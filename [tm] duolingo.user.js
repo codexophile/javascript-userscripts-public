@@ -1,0 +1,135 @@
+( function () {
+    'use strict'
+
+    window.addEventListener( 'urlchange', () => { main() } )
+
+    waitFor( '[data-test="schools-main-nav"]' ).then( ( el ) => {
+
+        let $original = $( el ).parent()
+        let $parent = $original.parent()
+
+        addButton( $original, $parent, 'prevButton', 'Previous', 'https://cdn-icons-png.flaticon.com/512/8677/8677640.png' )
+        addButton( $original, $parent, 'nextButton', 'Next', 'https://cdn-icons-png.flaticon.com/512/8677/8677641.png' )
+        addButton( $original, $parent, 'goToTestBt', 'Test', 'https://cdn-icons-png.flaticon.com/512/3120/3120676.png' )
+
+        main()
+
+    } )
+
+    function addButton ( original, parent, id, text, imgUrl ) {
+
+        let $original = $( original )
+
+        let $newButton = $original.clone()
+        $newButton.addClass( 'guide' )
+        $newButton.attr( 'id', id )
+        $newButton.find( 'span > span' ).text( text )
+        $newButton.find( 'img' ).attr( 'src', imgUrl )
+        $newButton.find( 'a' ).attr( 'href', '' ).attr( 'target', '' )
+
+        $newButton.appendTo( parent )
+        return $newButton
+
+    }
+
+    function main () {
+
+
+
+        //*---------
+
+        if ( !location.href.includes( '/guidebook/' ) ) {
+            $( `.guide` ).fadeOut()
+            return // 🛑
+        }
+
+        let currentHref = location.href
+        let sectionN = currentHref.match( /\d+$/ )[ 0 ]
+
+        $( `#prevButton` ).find( 'a' ).attr( 'href', currentHref.replace( sectionN, sectionN - 1 ) )
+        $( `#nextButton` ).find( 'a' ).attr( 'href', currentHref.replace( sectionN, +sectionN + 1 ) )
+        $( `#goToTestBt` ).find( 'a' ).attr( 'href', `https://www.duolingo.com/lesson/unit/${ sectionN }/test` )
+
+        $( `.guide` ).fadeIn()
+
+        // https://www.duolingo.com/lesson/unit/28/test
+
+    }
+
+} )();
+
+( function () {
+
+    document.addEventListener( 'keydown', doc_keyDown, false )
+    document.addEventListener( 'keyup', doc_keyUp, false )
+    // had to use keyup variation because a certain key combination didn't work in the other
+
+    function doc_keyDown ( e ) {
+
+        console.log( e.key.charCodeAt( 0 ) - 49 )
+
+        // numbers from 1 to 9 for word hints
+        if ( e.key.charCodeAt( 0 ) >= 49 && e.key.charCodeAt( 0 ) <= 57 ) {
+            e.preventDefault()
+            document.querySelectorAll( "div[data-test='hint-token'],[data-test='challenge-tap-token']" )[ e.key.charCodeAt( 0 ) - 49 ].click()
+        }
+
+        // backspace, space and a-z keys focuses the text area and send the pressed key again in the text area
+        if ( ( e.code == "Backspace" || e.code == "Space" || ( e.key.charCodeAt( 0 ) >= 97 && e.key.charCodeAt( 0 ) <= 122 ) ) && document.getElementsByTagName( 'textarea' )[ 0 ] ) {
+
+            var textEl = document.getElementsByTagName( 'textarea' )[ 0 ]
+            textEl.focus()
+            // textEl.value += e.key;
+            // textEl.value = e.key;
+
+        }
+
+        // console.log(e.code);
+
+        // can't speak and can't hear buttons
+        var skipbutton = document.querySelector( "[data-test=player-skip]" )
+        if ( e.ctrlKey && e.code == "KeyQ" && skipbutton.innerText != "SKIP" )
+            skipbutton.click()
+
+        // discuss button
+        var discusButton = document.querySelector( "[data-test=discussion-button]" )
+        if ( e.code == "KeyD" && discusButton )
+            discusButton.click()
+
+        // tab to set focus on the text area
+        if ( e.code == "Tab" )
+            document.getElementsByTagName( 'textarea' )[ 0 ].focus()
+
+        // condition to check if a choice element exists
+        if ( $( "[aria-label='choice']" ).length ) {
+
+            // j: selects 1st choice
+            if ( e.code == "KeyJ" )
+                $( "[aria-label='choice']" ).children().eq( 0 ).click()
+
+            if ( e.code == "KeyK" )
+                $( "[aria-label='choice']" ).children().eq( 1 ).click()
+
+            if ( e.code == "KeyL" )
+                $( "[aria-label='choice']" ).children().eq( 2 ).click()
+
+            if ( e.code == "Semicolon" )
+                $( "[aria-label='choice']" ).children().eq( 3 ).click()
+
+        }
+
+    }
+
+    function doc_keyUp ( e ) {
+
+        // ctrl + space to speak
+        if ( e.ctrlKey && e.code == "Space" )
+            document.querySelectorAll( '[dir=ltr] > button' )[ 0 ].click()
+
+        // ctrl + shift + space slow speak
+        if ( e.shiftKey && e.ctrlKey && e.code == "Space" )
+            document.querySelectorAll( '[dir=ltr] > button' )[ 1 ].click()
+
+    }
+
+} )()

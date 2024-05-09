@@ -1,0 +1,1 @@
+( function () {\nuse strict'\n} )()
