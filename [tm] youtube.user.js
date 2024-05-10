@@ -1,6 +1,10 @@
 ( function () {
     'use strict'
 
+    waitFor( `#video-controlPanel` ).then( ( el ) => {
+        el.style.top = '0px'
+        el.style.left = '120px'
+    } )
 
     fixUrl()
     window.addEventListener( 'urlchange', () => { fixUrl() } )

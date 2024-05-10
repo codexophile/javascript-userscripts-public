@@ -3,7 +3,6 @@
 
     function main ( selectorForSenderElement ) {
 
-        // if ( document.querySelector( '.fixedCSS' ) ) { console.log( document.querySelector( '.fixedCSS' ), '%c🏁', 'font-size: large' ); return } // 🛑
         if ( document.querySelector( '.fixedCSS' ) ) { console.log( '%c🏁', 'font-size: large' ); return } // 🛑
 
         let senderElement = document.querySelectorAll( selectorForSenderElement )[ 0 ]
@@ -595,13 +594,17 @@
 
         const moreBtn = document.querySelector( `[aria-label="More message options"]` )
         const lgLink = document.querySelector( `[href*='&view=lg']:not(.moved)` )
-        if ( !moreBtn || !lgLink ) return // 🛑
-        moreBtn.classList.add( '.marked' )
-        console.log( 'xxx', moreBtn, lgLink )
-        lgLink.classList.add( 'moved' )
-        lgLink.style.fontSize = 'x-large'
-        lgLink.style.margin = '10px'
-        moreBtn.parentElement.append( lgLink )
+        if ( moreBtn && lgLink ) {
+            moreBtn.classList.add( '.marked' )
+            console.log( 'xxx', moreBtn, lgLink )
+            lgLink.classList.add( 'moved' )
+            lgLink.style.fontSize = 'x-large'
+            lgLink.style.margin = '10px'
+            moreBtn.parentElement.append( lgLink )
+        }
+
+        document.querySelector( '[style="height: 657px;"]' ).scrollTo( 0, 150 )
+
         return
 
     }

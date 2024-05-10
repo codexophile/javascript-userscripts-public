@@ -1,4 +1,7 @@
-GM_addStyle(`
+
+
+//* CSS fix
+GM_addStyle( `
     .contentTag {
         background-color: #606060;
         margin          : 1px !important;
@@ -22,19 +25,20 @@ GM_addStyle(`
         background-color: black;
         position        : absolute;
         top             : -10px;
-    } `);
+    } `)
 
-addTagCSS( 'ahk', '#357721'   , 'AutoHotkey' )
-addTagCSS( 'js' , 'gold'      , 'JavaScript' )
-addTagCSS( '❗'  , 'darksalmon', 'Important'  )
+addTagCSS( 'ahk', '#357721', 'AutoHotkey' )
+addTagCSS( 'js', 'gold', 'JavaScript' )
+addTagCSS( '❗', 'darksalmon', 'Important' )
 addTagCSS( 'css', 'azure' )
 
-function addTagCSS( tag, backgroundColor, toolTip = '', fontColor = 'unset' ) {
+function addTagCSS ( tag, backgroundColor, toolTip = '', fontColor = 'unset' ) {
     GM_addStyle( `
-    [data-val='#${tag}'] {
+    [data-val='#${ tag }'] {
         color              : #00000000 !important;
-        background-color   : ${backgroundColor};
+        background-color   : ${ backgroundColor };
     }
-    [data-val='#${tag}']:hover:before {
-        content            : '${toolTip}';
-    } ` ) }
+    [data-val='#${ tag }']:hover:before {
+        content            : '${ toolTip }';
+    } ` )
+}
