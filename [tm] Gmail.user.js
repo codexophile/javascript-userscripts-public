@@ -15,6 +15,7 @@
 
         switch ( senderName ) {
 
+            //SECTION Blogtrotter
             case 'BlogtrottrBlogtrottr':
             case 'Blogtrottr':
             case 'Blogtrottr ':
@@ -93,6 +94,7 @@
 
                     switch ( feedTitle ) {
 
+                        //ANCHOR - 4horlover
                         case '4horlover':
                             GM_xmlhttpRequest( {
                                 method: 'GET',
@@ -116,16 +118,21 @@
                                 }
                             } )
                             break
+                        //ANCHOR -  'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
                         case 'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
                             item.querySelector( '[href="https://meumundogay.net"]' ).remove()
                             addIframeHrefs( item, itemUrl, innerDiv )
                             break
+                        //ANCHOR -  'porno gay latinos':
                         case 'porno gay latinos':
+                        //ANCHOR -  'GayVids.tube | GayVids, gaybb, porn gay hd, gay porn online, czech hunter, gayvids, freeonlinegayporn, gay porn, gay por...':
                         case 'GayVids.tube | GayVids, gaybb, porn gay hd, gay porn online, czech hunter, gayvids, freeonlinegayporn, gay porn, gay por...':
+                        //ANCHOR -  'GayGuy.Top':
                         case 'GayGuy.Top':
                             removeEmptytextEls( innerDiv )
                             addIframeHrefs( item, itemUrl, innerDiv )
                             break
+                        //ANCHOR -  'Gaystream':
                         case 'Gaystream':
                             GM_xmlhttpRequest( {
                                 method: 'GET',
@@ -151,6 +158,7 @@
                                 }
                             } )
                             break
+                        //ANCHOR -  'FreePornVideosHDGay.com – Videos online free gay porn':
                         case 'FreePornVideosHDGay.com – Videos online free gay porn':
                             GM_xmlhttpRequest( {
                                 method: 'GET',
@@ -166,6 +174,7 @@
                                 }
                             } )
                             break
+                        //ANCHOR -  'New Videos':
                         case 'New Videos':
 
                             const toggleButton = GM_addElement( item, 'button', { textContent: 'Toggle' } )
@@ -205,6 +214,7 @@
                             break
                             break
 
+                        //ANCHOR -  'NurGAY.to':
                         case 'NurGAY.to':
                             // break
                             const newDiv = document.createElement( 'div' )
@@ -231,6 +241,7 @@
 
                             break
 
+                        //ANCHOR -  'Hacker News: Front Page':
                         case 'Hacker News: Front Page':
                             GM_xmlhttpRequest( {
                                 method: 'GET',
@@ -246,6 +257,8 @@
                             } )
                             innerDiv.prepend( item.querySelector( '[href*="news.ycombinator.com"]' ) )
                         // no break here because reddit has some stuff in common
+
+                        //ANCHOR -  'reddit.com: search results - sri lanka':
                         case 'reddit.com: search results - sri lanka':
 
                             // console.log( innerDiv )
@@ -267,6 +280,7 @@
 
 
                 break
+            //!SECTION
 
             case 'daily.dev':
                 markAsCSSFixed()
