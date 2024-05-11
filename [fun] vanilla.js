@@ -1,5 +1,4 @@
 //ANCHOR Rest
-//#_______________________
 
 function downloadText ( filename, text ) {
     const dlLink = document.createElement( 'a' )
