@@ -1,3 +1,11 @@
+function downloadText ( filename, text ) {
+    const dlLink = document.createElement( 'a' )
+    const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`
+    dlLink.href = uriContent
+    dlLink.setAttribute( 'download', filename )
+    dlLink.click()
+}
+
 function pipeline ( ...functions ) {
     functions.reduce( ( accumilator, currentFn ) => {
         return currentFn( accumilator )

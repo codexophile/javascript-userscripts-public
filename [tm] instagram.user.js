@@ -1,5 +1,26 @@
 let observer = new MutationObserver( () => {
 
+    //* Suggested accounts on profile pages
+    const $profilesLocators = $( `[style="width: 170px;"]` )
+    if ( $profilesLocators.length ) {
+
+        const $grandParent = $( grandParent( $profilesLocators[ 0 ], 6 ) )
+        if ( $grandParent.parent().find( '#profilesWrapper' ).length ) return // 🛑
+
+        const $profilesWrapper = $( `<div id=profilesWrapper></div>` ).insertAfter( $grandParent.prev() )
+
+        $profilesLocators.each( function () {
+            const linkToProfile = this.querySelector( 'a' ).href
+            const porfilePicSrc = this.querySelector( 'img' ).src
+            $profilesWrapper.append( `
+                <a href=${ linkToProfile } style='display: inline-block; width: 33%'>
+                    <img src=${ porfilePicSrc }>
+                </a>
+            `)
+        } )
+
+    }
+
     //* click all 'see translation' button
     $( `[role=button]:contains('See translation')` ).click()
 

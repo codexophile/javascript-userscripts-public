@@ -6,7 +6,12 @@
 
     document.querySelectorAll( `p` ).forEach( item => { item.remove() } )
 
-
+    const testVariable = GM_getValue( 'testKey' )
+    console.log( testVariable )
+    const currentTropes = await GM.getValue( 'testKey' )
+    currentTropes.push( 'newValue' )
+    await GM.setValue( 'testKey', currentTropes )
+    console.log( GM_getValue( 'testKey' ) )
 
 
 
