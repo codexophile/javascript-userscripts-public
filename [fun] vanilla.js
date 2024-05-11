@@ -1,3 +1,6 @@
+//ANCHOR Rest
+//#_______________________
+
 function downloadText ( filename, text ) {
     const dlLink = document.createElement( 'a' )
     const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`
@@ -25,55 +28,6 @@ function sanitizeTrackingLinks ( selector, mainTrackerRegex, secondaryTrackerReg
         link.href = newHref
     } )
 }
-
-//# Functions for global script
-
-function generateToolbarButton ( text, parent, popup, onclick ) {
-    const button = generateElements( `<button class=popupButton>${ text }</button>` )
-    const collapsibleContent = document.querySelector( `#collapsibleContent` )
-    parent.append( button )
-    calculateWidthAndExpand( collapsibleContent )
-    if ( popup ) {
-        button.addEventListener( 'click', () => { togglePopup( popup ) } )
-    }
-    if ( onclick )
-        button.addEventListener( 'click', onclick )
-    return button
-}
-
-function createToolbarPopup () {
-    const toolbarPopup = generateElements( '<div></div>' )
-    toolbarPopup.classList.add( 'toolbarPopup' )
-    toolbarPopup.style = `
-        font-size:  large;
-        max-height: 50vh;
-        position:   absolute;
-        overflow:   auto;
-        display:    none;
-        background-color: gray;
-    `
-    collapsibleContent.append( toolbarPopup )
-    return toolbarPopup
-}
-
-function togglePopup ( popup ) {
-    toggle( popup )
-    const popupHeight = getComputedStyle( popup ).height
-        .replace( /px$/, '' )
-    popup.style.top = `-${ +popupHeight + 5 }px`
-}
-
-function calculateWidthAndExpand ( collapsibleContent ) {
-    let totalWidth = 0
-    for ( const child of collapsibleContent.children ) {
-        let widthValue = +getStyleOrComputedStyle( child, 'width' ).replace( 'px', '' )
-        let marginValue = +getStyleOrComputedStyle( child, 'margin' ).replace( 'px', '' )
-        totalWidth += ( widthValue ? widthValue : 0 ) + marginValue * 2
-    }
-    collapsibleContent.style.width = `${ totalWidth }px`
-}
-
-//#_______________________
 
 function getStyleOrComputedStyle ( element, property ) {
     return element.style[ property ] ? element.style[ property ] : getComputedStyle( element )[ property ]
@@ -779,6 +733,7 @@ function waitFor ( selector ) {
 
 }
 
+//ANCHOR - JQ Alternatives
 //# JQ Alternatives
 
 function contains ( selector, text ) {
@@ -879,4 +834,52 @@ function generateElements ( html, parent, returnTrusted ) {
     }
     return returnChildren.length === 1 ? returnChildren[ 0 ] : returnChildren
 
+}
+
+//ANCHOR - Functions for global script
+//# Functions for global script
+
+function generateToolbarButton ( text, parent, popup, onclick ) {
+    const button = generateElements( `<button class=popupButton>${ text }</button>` )
+    const collapsibleContent = document.querySelector( `#collapsibleContent` )
+    parent.append( button )
+    calculateWidthAndExpand( collapsibleContent )
+    if ( popup ) {
+        button.addEventListener( 'click', () => { togglePopup( popup ) } )
+    }
+    if ( onclick )
+        button.addEventListener( 'click', onclick )
+    return button
+}
+
+function createToolbarPopup () {
+    const toolbarPopup = generateElements( '<div></div>' )
+    toolbarPopup.classList.add( 'toolbarPopup' )
+    toolbarPopup.style = `
+        font-size:  large;
+        max-height: 50vh;
+        position:   absolute;
+        overflow:   auto;
+        display:    none;
+        background-color: gray;
+    `
+    collapsibleContent.append( toolbarPopup )
+    return toolbarPopup
+}
+
+function togglePopup ( popup ) {
+    toggle( popup )
+    const popupHeight = getComputedStyle( popup ).height
+        .replace( /px$/, '' )
+    popup.style.top = `-${ +popupHeight + 5 }px`
+}
+
+function calculateWidthAndExpand ( collapsibleContent ) {
+    let totalWidth = 0
+    for ( const child of collapsibleContent.children ) {
+        let widthValue = +getStyleOrComputedStyle( child, 'width' ).replace( 'px', '' )
+        let marginValue = +getStyleOrComputedStyle( child, 'margin' ).replace( 'px', '' )
+        totalWidth += ( widthValue ? widthValue : 0 ) + marginValue * 2
+    }
+    collapsibleContent.style.width = `${ totalWidth }px`
 }
