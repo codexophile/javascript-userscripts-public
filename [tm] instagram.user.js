@@ -1,5 +1,51 @@
+//* Expand button
+waitFor( '#collapsibleContent' ).then( ( el ) => {
+    generateToolbarButton( '♒', el, null, () => {
+        if ( !location.href.match( /https:\/\/www\.instagram\.com\/.+?\/$/ ) ) return // 🛑
+        const $main = $( '[style="height: 100%;"]' ).eq( 0 )
+        $main.children().first().hide()
+        $main.children().eq( 1 ).css( `width`, `100%` )
+        const $mainDiv = $( `main > div` ).css( `max-width`, `unset` )
+        const $rowsParent = $mainDiv.children().last().children().first()
+        console.log( $rowsParent )
+        $rowsParent[ 0 ].style = ''
+        style( $rowsParent[ 0 ], `
+            display:       flex;
+            flex-diection: row !important;
+            flex-wrap:     wrap;
+            flex-flow:     unset !important;
+        `)
+        $rowsParent.children().each( function () {
+            unwrap( this )
+        } )
+        addStyle( `
+            main > div > div > div[style] > div { width: 340px }
+        `)
+
+        let rowsObserver = new MutationObserver( ( mutations ) => {
+            mutations.forEach( mutation => {
+                mutation.addedNodes.forEach( item => {
+                    if ( $( item ).parent().is( $rowsParent ) ) {
+                        console.log( item )
+                        unwrap( item )
+                    }
+                } )
+            } )
+        } )
+        rowsObserver.observe( $rowsParent[ 0 ], { childList: true, subtree: true } )
+
+    } )
+} )
+
 let observer = new MutationObserver( () => {
 
+    //* Threads in feed
+    const $threadsImgEls = $( `[data-bloks-name="bk.components.Image"]` )
+    if ( $threadsImgEls.length ) {
+        const $grandParent = grandParent( $threadsImgEls[ 0 ], 13 )
+        console.log( $grandParent )
+        const $threadsImgsWrapper = $( `<div id=threadsImgsWrapper></div>` )
+    }
     //* Suggested accounts on profile pages
     const $profilesLocators = $( `[style="width: 170px;"]` )
     if ( $profilesLocators.length ) {
