@@ -1,7 +1,7 @@
 ( async function () {
     'use strict'
 
-    markTropeAsSeen()
+    markAndRefresh()
 
     const query = `:is(#main-article,.folder) > ul > li > [href*='/laconic/']:first-child`
     waitFor( '#collapsibleContent' ).then( ( el ) => {
@@ -12,8 +12,9 @@
             } )
         } )
         generateToolbarButton( '📤', el, null, async () => {
-            let currentTropes = await GM.getValue( 'tropesSeen' )
-            downloadText( 'browser - tvtropes_alreadySeenTropes.txt', JSON.stringify( currentTropes ) )
+            let tropesSeen = await GM.getValue( 'tropesSeen' )
+            let tropesImportant = await GM.getValue( 'tropesImportant' )
+            downloadText( 'browser - tvtropes.txt', JSON.stringify( { tropesSeen, tropesImportant } ) )
         } )
     } )
 
@@ -34,23 +35,15 @@
             let allToCopy = `\n[href*=${ tropeName }],`
             GM_setClipboard( allToCopy )
         } )
-        $( `<span class=ant>➕</span>` ).insertAfter( $tropeLink ).on( 'click', async () => {
-            let currentTropes = await GM.getValue( 'tropesSeen' )
-            if ( !currentTropes ) currentTropes = []
-            if ( currentTropes.includes( tropeName ) ) {
-                GM_notification( {
-                    text: 'Already exists!',
-                    silent: true,
-                    timeout: 4000
-                } )
-                return // 🛑
-            }
-            currentTropes.push( tropeName )
-            await GM.setValue( 'tropesSeen', currentTropes )
-            markTropeAsSeen()
+        $( `<span class=ant>✖️</span>` ).insertAfter( $tropeLink ).on( 'click', async () => {
+            markTrope( 'Seen' )
+        } )
+        $( `<span class=ant>✔️</span>` ).insertAfter( $tropeLink ).on( 'click', async () => {
+            markTrope( 'Important' )
         } )
 
         $tropeLink.on( 'mouseenter', ( event ) => {
+            if ( !event.target.title.match( /^\/pmwiki\/pmwiki.php\// ) ) return // 🛑
             GM_xmlhttpRequest( {
                 method: 'GET',
                 url: event.target.href,
@@ -67,8 +60,39 @@
 
     } )
 
-    async function markTropeAsSeen () {
+    async function markTrope ( which ) {
+
+        let tropesImportant = await GM.getValue( 'tropesImportant' )
+        let tropesSeen = await GM.getValue( 'tropesSeen' )
+        let currentTropes = await GM.getValue( `tropes${ which }` )
+
+        if ( !currentTropes ) currentTropes = []
+
+        if ( tropesSeen.includes( tropeName ) ) {
+            GM_notification( {
+                text: 'Already exists in Seen',
+                silent: true,
+                timeout: 4000
+            } )
+            return // 🛑
+        }
+        if ( tropesImportant.includes( tropeName ) ) {
+            GM_notification( {
+                text: 'Already exists in Important',
+                silent: true,
+                timeout: 4000
+            } )
+            return // 🛑
+        }
+
+        currentTropes.push( tropeName )
+        await GM.setValue( `tropes${ which }`, currentTropes )
+        markAndRefresh()
+    }
+
+    async function markAndRefresh () {
         const tropesSeen = await GM.getValue( 'tropesSeen' )
+        const tropesImportant = await GM.getValue( 'tropesImportant' )
         $( `[href*="/pmwiki/pmwiki.php/"]:first-child` ).each( function () {
             const match = this.href.match( /\.php\/\w+\/(\w+)$/ )
             if ( !match ) return // 🛑
@@ -76,6 +100,12 @@
             if ( tropesSeen.includes( tropeName ) ) {
                 style( $( this ).parent( 'li' )[ 0 ], `
                     background-color: brown;
+                    border-radius: 4px;
+                `)
+            }
+            if ( tropesImportant.includes( tropeName ) ) {
+                style( $( this ).parent( 'li' )[ 0 ], `
+                    background-color: rgb(102 103 23);
                     border-radius: 4px;
                 `)
             }
