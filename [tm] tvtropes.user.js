@@ -1,6 +1,15 @@
 ( async function () {
     'use strict'
 
+    let unsavedChanges = false
+    GM_addValueChangeListener( 'tropesSeen', () => { unsavedChanges = true } )
+    GM_addValueChangeListener( 'tropesImportant', () => { unsavedChanges = true } )
+    window.addEventListener( 'beforeunload', ( event ) => {
+        if ( !unsavedChanges ) return // 🛑
+        event.returnValue = '🤷🏻‍♂️'
+        saveBackup()
+    } )
+
     markAndRefresh()
 
     const query = `:is(#main-article,.folder) > ul > li > [href*='/laconic/']:first-child`
@@ -11,12 +20,15 @@
                     toggle( link.parentElement )
             } )
         } )
-        generateToolbarButton( '📤', el, null, async () => {
-            let tropesSeen = await GM.getValue( 'tropesSeen' )
-            let tropesImportant = await GM.getValue( 'tropesImportant' )
-            downloadText( 'browser - tvtropes.txt', JSON.stringify( { tropesSeen, tropesImportant } ) )
-        } )
+        generateToolbarButton( '📤', el, null, saveBackup )
     } )
+
+    async function saveBackup () {
+        let tropesSeen = await GM.getValue( 'tropesSeen' )
+        let tropesImportant = await GM.getValue( 'tropesImportant' )
+        downloadText( 'browser - tvtropes.txt', JSON.stringify( { tropesSeen, tropesImportant } ) )
+        unsavedChanges = false
+    }
 
     const tropesSeen = await GM.getValue( 'tropesSeen' )
 
