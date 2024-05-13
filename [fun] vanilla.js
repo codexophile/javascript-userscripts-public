@@ -222,6 +222,7 @@ function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
 
     // for all the elements that exist at page load
     document.querySelectorAll( selector ).forEach( item => { items.push( item ) } )
+    console.log( selector )
     // for the elements that appear after page load
     let observer = new MutationObserver( ( mutations ) => {
         mutations.forEach( mutation => {

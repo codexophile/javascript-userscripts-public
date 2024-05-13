@@ -533,9 +533,7 @@
                         max-width: unset;
                 `} )
                 containers[ 0 ].classList.add( 'fixedCSS' )
-                document.querySelectorAll( `[class*=src-item]` ).forEach( element => {
-                    element.style.width = `33%`
-                } )
+                document.querySelectorAll( `[class*=src-item]` ).forEach( element => { element.style.width = `33%` } )
 
                 let mbTitleElement = document.querySelector( '[class*=brew-title]' )
                 let mbFeedTitle = mbTitleElement.textContent.trim()
@@ -576,6 +574,20 @@
                                             `)
 
                                         item.append( tag )
+                                    } )
+                                }
+                            } )
+                            break
+                        case 'happy2hub':
+                            GM_xmlhttpRequest( {
+                                method: 'GET',
+                                url: itemHref,
+                                responseType: 'document',
+                                onload: function ( response ) {
+                                    const resText = response.responseText
+                                    const tempDoc = generateDoc( resText )
+                                    tempDoc.querySelector( 'p > a > img[decoding]' ).forEach( img => {
+                                        item.append( img )
                                     } )
                                 }
                             } )

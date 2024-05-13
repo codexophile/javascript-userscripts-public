@@ -10,6 +10,21 @@
         saveBackup()
     } )
 
+    lazyLoad( ( item ) => {
+        const laconicHref = item.href.replace( '/Main/', '/laconic/' )
+        GM_xmlhttpRequest( {
+            method: 'GET',
+            url: laconicHref,
+            responseType: 'document',
+            onload: function ( response ) {
+                const resText = response.responseText
+                const tempDoc = generateDoc( resText )
+                const mainCont = tempDoc.querySelector( '#main-article' )
+                item.title = mainCont.textContent
+            }
+        } )
+    }, ...$( `[href*="/Main/"]` ) )
+
     markAndRefresh()
 
     const query = `:is(#main-article,.folder) > ul > li > [href*='/laconic/']:first-child`
@@ -30,7 +45,7 @@
         unsavedChanges = false
     }
 
-    const tropesSeen = await GM.getValue( 'tropesSeen' )
+    // const tropesSeen = await GM.getValue( 'tropesSeen' )
 
     $( `[href*="/Main/"]` ).each( function () {
 
@@ -48,11 +63,41 @@
             GM_setClipboard( allToCopy )
         } )
         $( `<span class=ant>✖️</span>` ).insertAfter( $tropeLink ).on( 'click', async () => {
-            markTrope( 'Seen' )
+            appendTrope( 'Seen' )
         } )
         $( `<span class=ant>✔️</span>` ).insertAfter( $tropeLink ).on( 'click', async () => {
-            markTrope( 'Important' )
+            appendTrope( 'Important' )
         } )
+
+        async function appendTrope ( which ) {
+
+            let tropesImportant = await GM.getValue( 'tropesImportant' )
+            let tropesSeen = await GM.getValue( 'tropesSeen' )
+            let currentTropes = await GM.getValue( `tropes${ which }` )
+
+            if ( !currentTropes ) currentTropes = []
+
+            if ( tropesSeen.includes( tropeName ) ) {
+                GM_notification( {
+                    text: 'Already exists in Seen',
+                    silent: true,
+                    timeout: 4000
+                } )
+                return // 🛑
+            }
+            if ( tropesImportant.includes( tropeName ) ) {
+                GM_notification( {
+                    text: 'Already exists in Important',
+                    silent: true,
+                    timeout: 4000
+                } )
+                return // 🛑
+            }
+
+            currentTropes.push( tropeName )
+            await GM.setValue( `tropes${ which }`, currentTropes )
+            markAndRefresh()
+        }
 
         $tropeLink.on( 'mouseenter', ( event ) => {
             if ( !event.target.title.match( /^\/pmwiki\/pmwiki.php\// ) ) return // 🛑
@@ -72,56 +117,33 @@
 
     } )
 
-    async function markTrope ( which ) {
-
-        let tropesImportant = await GM.getValue( 'tropesImportant' )
-        let tropesSeen = await GM.getValue( 'tropesSeen' )
-        let currentTropes = await GM.getValue( `tropes${ which }` )
-
-        if ( !currentTropes ) currentTropes = []
-
-        if ( tropesSeen.includes( tropeName ) ) {
-            GM_notification( {
-                text: 'Already exists in Seen',
-                silent: true,
-                timeout: 4000
-            } )
-            return // 🛑
-        }
-        if ( tropesImportant.includes( tropeName ) ) {
-            GM_notification( {
-                text: 'Already exists in Important',
-                silent: true,
-                timeout: 4000
-            } )
-            return // 🛑
-        }
-
-        currentTropes.push( tropeName )
-        await GM.setValue( `tropes${ which }`, currentTropes )
-        markAndRefresh()
-    }
-
     async function markAndRefresh () {
+
         const tropesSeen = await GM.getValue( 'tropesSeen' )
         const tropesImportant = await GM.getValue( 'tropesImportant' )
-        $( `[href*="/pmwiki/pmwiki.php/"]:first-child` ).each( function () {
+
+        $( `[href*="/pmwiki/pmwiki.php/"]` ).each( function () {
             const match = this.href.match( /\.php\/\w+\/(\w+)$/ )
             if ( !match ) return // 🛑
             const tropeName = match[ 1 ]
-            if ( tropesSeen.includes( tropeName ) ) {
-                style( $( this ).parent( 'li' )[ 0 ], `
-                    background-color: brown;
-                    border-radius: 4px;
-                `)
-            }
-            if ( tropesImportant.includes( tropeName ) ) {
-                style( $( this ).parent( 'li' )[ 0 ], `
-                    background-color: rgb(102 103 23);
-                    border-radius: 4px;
-                `)
-            }
+            if ( tropesSeen.includes( tropeName ) )
+                mark( this, 'brown' )
+            if ( tropesImportant.includes( tropeName ) )
+                mark( this, 'rgb(102 103 23)' )
         } )
+
+        function mark ( el, color ) {
+            if ( el.matches( ':first-child' ) ) {
+                style( $( el ).parent( 'li' )[ 0 ], `
+                    background-color: ${ color };
+                    border-radius: 4px;
+                `)
+            }
+            else {
+                el.style.outline = `solid ${ color }`
+            }
+        }
+
     }
 
 } )()

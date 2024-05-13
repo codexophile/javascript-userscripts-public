@@ -76,6 +76,7 @@
         navigator.clipboard.writeText( textToCopy )
     } )
 
+    //ANCHOR - Complicated stuff
     //# Complicated stuff
 
     let searchResultItemWidth = '23%'
