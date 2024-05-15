@@ -58,7 +58,7 @@
                 parent.style.flexWrap = `wrap`
                 parent.style.display = `flex`
 
-                items.forEach( item => {
+                items.forEach( async item => {
 
                     item.removeAttribute( 'width' )
 
@@ -91,153 +91,140 @@
                     }
 
                     const itemUrl = item.querySelector( 'a' ).href
+                    let tempDoc
+
+                    async function addIframeHrefs ( tempDoc ) {
+                        if ( !tempDoc )
+                            tempDoc = await GMXmlHttpRequest( itemUrl )
+                        const iframes = tempDoc.querySelectorAll( 'iframe' )
+                        iframes.forEach( ( iframe ) => {
+                            GM_addElement( innerDiv, 'a', {
+                                textContent: iframe.src,
+                                href: iframe.src,
+                                style: 'display: block'
+                            } )
+                        } )
+                        addPeekButtons( innerDiv, item )
+                    }
 
                     switch ( feedTitle ) {
 
                         //ANCHOR - 4horlover
                         case '4horlover':
-                            GM_xmlhttpRequest( {
-                                method: 'GET',
-                                url: itemUrl,
-                                responseType: 'document',
-                                onload: function ( response ) {
-                                    const resText = response.responseText
-                                    const tempDoc = generateDoc( resText, true )
-                                    const centerEl = tempDoc.querySelector( 'main center' )
-                                    innerDiv.append( centerEl )
-                                    centerEl.querySelectorAll( 'b, img' ).forEach( el => {
-                                        unwrap( el.parentElement )
-                                    } )
-                                    const outerWrapper = generateElements( '<div id=outerWrapper></div>', null, true )
-                                    outerWrapper.style.display = 'flex'
-                                    innerDiv.prepend( outerWrapper )
-                                    innerDiv.querySelectorAll( 'b + p + p' ).forEach( locator => {
-                                        const wrapper = wrap( '<div class=wrapper></div>', prev( prev( locator ) ), prev( locator ), locator )
-                                        outerWrapper.append( wrapper )
-                                    } )
-                                }
+                            tempDoc = await GMXmlHttpRequest( itemUrl )
+                            const centerEl = tempDoc.querySelector( 'main center' )
+                            innerDiv.append( centerEl )
+                            centerEl.querySelectorAll( 'b, img' ).forEach( el => {
+                                unwrap( el.parentElement )
+                            } )
+                            const outerWrapper = generateElements( '<div id=outerWrapper></div>', null, true )
+                            outerWrapper.style.display = 'flex'
+                            innerDiv.prepend( outerWrapper )
+                            innerDiv.querySelectorAll( 'b + p + p' ).forEach( locator => {
+                                const wrapper = wrap( '<div class=wrapper></div>', prev( prev( locator ) ), prev( locator ), locator )
+                                outerWrapper.append( wrapper )
                             } )
                             break
+
                         //ANCHOR -  'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
                         case 'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
                             item.querySelector( '[href="https://meumundogay.net"]' ).remove()
                             addIframeHrefs( item, itemUrl, innerDiv )
                             break
+
+                        //ANCHOR - 'GayCock4U':
+                        case 'GayCock4U':
+                            const tempDoc = await GMXmlHttpRequest( itemUrl )
+                            console.log( tempDoc )
+                            const temp = tempDoc.querySelector( '[name="og:image"]' )
+                            // alert( temp.innerHTML )
+                            addIframeHrefs( tempDoc )
+                            break
+
                         //ANCHOR -  'porno gay latinos':
                         case 'porno gay latinos':
+
                         //ANCHOR -  'GayVids.tube | GayVids, gaybb, porn gay hd, gay porn online, czech hunter, gayvids, freeonlinegayporn, gay porn, gay por...':
                         case 'GayVids.tube | GayVids, gaybb, porn gay hd, gay porn online, czech hunter, gayvids, freeonlinegayporn, gay porn, gay por...':
+
                         //ANCHOR -  'GayGuy.Top':
                         case 'GayGuy.Top':
                             removeEmptytextEls( innerDiv )
                             addIframeHrefs( item, itemUrl, innerDiv )
                             break
+
                         //ANCHOR -  'Gaystream':
                         case 'Gaystream':
-                            GM_xmlhttpRequest( {
-                                method: 'GET',
-                                url: itemUrl,
-                                responseType: 'document',
-                                onload: function ( response ) {
-
-                                    const resText = response.responseText
-                                    const tempDoc = generateDoc( resText, true )
-
-                                    const btnEls = tempDoc.querySelectorAll( '.tab.boner' )
-                                    btnEls.forEach( item => {
-                                        const iframeLink = item.getAttribute( 'onclick' ).match( /\.src="(.+?)"/ )[ 1 ]
-                                        const iframeLinkEl = generateElements( `<a href=${ iframeLink }>${ iframeLink }</a>`, null, true )
-                                        iframeLinkEl.style.display = 'block'
-                                        innerDiv.prepend( iframeLinkEl )
-                                    } )
-                                    // alert( btnEls )
-
-                                    const imgUrl = tempDoc.querySelector( '#overlay' ).style.backgroundImage.match( /"(.+?)"/ )[ 1 ]
-                                    const imgEl = generateElements( `<img src=${ imgUrl }>`, null, true )
-                                    innerDiv.prepend( imgEl )
-                                }
+                            tempDoc = await GMXmlHttpRequest( itemUrl )
+                            const btnEls = tempDoc.querySelectorAll( '.tab.boner' )
+                            btnEls.forEach( item => {
+                                const iframeLink = item.getAttribute( 'onclick' ).match( /\.src="(.+?)"/ )[ 1 ]
+                                const iframeLinkEl = generateElements( `<a href=${ iframeLink }>${ iframeLink }</a>`, null, true )
+                                iframeLinkEl.style.display = 'block'
+                                innerDiv.prepend( iframeLinkEl )
                             } )
+                            // alert( btnEls )
+
+                            const imgUrl = tempDoc.querySelector( '#overlay' ).style.backgroundImage.match( /"(.+?)"/ )[ 1 ]
+                            const imgEl = generateElements( `<img src=${ imgUrl }>`, null, true )
+                            innerDiv.prepend( imgEl )
                             break
+
                         //ANCHOR -  'FreePornVideosHDGay.com – Videos online free gay porn':
                         case 'FreePornVideosHDGay.com – Videos online free gay porn':
-                            GM_xmlhttpRequest( {
-                                method: 'GET',
-                                url: itemUrl,
-                                responseType: 'document',
-                                onload: function ( response ) {
-                                    const resText = response.responseText
-                                    const tempDoc = generateDoc( resText, true )
-                                    tempDoc.querySelectorAll( '.button_choice_server' ).forEach( item => {
-                                        const linkHref = item.getAttribute( 'onclick' ).match( /'(.+?)'/ )[ 1 ]
-                                        generateElements( `<a href=${ linkHref }>${ linkHref }</a>`, innerDiv, true )
-                                    } )
-                                }
+                            tempDoc = await GMXmlHttpRequest( itemUrl )
+                            tempDoc.querySelectorAll( '.button_choice_server' ).forEach( item => {
+                                const linkHref = item.getAttribute( 'onclick' ).match( /'(.+?)'/ )[ 1 ]
+                                generateElements( `<a href=${ linkHref }>${ linkHref }</a>`, innerDiv, true )
                             } )
                             break
+
                         //ANCHOR -  'New Videos':
                         case 'New Videos':
 
                             const toggleButton = GM_addElement( item, 'button', { textContent: 'Toggle' } )
-                            toggleButton.addEventListener( 'click', () => {
+                            toggleButton.addEventListener( 'click', async () => {
                                 if ( item.querySelectorAll( '.thumbContainer' ).length )
                                     toggle( item.querySelector( '.thumbContainer' ) )
-                                else
-                                    GM_xmlhttpRequest( {
-                                        method: "GET",
-                                        url: itemUrl,
-                                        responseType: 'document',
-                                        onload: function ( response ) {
-                                            const temp = response.responseText
-                                            const script = generateElements( temp, null, true ).querySelectorAll( 'script[type="text/javascript"]' )
-                                            const screensCount = script[ 1 ].innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ]
-                                            const imgUrlTemplate = script[ 1 ].innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ]
-                                            const thumbnContainer = GM_addElement( item, 'div', { class: 'thumbContainer' } )
-                                            thumbnContainer.addEventListener( 'click', ( event ) => {
-                                                toggle( event.target.parentNode )
-                                                event.target.parentNode.parentNode.scrollIntoView()
-                                            } )
-                                            thumbnContainer.scrollIntoView()
-
-                                            repeat( screensCount + 1, j => {
-                                                const imgURL = imgUrlTemplate.replace( '{time}', j )
-                                                const imageElement = generateElements( `<img id=${ j } class='storyBoardItem' src='${ imgURL }'></img>`, null, true )
-                                                thumbnContainer.append( imageElement )
-                                            } )
-                                            innerDiv.style = `display: flex; flex-wrap: wrap;`
-                                            item.style.maxWidth = 'unset'
-                                            item.style.width = '100%'
-                                        }
+                                else {
+                                    tempDoc = await GMXmlHttpRequest( itemUrl )
+                                    script = tempDoc.querySelectorAll( 'script[type="text/javascript"]' )
+                                    const screensCount = script[ 1 ].innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ]
+                                    const imgUrlTemplate = script[ 1 ].innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ]
+                                    const thumbnContainer = GM_addElement( item, 'div', { class: 'thumbContainer' } )
+                                    thumbnContainer.addEventListener( 'click', ( event ) => {
+                                        toggle( event.target.parentNode )
+                                        event.target.parentNode.parentNode.scrollIntoView()
                                     } )
+                                    thumbnContainer.scrollIntoView()
+
+                                    repeat( screensCount + 1, j => {
+                                        const imgURL = imgUrlTemplate.replace( '{time}', j )
+                                        const imageElement = generateElements( `<img id=${ j } class='storyBoardItem' src='${ imgURL }'></img>`, null, true )
+                                        thumbnContainer.append( imageElement )
+                                    } )
+                                    innerDiv.style = `display: flex; flex-wrap: wrap;`
+                                    item.style.maxWidth = 'unset'
+                                    item.style.width = '100%'
+                                }
+
                             } )
-
-
-                            break
                             break
 
                         //ANCHOR -  'NurGAY.to':
                         case 'NurGAY.to':
-                            // break
+
                             const newDiv = document.createElement( 'div' )
                             newDiv.append( ...innerDiv.querySelectorAll( 'a:has(img)' ) )
                             innerDiv.replaceChildren()
                             innerDiv.append( newDiv )
 
-                            GM_xmlhttpRequest( {
-                                method: "GET",
-                                url: itemUrl,
-                                responseType: 'document',
-                                onload: function ( response ) {
-                                    console.log( 'xxxxxx' )
-                                    const temp = response.responseText
-                                    const tempDoc = generateDoc( temp, true )
-                                    const actorsList = tempDoc.querySelector( '#video-actors' ).textContent.replaceAll( '\t', '' ).replace( 'Actors: ', '' ).replaceAll( ' /', ',' )
-                                    GM_addElement( innerDiv, 'div', { textContent: actorsList } )
-                                    const links = tempDoc.querySelectorAll( 'p > [data-wpel-link="external"]' )
-                                    innerDiv.append( ...links )
-                                    addPeekButtons( innerDiv )
-                                }
-
-                            } )
+                            tempDoc = await GMXmlHttpRequest( itemUrl )
+                            const actorsList = tempDoc.querySelector( '#video-actors' ).textContent.replaceAll( '\t', '' ).replace( 'Actors: ', '' ).replaceAll( ' /', ',' )
+                            GM_addElement( innerDiv, 'div', { textContent: actorsList } )
+                            const links = tempDoc.querySelectorAll( 'p > [data-wpel-link="external"]' )
+                            innerDiv.append( ...links )
+                            addPeekButtons( innerDiv )
 
                             break
 
@@ -308,29 +295,23 @@
                 document.querySelectorAll( `br` ).forEach( br => { br.remove() } )
 
                 //* title genres
-                document.querySelectorAll( `[href*='/title/']:has(>img)` ).forEach( thumbnail => {
-                    GM_xmlhttpRequest( {
-                        method: 'GET',
-                        url: thumbnail.href,
-                        responseType: 'document',
-                        onload: function ( response ) {
+                document.querySelectorAll( `[href*='/title/']:has(>img)` ).forEach( async thumbnail => {
 
-                            const resText = response.responseText
-                            const tempDoc = generateDoc( resText, true )
-                            const scriptText = tempDoc.querySelector( 'script[type="application/ld+json"]' ).innerText
-                            const json = JSON.parse( scriptText )
+                    let tempDoc = await GMXmlHttpRequest( thumbnail.href )
+                    const scriptText = tempDoc.querySelector( 'script[type="application/ld+json"]' ).innerText
+                    const json = JSON.parse( scriptText )
 
-                            thumbnail.after( generateElements( `<div id=datePublishedEl>${ json.datePublished }</div>`, null, true ) )
-                            const tagsContainer = generateElements( '<div id=tagsContainer></div>', null, true )
-                            tagsContainer.style = 'display: flex; flex-wrap: wrap'
-                            thumbnail.after( tagsContainer )
-                            imdbAddTag( json[ '@type' ], 'red' )
-                            json.genre.forEach( genre => { imdbAddTag( genre, 'goldenrod' ) } )
+                    thumbnail.after( generateElements( `<div id=datePublishedEl>${ json.datePublished }</div>`, null, true ) )
+                    const tagsContainer = generateElements( '<div id=tagsContainer></div>', null, true )
+                    tagsContainer.style = 'display: flex; flex-wrap: wrap'
+                    thumbnail.after( tagsContainer )
+                    imdbAddTag( json[ '@type' ], 'red' )
+                    json.genre.forEach( genre => { imdbAddTag( genre, 'goldenrod' ) } )
 
-                            function imdbAddTag ( text, color ) {
-                                const tag = generateElements( `<div>${ text }</div>`, tagsContainer, true )
-                                // thumbnail.after( tag )
-                                tag.style = `
+                    function imdbAddTag ( text, color ) {
+                        const tag = generateElements( `<div>${ text }</div>`, tagsContainer, true )
+                        // thumbnail.after( tag )
+                        tag.style = `
                                     background-color: ${ color };
                                     border-radius:    4px;
                                     padding:          1px 6px;
@@ -338,10 +319,8 @@
                                     width:     fit-content;
                                     font-size: small;
                                 `
-                            }
+                    }
 
-                        }
-                    } )
                 } )
 
                 //* wrapping and moving
@@ -540,57 +519,39 @@
                 console.log( `%c📶 ${ mbFeedTitle }`, 'font-size: large; color: gold' )
 
                 const mbItems = document.querySelectorAll( '[class*=src-item]' )
-                mbItems.forEach( item => {
+                mbItems.forEach( async item => {
 
                     const itemHref = item.querySelector( `a` ).href
 
                     switch ( mbFeedTitle ) {
                         case 'PSA':
-                            GM_xmlhttpRequest( {
-                                method: 'GET',
-                                url: itemHref,
-                                responseType: 'document',
-                                onload: function ( response ) {
-                                    const resText = response.responseText
-                                    const tempDoc = generateDoc( resText, true )
-                                    const tagEls = tempDoc.querySelectorAll( '[rel=tag]' )
-                                    if ( !tagEls.length ) {
-                                        const errorEl = generateElements( '<div style="color: red">Error</div>', null, true )
-                                        item.append( errorEl )
-                                        return
-                                    }
-                                    tagEls.forEach( tag => {
-                                        if ( [ 'HEVC', 'HEVC PSA', 'x265', 'x265 HEVC', '2160p', 'hdr', 'HDR10Plus' ].includes( tag.textContent ) )
-                                            return // 🛑
-                                        style( tag, `
+                            const tempDoc = await GMXmlHttpRequest( itemHref )
+                            const tagEls = tempDoc.querySelectorAll( '[rel=tag]' )
+                            if ( !tagEls.length ) {
+                                const errorEl = generateElements( '<div style="color: red">Error</div>', null, true )
+                                item.append( errorEl )
+                                return
+                            }
+                            tagEls.forEach( tag => {
+                                if ( [ 'HEVC', 'HEVC PSA', 'x265', 'x265 HEVC', '2160p', 'hdr', 'HDR10Plus' ].includes( tag.textContent ) )
+                                    return // 🛑
+                                style( tag, `
                                             background-color: #2196F3;
                                             color: white;
                                             margin: 3px;
                                             padding: 2px;
                                         `)
-                                        if ( [ 'TV-Show', 'Movie' ].includes( tag.textContent ) )
-                                            style( tag, `
+                                if ( [ 'TV-Show', 'Movie' ].includes( tag.textContent ) )
+                                    style( tag, `
                                                 background-color: #f44336;
                                             `)
 
-                                        item.append( tag )
-                                    } )
-                                }
+                                item.append( tag )
                             } )
                             break
                         case 'happy2hub':
-                            GM_xmlhttpRequest( {
-                                method: 'GET',
-                                url: itemHref,
-                                responseType: 'document',
-                                onload: function ( response ) {
-                                    const resText = response.responseText
-                                    const tempDoc = generateDoc( resText )
-                                    tempDoc.querySelector( 'p > a > img[decoding]' ).forEach( img => {
-                                        item.append( img )
-                                    } )
-                                }
-                            } )
+                            tempDoc = await GMXmlHttpRequest( itemUrl )
+                            tempDoc.querySelector( 'p > a > img[decoding]' ).forEach( img => { item.append( img ) } )
                             break
 
                         default:
@@ -655,50 +616,24 @@
         document.querySelector( '[class=""] [jslog] table' ).classList.add( 'fixedCSS' )
     }
 
-    function addIframeHrefs ( item, itemUrl, innerDiv ) {
-        GM_xmlhttpRequest( {
-            method: "GET",
-            url: itemUrl,
-            responseType: 'document',
-            onload: function ( response ) {
-                const temp = response.responseText
-                const tempDoc = generateDoc( temp, true )
-                const iframes = tempDoc.querySelectorAll( 'iframe' )
-                iframes.forEach( ( iframe ) => {
-                    GM_addElement( innerDiv, 'a', {
-                        textContent: iframe.src,
-                        href: iframe.src,
-                        style: 'display: block'
-                    } )
-                } )
-                addPeekButtons( innerDiv, item )
-            }
-        } )
-    }
-
     function addPeekButtons ( itemInnerDiv, item ) {
 
         const links = itemInnerDiv.querySelectorAll( 'a' )
         links.forEach( ( link ) => {
             if ( link.href.match( /bembed/ ) ) {
                 const button = GM_addElement( 'button', { textContent: 'Bembed' } )
-                button.addEventListener( 'click', () => {
+                button.addEventListener( 'click', async () => {
                     if ( itemInnerDiv.querySelector( '#bembedImg' ) ) return
-                    GM_xmlhttpRequest( {
-                        method: "GET",
-                        url: link.href,
-                        responseType: 'document',
-                        onload: function ( response ) {
-                            const videoId = response.responseText.match( /:\\u0022(.+?)\.poster/ )[ 1 ]
-                            const sbImgHost = response.responseText.match( /og:image" content="https:\/\/(.+?)\// )[ 1 ]
-                            const peekImg = GM_addElement( itemInnerDiv, 'img', {
-                                id: 'bembedImg',
-                                src: `https://${ sbImgHost }/previews/${ videoId }.preview.jpg`
-                            } )
-                            peekImg.style.maxHeight = '300px'
-                            fauxHistoryPushState( link.href )
-                        }
+                    tempDoc = await GMXmlHttpRequest( itemUrl )
+                    const resText = tempDoc.innerHTML
+                    const videoId = resText.match( /:\\u0022(.+?)\.poster/ )[ 1 ]
+                    const sbImgHost = resText.match( /og:image" content="https:\/\/(.+?)\// )[ 1 ]
+                    const peekImg = GM_addElement( itemInnerDiv, 'img', {
+                        id: 'bembedImg',
+                        src: `https://${ sbImgHost }/previews/${ videoId }.preview.jpg`
                     } )
+                    peekImg.style.maxHeight = '300px'
+                    fauxHistoryPushState( link.href )
                 } )
                 link.after( button )
             }
@@ -717,45 +652,36 @@
             }
             if ( link.href.match( /(d000d)/ ) ) {
                 const doodButton = GM_addElement( 'button', { textContent: 'Dood' } )
-                doodButton.addEventListener( 'click', () => {
+                doodButton.addEventListener( 'click', async () => {
                     if ( itemInnerDiv.querySelector( '#doodImg' ) ) return
-                    GM_xmlhttpRequest( {
-                        method: "GET",
-                        url: link.href,
-                        responseType: 'document',
-                        onload: function ( response ) {
-                            const slidesId = response.responseText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ]
-                            const doodPeekImg = GM_addElement( itemInnerDiv, 'img', {
-                                id: 'doodImg',
-                                src: `https://img.doodcdn.co/slides/${ slidesId }.jpg`
-                            } )
-                            fauxHistoryPushState( link.href )
-                        }
+                    tempDoc = await GMXmlHttpRequest( itemUrl )
+                    const resText = tempDoc.innerHTML
+                    const slidesId = resText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ]
+                    GM_addElement( itemInnerDiv, 'img', {
+                        id: 'doodImg',
+                        src: `https://img.doodcdn.co/slides/${ slidesId }.jpg`
                     } )
+                    fauxHistoryPushState( link.href )
                 } )
                 link.after( doodButton )
             }
             if ( link.href.match( /(cdnstream|jodwish)/ ) ) {
                 const doodButton = GM_addElement( 'button', { textContent: 'Stream' } )
-                doodButton.addEventListener( 'click', () => {
+                doodButton.addEventListener( 'click', async () => {
                     if ( itemInnerDiv.querySelector( '#streamImg' ) ) return
-                    GM_xmlhttpRequest( {
-                        method: "GET",
-                        url: link.href,
-                        responseType: 'document',
-                        onload: function ( response ) {
-                            const imageUrl = response.responseText.match( /file:.*?&url=(.*?)"/ )[ 1 ]
-                            // storyboardFlex( itemInnerDiv, 10, 10, imageUrl, link.href, true )
-                            storyboardHorizontal( itemInnerDiv, 10, 10, link.href, null, samplingFq, trueNoOfSlots, ...imgUrls )
-                            item.style.width = '100%'
-                            item.style.maxWidth = 'unset'
-                            // const streamPeekImg = GM_addElement( itemInnerDiv, 'img', {
-                            //     id: 'streamImg',
-                            //     src: imageUrl
-                            // } )
-                            fauxHistoryPushState( link.href )
-                        }
-                    } )
+                    tempDoc = await GMXmlHttpRequest( itemUrl )
+                    const resText = tempDoc.innerHTML
+                    const imageUrl = resText.match( /file:.*?&url=(.*?)"/ )[ 1 ]
+                    // storyboardFlex( itemInnerDiv, 10, 10, imageUrl, link.href, true )
+                    storyboardHorizontal( itemInnerDiv, 10, 10, link.href, null, samplingFq, trueNoOfSlots, ...imgUrls )
+                    item.style.width = '100%'
+                    item.style.maxWidth = 'unset'
+                    // const streamPeekImg = GM_addElement( itemInnerDiv, 'img', {
+                    //     id: 'streamImg',
+                    //     src: imageUrl
+                    // } )
+                    fauxHistoryPushState( link.href )
+
                 } )
                 link.after( doodButton )
             }

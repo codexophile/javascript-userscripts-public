@@ -1,5 +1,26 @@
 //ANCHOR Rest
 
+function GMXmlHttpRequest ( url, headers = '' ) {
+
+    return new Promise( ( resolve, reject ) => {
+        GM_xmlhttpRequest( {
+            method: 'GET',
+            url: url,
+            headers: headers,
+            responseType: 'document',
+            onload: response => {
+                const resText = response.responseText
+                const tempDoc = generateDoc( resText, true )
+                resolve( tempDoc )
+            },
+            onerror: () => reject( 'onerror' ),
+            ontimeout: () => reject( 'ontimeout' )
+        } )
+        // function errorFunction () { reject( 'error loading page' ) }
+    } )
+
+}
+
 function downloadText ( filename, text ) {
     const dlLink = document.createElement( 'a' )
     const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`

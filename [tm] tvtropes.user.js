@@ -83,7 +83,8 @@
                     silent: true,
                     timeout: 4000
                 } )
-                return // 🛑
+                const index = tropesSeen.indexOf( tropeName )
+                tropesSeen.splice( index, 1 )
             }
             if ( tropesImportant.includes( tropeName ) ) {
                 GM_notification( {
@@ -91,7 +92,8 @@
                     silent: true,
                     timeout: 4000
                 } )
-                return // 🛑
+                const index = tropesImportant.indexOf( tropeName )
+                tropesImportant.splice( index, 1 )
             }
 
             currentTropes.push( tropeName )
@@ -133,7 +135,7 @@
         } )
 
         function mark ( el, color ) {
-            if ( el.matches( ':first-child' ) ) {
+            if ( el.matches( 'div>ul>li>a:first-child' ) ) {
                 style( $( el ).parent( 'li' )[ 0 ], `
                     background-color: ${ color };
                     border-radius: 4px;
