@@ -84,7 +84,7 @@ function collapsibleHorizontal ( maxHeight, togglerText = '' ) {
 
         if ( mouseDownX === mouseUpX && mouseDownY === mouseUpY ) {
 
-            event.target.classList.toggle( "active" )
+            event.target.classList.toggle( "togglerActive" )
             if ( collapsibleContent.style.width === '0px' ) {
                 calculateWidthAndExpand( collapsibleContent )
             } else {
@@ -130,7 +130,7 @@ function collapsible ( togglerText = '' ) {
                 font-size: 15px;
             }
 
-            .active, #collapsible-toggler:hover {
+            .togglerActive, #collapsible-toggler:hover {
                 background-color: #555;
             }
 
