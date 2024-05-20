@@ -10,10 +10,9 @@
 
     //* automatically hiding 'compose comment section and adding the toggle button
     waitFor( '#collapsibleContent' ).then( ( el ) => {
-        const $locators = $( `.commentarea` ).children().first().nextUntil( '.sitetable.nestedlisting' ).addBack()
+        const $locators = jQuery( `.commentarea` ).children().first().nextUntil( '.sitetable.nestedlisting' ).addBack()
         $locators.hide()
-        const $toggleBtn = $( `<button>💬</button>` ).on( 'click', () => { $locators.toggle() } )
-        console.log( el )
+        const $toggleBtn = jQuery( `<button>💬</button>` ).on( 'click', () => { $locators.toggle() } )
         el.append( $toggleBtn[ 0 ] )
         calculateWidthAndExpand( el )
     } )
@@ -21,9 +20,9 @@
     if ( location.href.match( /\/r\/.+?\/comments\// ) ) { // ==> location.href = ... /r/subreddit/comments/...
     }
 
-    $( `a.expand` ).on( 'click', ( event ) => {
+    jQuery( `a.expand` ).on( 'click', ( event ) => {
 
-        let $comment = $( event.target ).closest( '.comment' )
+        let $comment = jQuery( event.target ).closest( '.comment' )
         if ( !$comment.hasClass( 'collapsed' ) ) return // 🛑  // do nothing if the comment is NOW expanded
         let $nextExpand = $comment.nextAll( '.comment' ).find( '.expand' )
         if ( !$nextExpand.length ) return // 🛑
@@ -39,15 +38,15 @@
     let observer = new MutationObserver( () => {
 
         //* replacing image links with actual <img> elements
-        let $allImageLinks = $( `p>a:contains('<image>')` )
+        let $allImageLinks = jQuery( `p>a:contains('<image>')` )
         $allImageLinks.each( function () {
-            let $this = $( this )
+            let $this = jQuery( this )
             let imagePath = this.href
             $this.replaceWith( `<img src=${ imagePath } class=converted-from-link>` )
         } )
 
         //* 'old' to 'www' on links with href ending with a subreddit name
-        let $subredditLinks = $( `a[href^='/r/']:not(.converted-to-new-reddit)` )
+        let $subredditLinks = jQuery( `a[href^='/r/']:not(.converted-to-new-reddit)` )
         $subredditLinks.each( function () {
             let currentHref = this.getAttribute( 'href' )
             // regex for matching links with href ending with a subreddit name
@@ -59,7 +58,7 @@
         } )
 
         //* Replacing /user/ links with /user/submitted/ links
-        let $userLinks = $( `[href^='https://old.reddit.com/user/']:not(.userProcessed)` )
+        let $userLinks = jQuery( `[href^='https://old.reddit.com/user/']:not(.userProcessed)` )
         $userLinks.each( function () {
             let thisHref = this.href
             if ( thisHref.match( /https:\/\/old\.reddit\.com\/user\/(\d|\w|-)+$/ ) )
@@ -78,13 +77,10 @@
     const videoElement = document.getElementsByTagName( 'video' )[ 0 ]
     if ( !videoElement ) return
     let playAttemptThwarted = false
-    console.log( videoElement )
-    console.log( playAttemptThwarted )
     videoElement.addEventListener( 'play', ( event ) => {
         if ( playAttemptThwarted ) return // 🛑
-        console.log( event.currentTarget )
         event.currentTarget.pause()
-        $( 'button.play-pause' )[ 1 ].click()
+        jQuery( 'button.play-pause' )[ 1 ].click()
         playAttemptThwarted = true
     } )
 

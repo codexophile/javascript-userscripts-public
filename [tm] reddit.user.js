@@ -50,6 +50,7 @@
         redditPopup.id = 'redditPopup'
         generateToolbarButton( 'Reddit', el, redditPopup )
         const match = location.href.match( /\/\/.+?\.(.*)/ )
+        // const Link = `https://undelete.pullpush.io/r/Bitcoin/comments/7jzpir/`
         const oldLink = `https://old.${ match[ 1 ] }`
         const newLink = `https://new.${ match[ 1 ] }`
         const shLink = `https://sh.${ match[ 1 ] }`
@@ -101,7 +102,6 @@
 
         //* Reddit old links
         let $links = jQuery( '[href^="/r/"]:not(.wwwToOldDone)' )
-        console.log( 'xxx', $links )
         $links.each( function () {
             let thisHref = this.href
             if ( !thisHref.includes( '/comments/' ) ) return // 🛑 // Checks if it's a post link as opposed to a subreddit link

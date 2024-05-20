@@ -16,7 +16,9 @@ let blackList = [ 'suwa hamuwa', 'Rasa Madura', 'Manasika Saukkhya', 'Wawamu Rak
     'Gamata Cricket', 'smart poddo', 'ගුවන් සිහිනය', 'mihikatha dinuwo', 'sith asaka sakmana', 'pro +', 'a park',
     'ranmasu uyana', 'samma dhitti', 'dream villa', 'irida ayubowan', 'govibimata', 'japanese language',
     'දෙමටගොඩ සවස', 'Triplep', '12 horawa', 'bushalt', 'threethal', 'bus halt', 'aluth katha', 'turning point',
-    'check mate', 'newsfeed', 'Raga Suthra', 'full audio', 'good morning Sri Lanka', 'game rasa', 'ambayaluwo' ]
+    'check mate', 'newsfeed', 'Raga Suthra', 'full audio', 'good morning Sri Lanka', 'game rasa', 'ambayaluwo',
+    'වර්ණෝදය', 'lyric', 'ape paya', 'cricket gamata', 'rataa', 'hondatama pahila', 'sammadhitti', 'dreamvilla',
+    'ms. traveller' ]
 
 waitFor( '#collapsibleContent' ).then( ( el ) => {
 

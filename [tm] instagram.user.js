@@ -127,7 +127,9 @@ function getUserId ( image ) {
         $parent = $( image ).closest( 'article' )
     if ( location.href.includes( '/p/' ) )
         $parent = $( `main` ).first()
-    return $parent.find( '[href^="/"]' ).first().attr( 'href' ).match( /\/(.+?)\// )[ 1 ]
+    const userId = $parent.find( '[href^="/"]' ).first().attr( 'href' ).match( /\/(.+?)\// )[ 1 ]
+    console.log( userId )
+    return userId
 }
 
 function getPostId ( image ) {
