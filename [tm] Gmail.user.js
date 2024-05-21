@@ -107,6 +107,78 @@
                         addPeekButtons( innerDiv, item )
                     }
 
+                    function addPeekButtons ( itemInnerDiv, item ) {
+
+                        const links = itemInnerDiv.querySelectorAll( 'a' )
+                        links.forEach( async ( link ) => {
+                            if ( link.href.match( /bembed/ ) ) {
+                                const button = GM_addElement( 'button', { textContent: 'Bembed' } )
+                                button.addEventListener( 'click', async () => {
+                                    if ( itemInnerDiv.querySelector( '#bembedImg' ) ) return
+                                    tempDoc = await GMXmlHttpRequest( itemUrl )
+                                    const resText = tempDoc.innerHTML
+                                    const videoId = resText.match( /:\\u0022(.+?)\.poster/ )[ 1 ]
+                                    const sbImgHost = resText.match( /og:image" content="https:\/\/(.+?)\// )[ 1 ]
+                                    const peekImg = GM_addElement( itemInnerDiv, 'img', {
+                                        id: 'bembedImg',
+                                        src: `https://${ sbImgHost }/previews/${ videoId }.preview.jpg`
+                                    } )
+                                    peekImg.style.maxHeight = '300px'
+                                    fauxHistoryPushState( link.href )
+                                } )
+                                link.after( button )
+                            }
+                            if ( link.href.match( /(voe)/ ) ) {
+                                const doodButton = GM_addElement( 'button', { textContent: 'Voe' } )
+                                doodButton.addEventListener( 'click', () => {
+                                    if ( itemInnerDiv.querySelector( '#voeImg' ) ) return
+                                    const videoId = link.href.match( /\..+\/(.+?)$/ )[ 1 ]
+                                    const imageUrl = `https://i.voe.sx/cache/${ videoId }_storyboard_L0.jpg`
+                                    storyboardFlex( itemInnerDiv, 10, 10, imageUrl, link.href, true )
+                                    item.style.width = '100%'
+                                    item.style.maxWidth = 'unset'
+                                    fauxHistoryPushState( link.href )
+                                } )
+                                link.after( doodButton )
+                            }
+                            if ( link.href.match( /d000d|ds2play|d0000d/ ) ) {
+                                // const doodButton = GM_addElement( 'button', { textContent: 'Dood' } )
+                                // doodButton.addEventListener( 'click', async () => {
+                                // if ( itemInnerDiv.querySelector( '#doodImg' ) ) return
+                                const resText = await GMXmlHttpRequest( link.href, null, true )
+                                const slidesId = resText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ]
+                                GM_addElement( itemInnerDiv, 'img', {
+                                    id: 'doodImg',
+                                    src: `https://img.doodcdn.co/slides/${ slidesId }.jpg`
+                                } )
+                                // fauxHistoryPushState( link.href )
+                                // } )
+                                // link.after( doodButton )
+                            }
+                            if ( link.href.match( /(cdnstream|jodwish)/ ) ) {
+                                const doodButton = GM_addElement( 'button', { textContent: 'Stream' } )
+                                doodButton.addEventListener( 'click', async () => {
+                                    if ( itemInnerDiv.querySelector( '#streamImg' ) ) return
+                                    tempDoc = await GMXmlHttpRequest( itemUrl )
+                                    const resText = tempDoc.innerHTML
+                                    const imageUrl = resText.match( /file:.*?&url=(.*?)"/ )[ 1 ]
+                                    // storyboardFlex( itemInnerDiv, 10, 10, imageUrl, link.href, true )
+                                    storyboardHorizontal( itemInnerDiv, 10, 10, link.href, null, samplingFq, trueNoOfSlots, ...imgUrls )
+                                    item.style.width = '100%'
+                                    item.style.maxWidth = 'unset'
+                                    // const streamPeekImg = GM_addElement( itemInnerDiv, 'img', {
+                                    //     id: 'streamImg',
+                                    //     src: imageUrl
+                                    // } )
+                                    fauxHistoryPushState( link.href )
+
+                                } )
+                                link.after( doodButton )
+                            }
+                        } )
+
+                    }
+
                     switch ( feedTitle ) {
 
                         //ANCHOR - 4horlover
@@ -126,19 +198,23 @@
                             } )
                             break
 
+                        //ANCHOR -  'TURBOGVIDEOS.COM':
+                        case 'TURBOGVIDEOS.COM':
+                            addIframeHrefs()
+                            break
                         //ANCHOR -  'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
                         case 'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
                             item.querySelector( '[href="https://meumundogay.net"]' ).remove()
-                            addIframeHrefs( item, itemUrl, innerDiv )
+                            addIframeHrefs()
                             break
 
                         //ANCHOR - 'GayCock4U':
                         case 'GayCock4U':
-                            const tempDoc = await GMXmlHttpRequest( itemUrl )
-                            console.log( tempDoc )
-                            const temp = tempDoc.querySelector( '[name="og:image"]' )
+                            // const tempDoc = await GMXmlHttpRequest( itemUrl )
+                            // console.log( tempDoc )
+                            // const temp = tempDoc.querySelector( '[name="og:image"]' )
                             // alert( temp.innerHTML )
-                            addIframeHrefs( tempDoc )
+                            addIframeHrefs()
                             break
 
                         //ANCHOR -  'porno gay latinos':
@@ -150,13 +226,13 @@
                         //ANCHOR -  'GayGuy.Top':
                         case 'GayGuy.Top':
                             removeEmptytextEls( innerDiv )
-                            addIframeHrefs( item, itemUrl, innerDiv )
+                            addIframeHrefs()
                             break
 
                         //ANCHOR -  'Gaystream':
                         case 'Gaystream':
-                            tempDoc = await GMXmlHttpRequest( itemUrl )
-                            const btnEls = tempDoc.querySelectorAll( '.tab.boner' )
+                            const tempDocGstrm = await GMXmlHttpRequest( itemUrl )
+                            const btnEls = tempDocGstrm.querySelectorAll( '.tab.boner' )
                             btnEls.forEach( item => {
                                 const iframeLink = item.getAttribute( 'onclick' ).match( /\.src="(.+?)"/ )[ 1 ]
                                 const iframeLinkEl = generateElements( `<a href=${ iframeLink }>${ iframeLink }</a>`, null, true )
@@ -165,7 +241,7 @@
                             } )
                             // alert( btnEls )
 
-                            const imgUrl = tempDoc.querySelector( '#overlay' ).style.backgroundImage.match( /"(.+?)"/ )[ 1 ]
+                            const imgUrl = tempDocGstrm.querySelector( '#overlay' ).style.backgroundImage.match( /"(.+?)"/ )[ 1 ]
                             const imgEl = generateElements( `<img src=${ imgUrl }>`, null, true )
                             innerDiv.prepend( imgEl )
                             break
@@ -550,8 +626,14 @@
                             } )
                             break
                         case 'happy2hub':
-                            tempDoc = await GMXmlHttpRequest( itemUrl )
-                            tempDoc.querySelector( 'p > a > img[decoding]' ).forEach( img => { item.append( img ) } )
+                            item.style.width = '100%'
+                            item.style.maxWidth = 'unset'
+                            const tempDocH2h = await GMXmlHttpRequest( itemHref )
+                            item.append( tempDocH2h.querySelector( '[href*="paste.happy2hub"]' ) )
+                            tempDocH2h.querySelectorAll( 'p > a > img[decoding]' ).forEach( img => {
+                                img.style.width = '250px'
+                                item.append( img )
+                            } )
                             break
 
                         default:
@@ -590,7 +672,7 @@
             moreBtn.parentElement.append( lgLink )
         }
 
-        document.querySelector( '[style="height: 657px;"]' ).scrollTo( 0, 150 )
+        document.querySelector( '[style="height: 657px;"]' )?.scrollTo( 0, 150 )
 
         return
 
@@ -614,79 +696,6 @@
     function markAsCSSFixed () {
         if ( location.href.includes( 'view=lg' ) ) return // 🛑
         document.querySelector( '[class=""] [jslog] table' ).classList.add( 'fixedCSS' )
-    }
-
-    function addPeekButtons ( itemInnerDiv, item ) {
-
-        const links = itemInnerDiv.querySelectorAll( 'a' )
-        links.forEach( ( link ) => {
-            if ( link.href.match( /bembed/ ) ) {
-                const button = GM_addElement( 'button', { textContent: 'Bembed' } )
-                button.addEventListener( 'click', async () => {
-                    if ( itemInnerDiv.querySelector( '#bembedImg' ) ) return
-                    tempDoc = await GMXmlHttpRequest( itemUrl )
-                    const resText = tempDoc.innerHTML
-                    const videoId = resText.match( /:\\u0022(.+?)\.poster/ )[ 1 ]
-                    const sbImgHost = resText.match( /og:image" content="https:\/\/(.+?)\// )[ 1 ]
-                    const peekImg = GM_addElement( itemInnerDiv, 'img', {
-                        id: 'bembedImg',
-                        src: `https://${ sbImgHost }/previews/${ videoId }.preview.jpg`
-                    } )
-                    peekImg.style.maxHeight = '300px'
-                    fauxHistoryPushState( link.href )
-                } )
-                link.after( button )
-            }
-            if ( link.href.match( /(voe)/ ) ) {
-                const doodButton = GM_addElement( 'button', { textContent: 'Voe' } )
-                doodButton.addEventListener( 'click', () => {
-                    if ( itemInnerDiv.querySelector( '#voeImg' ) ) return
-                    const videoId = link.href.match( /\..+\/(.+?)$/ )[ 1 ]
-                    const imageUrl = `https://i.voe.sx/cache/${ videoId }_storyboard_L0.jpg`
-                    storyboardFlex( itemInnerDiv, 10, 10, imageUrl, link.href, true )
-                    item.style.width = '100%'
-                    item.style.maxWidth = 'unset'
-                    fauxHistoryPushState( link.href )
-                } )
-                link.after( doodButton )
-            }
-            if ( link.href.match( /(d000d)/ ) ) {
-                const doodButton = GM_addElement( 'button', { textContent: 'Dood' } )
-                doodButton.addEventListener( 'click', async () => {
-                    if ( itemInnerDiv.querySelector( '#doodImg' ) ) return
-                    tempDoc = await GMXmlHttpRequest( itemUrl )
-                    const resText = tempDoc.innerHTML
-                    const slidesId = resText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ]
-                    GM_addElement( itemInnerDiv, 'img', {
-                        id: 'doodImg',
-                        src: `https://img.doodcdn.co/slides/${ slidesId }.jpg`
-                    } )
-                    fauxHistoryPushState( link.href )
-                } )
-                link.after( doodButton )
-            }
-            if ( link.href.match( /(cdnstream|jodwish)/ ) ) {
-                const doodButton = GM_addElement( 'button', { textContent: 'Stream' } )
-                doodButton.addEventListener( 'click', async () => {
-                    if ( itemInnerDiv.querySelector( '#streamImg' ) ) return
-                    tempDoc = await GMXmlHttpRequest( itemUrl )
-                    const resText = tempDoc.innerHTML
-                    const imageUrl = resText.match( /file:.*?&url=(.*?)"/ )[ 1 ]
-                    // storyboardFlex( itemInnerDiv, 10, 10, imageUrl, link.href, true )
-                    storyboardHorizontal( itemInnerDiv, 10, 10, link.href, null, samplingFq, trueNoOfSlots, ...imgUrls )
-                    item.style.width = '100%'
-                    item.style.maxWidth = 'unset'
-                    // const streamPeekImg = GM_addElement( itemInnerDiv, 'img', {
-                    //     id: 'streamImg',
-                    //     src: imageUrl
-                    // } )
-                    fauxHistoryPushState( link.href )
-
-                } )
-                link.after( doodButton )
-            }
-        } )
-
     }
 
 } )()

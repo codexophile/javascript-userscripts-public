@@ -20,7 +20,9 @@
                 const resText = response.responseText
                 const tempDoc = generateDoc( resText )
                 const mainCont = tempDoc.querySelector( '#main-article' )
-                item.title = mainCont.textContent
+                const tooltipText = mainCont.textContent.replace( 'Visit the unabridged version HERE.', '' )
+                tooltipText = mainCont.textContent.replace( /\.(\w)/, '\.\n$1' )
+                item.title = tooltipText
             }
         } )
     }, ...$( `[href*="/Main/"]` ) )

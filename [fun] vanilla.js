@@ -1,6 +1,15 @@
 //ANCHOR Rest
 
-function GMXmlHttpRequest ( url, headers = '' ) {
+function getTextNodes ( el ) {
+    let textNodes = []
+    el.childNodes.forEach( node => {
+        if ( node.nodeType === Node.TEXT_NODE )
+            textNodes.push( node )
+    } )
+    return textNodes
+}
+
+function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
 
     return new Promise( ( resolve, reject ) => {
         GM_xmlhttpRequest( {
@@ -10,6 +19,8 @@ function GMXmlHttpRequest ( url, headers = '' ) {
             responseType: 'document',
             onload: response => {
                 const resText = response.responseText
+                if ( returnHtml )
+                    resolve( resText )
                 const tempDoc = generateDoc( resText, true )
                 resolve( tempDoc )
             },
