@@ -1,3 +1,46 @@
+//ANCHOR - Style related
+
+function getStyleOrComputedStyle ( element, property ) {
+    return element.style[ property ] ? element.style[ property ] : getComputedStyle( element )[ property ]
+}
+
+function addStyle ( css ) {
+    const allStyleEls = document.head.querySelectorAll( `style` )
+    let alreadyExists
+    allStyleEls.forEach( styleEl => {
+        if ( styleEl.innerText === css ) { alreadyExists = true }
+    } )
+    if ( alreadyExists ) return // 🛑
+    const newStyleEl = generateElements( `<style>${ css }</style>`, document.head, true )
+    return newStyleEl
+}
+
+function style ( targetEl, css, debug ) {
+    css
+        .replaceAll( /\s{2,}/g, '' ) // gets rid of whitespaces
+        .split( ';' )
+        .filter( line => line )  // gets rid of empty lines
+        .forEach( declaration => {
+            if ( debug ) console.log( declaration )
+            const [ property, value ] = declaration.split( ':' )
+            const propertySplit = property.split( '-' )
+            const propertyLhs = propertySplit[ 0 ].toLowerCase()
+            const propertyRhs = propertySplit[ 1 ] ? capitalizeFirstLetter( propertySplit[ 1 ] ) : ''
+            targetEl.style[ `${ propertyLhs }${ propertyRhs }` ] = value
+        } )
+}
+
+function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionProperty = 'absolute' ) {
+    var rect = staticEl.getBoundingClientRect()
+    style( targetEl, `
+        position: ${ positionProperty };
+        left: ${ rect.left + x }px;
+        top: ${ rect.top + y }px;
+        zIndex: 1
+    `)
+
+}
+
 //ANCHOR Rest
 
 function getTextNodes ( el ) {
@@ -60,10 +103,6 @@ function sanitizeTrackingLinks ( selector, mainTrackerRegex, secondaryTrackerReg
     } )
 }
 
-function getStyleOrComputedStyle ( element, property ) {
-    return element.style[ property ] ? element.style[ property ] : getComputedStyle( element )[ property ]
-}
-
 function beep ( duration, frequency, volume, type, callback ) {
     var audioCtx = new ( window.AudioContext || window.webkitAudioContext || window.audioContext )
 
@@ -95,32 +134,6 @@ function markElAsProcessed ( el, markedEls, execute ) {
         markedEls.push( el )
         execute( el )
     }
-}
-
-function addStyle ( css ) {
-    const allStyleEls = document.head.querySelectorAll( `style` )
-    let alreadyExists
-    allStyleEls.forEach( styleEl => {
-        if ( styleEl.innerText === css ) { alreadyExists = true }
-    } )
-    if ( alreadyExists ) return // 🛑
-    const newStyleEl = generateElements( `<style>${ css }</style>`, document.head, true )
-    return newStyleEl
-}
-
-function style ( targetEl, css, debug ) {
-    css
-        .replaceAll( /\s{2,}/g, '' ) // gets rid of whitespaces
-        .split( ';' )
-        .filter( line => line )  // gets rid of empty lines
-        .forEach( declaration => {
-            if ( debug ) console.log( declaration )
-            const [ property, value ] = declaration.split( ':' )
-            const propertySplit = property.split( '-' )
-            const propertyLhs = propertySplit[ 0 ].toLowerCase()
-            const propertyRhs = propertySplit[ 1 ] ? capitalizeFirstLetter( propertySplit[ 1 ] ) : ''
-            targetEl.style[ `${ propertyLhs }${ propertyRhs }` ] = value
-        } )
 }
 
 function capitalizeFirstLetter ( string ) {
@@ -204,17 +217,6 @@ function repeat ( times, repeatWhat ) {
     for ( let index = 0; index < times; index++ ) {
         repeatWhat( index )
     }
-}
-
-function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionProperty = 'absolute' ) {
-    var rect = staticEl.getBoundingClientRect()
-    style( targetEl, `
-        position: ${ positionProperty };
-        left: ${ rect.left + x }px;
-        top: ${ rect.top + y }px;
-        zIndex: 1
-    `)
-
 }
 
 function eagerLoad ( selector, load, scrollableEl = window ) {

@@ -10,21 +10,14 @@
         saveBackup()
     } )
 
-    lazyLoad( ( item ) => {
+    lazyLoad( async ( item ) => {
         const laconicHref = item.href.replace( '/Main/', '/laconic/' )
-        GM_xmlhttpRequest( {
-            method: 'GET',
-            url: laconicHref,
-            responseType: 'document',
-            onload: function ( response ) {
-                const resText = response.responseText
-                const tempDoc = generateDoc( resText )
-                const mainCont = tempDoc.querySelector( '#main-article' )
-                const tooltipText = mainCont.textContent.replace( 'Visit the unabridged version HERE.', '' )
-                tooltipText = mainCont.textContent.replace( /\.(\w)/, '\.\n$1' )
-                item.title = tooltipText
-            }
-        } )
+        const tempDoc = await GMXmlHttpRequest( laconicHref )
+        const mainCont = tempDoc.querySelector( '#main-article' )
+        // const tooltipText = mainCont.textContent.replace( 'Visit the unabridged version HERE.', '' )
+        console.log( mainCont.textContent )
+        const tooltipText = mainCont.textContent.replace( /\.(\w)/, '\.\n\n$1' )
+        item.title = tooltipText
     }, ...$( `[href*="/Main/"]` ) )
 
     markAndRefresh()
@@ -133,7 +126,7 @@
             if ( tropesSeen.includes( tropeName ) )
                 mark( this, 'brown' )
             if ( tropesImportant.includes( tropeName ) )
-                mark( this, 'rgb(102 103 23)' )
+                mark( this, '#e8e96c' )
         } )
 
         function mark ( el, color ) {

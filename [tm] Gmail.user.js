@@ -141,7 +141,7 @@
                                 } )
                                 link.after( doodButton )
                             }
-                            if ( link.href.match( /d000d|ds2play|d0000d/ ) ) {
+                            if ( link.href.match( /d000d|ds2play|d0000d|dood/ ) ) {
                                 // const doodButton = GM_addElement( 'button', { textContent: 'Dood' } )
                                 // doodButton.addEventListener( 'click', async () => {
                                 // if ( itemInnerDiv.querySelector( '#doodImg' ) ) return
@@ -253,6 +253,7 @@
                                 const linkHref = item.getAttribute( 'onclick' ).match( /'(.+?)'/ )[ 1 ]
                                 generateElements( `<a href=${ linkHref }>${ linkHref }</a>`, innerDiv, true )
                             } )
+                            addPeekButtons( innerDiv, item )
                             break
 
                         //ANCHOR -  'New Videos':
@@ -330,7 +331,7 @@
 
                             const innerDivAll = item.querySelectorAll( 'tbody > tr > td > div' )
                             innerDivAll.forEach( div => {
-                                div.style.overflow = 'scroll'
+                                div.style.overflow = 'auto'
                                 div.style.maxHeight = '300px'
                             } )
                             break
