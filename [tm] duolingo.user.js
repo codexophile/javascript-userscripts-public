@@ -1,65 +1,6 @@
 ( function () {
     'use strict'
 
-    window.addEventListener( 'urlchange', () => { main() } )
-
-    waitFor( '[data-test="schools-main-nav"]' ).then( ( el ) => {
-
-        let $original = $( el ).parent()
-        let $parent = $original.parent()
-
-        addButton( $original, $parent, 'prevButton', 'Previous', 'https://cdn-icons-png.flaticon.com/512/8677/8677640.png' )
-        addButton( $original, $parent, 'nextButton', 'Next', 'https://cdn-icons-png.flaticon.com/512/8677/8677641.png' )
-        addButton( $original, $parent, 'goToTestBt', 'Test', 'https://cdn-icons-png.flaticon.com/512/3120/3120676.png' )
-
-        main()
-
-    } )
-
-    function addButton ( original, parent, id, text, imgUrl ) {
-
-        let $original = $( original )
-
-        let $newButton = $original.clone()
-        $newButton.addClass( 'guide' )
-        $newButton.attr( 'id', id )
-        $newButton.find( 'span > span' ).text( text )
-        $newButton.find( 'img' ).attr( 'src', imgUrl )
-        $newButton.find( 'a' ).attr( 'href', '' ).attr( 'target', '' )
-
-        $newButton.appendTo( parent )
-        return $newButton
-
-    }
-
-    function main () {
-
-
-
-        //*---------
-
-        if ( !location.href.includes( '/guidebook/' ) ) {
-            $( `.guide` ).fadeOut()
-            return // 🛑
-        }
-
-        let currentHref = location.href
-        let sectionN = currentHref.match( /\d+$/ )[ 0 ]
-
-        $( `#prevButton` ).find( 'a' ).attr( 'href', currentHref.replace( sectionN, sectionN - 1 ) )
-        $( `#nextButton` ).find( 'a' ).attr( 'href', currentHref.replace( sectionN, +sectionN + 1 ) )
-        $( `#goToTestBt` ).find( 'a' ).attr( 'href', `https://www.duolingo.com/lesson/unit/${ sectionN }/test` )
-
-        $( `.guide` ).fadeIn()
-
-        // https://www.duolingo.com/lesson/unit/28/test
-
-    }
-
-} )();
-
-( function () {
-
     document.addEventListener( 'keydown', doc_keyDown, false )
     document.addEventListener( 'keyup', doc_keyUp, false )
     // had to use keyup variation because a certain key combination didn't work in the other
@@ -87,9 +28,9 @@
         // console.log(e.code);
 
         // can't speak and can't hear buttons
-        var skipbutton = document.querySelector( "[data-test=player-skip]" )
-        if ( e.ctrlKey && e.code == "KeyQ" && skipbutton.innerText != "SKIP" )
-            skipbutton.click()
+        var skipBtn = document.querySelector( "[data-test=player-skip]" )
+        if ( skipBtn && e.ctrlKey && e.key == 'q' && skipBtn.innerText != "SKIP" )
+            skipBtn.click()
 
         // discuss button
         var discusButton = document.querySelector( "[data-test=discussion-button]" )

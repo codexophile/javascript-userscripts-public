@@ -1,6 +1,20 @@
 ( function () {
     'use strict'
 
+    let processedElements = []
+
+    let linksObserver = new MutationObserver( () => {
+        // reddit links
+        let $redditLinks = $( `[href^="https://www.reddit"]` )
+        $redditLinks.each( function () {
+            markElAsProcessed( this, processedElements, () => {
+                let href = this.href
+                this.href = href.replace( 'https://www.reddit', 'https://old.reddit' )
+            } )
+        } )
+    } )
+    linksObserver.observe( document.body, { childList: true, subtree: true } )
+
     if ( location.href.includes( 'https://www.google.com/search?btnI=1' ) ) {
         waitFor( "#search" ).then( function ( el ) { location.replace( el.getElementsByTagName( 'a' )[ 0 ].href ) } )
     }
@@ -166,7 +180,6 @@
         }
     ` )
 
-    let processedElements = []
     let processedSearchItems = []
     let observer = new MutationObserver( () => {
 
@@ -249,15 +262,6 @@
                 console.log( this )
                 this.parentElement.parentElement.style.width = '100%'
                 $( this ).find( 'div' ).css( `width`, `100%` )
-            } )
-        } )
-
-        // reddit links
-        let $redditLinks = $( `[href^="https://www.reddit"]` )
-        $redditLinks.each( function () {
-            markElAsProcessed( this, processedElements, () => {
-                let href = this.href
-                this.href = href.replace( 'https://www.reddit', 'https://old.reddit' )
             } )
         } )
 
