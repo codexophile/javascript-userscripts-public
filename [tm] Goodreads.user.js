@@ -11,9 +11,9 @@
     const $elementNumberOfPages = jQuery( '[data-testid="pagesFormat"]' )
     const numberOfPages = $elementNumberOfPages.text().match( /\d+/ )
     const lowerApproximation = ( numberOfPages * 250 )
-    const upperApporximation = ( numberOfPages * 350 )
-    const averageApproximation = ( lowerApproximation + upperApporximation ) / 2
-    $elementNumberOfPages.after( `<div> Estimated number of words: ${ lowerApproximation.toLocaleString() } - ${ upperApporximation.toLocaleString() } (Avg. ${ averageApproximation.toLocaleString() }) </div>` )
+    const upperApproximation = ( numberOfPages * 350 )
+    const averageApproximation = ( lowerApproximation + upperApproximation ) / 2
+    $elementNumberOfPages.after( `<div> Estimated number of words: ${ lowerApproximation.toLocaleString() } - ${ upperApproximation.toLocaleString() } (Avg. ${ averageApproximation.toLocaleString() }) </div>` )
 
     // Adding external links
     waitFor( '#collapsibleContent' ).then( ( el ) => {
