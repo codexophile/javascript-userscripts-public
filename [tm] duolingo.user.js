@@ -28,10 +28,11 @@
         // console.log(e.code);
 
         // can't speak and can't hear buttons
-        var skipBtn = document.querySelector( "[data-test=player-skip]" )
-        if ( skipBtn && e.ctrlKey && e.key == 'q' && skipBtn.innerText != "SKIP" )
+        if ( e.ctrlKey && e.key == 'q' ) {
+            const skipBtn = document.querySelector( "[data-test=player-skip]" )
+            if ( !skipBtn && skipBtn.innerText === "SKIP" ) return // 🛑
             skipBtn.click()
-
+        }
         // discuss button
         var discusButton = document.querySelector( "[data-test=discussion-button]" )
         if ( e.code == "KeyD" && discusButton )
@@ -42,21 +43,29 @@
             document.getElementsByTagName( 'textarea' )[ 0 ].focus()
 
         // condition to check if a choice element exists
-        if ( $( "[aria-label='choice']" ).length ) {
+        let choiceParent
+        let choiceEls
+        if ( [ 'j', 'k', 'l', ';' ].includes( e.key ) ) {
+            choiceParent = document.querySelector( `[aria-label='choice']` )
+            if ( !choiceParent ) return // 🛑
+            choiceEls = document.querySelector( `[aria-label='choice']` ).children
+        }
 
-            // j: selects 1st choice
-            if ( e.code == "KeyJ" )
-                $( "[aria-label='choice']" ).children().eq( 0 ).click()
-
-            if ( e.code == "KeyK" )
-                $( "[aria-label='choice']" ).children().eq( 1 ).click()
-
-            if ( e.code == "KeyL" )
-                $( "[aria-label='choice']" ).children().eq( 2 ).click()
-
-            if ( e.code == "Semicolon" )
-                $( "[aria-label='choice']" ).children().eq( 3 ).click()
-
+        switch ( e.key ) {
+            case 'j':
+                choiceEls[ 0 ].click()
+                break
+            case 'k':
+                choiceEls[ 1 ].click()
+                break
+            case 'l':
+                choiceEls[ 2 ].click()
+                break
+            case ';':
+                choiceEls[ 3 ].click()
+                break
+            default:
+                break
         }
 
     }

@@ -94,15 +94,15 @@
     const ytUri = 'https://cdn-icons-png.flaticon.com/512/1383/1383260.png'
 
     if ( seasons && !episode ) {
-      $ratingButton = $( '<button> ⭐ </button>' ).appendTo( $toolBar )
+      const $ratingButton = $( '<button> ⭐ </button>' ).appendTo( $toolBar )
       $ratingButton.on( 'click', function () {
-        sum = 0
-        text = ''
+        let sum = 0
+        let text = ''
         let $ratings = $( '.fanart > .corner-rating' )
         let ratingIndex = 0
         $ratings.each( function () {
           ratingIndex++
-          $this = $( this )
+          const $this = $( this )
           let ratingText = $this.text()
           text += ` + ${ ratingText }`
           sum += Number( $this.text() )

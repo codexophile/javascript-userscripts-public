@@ -31,7 +31,15 @@
             } )
         } )
         generateToolbarButton( '📤', el, null, saveBackup )
+        generateToolbarButton( 'Test', el, null, test )
     } )
+
+    function test () {
+        const tropesIm = GM_getValue( 'tropesImportant' )
+        console.log( tropesIm.filter( ( currentVal, index, array ) => array.indexOf( currentVal ) !== index ) )
+        const tropesSeen = GM_getValue( 'tropesSeen' )
+        console.log( tropesSeen.filter( ( currentVal, index, array ) => array.indexOf( currentVal ) !== index ) )
+    }
 
     async function saveBackup () {
         let tropesSeen = await GM.getValue( 'tropesSeen' )
@@ -80,6 +88,7 @@
                 } )
                 const index = tropesSeen.indexOf( tropeName )
                 tropesSeen.splice( index, 1 )
+                GM_setValue( 'tropesSeen', tropesSeen )
             }
             if ( tropesImportant.includes( tropeName ) ) {
                 GM_notification( {
@@ -89,9 +98,11 @@
                 } )
                 const index = tropesImportant.indexOf( tropeName )
                 tropesImportant.splice( index, 1 )
+                GM_setValue( 'tropesImportant', tropesImportant )
             }
 
             currentTropes.push( tropeName )
+            currentTropes = [ ...new Set( currentTropes ) ]
             await GM.setValue( `tropes${ which }`, currentTropes )
             markAndRefresh()
         }
