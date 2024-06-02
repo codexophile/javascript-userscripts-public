@@ -102,7 +102,7 @@
 
     function stopAndChangeUrl ( url ) {
         window.stop()
-        location.href = url
+        location.replace( url )
     }
 
 } )()
