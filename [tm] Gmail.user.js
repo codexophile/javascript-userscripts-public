@@ -15,7 +15,7 @@
 
         switch ( senderName ) {
 
-            //SECTION Blogtrotter
+            //SECTION Blogtrottr
             case 'BlogtrottrBlogtrottr':
             case 'Blogtrottr':
             case 'Blogtrottr ':
@@ -180,6 +180,11 @@
                     }
 
                     switch ( feedTitle ) {
+
+                        //ANCHOR - iGay69
+                        case 'iGay69':
+                            addIframeHrefs()
+                            break
 
                         //ANCHOR - 4horlover
                         case '4horlover':
@@ -439,6 +444,17 @@
                     return wrapper
                 }
 
+                break
+            case 'Simkl':
+                const simklParent = document.querySelector( '[class*="stack-column"]' ).parentElement
+                simklParent.classList.add( 'fixedCSS' )
+                simklParent.style.display = 'flex'
+
+                const query = document.querySelector( 'h2.hP' ).textContent.replace( ' is out', '' ) + ' 720p'
+
+                const newDiv = generateElements( `<div></div>`, simklParent, true )
+                generateElements( `<a href='https://1337x.to/search/${ query }/1/'>720p</a>`, newDiv, true )
+                newDiv.style.fontSize = 'large'
                 break
 
             case 'Medium Daily Digest':
