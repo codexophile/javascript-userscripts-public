@@ -21,7 +21,7 @@
         'වර්ණෝදය', 'ape paya', 'cricket gamata', 'rataa', 'hondatama pahila', 'sammadhitti', 'dreamvilla',
         'ms. traveller', 'shanida ayubowan', 'poyaprogramme', 'yathra', 'jathika wedikawa', 'ama wessa', 'kasawatha',
         'බෞද්ධ පුවත්', 'පෝදා විකාශය', 'මාතලේ අළුවිහාර', 'කිරුළ', 'සුන්දර ශනිදා', 'sanhida', 'sukkanama', 'nipuna piriwara',
-        'SLASSCOM INGENUITY AWARDS' ]
+        'SLASSCOM INGENUITY AWARDS', 'lama puwath' ]
 
     waitFor( '#collapsibleContent' ).then( ( el ) => {
 

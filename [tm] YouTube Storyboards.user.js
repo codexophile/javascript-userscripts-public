@@ -5,9 +5,9 @@
     // window.addEventListener( 'yt-navigate', findStuff )
     // window.addEventListener( 'urlchange', findStuff )
     //
-    // window.addEventListener( 'yt-navigate-finish', findStuff )
-    // window.addEventListener( 'yt-page-data-updated', findStuff )
-    window.addEventListener( 'yt-player-updated', addStoryboard )
+    window.addEventListener( 'yt-navigate-finish', addStoryboard )
+    // window.addEventListener( 'yt-page-data-updated', addStoryboard )
+    //# window.addEventListener( 'yt-player-updated', addStoryboard )
     //? these didn't fire
     // window.addEventListener( 'yt-page-type-changed', findStuff )
 
@@ -94,7 +94,6 @@
             peekParentQuery = 'ytd-playlist-video-renderer > #content'
 
         const videoThumbs = document.querySelectorAll( peekParentQuery )
-        console.log( videoThumbs )
         videoThumbs.forEach( function ( thumb ) {
 
             if ( thumb.querySelectorAll( '#buttonsContainer' ).length ) return // 🛑

@@ -147,13 +147,8 @@
                                 // if ( itemInnerDiv.querySelector( '#doodImg' ) ) return
                                 const resText = await GMXmlHttpRequest( link.href, null, true )
                                 const slidesId = resText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ]
-                                GM_addElement( itemInnerDiv, 'img', {
-                                    id: 'doodImg',
-                                    src: `https://img.doodcdn.co/slides/${ slidesId }.jpg`
-                                } )
-                                // fauxHistoryPushState( link.href )
-                                // } )
-                                // link.after( doodButton )
+                                const imgSrc = `https://img.doodcdn.co/slides/${ slidesId }.jpg`
+                                generateElements( `<a href=${ link }><img id=doodImg src=${ imgSrc }></a>`, itemInnerDiv, true )
                             }
                             if ( link.href.match( /(cdnstream|jodwish)/ ) ) {
                                 const doodButton = GM_addElement( 'button', { textContent: 'Stream' } )

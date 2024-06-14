@@ -5,9 +5,8 @@
     'use strict'
 
     document.querySelectorAll( `p` ).forEach( item => { item.remove() } )
-
-    const temp = await GMXmlHttpRequest( 'http://www.google.com' )
-    console.log( temp )
+    globalThis.testVariable = 'testContent'
+    console.log( globalThis.testVariable )
 
 
 

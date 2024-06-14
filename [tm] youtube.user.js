@@ -7,7 +7,7 @@
     } )
 
     fixUrl()
-    window.addEventListener( 'urlchange', () => { fixUrl() } )
+    window.addEventListener( 'urlchange', fixUrl )
 
     window.addEventListener( 'load', () => {
 
@@ -93,9 +93,16 @@
             stopAndChangeUrl( href )
         }
 
-        if ( locationHref.match( /&list=|&index=|&pp=|&t=/ ) ) {
-            const videoID = locationHref.match( /\?v=(...........)/ )[ 1 ]
-            stopAndChangeUrl( `https://www.youtube.com/watch?v=${ videoID }` )
+        //? regex -> https://www.youtube.com/watch?v=xxxxxxxxxxx
+        if ( !locationHref.match( /https:\/\/www\.youtube\.com\/(watch\?v=...........)?$/ ) ) {
+
+            const videoID = locationHref.match( /[\?&]v=(...........)/ )[ 1 ]
+
+            let hashSlots = locationHref.match( /#slot=\d+?($|#)/ )
+            hashSlots = hashSlots ? hashSlots[ 0 ] : ''
+
+            history.pushState( { state: 1 }, "new state", `https://www.youtube.com/watch?v=${ videoID }${ hashSlots }` )
+            // stopAndChangeUrl( `https://www.youtube.com/watch?v=${ videoID }` )
         }
 
     }
