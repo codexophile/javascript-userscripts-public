@@ -9,6 +9,34 @@
     fixUrl()
     window.addEventListener( 'urlchange', fixUrl )
 
+
+    function fixUrl () {
+        console.clear()
+        console.log( 'xxx' )
+
+        const locationHref = location.href
+        const liveOrShortMatch = locationHref.match( /\/(shorts|live)\// )
+
+        if ( liveOrShortMatch ) {
+            let href = location.href
+            href = href.replace( liveOrShortMatch[ 0 ], '/watch?v=' )
+            stopAndChangeUrl( href )
+        }
+
+        //? regex -> https://www.youtube.com/watch?v=xxxxxxxxxxx
+        if ( !locationHref.match( /https:\/\/www\.youtube\.com\/(watch\?v=...........)?$/ ) ) {
+
+            const videoID = locationHref.match( /[\?&]v=(...........)/ )[ 1 ]
+
+            let hashSlots = locationHref.match( /#slot=\d+?($|#)/ )
+            hashSlots = hashSlots ? hashSlots[ 0 ] : ''
+
+            history.pushState( { state: 1 }, "new state", `https://www.youtube.com/watch?v=${ videoID }${ hashSlots }` )
+            // stopAndChangeUrl( `https://www.youtube.com/watch?v=${ videoID }` )
+        }
+
+    }
+
     window.addEventListener( 'load', () => {
 
         //* Toggle sidebar
@@ -82,30 +110,6 @@
     } )
     // const peekParentQuery = `ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer, #thumbnail`
     observer.observe( document.body, { childList: true, subtree: true } )
-
-    function fixUrl () {
-
-        const locationHref = location.href
-
-        if ( locationHref.includes( '/shorts/' ) ) {
-            let href = location.href
-            href = href.replace( '/shorts/', '/watch?v=' )
-            stopAndChangeUrl( href )
-        }
-
-        //? regex -> https://www.youtube.com/watch?v=xxxxxxxxxxx
-        if ( !locationHref.match( /https:\/\/www\.youtube\.com\/(watch\?v=...........)?$/ ) ) {
-
-            const videoID = locationHref.match( /[\?&]v=(...........)/ )[ 1 ]
-
-            let hashSlots = locationHref.match( /#slot=\d+?($|#)/ )
-            hashSlots = hashSlots ? hashSlots[ 0 ] : ''
-
-            history.pushState( { state: 1 }, "new state", `https://www.youtube.com/watch?v=${ videoID }${ hashSlots }` )
-            // stopAndChangeUrl( `https://www.youtube.com/watch?v=${ videoID }` )
-        }
-
-    }
 
     function stopAndChangeUrl ( url ) {
         window.stop()

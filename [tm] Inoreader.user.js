@@ -1,6 +1,10 @@
 ( function () {
     'use strict'
 
+    waitFor( `#show_articles_menu` ).then( ( unreadIndicator ) => {
+        document.querySelector( `.heading-wrapper > div > h2` ).prepend( unreadIndicator )
+    } )
+
     // const scrollEl = document.getElementById( 'reader_pane' )
     const scrollEl = document.body
 
@@ -13,12 +17,10 @@
 
         window.setTimeout( function () {
             if ( isElementInViewport( olderArticlesEl ) ) {
-                console.log( 'xxxxxxxxx' )
-                scrollEl.dispatchEvent( new KeyboardEvent( 'keydown', { key: 'j', shiftKey: true } ) )
-                // var e = jQuery.Event( "keydown" )
-                // e.which = 74
-                // e.shiftKey = true
-                // $( "#reader_pane" ).trigger( e )
+                console.log( 'test' )
+                return
+                const targetEl = document.querySelector( `#reader_pane` )
+                targetEl.dispatchEvent( new KeyboardEvent( 'keydown', { key: 'j', shiftKey: true } ) )
             }
         }, 1500 )
 

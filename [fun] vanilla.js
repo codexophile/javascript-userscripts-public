@@ -393,7 +393,8 @@ function sbControls ( video, trueNoOfSlots, sbParent ) {
     function jumpToSlot () {
         const matches = location.hash.match( /#slot=(\d+?)($|#)/ )
         if ( !matches ) return // 🛑
-        fauxHistoryPushState( location.href.replace( location.hash, '' ) )
+        // fauxHistoryPushState( location.href.replace( location.hash, '' ) )
+        addHistoryEntry( location.href.replace( location.hash, '' ) )
         slotNo = matches[ 1 ]
         if ( slotNo ) playVideo( video, trueNoOfSlots, slotNo )
     }
@@ -574,6 +575,12 @@ async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlo
 function fauxHistoryPushState ( url, timeout = 3000 ) {
     const backgroundTab = GM_openInTab( url, true )
     setTimeout( () => { backgroundTab.close() }, timeout )
+}
+
+function addHistoryEntry ( newUrl ) {
+    const originalUrl = location.href
+    history.pushState( { state: 1 }, "new state", newUrl )
+    history.pushState( { state: 1 }, "new state", originalUrl )
 }
 
 function removeEmptytextEls ( parent ) {
