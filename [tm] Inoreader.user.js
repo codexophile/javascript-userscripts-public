@@ -5,25 +5,19 @@
         document.querySelector( `.heading-wrapper > div > h2` ).prepend( unreadIndicator )
     } )
 
-    // const scrollEl = document.getElementById( 'reader_pane' )
-    const scrollEl = document.body
+    let observer = new MutationObserver( () => {
 
-    scrollEl.onscroll = function () {
+        const noMoreEl = document.querySelector( `#no_more_press_space[style="visibility: visible;"]` )
+        if ( !noMoreEl ) return // 🛑
 
-        const noMoreDiv = document.querySelector( '#no_more_div' )
-        const olderArticlesEl = document.querySelector( '#older_articles_hint' )
-        if ( !noMoreDiv ) return // 🛑
-        if ( !isElementInViewport( olderArticlesEl ) ) return // 🛑
-
-        window.setTimeout( function () {
-            if ( isElementInViewport( olderArticlesEl ) ) {
-                console.log( 'test' )
-                return
-                const targetEl = document.querySelector( `#reader_pane` )
-                targetEl.dispatchEvent( new KeyboardEvent( 'keydown', { key: 'j', shiftKey: true } ) )
+        setTimeout( () => {
+            if ( document.querySelector( `#no_more_press_space[style="visibility: visible;"]` ) ) {
+                const kbEvent = new KeyboardEvent( 'keydown', { 'keyCode': 32, 'which': 32 } )
+                document.dispatchEvent( kbEvent )
             }
-        }, 1500 )
+        }, 2000 )
 
-    }
+    } )
+    observer.observe( document.body, { childList: true, subtree: true } )
 
 } )()

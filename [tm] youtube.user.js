@@ -11,8 +11,6 @@
 
 
     function fixUrl () {
-        console.clear()
-        console.log( 'xxx' )
 
         const locationHref = location.href
         const liveOrShortMatch = locationHref.match( /\/(shorts|live)\// )
@@ -23,15 +21,19 @@
             stopAndChangeUrl( href )
         }
 
-        //? regex -> https://www.youtube.com/watch?v=xxxxxxxxxxx
-        if ( !locationHref.match( /https:\/\/www\.youtube\.com\/(watch\?v=...........)?$/ ) ) {
+        //? regex -> https://www.youtube.com/watch
+        if ( locationHref.match( /https:\/\/www\.youtube\.com\/watch/ ) ) {
+            // if ( !locationHref.match( /https:\/\/www\.youtube\.com\/(watch\?v=...........)?$/ ) ) {
 
             const videoID = locationHref.match( /[\?&]v=(...........)/ )[ 1 ]
 
             let hashSlots = locationHref.match( /#slot=\d+?($|#)/ )
             hashSlots = hashSlots ? hashSlots[ 0 ] : ''
+            const newUrl = `https://www.youtube.com/watch?v=${ videoID }${ hashSlots }`
 
-            history.pushState( { state: 1 }, "new state", `https://www.youtube.com/watch?v=${ videoID }${ hashSlots }` )
+            if ( location.href !== newUrl ) {
+                history.pushState( { state: 1 }, "new state", newUrl )
+            }
             // stopAndChangeUrl( `https://www.youtube.com/watch?v=${ videoID }` )
         }
 
