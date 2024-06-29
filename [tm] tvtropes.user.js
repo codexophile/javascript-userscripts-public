@@ -137,7 +137,7 @@
             if ( tropesSeen.includes( tropeName ) )
                 mark( this, 'brown' )
             if ( tropesImportant.includes( tropeName ) )
-                mark( this, '#e8e96c' )
+                mark( this, 'rgb(50 95 38)' )
         } )
 
         function mark ( el, color ) {

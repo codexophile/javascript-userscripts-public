@@ -5,8 +5,8 @@
     'use strict'
 
     document.querySelectorAll( `p` ).forEach( item => { item.remove() } )
-    globalThis.testVariable = 'testContent'
-    console.log( globalThis.testVariable )
+
+
 
 
 

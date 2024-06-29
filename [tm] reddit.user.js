@@ -1,50 +1,78 @@
 ( function () {
     'use strict'
 
-    let $activePost
+    main()
+    window.addEventListener( 'urlchange', main )
 
-    if ( !location.href.includes( '/comments/' ) ) {
-        document.querySelector( `main` )?.addEventListener( 'wheel', ( event ) => {
-            event.preventDefault()
+    function main () {
 
-            if ( !$activePost?.length ) {
-                $activePost = jQuery( `article` ).first()
-                markAsActive( $activePost[ 0 ] )
+        let $activePost
+
+        if ( !location.href.includes( '/comments/' ) ) {
+
+            waitFor( 'main:not(.scrollEvAdded)' ).then( ( mainEl ) => {
+                mainEl.classList.add( 'scrollEvAdded' )
+
+                mainEl.addEventListener( 'wheel', ( event ) => {
+
+                    let $scrollTo
+                    if ( !$activePost?.length ) {
+                        $activePost = jQuery( `article` ).first()
+                        markAsActive( $activePost[ 0 ] )
+                        $scrollTo = $activePost
+                    }
+                    else {
+                        if ( event.deltaY > 0 ) {
+                            $scrollTo = $activePost.nextAll( 'article' ).first()
+                            if ( !$scrollTo.length )
+                                $scrollTo = $activePost.nextAll().find( 'article ' ).first()
+                            if ( !$scrollTo.length )
+                                $scrollTo = $activePost.parent().nextAll( 'faceplate-batch' ).find( 'article ' ).first()
+                        }
+                        if ( event.deltaY < 0 ) {
+                            $scrollTo = $activePost.prevAll( 'article' ).first()
+                            if ( !$scrollTo.length )
+                                $scrollTo = $activePost.parent().prevAll( 'article' ).first()
+                            if ( !$scrollTo.length )
+                                $scrollTo = $activePost.parent().prevAll( 'faceplate-batch' ).first().find( 'article ' ).last()
+                        }
+                    }
+                    if ( !$scrollTo.length ) return // 🛑
+
+                    event.preventDefault()
+                    $scrollTo[ 0 ].scrollIntoView( { block: 'end', behaviour: 'smooth' } )
+                    markAsActive( $scrollTo[ 0 ], $activePost[ 0 ] )
+
+                    function markAsActive ( el, formerEl ) {
+                        if ( formerEl ) formerEl.style.outline = ''
+                        el.style.outline = 'solid red'
+                        $activePost = jQuery( el )
+                    }
+
+                } )
+
+            } )
+
+            function scrollToNext () {
+
             }
-            let $scrollTo
-            if ( event.deltaY > 0 ) {
-                $scrollTo = $activePost.nextAll( 'article' ).first()
-                if ( !$scrollTo.length )
-                    $scrollTo = $activePost.nextAll().find( 'article ' ).first()
+            function scrollToPrev () {
+                if ( !$activePost )
+                    $activePost = document.querySelector( `article` )
+                const nextPost = $activePost.nextElementSibling.nextElementSibling
+                nextPost.scrollIntoView( { block: 'center' } )
+                $activePost.style.outline = ''
+                nextPost.style.outline = 'solid red'
+                $activePost = nextPost
             }
-            if ( event.deltaY < 0 ) { $scrollTo = $activePost.prevAll( 'article' ).first() }
-            if ( !$scrollTo.length ) return // 🛑
-
-            $scrollTo[ 0 ].scrollIntoView( { block: 'end', behaviour: 'smooth' } )
-            markAsActive( $scrollTo[ 0 ], $activePost[ 0 ] )
-
-            function markAsActive ( el, formerEl ) {
-                if ( formerEl ) formerEl.style.outline = ''
-                el.style.outline = 'solid red'
-                $activePost = jQuery( el )
-            }
-
-        } )
-
-        function scrollToNext () {
-
         }
-        function scrollToPrev () {
-            if ( !$activePost )
-                $activePost = document.querySelector( `article` )
-            const nextPost = $activePost.nextElementSibling.nextElementSibling
-            nextPost.scrollIntoView( { block: 'center' } )
-            $activePost.style.outline = ''
-            nextPost.style.outline = 'solid red'
-            $activePost = nextPost
-        }
+
     }
+
     waitFor( '#collapsibleContent' ).then( ( el ) => {
+
+        el.parentElement.style.left = ''
+        el.parentElement.style.right = '5px'
 
         const redditPopup = createToolbarPopup()
         redditPopup.id = 'redditPopup'
@@ -58,9 +86,17 @@
         function blockAnchor ( href, text ) {
             generateElements( `<a href=${ href }>${ text }</a>`, redditPopup ).style.display = 'block'
         }
-        blockAnchor( oldLink, 'Old' )
         blockAnchor( newLink, 'New' )
         blockAnchor( shLink, 'SH' )
+        blockAnchor( oldLink, 'Old' )
+
+        //? regex -> (.+?/r/.+?)(/|$)
+        const subredditMatch = location.href.match( /(.+?\/r\/.+?)(\/|$)/ )
+        if ( subredditMatch ) {
+            generateElements( '<hr>', redditPopup )
+            const topAllLink = `${ subredditMatch[ 1 ] }/top/?t=all`
+            blockAnchor( topAllLink, 'TopAll' )
+        }
 
         if ( !location.href.includes( '/comments/' ) ) {
             generateToolbarButton( '⬆️', el, null, () => {
