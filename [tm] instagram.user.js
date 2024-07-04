@@ -39,13 +39,6 @@ waitFor( '#collapsibleContent' ).then( ( el ) => {
 
 let observer = new MutationObserver( () => {
 
-    //* Threads in feed
-    const $threadsImgEls = $( `[data-bloks-name="bk.components.Image"]` )
-    if ( $threadsImgEls.length ) {
-        const $grandParent = grandParent( $threadsImgEls[ 0 ], 13 )
-        console.log( $grandParent )
-        const $threadsImgsWrapper = $( `<div id=threadsImgsWrapper></div>` )
-    }
     //* Suggested accounts on profile pages
     const $profilesLocators = $( `[style="width: 170px;"]` )
     if ( $profilesLocators.length ) {

@@ -108,6 +108,38 @@
 
     let observer = new MutationObserver( () => {
 
+        //* gallery
+        jQuery( 'gallery-carousel:not(.galleryDone)' ).each( function () {
+            const $this = jQuery( this )
+            $this.addClass( 'galleryDone' )
+            $this.find( 'figure > img' ).prependTo( $this.parent() ).css( `width`, `200px` ).each( function () {
+
+                const $imgEl = jQuery( this )
+
+                let finalSrc
+                let lazySrcSet = $imgEl.attr( 'data-lazy-srcset' )
+                let srcSet = $imgEl.attr( 'srcset' )
+                let dataLazySrc = $imgEl.attr( 'data-lazy-src' )
+
+                if ( lazySrcSet ) {
+                    finalSrc = getBestSrc( lazySrcSet )
+                }
+                else if ( srcSet ) {
+                    finalSrc = getBestSrc( srcSet )
+                }
+                else
+                    finalSrc = dataLazySrc
+
+                $imgEl.attr( 'src', finalSrc )
+
+                function getBestSrc ( srcSet ) {
+                    srcSet = srcSet.split( ' ' ).filter( ( current, index ) => { return !( index % 2 ) } )
+                    return srcSet[ srcSet.length - 1 ]
+                }
+
+            } )
+        } )
+
         //* Adding an anchor element with src to each <img> element so the imagus extension can catch it easily
         jQuery( `:is(shreddit-post,[data-testid="post-container"]) img:not(.imgDone)` ).each( function () {
             // 'shreddit-post' is for the 'new new' reddit ui. 

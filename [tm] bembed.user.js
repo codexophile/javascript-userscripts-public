@@ -1,3 +1,10 @@
+const titleEl = generateElements( `<div>${ document.title }</div>` )
+document.body.prepend( titleEl )
+style( titleEl, `
+    color: aliceblue;
+    font-size: larger;
+`)
+
 let observer = new MutationObserver( () => {
     if ( !document.querySelector( '.jw-time-thumb' ).style.backgroundImage ) return // 🛑
     if ( document.querySelectorAll( '#sbMain' ).length ) return // 🛑

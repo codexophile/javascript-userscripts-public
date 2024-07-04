@@ -494,11 +494,13 @@
                     linksDiv.prepend( link )
                 } )
 
-                const ICYMIHeader = grandParent( contains( 'h3 > strong', 'ICYMI' )[ 0 ], 5 )
+                sanitizeTrackingLinks( `[href*=".awstrack.me/"]`, /^.+?\.awstrack\.me\/.+?\//, /\?.*/ )
+
+                const ICYMILocator = contains( 'h3 > strong', 'ICYMI' )[ 0 ]
+                if ( !ICYMILocator ) return // 🛑
+                const ICYMIHeader = grandParent( ICYMILocator, 5 )
                 const ICYMIContent = next( ICYMIHeader )
                 linksDiv.append( ICYMIHeader, ICYMIContent )
-
-                sanitizeTrackingLinks( `[href*=".awstrack.me/"]`, /^.+?\.awstrack\.me\/.+?\//, /\?.*/ )
 
                 break
 
