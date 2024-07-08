@@ -24,7 +24,7 @@
 
             const bookTitle = encodeURI( jQuery( `.Text__title1` )[ 0 ].innerText )
             const author = encodeURI( jQuery( `.ContributorLink__name` )[ 0 ].innerText )
-            const hrefZLib = `https://z-library.se/s/?q=${ bookTitle }+${ author }&languages[]=english&extensions[]=EPUB`
+            const hrefZLib = `https://1lib.sk/s/?q=${ bookTitle }+${ author }&languages[]=english&extensions[]=EPUB`
             const hrefAnnas = `https://annas-archive.org/search?index=&q=${ bookTitle }+${ author }&ext=epub`
             const hrefReddit = `https://www.google.com/search?q=${ bookTitle }+${ author }+site:reddit.com`
             const hrefBlog = `https://www.google.com/search?q=${ bookTitle }+${ author }+blog`

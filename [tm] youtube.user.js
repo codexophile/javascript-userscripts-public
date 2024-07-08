@@ -1,6 +1,30 @@
 ( function () {
     'use strict'
 
+    //!SECTION Shortcuts
+
+    window.addEventListener( 'keydown', ( event ) => {
+
+        const $activeTranscriptEl = $( `ytd-transcript-segment-renderer.active` )
+
+        if ( event.key === 'Home' || event.key === 'End' ) {
+            event.preventDefault()
+            if ( !$activeTranscriptEl.length )
+                document.querySelector( 'ytd-video-description-transcript-section-renderer button' ).click()
+        }
+
+        let $elToBeClicked
+        if ( event.key === 'Home' )
+            $elToBeClicked = $activeTranscriptEl.prevAll( 'ytd-transcript-segment-renderer' )
+        if ( event.key === 'End' )
+            $elToBeClicked = $activeTranscriptEl.nextAll( 'ytd-transcript-segment-renderer' )
+
+        $elToBeClicked.first().children().click()
+
+    } )
+
+    //!SECTION
+
     waitFor( `#video-controlPanel` ).then( ( el ) => {
         el.style.top = '0px'
         el.style.left = '120px'

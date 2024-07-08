@@ -8,14 +8,24 @@
         document.title = document.title.replace( /: (.+?)$/, '• /r/$1' )
     }
 
-    //* automatically hiding 'compose comment section and adding the toggle button
     waitFor( '#collapsibleContent' ).then( ( el ) => {
+
+        //* automatically hiding 'compose comment section
         const $locators = jQuery( `.commentarea` ).children().first().nextUntil( '.sitetable.nestedlisting' ).addBack()
         $locators.hide()
+
+        //* Scrolling to the comments section at page load
+        const commentsSection = document.querySelector( `.comment > .entry` )
+        commentsSection.scrollIntoView( { block: 'center' } )
+
+        //* and adding the toggle button
         const $toggleBtn = jQuery( `<button>💬</button>` ).on( 'click', () => { $locators.toggle() } )
         el.append( $toggleBtn[ 0 ] )
         calculateWidthAndExpand( el )
+
     } )
+
+    //*
 
     if ( location.href.match( /\/r\/.+?\/comments\// ) ) { // ==> location.href = ... /r/subreddit/comments/...
     }
