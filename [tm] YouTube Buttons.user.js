@@ -9,6 +9,10 @@
     let watchedItemsObserver = new MutationObserver( () => { hideWatchedItems() } )
 
     window.addEventListener( 'urlchange', () => { main() } )
+    window.addEventListener( 'yt-player-updated', async () => {
+        const temp = await waitFor( `#social-links [aria-label=Videos]` )
+        // window.open( temp.href )
+    } )
 
     waitFor( '#collapsibleContent' ).then( ( el ) => {
 
@@ -88,17 +92,18 @@
                 $relatedSection[ 0 ].scrollIntoView()
             } )
 
-            const linkToVideosOriginal = await waitFor( '[aria-label=Videos]' )
+            const linkToVideosOriginal = await waitFor( '#social-links [aria-label=Videos]:not(.done)' )
+            linkToVideosOriginal.classList.add( 'done' )
             const linkToVideos =
                 generateElements( `
-                    <div style='
+                    <div class=videoPageControl style='
                         display: flex;
                         /* justify-content: space-between; */
                         align-items: center;
                         font-size: large;
                         text-wrap: nowrap;
                     '>
-                        <a href=${ linkToVideosOriginal.href } class=videoPageControl style='
+                        <a href=${ linkToVideosOriginal.href } style='
                             text-decoration: none
                         '>•📂</a>
                     </div>` )

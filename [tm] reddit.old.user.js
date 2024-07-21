@@ -15,7 +15,7 @@
         $locators.hide()
 
         //* Scrolling to the comments section at page load
-        const commentsSection = document.querySelector( `.comment > .entry` )
+        const commentsSection = document.querySelector( `.comment > .entry > .tagline` )
         commentsSection.scrollIntoView( { block: 'center' } )
 
         //* and adding the toggle button

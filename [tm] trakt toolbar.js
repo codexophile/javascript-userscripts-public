@@ -57,7 +57,9 @@
     query = query.replaceAll( ' ', '%20' )
     query = query.replaceAll( '#', '%20' )
     query = query.replaceAll( '-', '%20' )
+    query = query.replaceAll( '&', '%26' )
     query = query.replaceAll( '%20%20', '%20' )
+
     if ( !queryClean ) queryClean = query
     const imdbHref = `https://www.google.com/search?btnI=1&q=${ query }%20site:imdb.com/title`
     const wikiHref = `https://www.google.com/search?btnI=1&q=${ query }%20site:wikipedia.org`

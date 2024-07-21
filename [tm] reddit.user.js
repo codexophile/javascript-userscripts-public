@@ -1,6 +1,7 @@
 ( function () {
     'use strict'
 
+    let filterList = GM_getValue( 'filterList', [] )
     main()
     window.addEventListener( 'urlchange', main )
 
@@ -41,6 +42,12 @@
 
                     event.preventDefault()
                     $scrollTo[ 0 ].scrollIntoView( { block: 'end', behaviour: 'smooth' } )
+
+                    const formerPostId = $activePost.children().attr( 'permalink' ).match( /\/comments\/(.+?)\// )[ 1 ]
+                    filterList.push( formerPostId )
+                    filterList = [ ...new Set( filterList ) ]
+                    GM_setValue( 'filterList', filterList )
+
                     markAsActive( $scrollTo[ 0 ], $activePost[ 0 ] )
 
                     function markAsActive ( el, formerEl ) {
@@ -104,9 +111,31 @@
             generateToolbarButton( '⬇️', el, null, () => {
             } )
         }
+
+        const $filteredCountDiv = jQuery( `<div id=filteredCountDiv style='color:black'>F</div>` )
+        $filteredCountDiv.appendTo( el )
+
     } )
 
+    let filteredCount = 0
+
     let observer = new MutationObserver( () => {
+
+        //* filtering
+
+        const allArticles = jQuery( 'article:not(.filterDone)' ).addClass( 'filterDone' ).each( function () {
+            const $this = jQuery( this )
+            const permalink = $this.children().attr( 'permalink' )
+            const title = $this.attr( 'aria-label' )
+            const articleId = permalink.match( /\/comments\/(.+?)\// )[ 1 ]
+            if ( filterList.includes( articleId ) ) {
+                filteredCount++
+                jQuery( '#filteredCountDiv' ).text( filteredCount )
+
+                $this.replaceWith( `<div><h3>Filtered</h3><a target=_blank href=${ permalink }>${ title }</a></div>` )
+                // $this.remove()
+            }
+        } )
 
         //* gallery
         jQuery( 'gallery-carousel:not(.galleryDone)' ).each( function () {
