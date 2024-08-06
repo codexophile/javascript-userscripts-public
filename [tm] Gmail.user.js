@@ -210,10 +210,6 @@
 
                         //ANCHOR - 'GayCock4U':
                         case 'GayCock4U':
-                            // const tempDoc = await GMXmlHttpRequest( itemUrl )
-                            // console.log( tempDoc )
-                            // const temp = tempDoc.querySelector( '[name="og:image"]' )
-                            // alert( temp.innerHTML )
                             addIframeHrefs()
                             break
 
@@ -612,6 +608,7 @@
                 mbItems.forEach( async item => {
 
                     const itemHref = item.querySelector( `a` ).href
+                    const itemTitle = item.querySelector( `a` ).textContent
 
                     switch ( mbFeedTitle ) {
                         case 'PSA':
@@ -637,7 +634,12 @@
                                             `)
 
                                 item.append( tag )
+
                             } )
+
+                            const googleEl = generateElements( `<a href="https://www.google.com/search?q=${ itemTitle }">Google</a>`, null, true )
+                            item.append( googleEl )
+
                             break
                         case 'happy2hub':
                             item.style.width = '100%'

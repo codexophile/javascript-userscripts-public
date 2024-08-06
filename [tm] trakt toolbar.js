@@ -54,11 +54,11 @@
 
   function generateToolbar () {
 
-    query = query.replaceAll( ' ', '%20' )
-    query = query.replaceAll( '#', '%20' )
-    query = query.replaceAll( '-', '%20' )
+    query = query.replaceAll( ' ', ' ' )
+    query = query.replaceAll( '#', ' ' )
+    query = query.replaceAll( '-', ' ' )
     query = query.replaceAll( '&', '%26' )
-    query = query.replaceAll( '%20%20', '%20' )
+    query = query.replaceAll( ' ', ' ' )
 
     if ( !queryClean ) queryClean = query
     const imdbHref = `https://www.google.com/search?btnI=1&q=${ query }%20site:imdb.com/title`
@@ -69,7 +69,7 @@
     const RedGDisHref = `https://www.google.com/search?&q=${ query }+discussion%20site:reddit.com`
     const RedGHref = `https://www.google.com/search?&q=${ query }%20site:reddit.com`
     const simklHref = `https://simkl.com/search/?type=movies&q=${ query }`
-    const rgHref = `https://www.google.com/search?btnI=1&q=${ movieShowTitle }%20site:ratingraph.com`
+    const rgHref = `https://www.google.com/search?btnI=1&q=${ movieShowTitle }%20site:ratingraph.com#${ query }`
     const leetHref = `https://1337x.to/search/${ queryClean }%20720p/1/`
     const tpbHref = `https://thepiratebay.org/search.php?q=${ queryClean }%20720p`
     const hrefPlot = `https://www.google.com/search?q=${ query }%20plot`
