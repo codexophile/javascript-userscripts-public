@@ -17,14 +17,16 @@
 
         if ( !location.href.includes( '/watch?v=' ) ) return // 🛑
 
-        $( `#storyboardParent` ).remove()
-        $( `#collapsibleContent > .storyboardControl` ).remove()
+        document.querySelector( `#storyboardParent` )?.remove()
+        document.querySelectorAll( `#collapsibleContent > .storyboardControl` ).forEach( item => { item.remove() } )
 
-        await waitFor( '#above-the-fold > #top-row' )
-        const $sbParent = $( `<div id=storyboardParent></div>` ).insertAfter( '#above-the-fold > #top-row' )
+        const sbLocator = await waitFor( '#above-the-fold > #top-row' )
+        const sbParent = generateElements( `<div id=storyboardParent></div>` )
+        sbLocator.after( sbParent )
         const ytHtml = await GMXmlHttpReqResponse( location.href )
         const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml )
-        storyboard( $sbParent[ 0 ], 5, 5, null, $( `video` )[ 0 ], samplingFq, trueNoOfSlots, ...allUrls )
+        const video = document.querySelector( `video` )
+        storyboard( sbParent, 5, 5, null, video, samplingFq, trueNoOfSlots, ...allUrls )
 
     }
 

@@ -65,8 +65,8 @@ function observerHandler () {
     let $items = $( '[href*="/t/"]:has(img)' ).parent().parent().parent().parent().parent()
     $items.each( function () {
         let $this = $( this )
-        // if ( !$this.has( 'span[data-visualcompletion="ignore"]' ).length ) { // based on the unread marker
-        if ( $this.has( ':contains("You: ")' ).length ) {                      // based on text 'You" '
+        if ( !$this.has( 'span[data-visualcompletion="ignore"]' ).length ) { // based on the unread marker
+            // if ( $this.has( ':contains("You: ")' ).length ) {                      // based on text 'You" '
             $this.slideUp()
         }
     } )

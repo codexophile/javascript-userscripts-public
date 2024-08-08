@@ -9,16 +9,11 @@
     let watchedItemsObserver = new MutationObserver( () => { hideWatchedItems() } )
 
     window.addEventListener( 'urlchange', () => { main() } )
-    window.addEventListener( 'yt-player-updated', async () => {
-        const temp = await waitFor( `#social-links [aria-label=Videos]` )
-        // window.open( temp.href )
-    } )
 
     waitFor( '#collapsibleContent' ).then( ( el ) => {
-
         //# Controls that should be available in any kind of page
 
-        const btHideSeen = GM_addElement( el, 'button', { textContent: "W", title: 'Hide Seen' } )
+        const btHideSeen = generateElements( '<button title="Hide Seen">W</button>', el )
         btHideSeen.onclick = function () {
             hideWatchedItems()
             watchedItemsObserver.observe( document.body, { childList: true, subtree: true } )
@@ -57,7 +52,7 @@
 
         if ( location.href.includes( '/watch?v=' ) ) {
 
-            const btStop = GM_addElement( toolbarEl, 'button', { textContent: "⏹" } )
+            const btStop = generateElements( '<button>⏹</button>', toolbarEl )
             btStop.classList.add( 'videoPageControl' )
             btStop.onclick = function () {
                 document.getElementById( "movie_player" ).pauseVideo()
@@ -68,14 +63,14 @@
             autoPauseChckbx.classList.add( 'videoPageControl' )
             autoPauseChckbx.id = 'autoPauseChckbx'
 
-            const btCopyURL = GM_addElement( toolbarEl, 'button', { textContent: "📋" } )
+            const btCopyURL = generateElements( '<button>📋</button>', toolbarEl )
             btCopyURL.classList.add( 'videoPageControl' )
             btCopyURL.onclick = function () {
                 const videoId = location.href.match( /\/(watch\?v=.{11})/ )[ 1 ]
                 GM_setClipboard( `https://www.youtube.com/${ videoId }` )
             }
 
-            const btExpandRelated = GM_addElement( toolbarEl, 'button', { textContent: '↖️' } )
+            const btExpandRelated = generateElements( '<button>↖️</button>', toolbarEl )
             btExpandRelated.classList.add( 'videoPageControl' )
             btExpandRelated.addEventListener( 'click', function () {
                 const $relatedSection = $( `#columns > #secondary > #secondary-inner > #related` )
@@ -122,6 +117,7 @@
         let $prevButton = $( `.ytp-prev-button:not([aria-disabled="true"])` )
         if ( $prevButton.length ) {
             var btPrev = GM_addElement( parent, 'button', { textContent: "⏮" } )
+            var btPrev = GM_addElement( parent, 'button', { textContent: "⏮" } )
             btPrev.onclick = function () {
                 document.getElementsByTagName( "video" )[ 0 ].pause()
                 document.getElementsByTagName( "video" )[ 0 ].currentTime = 0
@@ -133,6 +129,7 @@
         waitFor( '.ytp-next-button[href*="youtube.com"]' ).then( ( el ) => {
 
             let $nextButton = $( el )
+            var btNextLink = GM_addElement( parent, 'a', { textContent: "•👉🏻" } )
             var btNextLink = GM_addElement( parent, 'a', { textContent: "•👉🏻" } )
             let $btNextLink = $( btNextLink )
             $btNextLink.on( 'click', function () { el.click(); return false } )
@@ -146,6 +143,7 @@
 
     }
 
+    $declutterButton = $( GM_addElement( parent, 'button', { textContent: '', title: 'Declutter' } ) )
     $declutterButton = $( GM_addElement( parent, 'button', { textContent: '', title: 'Declutter' } ) )
     $declutterButton.on( 'click', function () {
         $( '#masthead-container' ).slideUp()            // horizontal bar at the top

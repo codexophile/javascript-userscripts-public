@@ -352,7 +352,7 @@ function sbControls ( video, trueNoOfSlots, sbParent ) {
 
     if ( video ) {
 
-        const scrollBackBtn = document.createElement( 'button' )
+        const scrollBackBtn = generateElements( '<button></button>' )
         scrollBackBtn.classList.add( 'storyboardControl' )
         scrollBackBtn.textContent = '🔙'
         scrollBackBtn.addEventListener( 'click', () => {
@@ -361,7 +361,7 @@ function sbControls ( video, trueNoOfSlots, sbParent ) {
             } )
         } )
 
-        const toggleBtn = document.createElement( 'button' )
+        const toggleBtn = generateElements( '<button></button>' )
         toggleBtn.classList.add( 'storyboardControl' )
         toggleBtn.textContent = '💠'
         toggleBtn.addEventListener( 'click', () => {
@@ -427,7 +427,7 @@ function sbControls ( video, trueNoOfSlots, sbParent ) {
 
 async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
 
-    const slotsDiv = document.createElement( 'div' )
+    const slotsDiv = generateElements( '<div></div>' )
     parent.append( slotsDiv )
     slotsDiv.id = 'slotsDiv'
     slotsDiv.style.display = 'flex'
@@ -444,7 +444,8 @@ async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, 
                         slotsDiv.append( slot )
                         slot.index = index
                         // slot.innerText += `: (${ index })`
-                        const link = document.createElement( 'a' )
+                        const link = generateElements( '<a></a>' )
+                        console.log( 'x' )
                         if ( linkToVid )
                             link.href = `${ linkToVid }#slot=${ index }`
                         link.target = '_blank'
@@ -486,7 +487,8 @@ function storyboardHorizontal ( parent, horizontal, vertical, linkToVid, vidOnPa
 async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
 
     const allSlots = []
-    const imgElement = document.createElement( 'img' )
+    const imgElement = generateElements( '<img></img>', document.body )
+    imgElement.style.display = 'none'
     imgElement.src = imgSrc
 
     const promise = new Promise( ( resolve ) => {
@@ -507,7 +509,7 @@ async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlo
 
             repeat( total, ( i ) => {
 
-                const storyboardItem = document.createElement( 'div' )
+                const storyboardItem = generateElements( '<div></div>' )
                 storyboardItem.classList.add( imgSrc.slice( -7 ) )
                 storyboardItem.classList.add( 'storyboardItem' )
 
@@ -700,6 +702,19 @@ function forHumans ( seconds ) {
     return returntext.trim()
 }
 
+function toSeconds ( timeString ) {
+
+    const a = timeString.split( ':' ).reverse()
+    let seconds = 0
+
+    if ( +a[ 2 ] ) seconds += ( +a[ 2 ] ) * 60 * 60
+    if ( +a[ 1 ] ) seconds += ( +a[ 1 ] ) * 60
+    if ( +a[ 0 ] ) seconds += ( +a[ 0 ] )
+
+    return seconds
+
+}
+
 function isInIframe () {
     return window !== window.parent
 }
@@ -843,19 +858,14 @@ function generateDoc ( html, returnTrusted ) {
 
     let escapeHTMLPolicy
 
-    if ( returnTrusted ) {
-        escapeHTMLPolicy = trustedTypes.createPolicy( "forceInner", {
-            createHTML: ( to_escape ) => to_escape
-        } )
-    }
+    escapeHTMLPolicy = trustedTypes.createPolicy( "forceInner", {
+        createHTML: ( to_escape ) => to_escape
+    } )
 
     const template = document.createElement( 'template' )
     document.body.prepend( template )
 
-    template.innerHTML =
-        returnTrusted
-            ? escapeHTMLPolicy.createHTML( html.trim() )
-            : html.trim()
+    template.innerHTML = escapeHTMLPolicy.createHTML( html.trim() )
 
     return template.content
 
