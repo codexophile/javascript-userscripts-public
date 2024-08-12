@@ -3,25 +3,25 @@
 
     //!SECTION Shortcuts
 
-    window.addEventListener( 'keydown', ( event ) => {
+    // window.addEventListener( 'keydown', ( event ) => {
 
-        const $activeTranscriptEl = $( `ytd-transcript-segment-renderer.active` )
+    //     const $activeTranscriptEl = document.querySelector( `ytd-transcript-segment-renderer.active` )
 
-        if ( event.key === 'Home' || event.key === 'End' ) {
-            event.preventDefault()
-            if ( !$activeTranscriptEl.length )
-                document.querySelector( 'ytd-video-description-transcript-section-renderer button' ).click()
-        }
+    //     if ( event.key === 'Home' || event.key === 'End' ) {
+    //         event.preventDefault()
+    //         if ( !$activeTranscriptEl )
+    //             document.querySelector( 'ytd-video-description-transcript-section-renderer button' ).click()
+    //     }
 
-        let $elToBeClicked
-        if ( event.key === 'Home' )
-            $elToBeClicked = $activeTranscriptEl.prevAll( 'ytd-transcript-segment-renderer' )
-        if ( event.key === 'End' )
-            $elToBeClicked = $activeTranscriptEl.nextAll( 'ytd-transcript-segment-renderer' )
+    //     let $elToBeClicked
+    //     if ( event.key === 'Home' )
+    //         $elToBeClicked = $activeTranscriptEl.prevAll( 'ytd-transcript-segment-renderer' )
+    //     if ( event.key === 'End' )
+    //         $elToBeClicked = $activeTranscriptEl.nextAll( 'ytd-transcript-segment-renderer' )
 
-        $elToBeClicked.first().children().click()
+    //     $elToBeClicked.first().children().click()
 
-    } )
+    // } )
 
     //!SECTION
 

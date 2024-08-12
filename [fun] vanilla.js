@@ -43,6 +43,10 @@ function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionP
 
 //ANCHOR Rest
 
+function asyncTimeout ( ms ) {
+    return new Promise( resolve => setTimeout( resolve, ms ) )
+}
+
 function getTextNodes ( el ) {
     let textNodes = []
     el.childNodes.forEach( node => {
@@ -73,6 +77,18 @@ function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
         // function errorFunction () { reject( 'error loading page' ) }
     } )
 
+}
+
+function generateUniqueString ( length ) {
+    let result = ''
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    const charactersLength = characters.length
+    let counter = 0
+    while ( counter < length ) {
+        result += characters.charAt( Math.floor( Math.random() * charactersLength ) )
+        counter += 1
+    }
+    return result
 }
 
 function downloadText ( filename, text ) {
@@ -355,10 +371,11 @@ function sbControls ( video, trueNoOfSlots, sbParent ) {
         const scrollBackBtn = generateElements( '<button></button>' )
         scrollBackBtn.classList.add( 'storyboardControl' )
         scrollBackBtn.textContent = '🔙'
-        scrollBackBtn.addEventListener( 'click', () => {
-            [ ...sbParent.querySelectorAll( '.wentPast' ) ].at( -1 ).scrollIntoView( {
-                behavior: 'instant', block: 'center'
-            } )
+        scrollBackBtn.addEventListener( 'click', async () => {
+            const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].at( -1 )
+            targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } )
+            await asyncTimeout( 250 )
+            await blink( targetEl, 250, 2 )
         } )
 
         const toggleBtn = generateElements( '<button></button>' )
@@ -382,12 +399,35 @@ function sbControls ( video, trueNoOfSlots, sbParent ) {
             calculateWidthAndExpand( el )
         } )
 
-    }
+        if ( video.readyState > 0 ) {
+            jumpToSlot()
+        }
 
-    if ( !video ) return // 🛑
+        video.addEventListener( 'loadeddata', jumpToSlot )
 
-    if ( video.readyState > 0 ) {
-        jumpToSlot()
+        video.addEventListener( 'timeupdate', () => {
+            const duration = video.duration
+            const currentSlotNo = Math.round( video.currentTime * trueNoOfSlots / duration )
+            const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' )
+            repeat( currentSlotNo, index => {
+                if ( !storyboardItems[ index ] ) return // 🛑
+                storyboardItems[ index ].classList.add( 'wentPast' )
+                storyboardItems[ index ].style.border = '3px solid red'
+            } )
+            for ( let index = currentSlotNo + 1; index <= trueNoOfSlots; index++ ) {
+                if ( !storyboardItems[ index ] ) return // 🛑
+
+                storyboardItems[ index ].classList.remove( 'wentPast' )
+                storyboardItems[ index ].style.border = '3px solid white'
+
+            }
+            // repeat( trueNoOfSlots + 1, index => {
+            //     index = index + currentSlotNo
+            //     storyboardItems[ index ].classList.remove( 'wentPast' )
+            //     storyboardItems[ index ].style.border = '3px solid white'
+            // } )
+        } )
+
     }
 
     function jumpToSlot () {
@@ -399,30 +439,6 @@ function sbControls ( video, trueNoOfSlots, sbParent ) {
         if ( slotNo ) playVideo( video, trueNoOfSlots, slotNo )
     }
 
-    video.addEventListener( 'loadeddata', jumpToSlot )
-
-    video.addEventListener( 'timeupdate', () => {
-        const duration = video.duration
-        const currentSlotNo = Math.round( video.currentTime * trueNoOfSlots / duration )
-        const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' )
-        repeat( currentSlotNo, index => {
-            if ( !storyboardItems[ index ] ) return // 🛑
-            storyboardItems[ index ].classList.add( 'wentPast' )
-            storyboardItems[ index ].style.border = '3px solid red'
-        } )
-        for ( let index = currentSlotNo + 1; index <= trueNoOfSlots; index++ ) {
-            if ( !storyboardItems[ index ] ) return // 🛑
-
-            storyboardItems[ index ].classList.remove( 'wentPast' )
-            storyboardItems[ index ].style.border = '3px solid white'
-
-        }
-        // repeat( trueNoOfSlots + 1, index => {
-        //     index = index + currentSlotNo
-        //     storyboardItems[ index ].classList.remove( 'wentPast' )
-        //     storyboardItems[ index ].style.border = '3px solid white'
-        // } )
-    } )
 }
 
 async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
@@ -445,7 +461,6 @@ async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, 
                         slot.index = index
                         // slot.innerText += `: (${ index })`
                         const link = generateElements( '<a></a>' )
-                        console.log( 'x' )
                         if ( linkToVid )
                             link.href = `${ linkToVid }#slot=${ index }`
                         link.target = '_blank'
@@ -458,8 +473,8 @@ async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, 
                         slot.append( link )
                         index++
                         slot.addEventListener( 'click', ( ev ) => {
-                            if ( !vidOnPage ) vidOnPage = document.querySelector( `video` )
-                            // vidOnPage.currentTime = ev.target.closest( 'div' ).index * samplingFq
+                            //? uncomment the following line if something breaks
+                            // if ( !vidOnPage ) vidOnPage = document.querySelector( `video` )
                             if ( !samplingFq ) samplingFq = vidOnPage.duration / ( horizontal * vertical )
                             vidOnPage.currentTime = ev.target.closest( 'div' ).index * samplingFq
                             vidOnPage.play()
@@ -475,13 +490,24 @@ async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, 
     return await promise
 }
 
-function storyboardHorizontal ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
-    const slotsDiv = storyboard( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls )
-    return
-    console.log( slotsDiv )
-    slotsDiv.style.flexWrap = ''
-    slotsDiv.style.justifyContent = ''
-    slotsDiv.style.overflow = 'auto'
+async function storyboardHorizontal ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
+
+    const slotsDiv = await storyboard( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls )
+    slotsDiv.style = 'overflow: auto; white-space: nowrap;'
+    slotsDiv.querySelectorAll( 'div.storyboardItem' ).forEach( item => { item.style.display = 'inline-block' } )
+
+    slotsDiv.addEventListener( 'wheel', ( event ) => {
+
+        event.preventDefault()
+
+        if ( event.deltaY > 0 )
+            slotsDiv.scrollBy( 50, 0 )
+        else
+            slotsDiv.scrollBy( -50, 0 )
+
+    } )
+
+    return slotsDiv
 }
 
 async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
@@ -572,6 +598,19 @@ async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlo
     //     // $storyboardItems.css( `background-size`, `${this.value/itemWidth*100}%` )
     // } )
 
+}
+
+function blink ( element, interval, numberOfTimes ) {
+    return new Promise( async resolve => {
+        element.style.transform = 'scale(1.3,1.3)'
+        await asyncTimeout( interval )
+        element.style.transform = ''
+        await asyncTimeout( interval )
+        element.style.transform = 'scale(1.3,1.3)'
+        await asyncTimeout( interval )
+        element.style.transform = ''
+        resolve
+    } )
 }
 
 function fauxHistoryPushState ( url, timeout = 3000 ) {

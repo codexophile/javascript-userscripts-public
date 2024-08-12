@@ -93,6 +93,12 @@
                     const itemUrl = item.querySelector( 'a' ).href
                     let tempDoc
 
+                    function expandBlogtrottrItem () {
+                        // innerDiv.style = `display: flex; flex-wrap: wrap;`
+                        item.style.maxWidth = '90vw'
+                        item.style.width = '100%'
+                    }
+
                     async function addIframeHrefs ( tempDoc ) {
                         if ( !tempDoc )
                             tempDoc = await GMXmlHttpRequest( itemUrl )
@@ -150,7 +156,7 @@
                                 const imgSrc = `https://img.doodcdn.co/slides/${ slidesId }.jpg`
                                 generateElements( `<a href=${ link }><img id=doodImg src=${ imgSrc }></a>`, itemInnerDiv, true )
                             }
-                            if ( link.href.match( /(cdnstream|jodwish)/ ) ) {
+                            if ( link.href.match( /(cdnstream|jodwish|74k)/ ) ) {
                                 const doodButton = GM_addElement( 'button', { textContent: 'Stream' } )
                                 doodButton.addEventListener( 'click', async () => {
                                     if ( itemInnerDiv.querySelector( '#streamImg' ) ) return
@@ -175,6 +181,41 @@
                     }
 
                     switch ( feedTitle ) {
+
+                        //ANCHOR -  g.xtapes.to
+                        case 'Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...':
+                            const tempDoc__ = await GMXmlHttpRequest( itemUrl )
+                            addIframeHrefs( tempDoc__ )
+                            break
+
+                        case 'VIDÉOS XXX GAY - Porno GAY Gratuit en Streaming':
+
+                            const videoUrl = itemUrl
+
+                            const doc = await GMXmlHttpRequest( videoUrl )
+                            const sbSrc = doc.querySelector( '[property="twitter:image"]' ).content.replace( '/default', '/nvsprite' )
+                            const script = doc.querySelector( 'script' )
+                            const match = script.innerHTML.match( /"duration": "(\w\w(\d+)S)"/ )
+                            let duration
+                            if ( match )
+                                duration = match[ 2 ]
+                            else
+                                alert( 'error' )
+
+                            const allUrls = sbSrc
+                            const trueNoOfSlots = 20
+                            const samplingFq = duration / trueNoOfSlots
+
+                            const modalBody = generateElements( '<div></div>', innerDiv )
+                            await storyboard( modalBody, 20, 1, videoUrl, null, samplingFq, trueNoOfSlots, allUrls )
+
+                            const videoId = itemUrl.match( /\/video\/(.+?)\// )[ 1 ]
+                            const previewVidSrc = `https://www.videosxgays.com/media/videos/tmb4/${ videoId }/video.webm`
+                            generateElements( `<video controls src=${ previewVidSrc }></video>`, innerDiv )
+
+                            expandBlogtrottrItem()
+
+                            break
 
                         //ANCHOR - iGay69
                         case 'iGay69':
@@ -221,12 +262,14 @@
 
                         //ANCHOR -  'GayGuy.Top':
                         case 'GayGuy.Top':
+                        case 'GayGuy.Top - Watch Gay Porn Videos Free':
                             removeEmptytextEls( innerDiv )
                             addIframeHrefs()
                             break
 
                         //ANCHOR -  'Gaystream':
                         case 'Gaystream':
+                        case 'Gaystream is brat':
                             const tempDocGstrm = await GMXmlHttpRequest( itemUrl )
                             const btnEls = tempDocGstrm.querySelectorAll( '.tab.boner' )
                             btnEls.forEach( item => {
@@ -244,44 +287,40 @@
 
                         //ANCHOR -  'FreePornVideosHDGay.com – Videos online free gay porn':
                         case 'FreePornVideosHDGay.com – Videos online free gay porn':
-                            tempDoc = await GMXmlHttpRequest( itemUrl )
-                            tempDoc.querySelectorAll( '.button_choice_server' ).forEach( item => {
+                            const tempDocD = await GMXmlHttpRequest( itemUrl )
+                            tempDocD.querySelectorAll( '.button_choice_server' ).forEach( item => {
                                 const linkHref = item.getAttribute( 'onclick' ).match( /'(.+?)'/ )[ 1 ]
                                 generateElements( `<a href=${ linkHref }>${ linkHref }</a>`, innerDiv, true )
                             } )
                             addPeekButtons( innerDiv, item )
                             break
 
-                        //ANCHOR -  'New Videos':
+                        //ANCHOR -  'New Videos (yesgay.xyz)':
                         case 'New Videos':
 
-                            const toggleButton = GM_addElement( item, 'button', { textContent: 'Toggle' } )
-                            toggleButton.addEventListener( 'click', async () => {
-                                if ( item.querySelectorAll( '.thumbContainer' ).length )
-                                    toggle( item.querySelector( '.thumbContainer' ) )
-                                else {
-                                    tempDoc = await GMXmlHttpRequest( itemUrl )
-                                    script = tempDoc.querySelectorAll( 'script[type="text/javascript"]' )
-                                    const screensCount = script[ 1 ].innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ]
-                                    const imgUrlTemplate = script[ 1 ].innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ]
-                                    const thumbnContainer = GM_addElement( item, 'div', { class: 'thumbContainer' } )
-                                    thumbnContainer.addEventListener( 'click', ( event ) => {
-                                        toggle( event.target.parentNode )
-                                        event.target.parentNode.parentNode.scrollIntoView()
-                                    } )
-                                    thumbnContainer.scrollIntoView()
+                            if ( item.querySelectorAll( '.thumbContainer' ).length ) {
+                                toggle( item.querySelector( '.thumbContainer' ) )
+                                alert( 'check userscript code' )
+                            }
 
-                                    repeat( screensCount + 1, j => {
-                                        const imgURL = imgUrlTemplate.replace( '{time}', j )
-                                        const imageElement = generateElements( `<img id=${ j } class='storyBoardItem' src='${ imgURL }'></img>`, null, true )
-                                        thumbnContainer.append( imageElement )
-                                    } )
-                                    innerDiv.style = `display: flex; flex-wrap: wrap;`
-                                    item.style.maxWidth = 'unset'
-                                    item.style.width = '100%'
-                                }
+                            const tempDoc = await GMXmlHttpRequest( itemUrl )
+                            const script_ = tempDoc.querySelectorAll( 'script[type="text/javascript"]' )
+                            const screensCount = script_[ 1 ].innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ]
+                            const imgUrlTemplate = script_[ 1 ].innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ]
+                            const samplingFq_ = script_[ 1 ].innerHTML.match( /timeline_screens_interval: '(\d+)'/ )[ 1 ]
+                            const trueNoOfSlots_ = script_[ 1 ].innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ]
 
+                            let imgUrls = []
+                            repeat( +screensCount, j => {
+                                const thisUrl = imgUrlTemplate.replace( '{time}', +j + 1 )
+                                imgUrls.push( thisUrl )
                             } )
+
+                            const sb = await storyboardHorizontal( item, 1, 1, itemUrl, null, samplingFq_, trueNoOfSlots_, ...imgUrls )
+                            sb.style.width = '85vw'
+
+                            expandBlogtrottrItem()
+
                             break
 
                         //ANCHOR -  'NurGAY.to':
@@ -292,11 +331,13 @@
                             innerDiv.replaceChildren()
                             innerDiv.append( newDiv )
 
-                            tempDoc = await GMXmlHttpRequest( itemUrl )
-                            const actorsList = tempDoc.querySelector( '#video-actors' ).textContent.replaceAll( '\t', '' ).replace( 'Actors: ', '' ).replaceAll( ' /', ',' )
+                            const tempDoc_ = await GMXmlHttpRequest( itemUrl )
+                            const actorsList = tempDoc_.querySelector( '#video-actors' ).textContent.replaceAll( '\t', '' ).replace( 'Actors: ', '' ).replaceAll( ' /', ',' )
                             GM_addElement( innerDiv, 'div', { textContent: actorsList } )
-                            const links = tempDoc.querySelectorAll( 'p > [data-wpel-link="external"]' )
+
+                            const links = tempDoc_.querySelectorAll( 'p > [data-wpel-link="external"]' )
                             innerDiv.append( ...links )
+
                             addPeekButtons( innerDiv )
 
                             break

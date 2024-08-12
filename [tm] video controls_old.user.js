@@ -6,7 +6,6 @@
   let timeIncrLarge = 60
   let currentVideo
   let defaultSpeed = 3
-  document.addEventListener( "keyup", keyboardEvent, false )
   waitFor( 'video' ).then( () => { videoEventListeners() } )
 
   setInterval( () => {
@@ -422,54 +421,6 @@
     $( '.divStatus' ).text( text )
     if ( document.getElementById( 'cbAutoSwitch' )?.checked )
       document.title = text
-  }
-
-  function keyboardEvent ( e ) {
-
-    let activeElementType = document.activeElement.tagName.toLowerCase()
-    if ( activeElementType === 'input' ) return // 🛑
-
-    let videoElement = getActiveVideo()
-
-    if ( e.keyCode == 74 ) {
-      // j
-      videoElement.currentTime = videoElement.currentTime - timeIncrSmall
-    }
-    if ( e.keyCode == 76 ) {
-      // l
-      videoElement.currentTime = videoElement.currentTime + timeIncrSmall
-    }
-    if ( e.code == 'KeyZ' ) {
-      speedToggle()
-    }
-    if ( e.keyCode === 88 ) {
-      // x
-      videoElement.playbackRate = videoElement.playbackRate - 0.5
-    }
-    if ( e.keyCode === 67 ) {
-      // c
-      videoElement.playbackRate = videoElement.playbackRate + 0.5
-    }
-    if ( e.code === "KeyM" ) {
-      videoElement.muted = !videoElement.toggleAttribute( "muted" )
-    }
-    if ( e.code === "KeyB" ) {
-      videoElement.volume -= 0.01
-    }
-    if ( e.code === "KeyN" ) {
-      videoElement.volume += 0.01
-    }
-    if ( e.shiftKey && e.code === "KeyB" ) {
-      videoElement.volume -= 0.001
-    }
-    if ( e.shiftKey && e.code === "KeyN" ) {
-      videoElement.volume += 0.001
-    }
-    if ( e.shiftKey && e.code === "KeyM" ) {
-      videoElement.muted = false
-      videoElement.volume = 0.5
-    }
-
   }
 
   function speedToggle () {

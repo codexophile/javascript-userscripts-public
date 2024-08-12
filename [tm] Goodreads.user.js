@@ -9,6 +9,7 @@
 
     // Estimating the number of words in the book
     const $elementNumberOfPages = jQuery( '[data-testid="pagesFormat"]' )
+    console.log( $elementNumberOfPages )
     const numberOfPages = $elementNumberOfPages.text().match( /\d+/ )
     const lowerApproximation = ( numberOfPages * 250 )
     const upperApproximation = ( numberOfPages * 350 )
@@ -31,8 +32,10 @@
             const hrefWiki = `https://www.google.com/search?q=${ bookTitle }+${ author }+wiki`
             const hrefStorygraph = `https://app.thestorygraph.com/browse?search_term=${ bookTitle }+${ author }`
             const hrefTVTropes = `https://tvtropes.org/pmwiki/search_result.php?q=${ bookTitle }+${ author }`
+            const hrefChatGPT = `https://chatgpt.com/?query=${ bookTitle } by ${ author }`
 
             const $parent = jQuery( GRPopup )
+            addExtLink( 'ChatGPT', hrefChatGPT )
             addExtLink( 'The StoryGraph', hrefStorygraph )
             addExtLink( 'Wiki', hrefWiki )
             addExtLink( 'Blog', hrefBlog )
@@ -42,7 +45,7 @@
             addExtLink( "Anna's", hrefAnnas )
 
             function addExtLink ( text, href ) {
-                const $linkEl = jQuery( `<a href=${ href } target=_blank> ${ text } </a>` )
+                const $linkEl = jQuery( `<a href="${ href }" target=_blank> ${ text } </a>` )
                 $linkEl.css( `display`, `block` )
                 $parent.append( $linkEl )
             }
