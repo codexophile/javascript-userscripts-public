@@ -21,7 +21,7 @@ if ( href.includes( '/torrent/' ) ) {
     createSeedrLink( $magnetLink )
 }
 
-if ( href.includes( '/search/' ) ) {
+if ( href.match( /\/(sort-)?search\// ) ) {
 
     let $torrentLinks = $( `[href*='/torrent/']` ).each( function () {
 

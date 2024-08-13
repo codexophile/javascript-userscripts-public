@@ -51,11 +51,6 @@
 
   }, 100 )
 
-  $( window ).on( "resize scroll", function () {
-    if ( !currentVideo ) return // 🛑
-    // if ( !$( currentVideo ).isInViewport() ) { currentVideo.pause(); return }
-  } )
-
   function addToolbar () {
 
     if ( $( `#video-controlPanel` ).length ) { $( `#video-controlPanel` ).fadeIn(); return } // 🛑
@@ -120,7 +115,7 @@
       </div>
 
       <input type="range" class="slidVolFin important" min="0" max="0.25" step="0.001">
-      <input type="range" id=progress class=important  min="0" max="100"  step="0.001" vlaue=0>
+      <input type="range" id=progress class=important  min="0" max="100"  step="0.001" value=0>
 
     </div>
     `
@@ -362,66 +357,7 @@
 
   }
 
-  function videoEventListeners () {
 
-    let $videos = $( 'video' )
-
-    $videos.on( 'playing', function () {
-      titler( "[media playing]" )
-      $( '[style="padding: 0px; margin: 3px 3px 20px; background: padding-box padding-box rgb(248, 248, 255); border: 3px solid rgba(242, 242, 242, 0.6); border-radius: 2px; box-shadow: rgb(102, 102, 102) 0px 0px 2px; visibility: visible; display: block; z-index: 2147483647; inset: 163.5px auto auto 292.5px; width: 206px; height: 330px; position: fixed !important; box-sizing: content-box !important; max-width: none !important; max-height: none !important;"]' ).fadeOut()
-      // $( '#speedDisp' ).value = getActiveVideo().playbackRate      
-    } )
-
-    $videos.on( 'timeupdate', () => {
-
-      let video = getActiveVideo()
-      if ( !video ) return // 🛑
-      $( '#progress.important' ).val( video.currentTime / video.duration * 100 )
-
-      $( '[style="padding: 0px; margin: 3px 3px 20px; background: padding-box padding-box rgb(248, 248, 255); border: 3px solid rgba(242, 242, 242, 0.6); border-radius: 2px; box-shadow: rgb(102, 102, 102) 0px 0px 2px; visibility: visible; display: block; z-index: 2147483647; inset: 163.5px auto auto 292.5px; width: 206px; height: 330px; position: fixed !important; box-sizing: content-box !important; max-width: none !important; max-height: none !important;"]' ).fadeOut()
-
-      duration = video.duration
-      currentTime = video.currentTime
-      if ( !duration && !currentTime ) { $( '#spanRemainingTime' ).fadeOut(); return } // 🛑
-
-      $( '#spanRemainingTime' ).fadeIn()
-      $( '#spanCurrentTime' ).fadeIn()
-
-      remainingTime = Math.round( duration - currentTime )
-      readable = forHumans( remainingTime )
-      $( '#spanRemainingTime' ).text( readable )
-      $( '#spanCurrentTime' ).text(
-        forHumans(
-          Math.round(
-            currentTime ) ) )
-
-      if ( video.playbackRate == 1 ) { $( '#spanActualRemainingTime' ).fadeOut(); return } // 🛑
-      $( '#spanActualRemainingTime' ).fadeIn()
-      actualRemainingTime = Math.round( ( duration - currentTime ) / video.playbackRate )
-      readableActual = forHumans( actualRemainingTime )
-      $( '#spanActualRemainingTime' ).text( readableActual )
-
-    } )
-    $videos.on( 'ratechange', () => { $( '#speedDisp' ).val( getActiveVideo()?.playbackRate ) } )
-    $videos.on( 'volumechange', () => { if ( getActiveVideo() ) $( '#volDisp' ).val( getActiveVideo().volume ) } )
-    $videos.on( 'pause', () => { titler( "[media  paused]" ) } )
-    $videos.on( 'waiting', () => { titler( "[media waiting]" ) } )
-    $videos.on( 'stalled', () => { titler( "[media stalled]" ) } )
-    $videos.on( 'loadedmetadata', () => {
-      if ( !( video = getActiveVideo() ) ) return
-      $video = $( video )
-      $( '.divHeight' ).text( video.videoHeight )
-      if ( video.src != video.currentSrc ) $( '.btsrc' ).css( 'color', 'green' )
-    } )
-    $videos.on( 'ended', function () { if ( location.host === 'www.tiktok.com' ) speedToggle() } )
-
-  }
-
-  function titler ( text ) {
-    $( '.divStatus' ).text( text )
-    if ( document.getElementById( 'cbAutoSwitch' )?.checked )
-      document.title = text
-  }
 
   function speedToggle () {
     let videoElement = getActiveVideo()

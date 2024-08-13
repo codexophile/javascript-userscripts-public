@@ -43,6 +43,15 @@ function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionP
 
 //ANCHOR Rest
 
+function isIterable ( obj ) {
+    // checks for null and undefined
+    if ( obj == null ) {
+        return false
+    }
+    return typeof obj[ Symbol.iterator ] === 'function'
+}
+
+
 function asyncTimeout ( ms ) {
     return new Promise( resolve => setTimeout( resolve, ms ) )
 }
@@ -501,9 +510,9 @@ async function storyboardHorizontal ( parent, horizontal, vertical, linkToVid, v
         event.preventDefault()
 
         if ( event.deltaY > 0 )
-            slotsDiv.scrollBy( 50, 0 )
+            slotsDiv.scrollBy( 100, 0 )
         else
-            slotsDiv.scrollBy( -50, 0 )
+            slotsDiv.scrollBy( -100, 0 )
 
     } )
 
@@ -831,6 +840,10 @@ function waitFor ( selector ) {
 //ANCHOR - JQ Alternatives
 //# JQ Alternatives
 
+function elementsToArray ( els ) {
+    return els instanceof Element ? [ els ] : els
+}
+
 function contains ( selector, text ) {
     const elsContaining = [ ...document.querySelectorAll( selector ) ].filter( ( el ) =>
         el.textContent.includes( text )
@@ -854,12 +867,42 @@ function prev ( el, selector ) {
     return null
 }
 
-function toggle ( el ) {
-    if ( el.style.display == 'none' ) {
-        el.style.display = ''
-    } else {
-        el.style.display = 'none'
-    }
+async function fadeOut ( targetEl, duration ) {
+    if ( !duration ) duration = 250
+    targetEl.style.transition = `opacity ${ duration / 1000 }s`
+    targetEl.style.opacity = 0
+    await asyncTimeout( duration )
+    targetEl.style.display = "none"
+}
+
+async function fadeIn ( targetEl, duration ) {
+    if ( !duration ) duration = 250
+    targetEl.style.transition = `opacity ${ duration / 1000 }s`
+    targetEl.style.opacity = 0
+    targetEl.style.display = ""
+    targetEl.style.opacity = 1
+}
+
+function fadeToggle ( targetEls, duration ) {
+    const elementsArray = elementsToArray( targetEls )
+    elementsArray.forEach( item => {
+        if ( item.style.display == 'none' ) {
+            fadeIn( item, duration )
+        } else {
+            fadeOut( item, duration )
+        }
+    } )
+}
+
+function toggle ( els ) {
+    const elementsArray = elementsToArray( els )
+    elementsArray.forEach( el => {
+        if ( el.style.display == 'none' ) {
+            el.style.display = ''
+        } else {
+            el.style.display = 'none'
+        }
+    } )
 }
 
 function wrap ( wrapperHtml, ...els ) {

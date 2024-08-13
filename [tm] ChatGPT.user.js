@@ -1,16 +1,24 @@
 ( async function () {
     'use strict'
 
-    // let observer = new MutationObserver( ( mutations ) => {
-    //     mutations.forEach( mutation => {
-    //         mutation.addedNodes.forEach( item => {
-    //             if ( item.nodeType === 1 ) {
-    //                 console.log( 'xxx', item )
-    //             }
-    //         } )
-    //     } )
-    // } )
-    // observer.observe( document.body, { childList: true, subtree: true } )
+    let observer = new MutationObserver( () => {
+
+
+        //* Right click to copy
+        const items = document.querySelectorAll( `article li,p:not(.processedItem)` )
+        items.forEach( item => {
+            item.classList.add( 'processedItem' )
+            item.addEventListener( 'contextmenu', ( event ) => {
+                event.preventDefault()
+                GM_setClipboard( event.target.textContent.replaceAll( 'Prompt: ', '' ) )
+            } )
+        } )
+
+    } )
+    observer.observe( document.body, { childList: true, subtree: true } )
+
+
+    //* search queries
 
     const match = location.href.match( /\/\?query=(.+)(#|&|$)/ )
     if ( match ) {
@@ -22,7 +30,8 @@
         const $neededChat = $( `.relative.grow.overflow-hidden.whitespace-nowrap:contains('Book Chapter Summaries (No lesser known books)')` )
         $neededChat.click()
 
-        await asyncTimeout( 3000 )
+        await waitFor( 'article' )
+        await asyncTimeout( 1000 )
 
         const promptTextarea = document.querySelector( `#prompt-textarea` )
         promptTextarea.value = queryString
@@ -34,19 +43,6 @@
         document.querySelector( `[data-testid="send-button"]` ).click()
 
     }
-
-
-
-    // const match = location.href.match( /\/\?query=(.+)(#|&|$)/ )
-    // if ( match ) {
-    //     const queryString = match[ 1 ]
-    //     const promptTextarea = document.querySelector( `#prompt-textarea` )
-    //     console.log( promptTextarea )
-    //     // promptTextarea.value = queryString
-    // }
-
-
-
 
     const el = await waitFor( '#collapsibleContent' )
 

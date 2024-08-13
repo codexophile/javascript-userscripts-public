@@ -118,7 +118,10 @@
                         ':is(article,#main,[role=main]) :is(h1,h2,h3,h4,.open-list-header):not([data-processed=true])'
                 const headers = document.querySelectorAll( queryForHeaders )
                 headers.forEach( header => {
-                        const headerDiv = generateElements( `<div>${ header.textContent }</div>`, null, true )
+                        const encodedText = header.textContent.replace( /[\u00A0-\u9999<>\&]/g, function ( i ) {
+                                return '&#' + i.charCodeAt( 0 ) + ';'
+                        } )
+                        const headerDiv = generateElements( `<div>${ encodedText }</div>`, null, true )
                         headerDiv.style = `
                                 font-size: large;
                                 display  : block;

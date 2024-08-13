@@ -4,32 +4,30 @@
 ( async function () {
     'use strict'
 
-    // document.querySelectorAll( `p` ).forEach( item => { item.remove() } )
-
-    const videoUrl = 'https://www.videosxgays.com/video/153352/apelle-moi-maitre-quand-je-te-baise-sly-conan-jean-pierre-noreaux'
-
-    const doc = await GMXmlHttpRequest( videoUrl )
-    const sbSrc = doc.querySelector( '[property="twitter:image"]' ).content.replace( '/default', '/nvsprite' )
-    const script = doc.querySelector( 'script' )
-    const match = script.innerHTML.match( /"duration": "(\w\w(\d+)S)"/ )
-    let duration
-    if ( match )
-        duration = match[ 2 ]
-    else
-        alert( 'error' )
-
-    const allUrls = sbSrc
-    const trueNoOfSlots = 20
-    const samplingFq = duration / trueNoOfSlots
-
-    const modalBody = generateElements( '<div></div>', document.body )
-    await storyboardHorizontal( modalBody, 20, 1, videoUrl, null, samplingFq, trueNoOfSlots, allUrls )
-    return
+    document.querySelectorAll( `p` ).forEach( item => { item.remove() } )
 
 
-    const headerLink = generateElements(
-        `<a href=${ videoUrl } target=_blank> ${ videoLink.textContent } </a>` )
-    modalBoxEl.display()
+    //# storyboard test
+    // const videoUrl = 'https://www.videosxgays.com/video/153352/apelle-moi-maitre-quand-je-te-baise-sly-conan-jean-pierre-noreaux'
+
+    // const doc = await GMXmlHttpRequest( videoUrl )
+    // const sbSrc = doc.querySelector( '[property="twitter:image"]' ).content.replace( '/default', '/nvsprite' )
+    // const script = doc.querySelector( 'script' )
+    // const match = script.innerHTML.match( /"duration": "(\w\w(\d+)S)"/ )
+    // let duration
+    // if ( match )
+    //     duration = match[ 2 ]
+    // else
+    //     alert( 'error' )
+
+    // const allUrls = sbSrc
+    // const trueNoOfSlots = 20
+    // const samplingFq = duration / trueNoOfSlots
+
+    // const modalBody = generateElements( '<div></div>', document.body )
+    // await storyboardHorizontal( modalBody, 20, 1, videoUrl, null, samplingFq, trueNoOfSlots, allUrls )
+    // return
+
 
 
 

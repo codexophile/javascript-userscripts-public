@@ -57,7 +57,7 @@
                     `)
                     return
                 }
-                storyboardHorizontal( horSbParent, 5, 5, linkToVid, null, null, trueNoOfSlots, ...allUrls )
+                storyboard( horSbParent, 5, 5, linkToVid, null, null, trueNoOfSlots, ...allUrls )
 
             }
 

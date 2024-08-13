@@ -10,8 +10,9 @@
 
         if ( !senderElement ) { console.log( '%c⌛', 'font-size: large' ); return } // 🛑
 
-        senderName = senderElement.textContent.replace( / \[Masked\] ?/, '' )
+        senderName = senderElement.textContent.replace( / \[Masked\] ?/, '' ).trim()
         console.log( `%c🔥 ${ senderName }`, 'font-size: large; color: gold' )
+        console.log( `x${ senderName }x` )
 
         switch ( senderName ) {
 
@@ -652,6 +653,16 @@
                     const itemTitle = item.querySelector( `a` ).textContent
 
                     switch ( mbFeedTitle ) {
+                        case 'MasalaDesi':
+                            item.style.width = '100%'
+                            item.style.maxWidth = 'unset'
+                            item.querySelectorAll( 'br' ).forEach( br => { br.remove() } )
+                            item.querySelectorAll( 'img' ).forEach( img => {
+                                img.style.maxHeight = '300px'
+                                img.style.maxWidth = '300px'
+                                item.append( img )
+                            } )
+                            break
                         case 'PSA':
                             const tempDoc = await GMXmlHttpRequest( itemHref )
                             const tagEls = tempDoc.querySelectorAll( '[rel=tag]' )
