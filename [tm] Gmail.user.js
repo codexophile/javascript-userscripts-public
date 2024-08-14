@@ -740,7 +740,7 @@
             moreBtn.parentElement.append( lgLink )
         }
 
-        document.querySelector( '[style="height: 657px;"]' )?.scrollTo( 0, 150 )
+        // document.querySelector( '[style="height: 657px;"]' )?.scrollTo( 0, 150 )
 
         return
 

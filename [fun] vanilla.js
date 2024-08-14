@@ -819,22 +819,6 @@ function waitFor ( selector ) {
     return new Promise( ( resolve ) => {
         waitForAll( selector ).then( ( els ) => { resolve( els[ 0 ] ) } )
     } )
-
-    return new Promise( ( resolve ) => {
-
-        if ( document.querySelector( selector ) ) { return resolve( document.querySelector( selector ) ) }
-
-        const observer = new MutationObserver( () => {
-            if ( document.querySelector( selector ) ) {
-                resolve( document.querySelector( selector ) )
-                observer.disconnect()
-            }
-        } )
-
-        observer.observe( document.body, { childList: true, subtree: true } )
-
-    } )
-
 }
 
 //ANCHOR - JQ Alternatives

@@ -44,6 +44,13 @@
 
     }
 
+    //* Setting volume of audio els
+
+    const audioEl = await waitFor( 'audio' )
+    audioEl.volume = 0.35
+
+    //* Rest
+
     const el = await waitFor( '#collapsibleContent' )
 
     let currentTurnEl
