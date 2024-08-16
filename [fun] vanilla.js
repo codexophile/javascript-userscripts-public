@@ -499,22 +499,31 @@ async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, 
     return await promise
 }
 
-async function storyboardHorizontal ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
+async function storyboardToggleable ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
 
     const slotsDiv = await storyboard( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls )
-    slotsDiv.style = 'overflow: auto; white-space: nowrap;'
-    slotsDiv.querySelectorAll( 'div.storyboardItem' ).forEach( item => { item.style.display = 'inline-block' } )
 
-    slotsDiv.addEventListener( 'wheel', ( event ) => {
+    slotsDiv.style.maxWidth = '90vw'
+    slotsDiv.style.maxHeight = '80vh'
+    slotsDiv.style.overflow = 'auto'
 
-        event.preventDefault()
+    // const toggleBtn = generateElements( '<button>Toggle</button>' )
+    // slotsDiv.append( toggleBtn )
+    // toggleBtn.style = 'position: sticky; bottom: 0;'
 
-        if ( event.deltaY > 0 )
-            slotsDiv.scrollBy( 100, 0 )
-        else
-            slotsDiv.scrollBy( -100, 0 )
+    // slotsDiv.style = 'overflow: auto; white-space: nowrap;'
+    // slotsDiv.querySelectorAll( 'div.storyboardItem' ).forEach( item => { item.style.display = 'inline-block' } )
 
-    } )
+    // slotsDiv.addEventListener( 'wheel', ( event ) => {
+
+    //     event.preventDefault()
+
+    //     if ( event.deltaY > 0 )
+    //         slotsDiv.scrollBy( 100, 0 )
+    //     else
+    //         slotsDiv.scrollBy( -100, 0 )
+
+    // } )
 
     return slotsDiv
 }
@@ -819,6 +828,30 @@ function waitFor ( selector ) {
     return new Promise( ( resolve ) => {
         waitForAll( selector ).then( ( els ) => { resolve( els[ 0 ] ) } )
     } )
+}
+
+function waitForNew ( selector ) {
+
+    document.querySelectorAll( selector ).forEach( item => { item.classList.add( 'waitForNewDone' ) } )
+
+    return new Promise( async ( resolve ) => {
+        const newEl = await waitFor( `${ selector }:not(.waitForNewDone)` )
+        resolve( newEl )
+    } )
+
+}
+
+function waitForNewEach ( selector, callback ) {
+
+    document.querySelectorAll( selector ).forEach( item => { item.classList.add( 'waitForNewDone' ) } )
+
+    let observer = new MutationObserver( () => {
+        const elements = document.querySelectorAll( `${ selector }:not(.waitForNewDone)` )
+        if ( elements.length ) {
+            callback
+        }
+    } )
+    observer.observe( document.body, { childList: true, subtree: true } )
 }
 
 //ANCHOR - JQ Alternatives

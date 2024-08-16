@@ -42,12 +42,15 @@
         document.title = 'ChatGPT'
         document.querySelector( `[data-testid="send-button"]` ).click()
 
+        // const soundBtnEl = await waitForNew( 'article div.flex.items-center > span:first-child > button' )
+        // soundBtnEl.click()
+
     }
 
     //* Setting volume of audio els
 
     const audioEl = await waitFor( 'audio' )
-    audioEl.volume = 0.35
+    audioEl.volume = 0.4
 
     //* Rest
 

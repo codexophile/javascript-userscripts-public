@@ -7,11 +7,7 @@
   let timeIncrSmall = 5
   let timeIncrLarge = 60
 
-  let controlPanel
-  let vidProgressEl
-  let speedDispEl
-  let volDispEl
-  let slidVolFinEl
+  let controlPanel, vidProgressEl, speedDispEl, volDispEl, slidVolFinEl, divHeightEl
 
   new MutationObserver( main ).observe( document.body, { childList: true, subtree: true } )
   document.addEventListener( 'scroll', main )
@@ -22,9 +18,6 @@
     activeVideo = getActiveVideo()
     const vidContPanel = document.querySelector( `#video-controlPanel` )
 
-    if ( activeVideo )
-      videoEventListeners( activeVideo )
-
     if ( activeVideo && !vidContPanel ) {
       addToolbar()
       const collapsibleCont = await waitFor( '#collapsibleContent' )
@@ -34,6 +27,11 @@
       vidContPanel.style.display = 'none'
     else if ( vidContPanel )
       vidContPanel.style.display = ''
+
+    if ( activeVideo ) {
+      videoEventListeners( activeVideo )
+      initializeToolbar()
+    }
 
   }
 
@@ -224,6 +222,7 @@
     speedDispEl = controlPanel.querySelector( '#speedDisp' )
     volDispEl = controlPanel.querySelector( '#volDisp' )
     slidVolFinEl = controlPanel.querySelector( `.slidVolFin` )
+    divHeightEl = controlPanel.querySelector( '.divHeight' )
 
     dragElement( controlPanel, contPanelHeader )
     contPanelHeader.addEventListener( 'mousedown', () => { controlPanel.style.transition = 'unset' } )
@@ -269,6 +268,15 @@
     //?pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
 
     initializeToolbar()
+
+  }
+
+  function initializeToolbar () {
+
+    slidVolFinEl.value = video.volume
+    volDispEl.value = video.volume
+    speedDispEl.value = video.playbackRate
+    divHeightEl.textContent = video.videoHeight
 
   }
 

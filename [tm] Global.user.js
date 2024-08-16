@@ -83,6 +83,14 @@
                 document.querySelectorAll( `.toolbarPopup` ).forEach( item => { item.style.display = 'none' } )
         } )
 
+        //* Rest
+
+        generateToolbarButton( '🔉', collapsibleContent, null, () => {
+                const text = window.getSelection().toString().replaceAll( '\n', '. ' )
+                if ( !text ) return // 🛑
+                location.href = `edge-tts:${ text }`
+        } )
+
         //? Not impossible to make it work with an iframe. use the below code if/when needed
         // Checkout: https://web.archive.org/web/20240423123905/https://wiki.greasespot.net/CSS_Independent_Content
 

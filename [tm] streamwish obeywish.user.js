@@ -10,10 +10,16 @@
     $videoEl.data( 'processed', true )
     $videoEl.prop( 'volume', 0.01 )
     $( '#vplayer' ).css( `height`, `70vh` )
-    const $storyboard = createStoryboard( 10, 10, storyboardUrl )
-    if ( $( '.videoplayer, #vplayer' ).length ) $( '.videoplayer, #vplayer' ).first().after( $storyboard )
-    else document.body.append( $storyboard[ 0 ] )
-    $storyboard[ 0 ].scrollIntoView()
+
+    let parent
+    if ( $( '.videoplayer, #vplayer' ).length )
+        parent = $( `<div></div>` ).insertAfter( $( '.videoplayer, #vplayer' ).first() )
+    else
+        parent = $( `<div></div>` ).appendTo( document.body )
+
+    const storyboardEl = storyboard( parent[ 0 ], 10, 10, null, $videoEl[ 0 ], null, 100, storyboardUrl )
+
+    storyboardEl.scrollIntoView()
 
 
 } )()

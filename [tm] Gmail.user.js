@@ -157,25 +157,14 @@
                                 const imgSrc = `https://img.doodcdn.co/slides/${ slidesId }.jpg`
                                 generateElements( `<a href=${ link }><img id=doodImg src=${ imgSrc }></a>`, itemInnerDiv, true )
                             }
-                            if ( link.href.match( /(cdnstream|jodwish|74k)/ ) ) {
-                                const doodButton = GM_addElement( 'button', { textContent: 'Stream' } )
-                                doodButton.addEventListener( 'click', async () => {
-                                    if ( itemInnerDiv.querySelector( '#streamImg' ) ) return
-                                    tempDoc = await GMXmlHttpRequest( itemUrl )
-                                    const resText = tempDoc.innerHTML
-                                    const imageUrl = resText.match( /file:.*?&url=(.*?)"/ )[ 1 ]
-                                    // storyboardFlex( itemInnerDiv, 10, 10, imageUrl, link.href, true )
-                                    storyboardHorizontal( itemInnerDiv, 10, 10, link.href, null, samplingFq, trueNoOfSlots, ...imgUrls )
-                                    item.style.width = '100%'
-                                    item.style.maxWidth = 'unset'
-                                    // const streamPeekImg = GM_addElement( itemInnerDiv, 'img', {
-                                    //     id: 'streamImg',
-                                    //     src: imageUrl
-                                    // } )
-                                    fauxHistoryPushState( link.href )
+                            if ( link.href.match( /(streamiwish|cdnstream|jodwish|74k)/ ) ) {
 
-                                } )
-                                link.after( doodButton )
+                                const doc = await GMXmlHttpRequest( link.href )
+                                const stem = doc.querySelector( '#vplayer > img' ).src.match( /.+\// )[ 0 ]
+                                const path = link.href.match( /\/(............)$/ )[ 1 ]
+                                storyboard( item, 10, 10, link.href, null, null, 100, `${ stem }${ path }0000.jpg` )
+                                expandBlogtrottrItem()
+
                             }
                         } )
 
@@ -218,6 +207,11 @@
 
                             break
 
+                        //ANCHOR - 'GayCock4U':
+                        case 'GayCock4U':
+                        //ANCHOR -  'TURBOGVIDEOS.COM':
+                        case 'TURBOGVIDEOS.COM':
+                        case 'Gay – Faply':
                         //ANCHOR - iGay69
                         case 'iGay69':
                             addIframeHrefs()
@@ -240,18 +234,9 @@
                             } )
                             break
 
-                        //ANCHOR -  'TURBOGVIDEOS.COM':
-                        case 'TURBOGVIDEOS.COM':
-                            addIframeHrefs()
-                            break
                         //ANCHOR -  'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
                         case 'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
                             item.querySelector( '[href="https://meumundogay.net"]' ).remove()
-                            addIframeHrefs()
-                            break
-
-                        //ANCHOR - 'GayCock4U':
-                        case 'GayCock4U':
                             addIframeHrefs()
                             break
 

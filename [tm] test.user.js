@@ -6,7 +6,11 @@
 
     document.querySelectorAll( `p` ).forEach( item => { item.remove() } )
 
-
+    const doc = await GMXmlHttpRequest( 'https://74k.io/e/j8v2rkgjmvb8', null, true )
+    GM_setClipboard( doc )
+    return
+    const src = doc.querySelector( '#vplayer > img' ).src.replace( '.jpg', '0000.jpg' )
+    window.open( src )
     //# storyboard test
     // const videoUrl = 'https://www.videosxgays.com/video/153352/apelle-moi-maitre-quand-je-te-baise-sly-conan-jean-pierre-noreaux'
 

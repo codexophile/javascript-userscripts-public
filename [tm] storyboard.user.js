@@ -13,7 +13,7 @@
     let $storyBoard = $( `<div></div>` )
     $( '.block-video' ).after( $storyBoard )
 
-    const storyboard = await prepareStoryboard( $storyBoard[ 0 ], document, 'flex', null, videoElement )
+    const storyboard = await prepareStoryboard( $storyBoard[ 0 ], document, null, videoElement, 'flex' )
     storyboard.scrollIntoView()
 
     //* Related videos
@@ -23,13 +23,25 @@
       const itemLink = item.querySelector( 'a' ).href
       const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item )
       const tempDoc = await GMXmlHttpRequest( itemLink )
-      prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, 'horizontal', itemLink, null )
+      prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable' )
+
+    } )
+
+  }
+  else {
+
+    document.querySelectorAll( `.list-videos .item` ).forEach( async item => {
+
+      const itemLink = item.querySelector( 'a' ).href
+      const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item )
+      const tempDoc = await GMXmlHttpRequest( itemLink )
+      prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable' )
 
     } )
 
   }
 
-  function prepareStoryboard ( parent, scriptSource, storyboardFunction, linkToVid, videoElement ) {
+  function prepareStoryboard ( parent, scriptSource, linkToVid, videoElement, sbFunction ) {
 
     let scriptEl
     if ( scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 2 ] )
@@ -47,10 +59,10 @@
       imgUrls.push( thisUrl )
     } )
 
-    if ( storyboardFunction = 'flex' )
+    if ( sbFunction === 'flex' )
       return storyboard( parent, 1, 1, linkToVid, videoElement, frequencyPer, nOfSlots, ...imgUrls )
-    if ( storyboardFunction = 'horizontal' )
-      return storyboardHorizontal( parent, 1, 1, linkToVid, videoElement, frequencyPer, nOfSlots, ...imgUrls )
+    if ( sbFunction === 'toggleable' )
+      return storyboardToggleable( parent, 1, 1, linkToVid, videoElement, frequencyPer, nOfSlots, ...imgUrls )
 
   }
 
