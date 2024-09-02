@@ -1,3 +1,93 @@
+function dialog ( title = '', contentElement, maxHeight = '300px' ) {
+    // Create the GUI container
+    const guiContainer = document.createElement( 'div' )
+    guiContainer.style.position = 'fixed'
+    guiContainer.style.top = '50px'
+    guiContainer.style.left = '50px'
+    guiContainer.style.width = '300px'
+    guiContainer.style.border = '1px solid #ccc'
+    guiContainer.style.backgroundColor = '#f0f0f0'
+    guiContainer.style.zIndex = '9999'
+    guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)'
+
+    // Create the header
+    const header = document.createElement( 'div' )
+    header.style.backgroundColor = '#e0e0e0'
+    header.style.padding = '10px'
+    header.style.cursor = 'move'
+    header.style.display = 'flex'
+    header.style.justifyContent = 'space-between'
+    header.style.alignItems = 'center'
+    header.innerText = title
+
+    // Create the collapse button
+    const collapseBtn = document.createElement( 'button' )
+    collapseBtn.innerHTML = '-'
+    collapseBtn.style.marginLeft = 'auto'
+    collapseBtn.style.marginRight = '5px'
+    collapseBtn.onclick = () => {
+        if ( body.style.display === 'none' ) {
+            body.style.display = 'block'
+            collapseBtn.innerHTML = '-'
+        } else {
+            body.style.display = 'none'
+            collapseBtn.innerHTML = '+'
+        }
+    }
+
+    // Create the close button
+    const closeBtn = document.createElement( 'button' )
+    closeBtn.innerHTML = 'x'
+    closeBtn.onclick = () => {
+        guiContainer.remove()
+    }
+
+    // Append buttons to the header
+    header.appendChild( collapseBtn )
+    header.appendChild( closeBtn )
+
+    // Create the body
+    const body = document.createElement( 'div' )
+    body.style.padding = '10px'
+    body.style.backgroundColor = '#fff'
+    body.style.maxHeight = maxHeight
+    body.style.overflow = 'auto'
+    // adding the content element given by the function parameter
+    body.append( contentElement )
+
+    // Append header and body to the container
+    guiContainer.appendChild( header )
+    guiContainer.appendChild( body )
+
+    // Append the container to the document body
+    document.body.appendChild( guiContainer )
+
+    // Make the GUI draggable
+    let isDragging = false
+    let offsetX = 0
+    let offsetY = 0
+
+    header.onmousedown = ( e ) => {
+        isDragging = true
+        offsetX = e.clientX - guiContainer.getBoundingClientRect().left
+        offsetY = e.clientY - guiContainer.getBoundingClientRect().top
+    }
+
+    document.onmousemove = ( e ) => {
+        if ( isDragging ) {
+            guiContainer.style.left = `${ e.clientX - offsetX }px`
+            guiContainer.style.top = `${ e.clientY - offsetY }px`
+        }
+    }
+
+    document.onmouseup = () => {
+        isDragging = false
+    }
+
+    return guiContainer
+
+}
+
 function addTooltip ( tooltipParent, tooltipContent ) {
 
     addStyle( /*css*/`
@@ -165,64 +255,6 @@ function collapsible ( togglerText = '' ) {
     return { collapsibleStructure, collapsibleToggler, collapsibleContent }
 
 }
-
-// function collapsibleHorizontal () {
-
-//     GM_addStyle( `
-
-//         .active, #collapsible-toggler:hover {
-//             background-color: #555;
-//         }
-
-//         #collapsible-content {
-//             width: 0px;
-//             overflow: hidden;
-//             transition: all 0.2s ease-out;
-//             background-color: #f1f1f1;
-//         }
-//     ` )
-
-//     const collapsibleStructure = generateElements( /*html*/`
-//             <div style='display: flex'>
-//                 <button id=collapsible-toggler></button>
-//                 <div id=collapsible-content></div>
-//             </div>
-//     `)
-//     style( collapsibleStructure, `
-//         height: fit-content;
-//     `)
-//     document.body.prepend( collapsibleStructure )
-
-//     const collapsibleToggler = document.querySelector( '#collapsible-toggler' )
-//     style( collapsibleToggler, `
-//         cursor: pointer;
-//     `)
-
-//     let mouseDownX, mouseUpX, mouseDownY, mouseUpY
-//     collapsibleToggler.addEventListener( 'mousedown', ( event ) => {
-//         mouseDownX = event.clientX
-//         mouseDownY = event.clientY
-//     } )
-//     collapsibleToggler.addEventListener( 'mouseup', ( event ) => {
-
-//         mouseUpX = event.clientX
-//         mouseUpY = event.clientY
-
-//         if ( mouseDownX === mouseUpX && mouseDownY === mouseUpY ) {
-//             event.target.classList.toggle( "active" )
-//             const content = document.querySelector( '#collapsible-content' )
-//             if ( content.style.width ) {
-//                 content.style.width = null
-//             } else {
-//                 content.style.width = '100%'
-//             }
-//         }
-
-//     } )
-
-//     return collapsibleStructure
-
-// }
 
 function slideshowGallery () {
 

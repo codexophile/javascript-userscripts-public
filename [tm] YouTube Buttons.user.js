@@ -24,15 +24,14 @@
 
             document.querySelectorAll( `ytd-rich-grid-row > #contents` ).forEach( item => { item.replaceWith( ...item.childNodes ) } )
             document.querySelectorAll( `ytd-rich-grid-row            ` ).forEach( item => { item.replaceWith( ...item.childNodes ) } )
-
-            const thumbItems = document.querySelectorAll( `ytd-rich-item-renderer` )
+            const thumbItems = document.querySelectorAll( `ytd-rich-item-renderer, ytd-compact-video-renderer` )
             lazyLoad( async ( item ) => {
                 const horSbParent = generateElements( '<div class=horSbParent style="width: -webkit-fill-available"></div>' )
                 item.after( horSbParent )
                 const linkToVid = item.querySelector( 'a' ).href
                 const ytHtml = await GMXmlHttpReqResponse( linkToVid )
                 const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml )
-                storyboardHorizontal( horSbParent, 5, 5, linkToVid, null, null, trueNoOfSlots, ...allUrls )
+                storyboardToggleable( horSbParent, 5, 5, linkToVid, null, null, trueNoOfSlots, ...allUrls )
             }, ...thumbItems )
 
         } )
@@ -73,9 +72,9 @@
             const btExpandRelated = generateElements( '<button>↖️</button>', toolbarEl )
             btExpandRelated.classList.add( 'videoPageControl' )
             btExpandRelated.addEventListener( 'click', function () {
-                const $relatedSection = $( `#columns > #secondary > #secondary-inner > #related` )
-                console.log( $relatedSection[ 0 ] )
-                $( 'ytd-app' ).prepend( $relatedSection )
+                const relatedSection = document.querySelector( `#columns > #secondary > #secondary-inner > #related` )
+                console.log( relatedSection[ 0 ] )
+                document.querySelector( 'ytd-app' ).prepend( relatedSection )
                 GM_addStyle( `
                         #masthead-container { position : unset }
                         #related #contents  {
@@ -84,7 +83,7 @@
                         }
                         #related #contents > * { width: 25% }
                 ` )
-                $relatedSection[ 0 ].scrollIntoView()
+                relatedSection[ 0 ].scrollIntoView()
             } )
 
             const linkToVideosOriginal = await waitFor( '#social-links [aria-label=Videos]:not(.done)' )

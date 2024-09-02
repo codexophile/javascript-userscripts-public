@@ -1,3 +1,59 @@
+//ANCHOR - Text functions
+
+function toSeconds ( timeString ) {
+
+    const a = timeString.split( ':' ).reverse()
+    let seconds = 0
+
+    if ( +a[ 2 ] ) seconds += ( +a[ 2 ] ) * 60 * 60
+    if ( +a[ 1 ] ) seconds += ( +a[ 1 ] ) * 60
+    if ( +a[ 0 ] ) seconds += ( +a[ 0 ] )
+
+    return seconds
+
+}
+
+function generateUniqueString ( length ) {
+    let result = ''
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    const charactersLength = characters.length
+    let counter = 0
+    while ( counter < length ) {
+        result += characters.charAt( Math.floor( Math.random() * charactersLength ) )
+        counter += 1
+    }
+    return result
+}
+
+function downloadText ( filename, text ) {
+    const dlLink = document.createElement( 'a' )
+    const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`
+    dlLink.href = uriContent
+    dlLink.setAttribute( 'download', filename )
+    dlLink.click()
+}
+
+function capitalizeFirstLetter ( string ) {
+    return string.charAt( 0 ).toUpperCase() + string.slice( 1 )
+}
+
+function forHumans ( seconds ) {
+    var levels = [
+        [ Math.floor( seconds / 31536000 ), 'years' ],
+        [ Math.floor( ( seconds % 31536000 ) / 86400 ), 'days' ],
+        [ Math.floor( ( ( seconds % 31536000 ) % 86400 ) / 3600 ), 'H' ],
+        [ Math.floor( ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) / 60 ), 'm' ],
+        [ ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) % 60, 's' ],
+    ]
+    var returntext = ''
+
+    for ( var i = 0, max = levels.length; i < max; i++ ) {
+        if ( levels[ i ][ 0 ] === 0 ) continue
+        returntext += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] )
+    };
+    return returntext.trim()
+}
+
 //ANCHOR - Style related
 
 function getStyleOrComputedStyle ( element, property ) {
@@ -17,7 +73,7 @@ function addStyle ( css ) {
 
 function style ( targetEl, css, debug ) {
     css
-        .replaceAll( /\s{2,}/g, '' ) // gets rid of whitespaces
+        .replaceAll( /\s{2,}/g, '' ) // gets rid of white spaces
         .split( ';' )
         .filter( line => line )  // gets rid of empty lines
         .forEach( declaration => {
@@ -43,6 +99,10 @@ function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionP
 
 //ANCHOR Rest
 
+function addAiImageDownloadButtons () {
+
+}
+
 function isIterable ( obj ) {
     // checks for null and undefined
     if ( obj == null ) {
@@ -63,6 +123,16 @@ function getTextNodes ( el ) {
             textNodes.push( node )
     } )
     return textNodes
+}
+
+async function load ( url, selector, parent ) {
+    const html = await GMXmlHttpRequest( url, null, true )
+    const doc = generateDoc( html )
+    const selected = doc.querySelectorAll( selector )
+    if ( parent ) {
+        parent.append( selected )
+    }
+    return selected
 }
 
 function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
@@ -88,25 +158,7 @@ function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
 
 }
 
-function generateUniqueString ( length ) {
-    let result = ''
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    const charactersLength = characters.length
-    let counter = 0
-    while ( counter < length ) {
-        result += characters.charAt( Math.floor( Math.random() * charactersLength ) )
-        counter += 1
-    }
-    return result
-}
 
-function downloadText ( filename, text ) {
-    const dlLink = document.createElement( 'a' )
-    const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`
-    dlLink.href = uriContent
-    dlLink.setAttribute( 'download', filename )
-    dlLink.click()
-}
 
 function pipeline ( ...functions ) {
     functions.reduce( ( accumilator, currentFn ) => {
@@ -159,10 +211,6 @@ function markElAsProcessed ( el, markedEls, execute ) {
         markedEls.push( el )
         execute( el )
     }
-}
-
-function capitalizeFirstLetter ( string ) {
-    return string.charAt( 0 ).toUpperCase() + string.slice( 1 )
 }
 
 async function GMXmlHttpReqResponse ( url ) {
@@ -736,42 +784,6 @@ var saveData = ( function () {
     }
 }() )
 
-/**
- * Translates seconds into human readable format of seconds, minutes, hours, days, and years
- *
- * @param  {number} seconds The number of seconds to be processed
- * @return {string}         The phrase describing the amount of time
- */
-function forHumans ( seconds ) {
-    var levels = [
-        [ Math.floor( seconds / 31536000 ), 'years' ],
-        [ Math.floor( ( seconds % 31536000 ) / 86400 ), 'days' ],
-        [ Math.floor( ( ( seconds % 31536000 ) % 86400 ) / 3600 ), 'H' ],
-        [ Math.floor( ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) / 60 ), 'm' ],
-        [ ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) % 60, 's' ],
-    ]
-    var returntext = ''
-
-    for ( var i = 0, max = levels.length; i < max; i++ ) {
-        if ( levels[ i ][ 0 ] === 0 ) continue
-        returntext += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] )
-    };
-    return returntext.trim()
-}
-
-function toSeconds ( timeString ) {
-
-    const a = timeString.split( ':' ).reverse()
-    let seconds = 0
-
-    if ( +a[ 2 ] ) seconds += ( +a[ 2 ] ) * 60 * 60
-    if ( +a[ 1 ] ) seconds += ( +a[ 1 ] ) * 60
-    if ( +a[ 0 ] ) seconds += ( +a[ 0 ] )
-
-    return seconds
-
-}
-
 function isInIframe () {
     return window !== window.parent
 }
@@ -843,13 +855,17 @@ function waitForNew ( selector ) {
 
 function waitForNewEach ( selector, callback ) {
 
-    document.querySelectorAll( selector ).forEach( item => { item.classList.add( 'waitForNewDone' ) } )
+    document.querySelectorAll( `${ selector }:not(.waitForNewDone)` ).forEach( item => {
+        item.classList.add( 'waitForNewDone' )
+        callback( item )
+    } )
 
     let observer = new MutationObserver( () => {
         const elements = document.querySelectorAll( `${ selector }:not(.waitForNewDone)` )
-        if ( elements.length ) {
-            callback
-        }
+        elements.forEach( element => {
+            element.classList.add( 'waitForNewDone' )
+            callback( element )
+        } )
     } )
     observer.observe( document.body, { childList: true, subtree: true } )
 }

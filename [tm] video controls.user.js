@@ -16,6 +16,7 @@
   async function main () {
 
     activeVideo = getActiveVideo()
+    if ( !activeVideo ) { }
     const vidContPanel = document.querySelector( `#video-controlPanel` )
 
     if ( activeVideo && !vidContPanel ) {
@@ -54,14 +55,11 @@
 
       <div id='contPanelHeader' class=important style='
         width: 100%;
-        height: 20px;
         background-color: #14855a;
       '>
         <span class="divHeight text" > x </span>
         <span id=spanCurrentTime class="text" ></span>
-        <span class=important> | </span>
         <span id=spanRemainingTime       class="text" >x</span>
-        <span class=important> | </span>
         <span id=spanActualRemainingTime class="text" >x</span>
       </div>
     
@@ -119,6 +117,14 @@
     .button,
     .controlPanel button { width : 30px; height: 30px         } 
     .controlPanel *      { font-size: small                   }
+
+    #contPanelHeader > span {
+      color: black;
+      background-color: greenyellow;
+      padding: 3px;
+      margin: 1px;
+      border-radius: 4px;
+    }
 
     /* Range controls*/
 
@@ -273,10 +279,10 @@
 
   function initializeToolbar () {
 
-    slidVolFinEl.value = video.volume
-    volDispEl.value = video.volume
-    speedDispEl.value = video.playbackRate
-    divHeightEl.textContent = video.videoHeight
+    slidVolFinEl.value = activeVideo.volume
+    volDispEl.value = activeVideo.volume
+    speedDispEl.value = activeVideo.playbackRate
+    divHeightEl.textContent = activeVideo.videoHeight
 
   }
 
@@ -418,33 +424,16 @@
 
   function getActiveVideo () {
 
-    const videos = document.querySelectorAll( "video, audio" )
-    let videosInVP = []
-    let activeVideo
+    let videos = [ ...document.querySelectorAll( "video, audio" ) ]
 
-    if ( videos.length )
-      activeVideo = videos[ 0 ] // 🛑
+    const playingVideos = videos.filter( video => !video.paused )
+    let visibleVideos = playingVideos.filter( video => isElementInViewport( video ) && video.videoHeight )
 
-    videos.forEach( video => {
-      video.style.outline = ''
-      if ( video && isElementInViewport( video ) )
-        videosInVP.push( video )
-    } )
+    const activeVideos =
+      playingVideos.length ? playingVideos : visibleVideos.length ? visibleVideos : videos
 
-    // console.log( videosInVP )
-
-    if ( videosInVP.length == 1 )
-      activeVideo = videosInVP[ 0 ] // 🛑
-
-    videosInVP.forEach( video => {
-      if ( !video.paused )
-        activeVideo = video // 🛑
-    } )
-
-    if ( activeVideo ) {
-      activeVideo.style.outline = 'solid red'
-      return activeVideo
-    }
+    if ( activeVideos[ 0 ] ) return activeVideos[ 0 ]
+    return null
 
   }
 

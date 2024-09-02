@@ -3,14 +3,13 @@
 
     let observer = new MutationObserver( () => {
 
-
         //* Right click to copy
         const items = document.querySelectorAll( `article li,p:not(.processedItem)` )
         items.forEach( item => {
             item.classList.add( 'processedItem' )
             item.addEventListener( 'contextmenu', ( event ) => {
                 event.preventDefault()
-                GM_setClipboard( event.target.textContent.replaceAll( 'Prompt: ', '' ) )
+                GM_setClipboard( event.target.textContent.replaceAll( /(Prompt|Prologue|First Chapter): /, '' ) )
             } )
         } )
 
@@ -23,11 +22,11 @@
     const match = location.href.match( /\/\?query=(.+)(#|&|$)/ )
     if ( match ) {
 
-        await waitFor( '#enforcement-containerchatgpt-subscription' )
+        await waitFor( 'nav' )
+        alert()
+        const queryString = decodeURIComponent( match[ 1 ] )
 
-        const queryString = match[ 1 ].replaceAll( '%20', ' ' )
-
-        const $neededChat = $( `.relative.grow.overflow-hidden.whitespace-nowrap:contains('Book Chapter Summaries (No lesser known books)')` )
+        const $neededChat = $( `.relative.grow.overflow-hidden.whitespace-nowrap:contains('Book Chapter Summaries')` )
         $neededChat.click()
 
         await waitFor( 'article' )

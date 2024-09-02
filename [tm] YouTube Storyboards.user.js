@@ -87,8 +87,10 @@
             peekParentQuery = 'ytd-compact-video-renderer'
             videoLinkWithTitleQuery = 'a:has(#video-title)'
         }
-        if ( location.href.match( /https:\/\/www.youtube.com\/$|\/@.+?\// ) ) {
-            // matches: https://www.youtube.com/ and */@_channel_name/*
+        if ( location.href.match( /https:\/\/www.youtube.com\/$/ )
+            // matches: https://www.youtube.com/ 
+            || location.href.match( /\/(@.+?|channel)\// ) ) {
+            // matches https://www.youtube.com/@comedyland573/videos or https://www.youtube.com/channel/UClfq6WEgQm3MG6b30xJhX3g/videos
             peekParentQuery = `ytd-rich-item-renderer`
             videoLinkWithTitleQuery = '#video-title-link'
         }
@@ -128,6 +130,7 @@
             }
 
             if ( !buttonsContainer.querySelectorAll( ' #sbHorzBtn' ).length ) {
+
                 const sbHorzBtn = generateElements( `<button id=sbHorzBtn>🎞️</button>` )
                 buttonsContainer.append( sbHorzBtn )
                 sbHorzBtn.addEventListener( 'click', async ( event ) => {

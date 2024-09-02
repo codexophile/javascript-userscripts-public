@@ -118,23 +118,10 @@
 
                         const links = itemInnerDiv.querySelectorAll( 'a' )
                         links.forEach( async ( link ) => {
-                            if ( link.href.match( /bembed/ ) ) {
-                                const button = GM_addElement( 'button', { textContent: 'Bembed' } )
-                                button.addEventListener( 'click', async () => {
-                                    if ( itemInnerDiv.querySelector( '#bembedImg' ) ) return
-                                    tempDoc = await GMXmlHttpRequest( itemUrl )
-                                    const resText = tempDoc.innerHTML
-                                    const videoId = resText.match( /:\\u0022(.+?)\.poster/ )[ 1 ]
-                                    const sbImgHost = resText.match( /og:image" content="https:\/\/(.+?)\// )[ 1 ]
-                                    const peekImg = GM_addElement( itemInnerDiv, 'img', {
-                                        id: 'bembedImg',
-                                        src: `https://${ sbImgHost }/previews/${ videoId }.preview.jpg`
-                                    } )
-                                    peekImg.style.maxHeight = '300px'
-                                    fauxHistoryPushState( link.href )
-                                } )
-                                link.after( button )
-                            }
+
+                            if ( item.querySelector( '#slotsDiv' ) )
+                                return // 🛑
+
                             if ( link.href.match( /(voe)/ ) ) {
                                 const doodButton = GM_addElement( 'button', { textContent: 'Voe' } )
                                 doodButton.addEventListener( 'click', () => {
@@ -148,15 +135,6 @@
                                 } )
                                 link.after( doodButton )
                             }
-                            if ( link.href.match( /d000d|ds2play|d0000d|dood/ ) ) {
-                                // const doodButton = GM_addElement( 'button', { textContent: 'Dood' } )
-                                // doodButton.addEventListener( 'click', async () => {
-                                // if ( itemInnerDiv.querySelector( '#doodImg' ) ) return
-                                const resText = await GMXmlHttpRequest( link.href, null, true )
-                                const slidesId = resText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ]
-                                const imgSrc = `https://img.doodcdn.co/slides/${ slidesId }.jpg`
-                                generateElements( `<a href=${ link }><img id=doodImg src=${ imgSrc }></a>`, itemInnerDiv, true )
-                            }
                             if ( link.href.match( /(streamiwish|cdnstream|jodwish|74k)/ ) ) {
 
                                 const doc = await GMXmlHttpRequest( link.href )
@@ -165,6 +143,12 @@
                                 storyboard( item, 10, 10, link.href, null, null, 100, `${ stem }${ path }0000.jpg` )
                                 expandBlogtrottrItem()
 
+                            }
+                            if ( link.href.match( /d000d|ds2play|d0000d|dood/ ) ) {
+                                const resText = await GMXmlHttpRequest( link.href, null, true )
+                                const slidesId = resText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ]
+                                const imgSrc = `https://img.doodcdn.co/slides/${ slidesId }.jpg`
+                                generateElements( `<a href=${ link }><img id=doodImg src=${ imgSrc }></a>`, itemInnerDiv, true )
                             }
                         } )
 
@@ -489,14 +473,17 @@
                 document.querySelector( 'table[role=presentation]:not([class])' ).parentElement.prepend( mediumParent )
                 console.log( mediumParent )
                 mediumParent.classList.add( 'fixedCSS' )
-                document.querySelectorAll( `b[id]` ).forEach( item => {
-                    const mainItem = grandParent( item, 7 )
+
+                document.querySelectorAll( `img[alt=Claps]` ).forEach( item => {
+                    const mainItem = grandParent( item, 6 )
                     if ( !mainItem.querySelector( '[alt="Member-only content"]' ) ) {
                         mainItem.style.width = '48%'
                         mediumParent.prepend( mainItem )
                     }
                 } )
+
                 break
+
             case 'MUO':
             case 'MUO Windows':
             case 'MUO Daily':
@@ -637,7 +624,67 @@
                     const itemHref = item.querySelector( `a` ).href
                     const itemTitle = item.querySelector( `a` ).textContent
 
+                    async function addIframeHrefsMailBrew () {
+                        const tempDoc = await GMXmlHttpRequest( itemHref )
+                        const iframes = tempDoc.querySelectorAll( 'iframe' )
+                        iframes.forEach( ( iframe ) => {
+                            GM_addElement( item, 'a', {
+                                textContent: iframe.src,
+                                href: iframe.src,
+                                style: 'display: block'
+                            } )
+                        } )
+                        addPeekButtonsMailBrew()
+                    }
+
+                    function addPeekButtonsMailBrew () {
+
+                        const links = item.querySelectorAll( 'a' )
+                        links.forEach( async ( link ) => {
+
+                            if ( item.querySelector( '#slotsDiv' ) )
+                                return // 🛑
+
+                            if ( link.href.match( /(voe)/ ) ) {
+                                const doodButton = GM_addElement( 'button', { textContent: 'Voe' } )
+                                doodButton.addEventListener( 'click', () => {
+                                    if ( itemInnerDiv.querySelector( '#voeImg' ) ) return
+                                    const videoId = link.href.match( /\..+\/(.+?)$/ )[ 1 ]
+                                    const imageUrl = `https://i.voe.sx/cache/${ videoId }_storyboard_L0.jpg`
+                                    storyboardFlex( itemInnerDiv, 10, 10, imageUrl, link.href, true )
+                                    item.style.width = '100%'
+                                    item.style.maxWidth = 'unset'
+                                    fauxHistoryPushState( link.href )
+                                } )
+                                link.after( doodButton )
+                            }
+                            if ( link.href.match( /(streamiwish|cdnstream|jodwish|74k)/ ) ) {
+
+                                const doc = await GMXmlHttpRequest( link.href )
+                                const stem = doc.querySelector( '#vplayer > img' ).src.match( /.+\// )[ 0 ]
+                                const path = link.href.match( /\/(............)$/ )[ 1 ]
+                                storyboard( item, 10, 10, link.href, null, null, 100, `${ stem }${ path }0000.jpg` )
+                                expandBlogtrottrItem()
+
+                            }
+                            if ( link.href.match( /d000d|ds2play|d0000d|dood|do0od/ ) ) {
+                                const resText = await GMXmlHttpRequest( link.href, null, true )
+                                const slidesId = resText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ]
+                                const imgSrc = `https://img.doodcdn.co/slides/${ slidesId }.jpg`
+                                generateElements( `<a href=${ link }><img id=doodImg src=${ imgSrc }></a>`, item, true )
+                            }
+                        } )
+
+                    }
+
                     switch ( mbFeedTitle ) {
+
+                        case 'fxggxt.com':
+                            addIframeHrefsMailBrew()
+                            break
+                        case 'CocyStream':
+                            addIframeHrefsMailBrew()
+                            break
                         case 'MasalaDesi':
                             item.style.width = '100%'
                             item.style.maxWidth = 'unset'

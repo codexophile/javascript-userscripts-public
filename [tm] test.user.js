@@ -4,33 +4,97 @@
 ( async function () {
     'use strict'
 
-    document.querySelectorAll( `p` ).forEach( item => { item.remove() } )
+    // ==UserScript==
+    // @name         Draggable GUI
+    // @namespace    http://tampermonkey.net/
+    // @version      0.1
+    // @description  Create a draggable GUI with collapse and close functionality
+    // @author       Your Name
+    // @match        *://*/*
+    // @grant        none
+    // ==/UserScript==
 
-    const doc = await GMXmlHttpRequest( 'https://74k.io/e/j8v2rkgjmvb8', null, true )
-    GM_setClipboard( doc )
-    return
-    const src = doc.querySelector( '#vplayer > img' ).src.replace( '.jpg', '0000.jpg' )
-    window.open( src )
-    //# storyboard test
-    // const videoUrl = 'https://www.videosxgays.com/video/153352/apelle-moi-maitre-quand-je-te-baise-sly-conan-jean-pierre-noreaux'
+    // Create the GUI container
+    const guiContainer = document.createElement( 'div' )
+    guiContainer.style.position = 'fixed'
+    guiContainer.style.top = '50px'
+    guiContainer.style.left = '50px'
+    guiContainer.style.width = '300px'
+    guiContainer.style.border = '1px solid #ccc'
+    guiContainer.style.backgroundColor = '#f0f0f0'
+    guiContainer.style.zIndex = '9999'
+    guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)'
 
-    // const doc = await GMXmlHttpRequest( videoUrl )
-    // const sbSrc = doc.querySelector( '[property="twitter:image"]' ).content.replace( '/default', '/nvsprite' )
-    // const script = doc.querySelector( 'script' )
-    // const match = script.innerHTML.match( /"duration": "(\w\w(\d+)S)"/ )
-    // let duration
-    // if ( match )
-    //     duration = match[ 2 ]
-    // else
-    //     alert( 'error' )
+    // Create the header
+    const header = document.createElement( 'div' )
+    header.style.backgroundColor = '#e0e0e0'
+    header.style.padding = '10px'
+    header.style.cursor = 'move'
+    header.style.display = 'flex'
+    header.style.justifyContent = 'space-between'
+    header.style.alignItems = 'center'
+    header.innerText = 'Basic dialog'
 
-    // const allUrls = sbSrc
-    // const trueNoOfSlots = 20
-    // const samplingFq = duration / trueNoOfSlots
+    // Create the collapse button
+    const collapseBtn = document.createElement( 'button' )
+    collapseBtn.innerHTML = '-'
+    collapseBtn.style.marginLeft = 'auto'
+    collapseBtn.style.marginRight = '5px'
+    collapseBtn.onclick = () => {
+        if ( body.style.display === 'none' ) {
+            body.style.display = 'block'
+            collapseBtn.innerHTML = '-'
+        } else {
+            body.style.display = 'none'
+            collapseBtn.innerHTML = '+'
+        }
+    }
 
-    // const modalBody = generateElements( '<div></div>', document.body )
-    // await storyboardHorizontal( modalBody, 20, 1, videoUrl, null, samplingFq, trueNoOfSlots, allUrls )
-    // return
+    // Create the close button
+    const closeBtn = document.createElement( 'button' )
+    closeBtn.innerHTML = 'x'
+    closeBtn.onclick = () => {
+        guiContainer.remove()
+    }
+
+    // Append buttons to the header
+    header.appendChild( collapseBtn )
+    header.appendChild( closeBtn )
+
+    // Create the body
+    const body = document.createElement( 'div' )
+    body.style.padding = '10px'
+    body.style.backgroundColor = '#fff'
+    body.innerText = 'This is the body of the dialog.'
+
+    // Append header and body to the container
+    guiContainer.appendChild( header )
+    guiContainer.appendChild( body )
+
+    // Append the container to the document body
+    document.body.appendChild( guiContainer )
+
+    // Make the GUI draggable
+    let isDragging = false
+    let offsetX = 0
+    let offsetY = 0
+
+    header.onmousedown = ( e ) => {
+        isDragging = true
+        offsetX = e.clientX - guiContainer.getBoundingClientRect().left
+        offsetY = e.clientY - guiContainer.getBoundingClientRect().top
+    }
+
+    document.onmousemove = ( e ) => {
+        if ( isDragging ) {
+            guiContainer.style.left = `${ e.clientX - offsetX }px`
+            guiContainer.style.top = `${ e.clientY - offsetY }px`
+        }
+    }
+
+    document.onmouseup = () => {
+        isDragging = false
+    }
 
 
 
