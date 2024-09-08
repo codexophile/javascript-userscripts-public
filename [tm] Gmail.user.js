@@ -679,9 +679,8 @@
 
                     switch ( mbFeedTitle ) {
 
+                        case 'GVDBlog':
                         case 'fxggxt.com':
-                            addIframeHrefsMailBrew()
-                            break
                         case 'CocyStream':
                             addIframeHrefsMailBrew()
                             break

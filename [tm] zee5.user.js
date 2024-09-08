@@ -2,6 +2,7 @@
     'use strict'
 
     const element = await waitFor( '.vjs-vtt-thumbnail-display[style]' )
+    console.log( element )
 
     try {
         let nOfImgs = Math.ceil( document.querySelectorAll( `video` )[ 0 ].duration / 5 )

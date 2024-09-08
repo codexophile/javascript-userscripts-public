@@ -2,39 +2,39 @@
 
 function toSeconds ( timeString ) {
 
-    const a = timeString.split( ':' ).reverse()
-    let seconds = 0
+    const a = timeString.split( ':' ).reverse();
+    let seconds = 0;
 
-    if ( +a[ 2 ] ) seconds += ( +a[ 2 ] ) * 60 * 60
-    if ( +a[ 1 ] ) seconds += ( +a[ 1 ] ) * 60
-    if ( +a[ 0 ] ) seconds += ( +a[ 0 ] )
+    if ( +a[ 2 ] ) seconds += ( +a[ 2 ] ) * 60 * 60;
+    if ( +a[ 1 ] ) seconds += ( +a[ 1 ] ) * 60;
+    if ( +a[ 0 ] ) seconds += ( +a[ 0 ] );
 
-    return seconds
+    return seconds;
 
 }
 
 function generateUniqueString ( length ) {
-    let result = ''
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    const charactersLength = characters.length
-    let counter = 0
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
     while ( counter < length ) {
-        result += characters.charAt( Math.floor( Math.random() * charactersLength ) )
-        counter += 1
+        result += characters.charAt( Math.floor( Math.random() * charactersLength ) );
+        counter += 1;
     }
-    return result
+    return result;
 }
 
 function downloadText ( filename, text ) {
-    const dlLink = document.createElement( 'a' )
-    const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`
-    dlLink.href = uriContent
-    dlLink.setAttribute( 'download', filename )
-    dlLink.click()
+    const dlLink = document.createElement( 'a' );
+    const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`;
+    dlLink.href = uriContent;
+    dlLink.setAttribute( 'download', filename );
+    dlLink.click();
 }
 
 function capitalizeFirstLetter ( string ) {
-    return string.charAt( 0 ).toUpperCase() + string.slice( 1 )
+    return string.charAt( 0 ).toUpperCase() + string.slice( 1 );
 }
 
 function forHumans ( seconds ) {
@@ -44,31 +44,31 @@ function forHumans ( seconds ) {
         [ Math.floor( ( ( seconds % 31536000 ) % 86400 ) / 3600 ), 'H' ],
         [ Math.floor( ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) / 60 ), 'm' ],
         [ ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) % 60, 's' ],
-    ]
-    var returntext = ''
+    ];
+    var returntext = '';
 
     for ( var i = 0, max = levels.length; i < max; i++ ) {
-        if ( levels[ i ][ 0 ] === 0 ) continue
-        returntext += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] )
+        if ( levels[ i ][ 0 ] === 0 ) continue;
+        returntext += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] );
     };
-    return returntext.trim()
+    return returntext.trim();
 }
 
 //ANCHOR - Style related
 
 function getStyleOrComputedStyle ( element, property ) {
-    return element.style[ property ] ? element.style[ property ] : getComputedStyle( element )[ property ]
+    return element.style[ property ] ? element.style[ property ] : getComputedStyle( element )[ property ];
 }
 
 function addStyle ( css ) {
-    const allStyleEls = document.head.querySelectorAll( `style` )
-    let alreadyExists
+    const allStyleEls = document.head.querySelectorAll( `style` );
+    let alreadyExists;
     allStyleEls.forEach( styleEl => {
-        if ( styleEl.innerText === css ) { alreadyExists = true }
-    } )
-    if ( alreadyExists ) return // 🛑
-    const newStyleEl = generateElements( `<style>${ css }</style>`, document.head, true )
-    return newStyleEl
+        if ( styleEl.innerText === css ) { alreadyExists = true; }
+    } );
+    if ( alreadyExists ) return; // 🛑
+    const newStyleEl = generateElements( `<style>${ css }</style>`, document.head, true );
+    return newStyleEl;
 }
 
 function style ( targetEl, css, debug ) {
@@ -77,23 +77,236 @@ function style ( targetEl, css, debug ) {
         .split( ';' )
         .filter( line => line )  // gets rid of empty lines
         .forEach( declaration => {
-            if ( debug ) console.log( declaration )
-            const [ property, value ] = declaration.split( ':' )
-            const propertySplit = property.split( '-' )
-            const propertyLhs = propertySplit[ 0 ].toLowerCase()
-            const propertyRhs = propertySplit[ 1 ] ? capitalizeFirstLetter( propertySplit[ 1 ] ) : ''
-            targetEl.style[ `${ propertyLhs }${ propertyRhs }` ] = value
-        } )
+            if ( debug ) console.log( declaration );
+            const [ property, value ] = declaration.split( ':' );
+            const propertySplit = property.split( '-' );
+            const propertyLhs = propertySplit[ 0 ].toLowerCase();
+            const propertyRhs = propertySplit[ 1 ] ? capitalizeFirstLetter( propertySplit[ 1 ] ) : '';
+            targetEl.style[ `${ propertyLhs }${ propertyRhs }` ] = value;
+        } );
 }
 
 function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionProperty = 'absolute' ) {
-    var rect = staticEl.getBoundingClientRect()
+    var rect = staticEl.getBoundingClientRect();
     style( targetEl, `
         position: ${ positionProperty };
         left: ${ rect.left + x }px;
         top: ${ rect.top + y }px;
         zIndex: 1
-    `)
+    `);
+
+}
+
+//ANCHOR Storyboard functions
+
+function playVideo ( videoEl, total, index ) {
+    videoEl.scrollIntoView();
+    const duration = videoEl.duration;
+    videoEl.currentTime = duration / total * ( index );
+    videoEl.play();
+}
+
+function sbControls ( video, trueNoOfSlots, sbParent ) {
+
+    if ( video ) {
+
+        const scrollBackBtn = generateElements( '<button></button>' );
+        scrollBackBtn.classList.add( 'storyboardControl' );
+        scrollBackBtn.textContent = '🔙';
+        scrollBackBtn.addEventListener( 'click', async () => {
+            const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].at( -1 );
+            targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } );
+            await asyncTimeout( 250 );
+            await blink( targetEl, 250, 2 );
+        } );
+
+        const toggleBtn = generateElements( '<button></button>' );
+        toggleBtn.classList.add( 'storyboardControl' );
+        toggleBtn.textContent = '💠';
+        toggleBtn.addEventListener( 'click', () => {
+            if ( sbParent.style.display === 'none' ) {
+                sbParent.style.display = 'block';
+                sbParent.scrollIntoView( { block: 'start' } );
+            }
+            else {
+                sbParent.style.display = 'none';
+                sbParent.parentNode.scrollIntoView( { block: 'center' } );
+            }// sbParent.querySelectorAll( '.storyboardItem' ).forEach( ( el ) => {
+            //     toggle( el )
+            // } )
+        } );
+
+        waitFor( '#collapsibleContent' ).then( ( el ) => {
+            el.append( scrollBackBtn, toggleBtn );
+            calculateWidthAndExpand( el );
+        } );
+
+        if ( video.readyState > 0 ) {
+            jumpToSlot();
+        }
+
+        video.addEventListener( 'loadeddata', jumpToSlot );
+
+        video.addEventListener( 'timeupdate', () => {
+            const duration = video.duration;
+            const currentSlotNo = Math.round( video.currentTime * trueNoOfSlots / duration );
+            const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' );
+            repeat( currentSlotNo, index => {
+                if ( !storyboardItems[ index ] ) return; // 🛑
+                storyboardItems[ index ].classList.add( 'wentPast' );
+                storyboardItems[ index ].style.border = '3px solid red';
+            } );
+            for ( let index = currentSlotNo + 1; index <= trueNoOfSlots; index++ ) {
+                if ( !storyboardItems[ index ] ) return; // 🛑
+
+                storyboardItems[ index ].classList.remove( 'wentPast' );
+                storyboardItems[ index ].style.border = '3px solid white';
+
+            }
+
+        } );
+
+    }
+
+    function jumpToSlot () {
+        const matches = location.hash.match( /#slot=(\d+?)($|#)/ );
+        if ( !matches ) return; // 🛑
+        // fauxHistoryPushState( location.href.replace( location.hash, '' ) )
+        addHistoryEntry( location.href.replace( location.hash, '' ) );
+        slotNo = matches[ 1 ];
+        if ( slotNo ) playVideo( video, trueNoOfSlots, slotNo );
+    }
+
+}
+
+async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
+
+    //? uncomment the following line if something breaks
+    // if ( !vidOnPage ) vidOnPage = document.querySelector( `video` );
+
+    const slotsDiv = generateElements( '<div></div>' );
+    parent.append( slotsDiv );
+    slotsDiv.id = 'slotsDiv';
+    slotsDiv.style.display = 'flex';
+    slotsDiv.style.flexWrap = 'wrap';
+    slotsDiv.style.justifyContent = 'space-evenly';
+
+    const promises = imgUrls.map( ( url, index ) => storyboardFlex( horizontal, vertical, url, index, trueNoOfSlots ) );
+    let index = 0;
+    const promise = new Promise( resolve => {
+        Promise.allSettled( promises ).then( results => {
+            results.forEach(
+                result => result.value.forEach(
+                    slot => {
+                        slotsDiv.append( slot );
+                        slot.index = index;
+                        // slot.innerText += `: (${ index })`
+                        const link = generateElements( '<a></a>' );
+                        if ( linkToVid )
+                            link.href = `${ linkToVid }#slot=${ index }`;
+                        link.target = '_blank';
+                        link.style = `
+                            display: block;
+                            width: 100%;
+                            height: 100%;
+                            top: 0px;
+                            left: 0px;`;
+                        slot.append( link );
+                        index++;
+                        slot.addEventListener( 'click', ( ev ) => {
+                            if ( !samplingFq ) samplingFq = vidOnPage.duration / ( horizontal * vertical );
+                            vidOnPage.currentTime = ev.target.closest( 'div' ).index * samplingFq;
+                            vidOnPage.play();
+                            vidOnPage.scrollIntoView( { behavior: 'instant', block: 'center' } );
+                        } );
+                    }
+                ) );
+            resolve( slotsDiv );
+
+        } );
+    } );
+    sbControls( vidOnPage, trueNoOfSlots, parent );
+    return await promise;
+}
+
+async function storyboardToggleable ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
+
+    const slotsDiv = await storyboard( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls );
+
+    slotsDiv.style.maxWidth = '90vw';
+    slotsDiv.style.maxHeight = '80vh';
+    slotsDiv.style.overflow = 'auto';
+
+    return slotsDiv;
+}
+
+async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
+
+    const allSlots = [];
+    const imgElement = generateElements( '<img></img>', document.body );
+    imgElement.style.display = 'none';
+    imgElement.src = imgSrc;
+
+    const promise = new Promise( ( resolve ) => {
+        imgElement.addEventListener( 'load', () => {
+
+            const normalTotal = horizontal * vertical;
+            const noOfSlotsDone = index * normalTotal;
+            const noOfSlotsRemaining = trueNoOfSlots - noOfSlotsDone;
+            const thisIsFinalSb = noOfSlotsRemaining / normalTotal < 1;
+            if ( thisIsFinalSb )
+                vertical = Math.ceil( noOfSlotsRemaining / horizontal );
+
+            total = horizontal * vertical;
+            width = imgElement.naturalWidth;
+            height = imgElement.naturalHeight;
+            itemWidth = width / horizontal;
+            itemHeight = height / vertical;
+
+            repeat( total, ( i ) => {
+
+                const storyboardItem = generateElements( '<div></div>' );
+                storyboardItem.classList.add( imgSrc.slice( -7 ) );
+                storyboardItem.classList.add( 'storyboardItem' );
+
+                allSlots.push( storyboardItem );
+
+                x = i % horizontal;
+                y = Math.floor( i / horizontal );
+
+                xPosition = width - itemWidth * x;
+                yPosition = height - itemHeight * y;
+                storyboardItem.style = `
+                    background-color: black;
+                    text-shadow: white 0px 0px 10px;
+                    background-image: url('${ imgElement.src }');
+                    background-position: ${ xPosition }px ${ yPosition }px;
+                    width: ${ itemWidth }px;
+                    min-width: ${ itemWidth }px;
+                    height: ${ itemHeight }px;
+                    margin: 1px
+                    border: solid;
+                    border-color: white;
+                `;
+
+            } );
+
+            resolve( allSlots );
+
+        } );
+        imgElement.addEventListener( 'error', () => {
+            const errorEl = generateElements( '<div>Image load error</div>' );
+            style( errorEl, `
+                color: red;
+                font-size: 20px;
+            `);
+            allSlots.push( errorEl );
+            resolve( allSlots );
+            return false;
+        } );
+    } );
+    let result = await promise;
+    return result;
 
 }
 
@@ -106,33 +319,33 @@ function addAiImageDownloadButtons () {
 function isIterable ( obj ) {
     // checks for null and undefined
     if ( obj == null ) {
-        return false
+        return false;
     }
-    return typeof obj[ Symbol.iterator ] === 'function'
+    return typeof obj[ Symbol.iterator ] === 'function';
 }
 
 
 function asyncTimeout ( ms ) {
-    return new Promise( resolve => setTimeout( resolve, ms ) )
+    return new Promise( resolve => setTimeout( resolve, ms ) );
 }
 
 function getTextNodes ( el ) {
-    let textNodes = []
+    let textNodes = [];
     el.childNodes.forEach( node => {
         if ( node.nodeType === Node.TEXT_NODE )
-            textNodes.push( node )
-    } )
-    return textNodes
+            textNodes.push( node );
+    } );
+    return textNodes;
 }
 
 async function load ( url, selector, parent ) {
-    const html = await GMXmlHttpRequest( url, null, true )
-    const doc = generateDoc( html )
-    const selected = doc.querySelectorAll( selector )
+    const html = await GMXmlHttpRequest( url, null, true );
+    const doc = generateDoc( html );
+    const selected = doc.querySelectorAll( selector );
     if ( parent ) {
-        parent.append( selected )
+        parent.append( selected );
     }
-    return selected
+    return selected;
 }
 
 function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
@@ -144,44 +357,43 @@ function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
             headers: headers,
             responseType: 'document',
             onload: response => {
-                const resText = response.responseText
+                const resText = response.responseText;
                 if ( returnHtml )
-                    resolve( resText )
-                const tempDoc = generateDoc( resText, true )
-                resolve( tempDoc )
+                    resolve( resText );
+                const tempDoc = generateDoc( resText, true );
+                resolve( tempDoc );
             },
             onerror: () => reject( 'onerror' ),
             ontimeout: () => reject( 'ontimeout' )
-        } )
+        } );
         // function errorFunction () { reject( 'error loading page' ) }
-    } )
+    } );
 
 }
-
 
 
 function pipeline ( ...functions ) {
     functions.reduce( ( accumilator, currentFn ) => {
-        return currentFn( accumilator )
-    } )
+        return currentFn( accumilator );
+    } );
 }
 
 function sanitizeTrackingLinks ( selector, mainTrackerRegex, secondaryTrackerRegex ) {
     document.querySelectorAll( selector ).forEach( ( link ) => {
-        link.removeAttribute( 'data-saferedirecturl' )
-        let newHref = link.href.replace( mainTrackerRegex, '' )
-        newHref = decodeURIComponent( newHref )
+        link.removeAttribute( 'data-saferedirecturl' );
+        let newHref = link.href.replace( mainTrackerRegex, '' );
+        newHref = decodeURIComponent( newHref );
         if ( !secondaryTrackerRegex ) {
-            link.href = newHref
-            return
+            link.href = newHref;
+            return;
         }
-        newHref = newHref.replace( secondaryTrackerRegex, '' )
-        link.href = newHref
-    } )
+        newHref = newHref.replace( secondaryTrackerRegex, '' );
+        link.href = newHref;
+    } );
 }
 
 function beep ( duration, frequency, volume, type, callback ) {
-    var audioCtx = new ( window.AudioContext || window.webkitAudioContext || window.audioContext )
+    var audioCtx = new ( window.AudioContext || window.webkitAudioContext || window.audioContext );
 
     //All arguments are optional:
 
@@ -190,26 +402,26 @@ function beep ( duration, frequency, volume, type, callback ) {
     //volume of the tone. Default is 1, off is 0.
     //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
     //callback to use on end of tone
-    var oscillator = audioCtx.createOscillator()
-    var gainNode = audioCtx.createGain()
+    var oscillator = audioCtx.createOscillator();
+    var gainNode = audioCtx.createGain();
 
-    oscillator.connect( gainNode )
-    gainNode.connect( audioCtx.destination )
+    oscillator.connect( gainNode );
+    gainNode.connect( audioCtx.destination );
 
-    if ( volume ) { gainNode.gain.value = volume }
-    if ( frequency ) { oscillator.frequency.value = frequency }
-    if ( type ) { oscillator.type = type }
-    if ( callback ) { oscillator.onended = callback }
+    if ( volume ) { gainNode.gain.value = volume; }
+    if ( frequency ) { oscillator.frequency.value = frequency; }
+    if ( type ) { oscillator.type = type; }
+    if ( callback ) { oscillator.onended = callback; }
 
-    oscillator.start( audioCtx.currentTime )
-    oscillator.stop( audioCtx.currentTime + ( ( duration || 500 ) / 1000 ) )
+    oscillator.start( audioCtx.currentTime );
+    oscillator.stop( audioCtx.currentTime + ( ( duration || 500 ) / 1000 ) );
 
 }
 
 function markElAsProcessed ( el, markedEls, execute ) {
     if ( markedEls.includes( el ) === false ) {
-        markedEls.push( el )
-        execute( el )
+        markedEls.push( el );
+        execute( el );
     }
 }
 
@@ -221,13 +433,13 @@ async function GMXmlHttpReqResponse ( url ) {
             url: url,
             responseType: 'document',
             onload: function ( response ) {
-                resolve( response.responseText )
+                resolve( response.responseText );
             }
             ,
-            onerror: () => { reject( 'error' ) }
-        } )
-    } )
-    return await promise
+            onerror: () => { reject( 'error' ); }
+        } );
+    } );
+    return await promise;
 }
 
 function generateAllYouTubeSbUrls ( fullYTHtml ) {
@@ -236,18 +448,18 @@ function generateAllYouTubeSbUrls ( fullYTHtml ) {
     // https://github.com/hjk789/Userscripts/tree/master/YouTube-Clickbait-Buster
     // "Peek video content" button onClick function
 
-    const resText = fullYTHtml
-    const fullStoryboardURL = resText.match( /"playerStoryboardSpecRenderer":.+?"(https.+?)",/ )
+    const resText = fullYTHtml;
+    const fullStoryboardURL = resText.match( /"playerStoryboardSpecRenderer":.+?"(https.+?)",/ );
 
     if ( !fullStoryboardURL || fullStoryboardURL[ 1 ].includes( "googleadservices" ) ) {
         // It can happen sometimes that the storyboard provided is of the ad, instead of the video itself.
         // But this seems to only happen on videos that don't have a storyboard available anyway.
-        const temp = 'Storyboard not available for this video!'
-        return { temp, temp, temp }
+        const temp = 'Storyboard not available for this video!';
+        return { temp, temp, temp };
     }
 
-    const urlSplit = fullStoryboardURL[ 1 ].split( "|" )
-    let mode = urlSplit[ 3 ] ? 3 : 1
+    const urlSplit = fullStoryboardURL[ 1 ].split( "|" );
+    let mode = urlSplit[ 3 ] ? 3 : 1;
     // YouTube provides 2 modes of storyboards: one with 25 frames per chunk
     // and another one with 60 frames per chunk.I've choose the former mode,
     // as in the second one the frames are too tiny to see anything.
@@ -255,448 +467,196 @@ function generateAllYouTubeSbUrls ( fullYTHtml ) {
     if ( !urlSplit[ mode ] ) {
         // There's also a third mode, videos that have only one mode and ongoing lives storyboards,
         // but I couldn't find any way to make them work.
-        alert( "Storyboard not available for this video yet! Try again some hours later." )
-        return
+        alert( "Storyboard not available for this video yet! Try again some hours later." );
+        return;
     }
 
-    const storyboardId = urlSplit[ mode ].replace( /.+#rs/, "&sigh=rs" )
-    if ( mode == 3 ) mode--
+    const storyboardId = urlSplit[ mode ].replace( /.+#rs/, "&sigh=rs" );
+    if ( mode == 3 ) mode--;
 
-    const videoLength = +resText.match( /"lengthSeconds":"(\d+)","ownerProfileUrl/ )[ 1 ]
+    const videoLength = +resText.match( /"lengthSeconds":"(\d+)","ownerProfileUrl/ )[ 1 ];
     const samplingFq =
         videoLength <= 120
             ? 1 : videoLength <= 300
                 ? 2 : videoLength < 900
-                    ? 5 : 10
+                    ? 5 : 10;
     // Depending on the video length, YouTube takes snapshots with different time spaces.
 
-    const trueNoOfSlots = Math.round( videoLength / samplingFq )
-    const noOfSbs = trueNoOfSlots / 25
-    let allUrls = []
+    const trueNoOfSlots = Math.round( videoLength / samplingFq );
+    const noOfSbs = trueNoOfSlots / 25;
+    let allUrls = [];
     repeat( noOfSbs, ( index ) => {
-        const base = urlSplit[ 0 ].replace( "L$L/$N", `L${ mode }/M${ index }` )
+        const base = urlSplit[ 0 ].replace( "L$L/$N", `L${ mode }/M${ index }` );
         // The storyboard URL uses the "L#/M#" parameter to
         // determine the type and part of the storyboard to load.
         // L1 is the storyboard chunk with 60 frames, and L2 is the one with 25 frames.
         // M0 is the first chunk, M1 the second, and so on.
-        allUrls.push( base + storyboardId )
-    } )
+        allUrls.push( base + storyboardId );
+    } );
 
-    return { allUrls, trueNoOfSlots, samplingFq }
+    return { allUrls, trueNoOfSlots, samplingFq };
 
 }
 
 function repeat ( times, repeatWhat ) {
     for ( let index = 0; index < times; index++ ) {
-        repeatWhat( index )
+        repeatWhat( index );
     }
 }
 
 function eagerLoad ( selector, load, scrollableEl = window ) {
 
-    let items = []
+    let items = [];
 
     // for all the elements that exist at page load
-    document.querySelectorAll( selector ).forEach( item => { items.push( item ) } )
+    document.querySelectorAll( selector ).forEach( item => { items.push( item ); } );
     // for the elements that appear after page load
     let observer = new MutationObserver( ( mutations ) => {
         mutations.forEach( mutation => {
             mutation.addedNodes.forEach( item => {
-                if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item )
-            } )
-        } )
-    } )
-    observer.observe( document.body, { childList: true, subtree: true } )
+                if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item );
+            } );
+        } );
+    } );
+    observer.observe( document.body, { childList: true, subtree: true } );
 
-    eventTrigger()
-    scrollableEl.addEventListener( 'scroll', eventTrigger )
+    eventTrigger();
+    scrollableEl.addEventListener( 'scroll', eventTrigger );
     'DOMContentLoaded load resize'.split( ' ' ).forEach( event => {
-        window.addEventListener( event, eventTrigger )
-    } )
+        window.addEventListener( event, eventTrigger );
+    } );
 
     function eventTrigger () {
         items.forEach( ( item, index ) => {
-            if ( item.getBoundingClientRect().top - window.innerHeight > 500 ) return // 🛑
-            items.splice( index, 1 )
-            load( item )
-        } )
+            if ( item.getBoundingClientRect().top - window.innerHeight > 500 ) return; // 🛑
+            items.splice( index, 1 );
+            load( item );
+        } );
     }
 
 }
 function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
 
-    let items = []
+    let items = [];
 
     // for all the elements that exist at page load
-    document.querySelectorAll( selector ).forEach( item => { items.push( item ) } )
-    console.log( selector )
+    document.querySelectorAll( selector ).forEach( item => { items.push( item ); } );
+    console.log( selector );
     // for the elements that appear after page load
     let observer = new MutationObserver( ( mutations ) => {
         mutations.forEach( mutation => {
             mutation.addedNodes.forEach( item => {
-                if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item )
-            } )
-        } )
-    } )
-    observer.observe( document.body, { childList: true, subtree: true } )
+                if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item );
+            } );
+        } );
+    } );
+    observer.observe( document.body, { childList: true, subtree: true } );
 
-    lazy()
-    scrollableEl.addEventListener( 'scroll', lazy )
+    lazy();
+    scrollableEl.addEventListener( 'scroll', lazy );
     'DOMContentLoaded load resize'.split( ' ' ).forEach( event => {
-        window.addEventListener( event, lazy )
-    } )
+        window.addEventListener( event, lazy );
+    } );
 
     function lazy () {
         items.forEach( ( item, index ) => {
-            if ( !isElementInViewport( item ) ) return // 🛑
-            items.splice( index, 1 )
-            load( item )
-        } )
+            if ( !isElementInViewport( item ) ) return; // 🛑
+            items.splice( index, 1 );
+            load( item );
+        } );
     }
 
 }
 
 function lazyLoad ( load, ...items ) {
 
-    lazy()
+    lazy();
     'DOMContentLoaded load resize scroll'.split( ' ' ).forEach( event => {
-        window.addEventListener( event, lazy )
-    } )
+        window.addEventListener( event, lazy );
+    } );
 
     function lazy () {
         items.forEach( ( item, index ) => {
-            if ( !isElementInViewport( item ) ) return // 🛑
-            items.splice( index, 1 )
-            load( item )
-        } )
+            if ( !isElementInViewport( item ) ) return; // 🛑
+            items.splice( index, 1 );
+            load( item );
+        } );
     }
 
 }
 
 function dragElement ( targetEl, dragHandleEl ) {
 
-    targetEl.style.position = 'fixed'
-    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0
+    targetEl.style.position = 'fixed';
+    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
     if ( dragHandleEl )
-        dragHandleEl.onmousedown = dragMouseDown
+        dragHandleEl.onmousedown = dragMouseDown;
     else
-        targetEl.onmousedown = dragMouseDown
+        targetEl.onmousedown = dragMouseDown;
 
     function dragMouseDown ( e ) {
-        e = e || window.event
-        e.preventDefault()
+        e = e || window.event;
+        e.preventDefault();
         // get the mouse cursor position at startup:
-        pos3 = e.clientX
-        pos4 = e.clientY
-        document.onmouseup = closeDragElement
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
         // call a function whenever the cursor moves:
-        document.onmousemove = elementDrag
+        document.onmousemove = elementDrag;
     }
 
     function elementDrag ( e ) {
-        e = e || window.event
-        e.preventDefault()
+        e = e || window.event;
+        e.preventDefault();
         // calculate the new cursor position:
-        pos1 = pos3 - e.clientX
-        pos2 = pos4 - e.clientY
-        pos3 = e.clientX
-        pos4 = e.clientY
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
         // set the element's new position:
-        targetEl.style.top = ( targetEl.offsetTop - pos2 ) + "px"
-        targetEl.style.left = ( targetEl.offsetLeft - pos1 ) + "px"
+        targetEl.style.top = ( targetEl.offsetTop - pos2 ) + "px";
+        targetEl.style.left = ( targetEl.offsetLeft - pos1 ) + "px";
     }
 
     function closeDragElement () {
         // stop moving when mouse button is released:
-        document.onmouseup = null
-        document.onmousemove = null
+        document.onmouseup = null;
+        document.onmousemove = null;
     }
-}
-
-function playVideo ( videoEl, total, index ) {
-    videoEl.scrollIntoView()
-    duration = videoEl.duration
-    videoEl.currentTime = duration / total * ( index )
-    videoEl.play()
-}
-
-function sbControls ( video, trueNoOfSlots, sbParent ) {
-
-    if ( video ) {
-
-        const scrollBackBtn = generateElements( '<button></button>' )
-        scrollBackBtn.classList.add( 'storyboardControl' )
-        scrollBackBtn.textContent = '🔙'
-        scrollBackBtn.addEventListener( 'click', async () => {
-            const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].at( -1 )
-            targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } )
-            await asyncTimeout( 250 )
-            await blink( targetEl, 250, 2 )
-        } )
-
-        const toggleBtn = generateElements( '<button></button>' )
-        toggleBtn.classList.add( 'storyboardControl' )
-        toggleBtn.textContent = '💠'
-        toggleBtn.addEventListener( 'click', () => {
-            if ( sbParent.style.display === 'none' ) {
-                sbParent.style.display = 'block'
-                sbParent.scrollIntoView( { block: 'start' } )
-            }
-            else {
-                sbParent.style.display = 'none'
-                sbParent.parentNode.scrollIntoView( { block: 'center' } )
-            }// sbParent.querySelectorAll( '.storyboardItem' ).forEach( ( el ) => {
-            //     toggle( el )
-            // } )
-        } )
-
-        waitFor( '#collapsibleContent' ).then( ( el ) => {
-            el.append( scrollBackBtn, toggleBtn )
-            calculateWidthAndExpand( el )
-        } )
-
-        if ( video.readyState > 0 ) {
-            jumpToSlot()
-        }
-
-        video.addEventListener( 'loadeddata', jumpToSlot )
-
-        video.addEventListener( 'timeupdate', () => {
-            const duration = video.duration
-            const currentSlotNo = Math.round( video.currentTime * trueNoOfSlots / duration )
-            const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' )
-            repeat( currentSlotNo, index => {
-                if ( !storyboardItems[ index ] ) return // 🛑
-                storyboardItems[ index ].classList.add( 'wentPast' )
-                storyboardItems[ index ].style.border = '3px solid red'
-            } )
-            for ( let index = currentSlotNo + 1; index <= trueNoOfSlots; index++ ) {
-                if ( !storyboardItems[ index ] ) return // 🛑
-
-                storyboardItems[ index ].classList.remove( 'wentPast' )
-                storyboardItems[ index ].style.border = '3px solid white'
-
-            }
-            // repeat( trueNoOfSlots + 1, index => {
-            //     index = index + currentSlotNo
-            //     storyboardItems[ index ].classList.remove( 'wentPast' )
-            //     storyboardItems[ index ].style.border = '3px solid white'
-            // } )
-        } )
-
-    }
-
-    function jumpToSlot () {
-        const matches = location.hash.match( /#slot=(\d+?)($|#)/ )
-        if ( !matches ) return // 🛑
-        // fauxHistoryPushState( location.href.replace( location.hash, '' ) )
-        addHistoryEntry( location.href.replace( location.hash, '' ) )
-        slotNo = matches[ 1 ]
-        if ( slotNo ) playVideo( video, trueNoOfSlots, slotNo )
-    }
-
-}
-
-async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
-
-    const slotsDiv = generateElements( '<div></div>' )
-    parent.append( slotsDiv )
-    slotsDiv.id = 'slotsDiv'
-    slotsDiv.style.display = 'flex'
-    slotsDiv.style.flexWrap = 'wrap'
-    slotsDiv.style.justifyContent = 'space-evenly'
-
-    const promises = imgUrls.map( ( url, index ) => storyboardFlex( horizontal, vertical, url, index, trueNoOfSlots ) )
-    let index = 0
-    const promise = new Promise( resolve => {
-        Promise.allSettled( promises ).then( results => {
-            results.forEach(
-                result => result.value.forEach(
-                    slot => {
-                        slotsDiv.append( slot )
-                        slot.index = index
-                        // slot.innerText += `: (${ index })`
-                        const link = generateElements( '<a></a>' )
-                        if ( linkToVid )
-                            link.href = `${ linkToVid }#slot=${ index }`
-                        link.target = '_blank'
-                        link.style = `
-                            display: block;
-                            width: 100%;
-                            height: 100%;
-                            top: 0px;
-                            left: 0px;`
-                        slot.append( link )
-                        index++
-                        slot.addEventListener( 'click', ( ev ) => {
-                            //? uncomment the following line if something breaks
-                            // if ( !vidOnPage ) vidOnPage = document.querySelector( `video` )
-                            if ( !samplingFq ) samplingFq = vidOnPage.duration / ( horizontal * vertical )
-                            vidOnPage.currentTime = ev.target.closest( 'div' ).index * samplingFq
-                            vidOnPage.play()
-                            vidOnPage.scrollIntoView( { behavior: 'instant', block: 'center' } )
-                        } )
-                    }
-                ) )
-            resolve( slotsDiv )
-
-        } )
-    } )
-    sbControls( vidOnPage, trueNoOfSlots, parent )
-    return await promise
-}
-
-async function storyboardToggleable ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
-
-    const slotsDiv = await storyboard( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls )
-
-    slotsDiv.style.maxWidth = '90vw'
-    slotsDiv.style.maxHeight = '80vh'
-    slotsDiv.style.overflow = 'auto'
-
-    // const toggleBtn = generateElements( '<button>Toggle</button>' )
-    // slotsDiv.append( toggleBtn )
-    // toggleBtn.style = 'position: sticky; bottom: 0;'
-
-    // slotsDiv.style = 'overflow: auto; white-space: nowrap;'
-    // slotsDiv.querySelectorAll( 'div.storyboardItem' ).forEach( item => { item.style.display = 'inline-block' } )
-
-    // slotsDiv.addEventListener( 'wheel', ( event ) => {
-
-    //     event.preventDefault()
-
-    //     if ( event.deltaY > 0 )
-    //         slotsDiv.scrollBy( 100, 0 )
-    //     else
-    //         slotsDiv.scrollBy( -100, 0 )
-
-    // } )
-
-    return slotsDiv
-}
-
-async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
-
-    const allSlots = []
-    const imgElement = generateElements( '<img></img>', document.body )
-    imgElement.style.display = 'none'
-    imgElement.src = imgSrc
-
-    const promise = new Promise( ( resolve ) => {
-        imgElement.addEventListener( 'load', () => {
-
-            const normalTotal = horizontal * vertical
-            const noOfSlotsDone = index * normalTotal
-            const noOfSlotsRemaining = trueNoOfSlots - noOfSlotsDone
-            const thisIsFinalSb = noOfSlotsRemaining / normalTotal < 1
-            if ( thisIsFinalSb )
-                vertical = Math.ceil( noOfSlotsRemaining / horizontal )
-
-            total = horizontal * vertical
-            width = imgElement.naturalWidth
-            height = imgElement.naturalHeight
-            itemWidth = width / horizontal
-            itemHeight = height / vertical
-
-            repeat( total, ( i ) => {
-
-                const storyboardItem = generateElements( '<div></div>' )
-                storyboardItem.classList.add( imgSrc.slice( -7 ) )
-                storyboardItem.classList.add( 'storyboardItem' )
-
-                allSlots.push( storyboardItem )
-
-                x = i % horizontal
-                y = Math.floor( i / horizontal )
-
-                xPosition = width - itemWidth * x
-                yPosition = height - itemHeight * y
-                storyboardItem.style = `
-                    background-color: black;
-                    text-shadow: white 0px 0px 10px;
-                    background-image: url('${ imgElement.src }');
-                    background-position: ${ xPosition }px ${ yPosition }px;
-                    width: ${ itemWidth }px;
-                    min-width: ${ itemWidth }px;
-                    height: ${ itemHeight }px;
-                    margin: 1px
-                    border: solid;
-                    border-color: white;
-                `
-
-            } )
-
-            resolve( allSlots )
-
-        } )
-        imgElement.addEventListener( 'error', () => {
-            const errorEl = generateElements( '<div>Image load error</div>' )
-            style( errorEl, `
-                color: red;
-                font-size: 20px;
-            `)
-            allSlots.push( errorEl )
-            resolve( allSlots )
-            return false
-        } )
-    } )
-    let result = await promise
-    return result
-
-
-
-
-    // $controlSize = $( `<input type=range min=0 max=5 value=1 step=0.1>` )
-    // // $controlSize.prependTo( $container )
-    // $controlSize.on( 'input', function () {
-
-    //     $storyboardItems.css( `transform`, `scale(${ this.value })` )
-    //     $storyboardItems.css( `width`, `${ this.value * itemWidth }` )
-    //     $storyboardItems.css( `height`, `${ this.value * itemHeight }` )
-
-    // } )
-    // $controlSize_ = $( `<input type=range min=0 max=1000 value=1>` )
-    // $controlSize_.prependTo( $container )
-    // $controlSize_.on( 'input', function() {
-    //     document.title = this.value
-    //     $storyboardItems.css( `background-size`, `${this.value}%` )
-    //     // $storyboardItems.css( `background-size`, `${this.value/itemWidth*100}%` )
-    // } )
-
 }
 
 function blink ( element, interval, numberOfTimes ) {
     return new Promise( async resolve => {
-        element.style.transform = 'scale(1.3,1.3)'
-        await asyncTimeout( interval )
-        element.style.transform = ''
-        await asyncTimeout( interval )
-        element.style.transform = 'scale(1.3,1.3)'
-        await asyncTimeout( interval )
-        element.style.transform = ''
-        resolve
-    } )
+        element.style.transform = 'scale(1.3,1.3)';
+        await asyncTimeout( interval );
+        element.style.transform = '';
+        await asyncTimeout( interval );
+        element.style.transform = 'scale(1.3,1.3)';
+        await asyncTimeout( interval );
+        element.style.transform = '';
+        resolve;
+    } );
 }
 
 function fauxHistoryPushState ( url, timeout = 3000 ) {
-    const backgroundTab = GM_openInTab( url, true )
-    setTimeout( () => { backgroundTab.close() }, timeout )
+    const backgroundTab = GM_openInTab( url, true );
+    setTimeout( () => { backgroundTab.close(); }, timeout );
 }
 
 function addHistoryEntry ( newUrl ) {
-    const originalUrl = location.href
-    history.pushState( { state: 1 }, "new state", newUrl )
-    history.pushState( { state: 1 }, "new state", originalUrl )
+    const originalUrl = location.href;
+    history.pushState( { state: 1 }, "new state", newUrl );
+    history.pushState( { state: 1 }, "new state", originalUrl );
 }
 
 function removeEmptytextEls ( parent ) {
-    const divsOrPs = parent.querySelectorAll( 'div, p' )
+    const divsOrPs = parent.querySelectorAll( 'div, p' );
     divsOrPs.forEach( ( el ) => {
         if ( !el.textContent.trim() ) {
-            el.remove()
+            el.remove();
         }
-    } )
+    } );
 }
 
 /**
@@ -704,29 +664,29 @@ function removeEmptytextEls ( parent ) {
  * @param `url` Remote URL for the file to be downloaded
  */
 function Download ( { url, filename } ) {
-    const [ fetching, setFetching ] = useState( false )
-    const [ error, setError ] = useState( false )
+    const [ fetching, setFetching ] = useState( false );
+    const [ error, setError ] = useState( false );
 
     const download = ( url, name ) => {
         if ( !url ) {
-            throw new Error( "Resource URL not provided! You need to provide one" )
+            throw new Error( "Resource URL not provided! You need to provide one" );
         }
-        setFetching( true )
+        setFetching( true );
         fetch( url )
             .then( response => response.blob() )
             .then( blob => {
-                setFetching( false )
-                const blobURL = URL.createObjectURL( blob )
-                const a = document.createElement( "a" )
-                a.href = blobURL
-                a.style = "display: none"
+                setFetching( false );
+                const blobURL = URL.createObjectURL( blob );
+                const a = document.createElement( "a" );
+                a.href = blobURL;
+                a.style = "display: none";
 
-                if ( name && name.length ) a.download = name
-                document.body.appendChild( a )
-                a.click()
+                if ( name && name.length ) a.download = name;
+                document.body.appendChild( a );
+                a.click();
             } )
-            .catch( () => setError( true ) )
-    }
+            .catch( () => setError( true ) );
+    };
 
     // return (
     //     <button
@@ -743,55 +703,55 @@ function isElementInViewport ( el ) {
 
     // Special bonus for those using jQuery
     if ( typeof jQuery === "function" && el instanceof jQuery ) {
-        el = el[ 0 ]
+        el = el[ 0 ];
     }
 
-    var rect = el.getBoundingClientRect()
+    var rect = el.getBoundingClientRect();
 
     return (
         rect.top >= 0 &&
         // rect.left >= 0 &&
         rect.bottom <= ( window.innerHeight || document.documentElement.clientHeight )
         // && /* or $(window).height() */ rect.right <= ( window.innerWidth || document.documentElement.clientWidth ) /* or $(window).width() */
-    )
+    );
 }
 
 const downloadFile = ( file ) => {
-    const element = document.createElement( 'a' )
-    element.setAttribute( 'href', 'Download Btn' )
-    element.setAttribute( 'download', file )
+    const element = document.createElement( 'a' );
+    element.setAttribute( 'href', 'Download Btn' );
+    element.setAttribute( 'download', file );
 
-    element.style.display = 'none'
+    element.style.display = 'none';
 
-    document.body.appendChild( element )
+    document.body.appendChild( element );
 
-    element.click()
-    document.body.removeChild( element )
-}
+    element.click();
+    document.body.removeChild( element );
+};
 
 var saveData = ( function () {
-    var a = document.createElement( "a" )
-    document.body.appendChild( a )
-    a.style = "display: none"
+    var a = document.createElement( "a" );
+    document.body.appendChild( a );
+    a.style = "display: none";
     return function ( data, fileName ) {
         var json = JSON.stringify( data ),
             blob = new Blob( [ json ], { type: "octet/stream" } ),
-            url = window.URL.createObjectURL( blob )
-        a.href = url
-        a.download = fileName
-        a.click()
-        window.URL.revokeObjectURL( url )
-    }
-}() )
+            url = window.URL.createObjectURL( blob );
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL( url );
+    };
+}() );
 
 function isInIframe () {
-    return window !== window.parent
+    return window !== window.parent;
 }
 
 function iframeRef ( frameRef ) {
     return frameRef.contentWindow
         ? frameRef.contentWindow.document
-        : frameRef.contentDocument
+        : frameRef.contentDocument;
 }
 
 function waitNotExist ( selector ) {
@@ -799,19 +759,19 @@ function waitNotExist ( selector ) {
     return new Promise( ( resolve ) => {
 
         if ( !document.querySelector( selector ) ) {
-            return resolve( 'at start' )
+            return resolve( 'at start' );
         }
 
         const observer = new MutationObserver( () => {
             if ( !document.querySelector( selector ) ) {
-                observer.disconnect()
-                return resolve( 'observer' )
+                observer.disconnect();
+                return resolve( 'observer' );
             }
-        } )
+        } );
 
-        observer.observe( document.body, { childList: true, subtree: true } )
+        observer.observe( document.body, { childList: true, subtree: true } );
 
-    } )
+    } );
 
 }
 
@@ -820,185 +780,185 @@ function waitForAll ( selector ) {
 
     return new Promise( ( resolve ) => {
 
-        if ( document.querySelector( selector ) ) { return resolve( document.querySelectorAll( selector ) ) }
+        if ( document.querySelector( selector ) ) { return resolve( document.querySelectorAll( selector ) ); }
 
         const observer = new MutationObserver( () => {
             if ( document.querySelector( selector ) ) {
-                resolve( document.querySelectorAll( selector ) )
-                observer.disconnect()
+                resolve( document.querySelectorAll( selector ) );
+                observer.disconnect();
             }
-        } )
+        } );
 
-        observer.observe( document.body, { childList: true, subtree: true } )
+        observer.observe( document.body, { childList: true, subtree: true } );
 
-    } )
+    } );
 
 }
 
 function waitFor ( selector ) {
     // waitFor( '[role=main]' ).then( ( el ) => {} )
     return new Promise( ( resolve ) => {
-        waitForAll( selector ).then( ( els ) => { resolve( els[ 0 ] ) } )
-    } )
+        waitForAll( selector ).then( ( els ) => { resolve( els[ 0 ] ); } );
+    } );
 }
 
 function waitForNew ( selector ) {
 
-    document.querySelectorAll( selector ).forEach( item => { item.classList.add( 'waitForNewDone' ) } )
+    document.querySelectorAll( selector ).forEach( item => { item.classList.add( 'waitForNewDone' ); } );
 
     return new Promise( async ( resolve ) => {
-        const newEl = await waitFor( `${ selector }:not(.waitForNewDone)` )
-        resolve( newEl )
-    } )
+        const newEl = await waitFor( `${ selector }:not(.waitForNewDone)` );
+        resolve( newEl );
+    } );
 
 }
 
-function waitForNewEach ( selector, callback ) {
+function waitForEach ( selector, callback ) {
 
     document.querySelectorAll( `${ selector }:not(.waitForNewDone)` ).forEach( item => {
-        item.classList.add( 'waitForNewDone' )
-        callback( item )
-    } )
+        item.classList.add( 'waitForNewDone' );
+        callback( item );
+    } );
 
     let observer = new MutationObserver( () => {
-        const elements = document.querySelectorAll( `${ selector }:not(.waitForNewDone)` )
+        const elements = document.querySelectorAll( `${ selector }:not(.waitForNewDone)` );
         elements.forEach( element => {
-            element.classList.add( 'waitForNewDone' )
-            callback( element )
-        } )
-    } )
-    observer.observe( document.body, { childList: true, subtree: true } )
+            element.classList.add( 'waitForNewDone' );
+            callback( element );
+        } );
+    } );
+    observer.observe( document.body, { childList: true, subtree: true } );
 }
 
 //ANCHOR - JQ Alternatives
 //# JQ Alternatives
 
 function elementsToArray ( els ) {
-    return els instanceof Element ? [ els ] : els
+    return els instanceof Element ? [ els ] : els;
 }
 
 function contains ( selector, text ) {
     const elsContaining = [ ...document.querySelectorAll( selector ) ].filter( ( el ) =>
         el.textContent.includes( text )
-    )
-    return elsContaining
+    );
+    return elsContaining;
 }
 
 function next ( el, selector ) {
-    const nextEl = el.nextElementSibling
+    const nextEl = el.nextElementSibling;
     if ( !selector || ( nextEl && nextEl.matches( selector ) ) ) {
-        return nextEl
+        return nextEl;
     }
-    return null
+    return null;
 }
 
 function prev ( el, selector ) {
-    const prevEl = el.previousElementSibling
+    const prevEl = el.previousElementSibling;
     if ( !selector || ( prevEl && prevEl.matches( selector ) ) ) {
-        return prevEl
+        return prevEl;
     }
-    return null
+    return null;
 }
 
 async function fadeOut ( targetEl, duration ) {
-    if ( !duration ) duration = 250
-    targetEl.style.transition = `opacity ${ duration / 1000 }s`
-    targetEl.style.opacity = 0
-    await asyncTimeout( duration )
-    targetEl.style.display = "none"
+    if ( !duration ) duration = 250;
+    targetEl.style.transition = `opacity ${ duration / 1000 }s`;
+    targetEl.style.opacity = 0;
+    await asyncTimeout( duration );
+    targetEl.style.display = "none";
 }
 
 async function fadeIn ( targetEl, duration ) {
-    if ( !duration ) duration = 250
-    targetEl.style.transition = `opacity ${ duration / 1000 }s`
-    targetEl.style.opacity = 0
-    targetEl.style.display = ""
-    targetEl.style.opacity = 1
+    if ( !duration ) duration = 250;
+    targetEl.style.transition = `opacity ${ duration / 1000 }s`;
+    targetEl.style.opacity = 0;
+    targetEl.style.display = "";
+    targetEl.style.opacity = 1;
 }
 
 function fadeToggle ( targetEls, duration ) {
-    const elementsArray = elementsToArray( targetEls )
+    const elementsArray = elementsToArray( targetEls );
     elementsArray.forEach( item => {
         if ( item.style.display == 'none' ) {
-            fadeIn( item, duration )
+            fadeIn( item, duration );
         } else {
-            fadeOut( item, duration )
+            fadeOut( item, duration );
         }
-    } )
+    } );
 }
 
 function toggle ( els ) {
-    const elementsArray = elementsToArray( els )
+    const elementsArray = elementsToArray( els );
     elementsArray.forEach( el => {
         if ( el.style.display == 'none' ) {
-            el.style.display = ''
+            el.style.display = '';
         } else {
-            el.style.display = 'none'
+            el.style.display = 'none';
         }
-    } )
+    } );
 }
 
 function wrap ( wrapperHtml, ...els ) {
-    const wrappingElement = generateElements( wrapperHtml, null, true )
-    els[ 0 ].before( wrappingElement )
-    wrappingElement.append( ...els )
-    return wrappingElement
+    const wrappingElement = generateElements( wrapperHtml, null, true );
+    els[ 0 ].before( wrappingElement );
+    wrappingElement.append( ...els );
+    return wrappingElement;
 }
 
 function unwrap ( el ) {
-    el.replaceWith( ...el.childNodes )
+    el.replaceWith( ...el.childNodes );
 }
 
 function parents ( el, selector ) {
-    const parents = []
+    const parents = [];
     while ( ( el = el.parentNode ) && el !== document ) {
-        if ( !selector || el.matches( selector ) ) parents.push( el )
+        if ( !selector || el.matches( selector ) ) parents.push( el );
     }
-    return parents
+    return parents;
 }
 
 function grandParent ( child, iterations ) {
 
-    let currentIteration = iterations
-    let parent = child.parentNode
+    let currentIteration = iterations;
+    let parent = child.parentNode;
 
     if ( currentIteration === 1 )
-        return parent
+        return parent;
 
-    return grandParent( parent, currentIteration - 1 )
+    return grandParent( parent, currentIteration - 1 );
 
 }
 
 function generateDoc ( html, returnTrusted ) {
 
-    let escapeHTMLPolicy
+    let escapeHTMLPolicy;
 
     escapeHTMLPolicy = trustedTypes.createPolicy( "forceInner", {
         createHTML: ( to_escape ) => to_escape
-    } )
+    } );
 
-    const template = document.createElement( 'template' )
-    document.body.prepend( template )
+    const template = document.createElement( 'template' );
+    document.body.prepend( template );
 
-    template.innerHTML = escapeHTMLPolicy.createHTML( html.trim() )
+    template.innerHTML = escapeHTMLPolicy.createHTML( html.trim() );
 
-    return template.content
+    return template.content;
 
 }
 
 function generateElements ( html, parent, returnTrusted ) {
 
-    const doc = generateDoc( html, returnTrusted )
-    const children = doc.children
-    let returnChildren = [ ...children ]
+    const doc = generateDoc( html, returnTrusted );
+    const children = doc.children;
+    let returnChildren = [ ...children ];
     if ( parent ) {
-        returnChildren.length = 0
+        returnChildren.length = 0;
         for ( const child of children ) {
             returnChildren.push(
-                parent.appendChild( child ) )
+                parent.appendChild( child ) );
         }
     }
-    return returnChildren.length === 1 ? returnChildren[ 0 ] : returnChildren
+    return returnChildren.length === 1 ? returnChildren[ 0 ] : returnChildren;
 
 }
 
@@ -1006,21 +966,21 @@ function generateElements ( html, parent, returnTrusted ) {
 //# Functions for global script
 
 function generateToolbarButton ( text, parent, popup, onclick ) {
-    const button = generateElements( `<button class=popupButton>${ text }</button>` )
-    const collapsibleContent = document.querySelector( `#collapsibleContent` )
-    parent.append( button )
-    calculateWidthAndExpand( collapsibleContent )
+    const button = generateElements( `<button class=popupButton>${ text }</button>` );
+    const collapsibleContent = document.querySelector( `#collapsibleContent` );
+    parent.append( button );
+    calculateWidthAndExpand( collapsibleContent );
     if ( popup ) {
-        button.addEventListener( 'click', () => { togglePopup( popup ) } )
+        button.addEventListener( 'click', () => { togglePopup( popup ); } );
     }
     if ( onclick )
-        button.addEventListener( 'click', onclick )
-    return button
+        button.addEventListener( 'click', onclick );
+    return button;
 }
 
 function createToolbarPopup () {
-    const toolbarPopup = generateElements( '<div></div>' )
-    toolbarPopup.classList.add( 'toolbarPopup' )
+    const toolbarPopup = generateElements( '<div></div>' );
+    toolbarPopup.classList.add( 'toolbarPopup' );
     toolbarPopup.style = `
         font-size:  large;
         max-height: 50vh;
@@ -1028,24 +988,24 @@ function createToolbarPopup () {
         overflow:   auto;
         display:    none;
         background-color: gray;
-    `
-    collapsibleContent.append( toolbarPopup )
-    return toolbarPopup
+    `;
+    collapsibleContent.append( toolbarPopup );
+    return toolbarPopup;
 }
 
 function togglePopup ( popup ) {
-    toggle( popup )
+    toggle( popup );
     const popupHeight = getComputedStyle( popup ).height
-        .replace( /px$/, '' )
-    popup.style.top = `-${ +popupHeight + 5 }px`
+        .replace( /px$/, '' );
+    popup.style.top = `-${ +popupHeight + 5 }px`;
 }
 
 function calculateWidthAndExpand ( collapsibleContent ) {
-    let totalWidth = 0
+    let totalWidth = 0;
     for ( const child of collapsibleContent.children ) {
-        let widthValue = +getStyleOrComputedStyle( child, 'width' ).replace( 'px', '' )
-        let marginValue = +getStyleOrComputedStyle( child, 'margin' ).replace( 'px', '' )
-        totalWidth += ( widthValue ? widthValue : 0 ) + marginValue * 2
+        let widthValue = +getStyleOrComputedStyle( child, 'width' ).replace( 'px', '' );
+        let marginValue = +getStyleOrComputedStyle( child, 'margin' ).replace( 'px', '' );
+        totalWidth += ( widthValue ? widthValue : 0 ) + marginValue * 2;
     }
-    collapsibleContent.style.width = `${ totalWidth }px`
+    collapsibleContent.style.width = `${ totalWidth }px`;
 }

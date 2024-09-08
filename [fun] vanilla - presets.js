@@ -1,90 +1,91 @@
 function dialog ( title = '', contentElement, maxHeight = '300px' ) {
     // Create the GUI container
-    const guiContainer = document.createElement( 'div' )
-    guiContainer.style.position = 'fixed'
-    guiContainer.style.top = '50px'
-    guiContainer.style.left = '50px'
-    guiContainer.style.width = '300px'
-    guiContainer.style.border = '1px solid #ccc'
-    guiContainer.style.backgroundColor = '#f0f0f0'
-    guiContainer.style.zIndex = '9999'
-    guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)'
+    const guiContainer = document.createElement( 'div' );
+    guiContainer.style.position = 'fixed';
+    guiContainer.style.top = '100px';
+    guiContainer.style.right = '50px';
+    guiContainer.style.width = '300px';
+    guiContainer.style.border = '1px solid #ccc';
+    guiContainer.style.backgroundColor = '#f0f0f0';
+    guiContainer.style.zIndex = '9999';
+    guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
 
     // Create the header
-    const header = document.createElement( 'div' )
-    header.style.backgroundColor = '#e0e0e0'
-    header.style.padding = '10px'
-    header.style.cursor = 'move'
-    header.style.display = 'flex'
-    header.style.justifyContent = 'space-between'
-    header.style.alignItems = 'center'
-    header.innerText = title
+    const header = document.createElement( 'div' );
+    header.style.backgroundColor = '#e0e0e0';
+    header.style.padding = '10px';
+    header.style.cursor = 'move';
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.innerText = title;
 
     // Create the collapse button
-    const collapseBtn = document.createElement( 'button' )
-    collapseBtn.innerHTML = '-'
-    collapseBtn.style.marginLeft = 'auto'
-    collapseBtn.style.marginRight = '5px'
+    const collapseBtn = document.createElement( 'button' );
+    collapseBtn.innerHTML = '+';
+    collapseBtn.style.marginLeft = 'auto';
+    collapseBtn.style.marginRight = '5px';
     collapseBtn.onclick = () => {
         if ( body.style.display === 'none' ) {
-            body.style.display = 'block'
-            collapseBtn.innerHTML = '-'
+            body.style.display = 'block';
+            collapseBtn.innerHTML = '-';
         } else {
-            body.style.display = 'none'
-            collapseBtn.innerHTML = '+'
+            body.style.display = 'none';
+            collapseBtn.innerHTML = '+';
         }
-    }
+    };
 
     // Create the close button
-    const closeBtn = document.createElement( 'button' )
-    closeBtn.innerHTML = 'x'
+    const closeBtn = document.createElement( 'button' );
+    closeBtn.innerHTML = 'x';
     closeBtn.onclick = () => {
-        guiContainer.remove()
-    }
+        guiContainer.remove();
+    };
 
     // Append buttons to the header
-    header.appendChild( collapseBtn )
-    header.appendChild( closeBtn )
+    header.appendChild( collapseBtn );
+    header.appendChild( closeBtn );
 
     // Create the body
-    const body = document.createElement( 'div' )
-    body.style.padding = '10px'
-    body.style.backgroundColor = '#fff'
-    body.style.maxHeight = maxHeight
-    body.style.overflow = 'auto'
+    const body = document.createElement( 'div' );
+    body.style.display = 'none';
+    body.style.padding = '10px';
+    body.style.backgroundColor = '#fff';
+    body.style.maxHeight = maxHeight;
+    body.style.overflow = 'auto';
     // adding the content element given by the function parameter
-    body.append( contentElement )
+    body.append( contentElement );
 
     // Append header and body to the container
-    guiContainer.appendChild( header )
-    guiContainer.appendChild( body )
+    guiContainer.appendChild( header );
+    guiContainer.appendChild( body );
 
     // Append the container to the document body
-    document.body.appendChild( guiContainer )
+    document.body.appendChild( guiContainer );
 
     // Make the GUI draggable
-    let isDragging = false
-    let offsetX = 0
-    let offsetY = 0
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
 
     header.onmousedown = ( e ) => {
-        isDragging = true
-        offsetX = e.clientX - guiContainer.getBoundingClientRect().left
-        offsetY = e.clientY - guiContainer.getBoundingClientRect().top
-    }
+        isDragging = true;
+        offsetX = e.clientX - guiContainer.getBoundingClientRect().left;
+        offsetY = e.clientY - guiContainer.getBoundingClientRect().top;
+    };
 
     document.onmousemove = ( e ) => {
         if ( isDragging ) {
-            guiContainer.style.left = `${ e.clientX - offsetX }px`
-            guiContainer.style.top = `${ e.clientY - offsetY }px`
+            guiContainer.style.left = `${ e.clientX - offsetX }px`;
+            guiContainer.style.top = `${ e.clientY - offsetY }px`;
         }
-    }
+    };
 
     document.onmouseup = () => {
-        isDragging = false
-    }
+        isDragging = false;
+    };
 
-    return guiContainer
+    return guiContainer;
 
 }
 
@@ -129,17 +130,17 @@ function addTooltip ( tooltipParent, tooltipContent ) {
             visibility: visible;
             opacity: 1;
         }
-    `)
+    `);
 
-    tooltipParent.classList.add( 'tooltipParent' )
-    const toolTip = generateElements( '<span class=tooltip></span>', null, true )
-    tooltipParent.after( toolTip )
-    const wrapper = wrap( '<div class=wrapper></div>', tooltipParent, toolTip )
+    tooltipParent.classList.add( 'tooltipParent' );
+    const toolTip = generateElements( '<span class=tooltip></span>', null, true );
+    tooltipParent.after( toolTip );
+    const wrapper = wrap( '<div class=wrapper></div>', tooltipParent, toolTip );
     style( wrapper, `
         position: relative;
         width:    fit-content;
-    `)
-    toolTip.append( tooltipContent )
+    `);
+    toolTip.append( tooltipContent );
 
 }
 
@@ -149,57 +150,57 @@ function addTooltip ( tooltipParent, tooltipContent ) {
 
 function collapsibleHorizontal ( maxHeight, togglerText = '' ) {
 
-    const { collapsibleStructure, collapsibleToggler, collapsibleContent } = collapsible( togglerText )
+    const { collapsibleStructure, collapsibleToggler, collapsibleContent } = collapsible( togglerText );
     style( collapsibleStructure, `
             max-height: ${ maxHeight };
-            display: flex;` )
-    collapsibleToggler.style.width = 'unset'
+            display: flex;` );
+    collapsibleToggler.style.width = 'unset';
     style( collapsibleContent, `
             padding:     0;
             max-height:  unset;
             width:       0;
             transition:  width 0.2s ease-out;
-        `)
+        `);
 
-    let mouseDownX, mouseUpX, mouseDownY, mouseUpY
+    let mouseDownX, mouseUpX, mouseDownY, mouseUpY;
     collapsibleToggler.addEventListener( 'mousedown', ( event ) => {
-        mouseDownX = event.clientX
-        mouseDownY = event.clientY
-    } )
+        mouseDownX = event.clientX;
+        mouseDownY = event.clientY;
+    } );
     collapsibleToggler.addEventListener( 'mouseup', ( event ) => {
-        if ( event.button !== 0 ) return // 🛑
+        if ( event.button !== 0 ) return; // 🛑
 
-        mouseUpX = event.clientX
-        mouseUpY = event.clientY
+        mouseUpX = event.clientX;
+        mouseUpY = event.clientY;
 
         if ( mouseDownX === mouseUpX && mouseDownY === mouseUpY ) {
 
-            event.target.classList.toggle( "togglerActive" )
+            event.target.classList.toggle( "togglerActive" );
             if ( collapsibleContent.style.width === '0px' ) {
-                calculateWidthAndExpand( collapsibleContent )
+                calculateWidthAndExpand( collapsibleContent );
             } else {
-                collapsibleContent.style.width = 0
+                collapsibleContent.style.width = 0;
             }
 
         }
 
-    } )
+    } );
 
-    return { collapsibleStructure, collapsibleToggler, collapsibleContent }
+    return { collapsibleStructure, collapsibleToggler, collapsibleContent };
 
 
 }
 
 function collapsibleVertical () {
-    const { collapsibleStructure, collapsibleToggler, collapsibleContent } = collapsible()
+    const { collapsibleStructure, collapsibleToggler, collapsibleContent } = collapsible();
     collapsibleToggler.addEventListener( "click", function () {
-        this.classList.toggle( "active" )
+        this.classList.toggle( "active" );
         if ( collapsibleContent.style.maxHeight ) {
-            collapsibleContent.style.maxHeight = null
+            collapsibleContent.style.maxHeight = null;
         } else {
-            collapsibleContent.style.maxHeight = collapsibleContent.scrollHeight + "px"
+            collapsibleContent.style.maxHeight = collapsibleContent.scrollHeight + "px";
         }
-    } )
+    } );
 
 }
 
@@ -236,8 +237,8 @@ function collapsible ( togglerText = '' ) {
                 transition: all 0.2s ease-out;
                 background-color: #f1f1f1;
 
-        `
-    GM_addStyle( css )
+        `;
+    GM_addStyle( css );
 
 
     const collapsibleStructure = generateElements( /*html*/`
@@ -246,13 +247,13 @@ function collapsible ( togglerText = '' ) {
                     <div id=collapsibleContent>
                     </div>
                 <div>
-        `, null, true )
-    document.body.prepend( collapsibleStructure )
+        `, null, true );
+    document.body.prepend( collapsibleStructure );
 
-    const collapsibleContent = document.querySelector( `#collapsibleContent` )
-    const collapsibleToggler = document.querySelector( `#collapsible-toggler` )
+    const collapsibleContent = document.querySelector( `#collapsibleContent` );
+    const collapsibleToggler = document.querySelector( `#collapsible-toggler` );
 
-    return { collapsibleStructure, collapsibleToggler, collapsibleContent }
+    return { collapsibleStructure, collapsibleToggler, collapsibleContent };
 
 }
 
@@ -363,7 +364,7 @@ function slideshowGallery () {
         #slideShowGallery :is(.active, .demo:hover) {
             opacity: 1;
         }
-    ` )
+    ` );
 
     const sgContent = generateElements( /*html*/ `
             <div id=slideShowGallery>
@@ -378,66 +379,66 @@ function slideshowGallery () {
                     <div class="row"></div>
                 </div>
             </div>
-            `)
-    document.body.append( sgContent )
+            `);
+    document.body.append( sgContent );
 
-    const fullImgContainer = document.querySelector( `#fullImgCont` )
-    const row = document.querySelector( `.row` )
+    const fullImgContainer = document.querySelector( `#fullImgCont` );
+    const row = document.querySelector( `.row` );
     for ( const item in arguments ) {
         fullImgContainer.append( generateElements( /*html*/`
             <div class=mySlides>
                 <div class=numbertext>${ +item + 1 } / ${ arguments.length }</div>
                 <img src=${ arguments[ item ] } style='width:100%'>
             </div>
-        `) )
+        `) );
         row.append( generateElements( /*html*/`
             <div class=column>
                 <img class='demo cursor' src=${ arguments[ item ] } style='width:100%'>
             </div>
-            `) )
+            `) );
     }
 
-    document.querySelector( `.prev` ).addEventListener( 'click', () => { plusSlides( -1 ) } )
-    document.querySelector( `.next` ).addEventListener( 'click', () => { plusSlides( 1 ) } )
+    document.querySelector( `.prev` ).addEventListener( 'click', () => { plusSlides( -1 ); } );
+    document.querySelector( `.next` ).addEventListener( 'click', () => { plusSlides( 1 ); } );
     document.querySelectorAll( `.demo` ).forEach( item => {
         item.addEventListener( 'click', ( event ) => {
-            const element = event.target.parentNode
-            const index = Array.from( element.parentNode.children ).indexOf( element ) + 1
-            currentSlide( index )
-        } )
-    } )
+            const element = event.target.parentNode;
+            const index = Array.from( element.parentNode.children ).indexOf( element ) + 1;
+            currentSlide( index );
+        } );
+    } );
 
 
-    let slideIndex = 1
-    showSlides( slideIndex )
+    let slideIndex = 1;
+    showSlides( slideIndex );
 
     function plusSlides ( n ) {
-        showSlides( slideIndex += n )
+        showSlides( slideIndex += n );
     }
 
     function currentSlide ( n ) {
-        showSlides( slideIndex = n )
+        showSlides( slideIndex = n );
     }
 
     function showSlides ( n ) {
-        let i
-        let slides = document.getElementsByClassName( "mySlides" )
-        let dots = document.getElementsByClassName( "demo" )
-        let captionText = document.getElementById( "caption" )
-        if ( n > slides.length ) { slideIndex = 1 }
-        if ( n < 1 ) { slideIndex = slides.length }
+        let i;
+        let slides = document.getElementsByClassName( "mySlides" );
+        let dots = document.getElementsByClassName( "demo" );
+        let captionText = document.getElementById( "caption" );
+        if ( n > slides.length ) { slideIndex = 1; }
+        if ( n < 1 ) { slideIndex = slides.length; }
         for ( i = 0; i < slides.length; i++ ) {
-            slides[ i ].style.display = "none"
+            slides[ i ].style.display = "none";
         }
         for ( i = 0; i < dots.length; i++ ) {
-            dots[ i ].className = dots[ i ].className.replace( " active", "" )
+            dots[ i ].className = dots[ i ].className.replace( " active", "" );
         }
-        slides[ slideIndex - 1 ].style.display = "block"
-        dots[ slideIndex - 1 ].className += " active"
-        captionText.innerHTML = dots[ slideIndex - 1 ].alt
+        slides[ slideIndex - 1 ].style.display = "block";
+        dots[ slideIndex - 1 ].className += " active";
+        captionText.innerHTML = dots[ slideIndex - 1 ].alt;
     }
 
-    return sgContent
+    return sgContent;
 
 }
 
@@ -505,7 +506,7 @@ class modalBox {
 
             #modal-body {padding: 2px 16px;}
 
-        ` )
+        ` );
 
         this.modal = generateElements( `
             <div id=vanilla-presets-modal class=modal>
@@ -517,38 +518,38 @@ class modalBox {
                     <div id=modal-body></div>
                 </div>
             </div>
-            ` )
+            ` );
 
-        document.body.append( this.modal )
-        this.header = this.modal.querySelector( '#header-content' )
-        this.body = this.modal.querySelector( '#modal-body' )
-        const dismiss = this.modal.querySelector( '#dismiss' )
-        dismiss.addEventListener( 'click', () => { this.destroy() } )
+        document.body.append( this.modal );
+        this.header = this.modal.querySelector( '#header-content' );
+        this.body = this.modal.querySelector( '#modal-body' );
+        const dismiss = this.modal.querySelector( '#dismiss' );
+        dismiss.addEventListener( 'click', () => { this.destroy(); } );
 
     }
 
     display () {
-        this.modal.style.display = 'block'
+        this.modal.style.display = 'block';
     }
     headerAddContent ( content ) {
-        this.header.append( content )
+        this.header.append( content );
     }
     bodyAddContent ( content ) {
-        this.body.append( content )
+        this.body.append( content );
     }
     hide () {
-        this.modal.style.display = 'none'
+        this.modal.style.display = 'none';
     }
     flushHeader () {
-        this.modal.querySelector( '#header-content' ).replaceChildren()
+        this.modal.querySelector( '#header-content' ).replaceChildren();
     }
     flushBody () {
-        this.modal.querySelector( '#modal-body' ).replaceChildren()
+        this.modal.querySelector( '#modal-body' ).replaceChildren();
     }
     destroy () {
-        this.flushHeader()
-        this.flushBody()
-        this.hide()
+        this.flushHeader();
+        this.flushBody();
+        this.hide();
     }
 
 }

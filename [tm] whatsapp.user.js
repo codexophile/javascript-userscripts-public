@@ -4,8 +4,6 @@
     let amountOfMinutes = 5
     var time
 
-    $chatList = $( '[aria-label="Chat list"]' )
-
     function logout () {
         location.href = 'about:blank'
     }
