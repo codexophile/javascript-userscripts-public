@@ -99,216 +99,189 @@ function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionP
 
 //ANCHOR Storyboard functions
 
+// Simplified playVideo function
 function playVideo ( videoEl, total, index ) {
     videoEl.scrollIntoView();
     const duration = videoEl.duration;
-    videoEl.currentTime = duration / total * ( index );
+    videoEl.currentTime = ( duration / total ) * index;
     videoEl.play();
 }
 
 function sbControls ( video, trueNoOfSlots, sbParent ) {
+    if ( !video ) return;
 
-    if ( video ) {
+    const createButton = ( text, className, clickHandler ) => {
+        const button = document.createElement( 'button' );
+        button.classList.add( 'storyboardControl', className );
+        button.textContent = text;
+        button.addEventListener( 'click', clickHandler );
+        return button;
+    };
 
-        const scrollBackBtn = generateElements( '<button></button>' );
-        scrollBackBtn.classList.add( 'storyboardControl' );
-        scrollBackBtn.textContent = '🔙';
-        scrollBackBtn.addEventListener( 'click', async () => {
-            const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].at( -1 );
-            targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } );
-            await asyncTimeout( 250 );
-            await blink( targetEl, 250, 2 );
-        } );
+    const scrollBackBtn = createButton( '🔙', 'scrollBack', async () => {
+        const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].pop();
+        targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } );
+        await asyncTimeout( 250 );
+        await blink( targetEl, 250, 2 );
+    } );
 
-        const toggleBtn = generateElements( '<button></button>' );
-        toggleBtn.classList.add( 'storyboardControl' );
-        toggleBtn.textContent = '💠';
-        toggleBtn.addEventListener( 'click', () => {
-            if ( sbParent.style.display === 'none' ) {
-                sbParent.style.display = 'block';
-                sbParent.scrollIntoView( { block: 'start' } );
-            }
-            else {
-                sbParent.style.display = 'none';
-                sbParent.parentNode.scrollIntoView( { block: 'center' } );
-            }// sbParent.querySelectorAll( '.storyboardItem' ).forEach( ( el ) => {
-            //     toggle( el )
-            // } )
-        } );
+    const toggleBtn = createButton( '💠', 'toggle', () => {
+        const isHidden = sbParent.style.display === 'none';
+        sbParent.style.display = isHidden ? 'block' : 'none';
+        sbParent.scrollIntoView( { block: isHidden ? 'start' : 'center' } );
+    } );
 
-        waitFor( '#collapsibleContent' ).then( ( el ) => {
-            el.append( scrollBackBtn, toggleBtn );
-            calculateWidthAndExpand( el );
-        } );
+    waitFor( '#collapsibleContent' ).then( el => {
+        el.append( scrollBackBtn, toggleBtn );
+        calculateWidthAndExpand( el );
+    } );
 
-        if ( video.readyState > 0 ) {
-            jumpToSlot();
-        }
-
-        video.addEventListener( 'loadeddata', jumpToSlot );
-
-        video.addEventListener( 'timeupdate', () => {
-            const duration = video.duration;
-            const currentSlotNo = Math.round( video.currentTime * trueNoOfSlots / duration );
-            const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' );
-            repeat( currentSlotNo, index => {
-                if ( !storyboardItems[ index ] ) return; // 🛑
-                storyboardItems[ index ].classList.add( 'wentPast' );
-                storyboardItems[ index ].style.border = '3px solid red';
-            } );
-            for ( let index = currentSlotNo + 1; index <= trueNoOfSlots; index++ ) {
-                if ( !storyboardItems[ index ] ) return; // 🛑
-
-                storyboardItems[ index ].classList.remove( 'wentPast' );
-                storyboardItems[ index ].style.border = '3px solid white';
-
-            }
-
-        } );
-
-    }
-
-    function jumpToSlot () {
+    const jumpToSlot = () => {
         const matches = location.hash.match( /#slot=(\d+?)($|#)/ );
-        if ( !matches ) return; // 🛑
-        // fauxHistoryPushState( location.href.replace( location.hash, '' ) )
-        addHistoryEntry( location.href.replace( location.hash, '' ) );
-        slotNo = matches[ 1 ];
-        if ( slotNo ) playVideo( video, trueNoOfSlots, slotNo );
-    }
+        if ( !matches ) return;
 
+        addHistoryEntry( location.href.replace( location.hash, '' ) );
+        const slotNo = matches[ 1 ];
+        if ( slotNo ) playVideo( video, trueNoOfSlots, slotNo );
+    };
+
+    if ( video.readyState > 0 ) jumpToSlot();
+    video.addEventListener( 'loadeddata', jumpToSlot );
+
+    video.addEventListener( 'timeupdate', () => {
+        const duration = video.duration;
+        const currentSlotNo = Math.round( ( video.currentTime * trueNoOfSlots ) / duration );
+        const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' );
+
+        storyboardItems.forEach( ( item, index ) => {
+            if ( index <= currentSlotNo ) {
+                item.classList.add( 'wentPast' );
+                item.style.border = '3px solid red';
+            } else {
+                item.classList.remove( 'wentPast' );
+                item.style.border = '3px solid white';
+            }
+        } );
+    } );
 }
 
 async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
 
-    //? uncomment the following line if something breaks
-    // if ( !vidOnPage ) vidOnPage = document.querySelector( `video` );
-
-    const slotsDiv = generateElements( '<div></div>' );
+    vidOnPage = vidOnPage || document.querySelector( 'video' );
+    const slotsDiv = document.createElement( 'div' );
     parent.append( slotsDiv );
     slotsDiv.id = 'slotsDiv';
     slotsDiv.style.display = 'flex';
     slotsDiv.style.flexWrap = 'wrap';
     slotsDiv.style.justifyContent = 'space-evenly';
 
-    const promises = imgUrls.map( ( url, index ) => storyboardFlex( horizontal, vertical, url, index, trueNoOfSlots ) );
-    let index = 0;
-    const promise = new Promise( resolve => {
-        Promise.allSettled( promises ).then( results => {
-            results.forEach(
-                result => result.value.forEach(
-                    slot => {
-                        slotsDiv.append( slot );
-                        slot.index = index;
-                        // slot.innerText += `: (${ index })`
-                        const link = generateElements( '<a></a>' );
-                        if ( linkToVid )
-                            link.href = `${ linkToVid }#slot=${ index }`;
-                        link.target = '_blank';
-                        link.style = `
-                            display: block;
-                            width: 100%;
-                            height: 100%;
-                            top: 0px;
-                            left: 0px;`;
-                        slot.append( link );
-                        index++;
-                        slot.addEventListener( 'click', ( ev ) => {
-                            if ( !samplingFq ) samplingFq = vidOnPage.duration / ( horizontal * vertical );
-                            vidOnPage.currentTime = ev.target.closest( 'div' ).index * samplingFq;
-                            vidOnPage.play();
-                            vidOnPage.scrollIntoView( { behavior: 'instant', block: 'center' } );
-                        } );
-                    }
-                ) );
-            resolve( slotsDiv );
+    const promises = imgUrls.map( ( url, index ) =>
+        storyboardFlex( horizontal, vertical, url, index, trueNoOfSlots )
+    );
 
+    const results = await Promise.allSettled( promises );
+    let index = 0;
+
+    results.forEach( result => {
+        result.value.forEach( slot => {
+            slotsDiv.append( slot );
+            slot.index = index;
+            if ( linkToVid ) {
+                const link = document.createElement( 'a' );
+                link.href = `${ linkToVid }#slot=${ index }`;
+                link.target = '_blank';
+                Object.assign( link.style, {
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                    top: '0px',
+                    left: '0px',
+                } );
+                slot.append( link );
+            }
+            slot.addEventListener( 'click', ev => {
+                const samplingFreq = samplingFq || ( vidOnPage.duration / ( horizontal * vertical ) );
+                vidOnPage.currentTime = ev.target.closest( 'div' ).index * samplingFreq;
+                vidOnPage.play();
+                vidOnPage.scrollIntoView( { behavior: 'instant', block: 'center' } );
+            } );
+            index++;
         } );
     } );
+
     sbControls( vidOnPage, trueNoOfSlots, parent );
-    return await promise;
+    return slotsDiv;
 }
 
 async function storyboardToggleable ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
-
     const slotsDiv = await storyboard( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls );
-
-    slotsDiv.style.maxWidth = '90vw';
-    slotsDiv.style.maxHeight = '80vh';
-    slotsDiv.style.overflow = 'auto';
+    Object.assign( slotsDiv.style, {
+        maxWidth: '90vw',
+        maxHeight: '80vh',
+        overflow: 'auto',
+    } );
 
     return slotsDiv;
 }
 
 async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
-
-    const allSlots = [];
-    const imgElement = generateElements( '<img></img>', document.body );
+    const imgElement = new Image();
     imgElement.style.display = 'none';
     imgElement.src = imgSrc;
+    document.body.appendChild( imgElement );
 
-    const promise = new Promise( ( resolve ) => {
-        imgElement.addEventListener( 'load', () => {
-
+    const promise = new Promise( ( resolve, reject ) => {
+        imgElement.onload = () => {
+            const allSlots = [];
             const normalTotal = horizontal * vertical;
-            const noOfSlotsDone = index * normalTotal;
-            const noOfSlotsRemaining = trueNoOfSlots - noOfSlotsDone;
-            const thisIsFinalSb = noOfSlotsRemaining / normalTotal < 1;
-            if ( thisIsFinalSb )
-                vertical = Math.ceil( noOfSlotsRemaining / horizontal );
+            const noOfSlotsRemaining = trueNoOfSlots - ( index * normalTotal );
+            const thisIsFinalSb = noOfSlotsRemaining < normalTotal;
 
-            total = horizontal * vertical;
-            width = imgElement.naturalWidth;
-            height = imgElement.naturalHeight;
-            itemWidth = width / horizontal;
-            itemHeight = height / vertical;
+            if ( thisIsFinalSb ) vertical = Math.ceil( noOfSlotsRemaining / horizontal );
 
-            repeat( total, ( i ) => {
+            const total = horizontal * vertical;
+            const itemWidth = imgElement.naturalWidth / horizontal;
+            const itemHeight = imgElement.naturalHeight / vertical;
 
-                const storyboardItem = generateElements( '<div></div>' );
-                storyboardItem.classList.add( imgSrc.slice( -7 ) );
-                storyboardItem.classList.add( 'storyboardItem' );
-
+            for ( let i = 0; i < total; i++ ) {
+                const storyboardItem = document.createElement( 'div' );
+                storyboardItem.classList.add( imgSrc.slice( -7 ), 'storyboardItem' );
                 allSlots.push( storyboardItem );
 
-                x = i % horizontal;
-                y = Math.floor( i / horizontal );
+                const x = i % horizontal;
+                const y = Math.floor( i / horizontal );
+                Object.assign( storyboardItem.style, {
+                    backgroundColor: 'black',
+                    textShadow: 'white 0px 0px 10px',
+                    backgroundImage: `url('${ imgElement.src }')`,
+                    backgroundPosition: `${ -x * itemWidth }px ${ -y * itemHeight }px`,
+                    width: `${ itemWidth }px`,
+                    minWidth: `${ itemWidth }px`,
+                    height: `${ itemHeight }px`,
+                    margin: '1px',
+                    border: 'solid white',
+                } );
+            }
 
-                xPosition = width - itemWidth * x;
-                yPosition = height - itemHeight * y;
-                storyboardItem.style = `
-                    background-color: black;
-                    text-shadow: white 0px 0px 10px;
-                    background-image: url('${ imgElement.src }');
-                    background-position: ${ xPosition }px ${ yPosition }px;
-                    width: ${ itemWidth }px;
-                    min-width: ${ itemWidth }px;
-                    height: ${ itemHeight }px;
-                    margin: 1px
-                    border: solid;
-                    border-color: white;
-                `;
+            resolve( allSlots );
+            imgElement.remove();
+        };
 
+        imgElement.onerror = () => {
+            const errorEl = document.createElement( 'div' );
+            errorEl.textContent = 'Image load error';
+            Object.assign( errorEl.style, {
+                color: 'red',
+                fontSize: '20px',
             } );
-
-            resolve( allSlots );
-
-        } );
-        imgElement.addEventListener( 'error', () => {
-            const errorEl = generateElements( '<div>Image load error</div>' );
-            style( errorEl, `
-                color: red;
-                font-size: 20px;
-            `);
-            allSlots.push( errorEl );
-            resolve( allSlots );
-            return false;
-        } );
+            resolve( [ errorEl ] );
+            imgElement.remove();
+        };
     } );
-    let result = await promise;
-    return result;
 
+    return await promise;
 }
+
 
 //ANCHOR Rest
 
