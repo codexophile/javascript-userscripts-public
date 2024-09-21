@@ -1,6 +1,9 @@
-(function() {
-'use strict';
+( function () {
+    'use strict';
 
-$( `audio` ).prop( 'volume', 0.3 )
+    waitForEach( 'audio, video', mediaEl => {
+        console.log( mediaEl );
+        mediaEl.volume = 0.03;
+    } );
 
-})();
+} )();

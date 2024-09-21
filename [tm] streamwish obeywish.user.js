@@ -1,25 +1,31 @@
 ( async function () {
-    'use strict'
+    'use strict';
 
-    let storyboardUrl
+    let storyboardUrl;
 
-    const thumbEl = await waitFor( '.jw-time-thumb[style*="background-image"]' )
-    storyboardUrl = thumbEl.style.backgroundImage.match( /['"](.*)['"]/ )[ 1 ]
+    const thumbEl = await waitFor( '.jw-time-thumb[style*="background-image"]' );
+    storyboardUrl = thumbEl.style.backgroundImage.match( /['"](.*)['"]/ )[ 1 ];
 
-    const $videoEl = $( `video[src]` )
-    $videoEl.data( 'processed', true )
-    $videoEl.prop( 'volume', 0.01 )
-    $( '#vplayer' ).css( `height`, `70vh` )
+    const $videoEl = $( `video[src]` );
+    $videoEl.data( 'processed', true );
+    $videoEl.prop( 'volume', 0.01 );
+    $( '#vplayer' ).css( `height`, `70vh` );
 
-    let parent
+    let parent;
     if ( $( '.videoplayer, #vplayer' ).length )
-        parent = $( `<div></div>` ).insertAfter( $( '.videoplayer, #vplayer' ).first() )
+        parent = $( `<div></div>` ).insertAfter( $( '.videoplayer, #vplayer' ).first() );
     else
-        parent = $( `<div></div>` ).appendTo( document.body )
+        parent = $( `<div></div>` ).appendTo( document.body );
 
-    const storyboardEl = storyboard( parent[ 0 ], 10, 10, null, $videoEl[ 0 ], null, 100, storyboardUrl )
+    const storyboardEl = await storyboard( {
+        storyboardParent: parent[ 0 ],
+        horizontal: 10, vertical: 10,
+        vidOnPage: $videoEl[ 0 ],
+        trueNoOfSlots: 100,
+        imgUrls: [ storyboardUrl ]
+    } );
 
-    storyboardEl.scrollIntoView()
+    storyboardEl.scrollIntoView();
 
 
-} )()
+} )();

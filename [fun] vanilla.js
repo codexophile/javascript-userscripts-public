@@ -99,7 +99,6 @@ function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionP
 
 //ANCHOR Storyboard functions
 
-// Simplified playVideo function
 function playVideo ( videoEl, total, index ) {
     videoEl.scrollIntoView();
     const duration = videoEl.duration;
@@ -107,34 +106,77 @@ function playVideo ( videoEl, total, index ) {
     videoEl.play();
 }
 
-function sbControls ( video, trueNoOfSlots, sbParent ) {
-    if ( !video ) return;
+function setSlotScale ( sbParent, scaleFactor ) {
 
-    const createButton = ( text, className, clickHandler ) => {
-        const button = document.createElement( 'button' );
-        button.classList.add( 'storyboardControl', className );
-        button.textContent = text;
-        button.addEventListener( 'click', clickHandler );
-        return button;
-    };
+    const originalWidth = sbParent.querySelector( 'canvas' ).width;
+    const originalHeight = sbParent.querySelector( 'canvas' ).height;
 
-    const scrollBackBtn = createButton( '🔙', 'scrollBack', async () => {
-        const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].pop();
-        targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } );
-        await asyncTimeout( 250 );
-        await blink( targetEl, 250, 2 );
+    sbParent.querySelectorAll( 'canvas, .storyboardItem' ).forEach( function ( canvas ) {
+        canvas.style.width = ( originalWidth * scaleFactor ) + 'px';
+        canvas.style.height = ( originalHeight * scaleFactor ) + 'px';
     } );
 
-    const toggleBtn = createButton( '💠', 'toggle', () => {
-        const isHidden = sbParent.style.display === 'none';
-        sbParent.style.display = isHidden ? 'block' : 'none';
-        sbParent.scrollIntoView( { block: isHidden ? 'start' : 'center' } );
+}
+
+function setSlotSize ( sbParent, newWidth ) {
+
+    const originalWidth = sbParent.querySelector( 'canvas' ).width;
+    const originalHeight = sbParent.querySelector( 'canvas' ).height;
+    const scale = newWidth / originalWidth;
+    const newHeight = originalHeight * scale;
+
+    sbParent.querySelectorAll( 'canvas, .storyboardItem' ).forEach( function ( el ) {
+        el.style.width = newWidth + 'px';
+        el.style.height = newHeight + 'px';
+        // el.style.width = ( originalWidth * scaleFactor ) + 'px';
+        // el.style.height = ( originalHeight * scaleFactor ) + 'px';
     } );
 
-    waitFor( '#collapsibleContent' ).then( el => {
-        el.append( scrollBackBtn, toggleBtn );
-        calculateWidthAndExpand( el );
-    } );
+}
+
+async function sbControls ( video, trueNoOfSlots, sbParent ) {
+
+    const collapsibleEl = await waitFor( '#collapsibleContent' );
+
+    if ( video ) {
+
+        const createButton = ( text, className, clickHandler ) => {
+            const button = document.createElement( 'button' );
+            button.classList.add( 'storyboardControl', className );
+            button.textContent = text;
+            button.addEventListener( 'click', clickHandler );
+            return button;
+        };
+
+        const scrollBackBtn = createButton( '🔙', 'scrollBack', async () => {
+            const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].pop();
+            targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } );
+            await asyncTimeout( 250 );
+            await blink( targetEl, 250, 2 );
+        } );
+
+        const toggleBtn = createButton( '💠', 'toggle', () => {
+            const isHidden = sbParent.style.display === 'none';
+            sbParent.style.display = isHidden ? 'block' : 'none';
+            sbParent.scrollIntoView( { block: isHidden ? 'start' : 'center' } );
+        } );
+
+        collapsibleEl.append( scrollBackBtn, toggleBtn );
+
+        const sbSlider = generateElements( `
+            <input class=storyboardControl type="range" id="sizeSlider" min="50" max="300" value="100">`, collapsibleEl );
+        sbSlider.addEventListener( 'input', function () {
+            const scaleFactor = sbSlider.value / 100;
+            setSlotScale( sbParent, scaleFactor );
+        } );
+    }
+    else {
+
+    }
+
+
+
+    calculateWidthAndExpand( collapsibleEl );
 
     const jumpToSlot = () => {
         const matches = location.hash.match( /#slot=(\d+?)($|#)/ );
@@ -165,11 +207,21 @@ function sbControls ( video, trueNoOfSlots, sbParent ) {
     } );
 }
 
-async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
+async function storyboard ( {
+    storyboardParent,
+    horizontal,
+    vertical,
+    linkToVid = null,
+    vidOnPage,
+    samplingFq = null,
+    trueNoOfSlots,
+    imgUrls = []
+} ) {
 
-    vidOnPage = vidOnPage || document.querySelector( 'video' );
+    console.log( imgUrls );
+
     const slotsDiv = document.createElement( 'div' );
-    parent.append( slotsDiv );
+    storyboardParent.append( slotsDiv );
     slotsDiv.id = 'slotsDiv';
     slotsDiv.style.display = 'flex';
     slotsDiv.style.flexWrap = 'wrap';
@@ -187,7 +239,7 @@ async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, 
             slotsDiv.append( slot );
             slot.index = index;
             if ( linkToVid ) {
-                const link = document.createElement( 'a' );
+                const link = wrap( `<a></a>`, slot.querySelector( 'canvas' ) );
                 link.href = `${ linkToVid }#slot=${ index }`;
                 link.target = '_blank';
                 Object.assign( link.style, {
@@ -197,7 +249,7 @@ async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, 
                     top: '0px',
                     left: '0px',
                 } );
-                slot.append( link );
+                // slot.append( link );
             }
             slot.addEventListener( 'click', ev => {
                 const samplingFreq = samplingFq || ( vidOnPage.duration / ( horizontal * vertical ) );
@@ -209,12 +261,22 @@ async function storyboard ( parent, horizontal, vertical, linkToVid, vidOnPage, 
         } );
     } );
 
-    sbControls( vidOnPage, trueNoOfSlots, parent );
+    setSlotSize( storyboardParent, '200' );
+    sbControls( vidOnPage, trueNoOfSlots, storyboardParent );
     return slotsDiv;
 }
 
-async function storyboardToggleable ( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls ) {
-    const slotsDiv = await storyboard( parent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, ...imgUrls );
+
+async function storyboardToggleable ( {
+    storyboardParent,
+    horizontal,
+    vertical,
+    linkToVid = null,
+    vidOnPage,
+    samplingFq = null,
+    trueNoOfSlots,
+    imgUrls = [] } ) {
+    const slotsDiv = await storyboard( { storyboardParent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, imgUrls } );
     Object.assign( slotsDiv.style, {
         maxWidth: '90vw',
         maxHeight: '80vh',
@@ -250,13 +312,30 @@ async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlo
 
                 const x = i % horizontal;
                 const y = Math.floor( i / horizontal );
+
+                const canvas = document.createElement( 'canvas' );
+                const ctx = canvas.getContext( '2d' );
+                // Set canvas dimensions
+                canvas.width = itemWidth;
+                canvas.height = itemHeight;
+                // Draw the part of the image into the canvas
+                ctx.drawImage(
+                    imgElement,
+                    x * itemWidth, y * itemHeight, // Source x, y
+                    itemWidth, itemHeight,          // Source width, height
+                    0, 0,                              // Destination x, y
+                    canvas.width, canvas.height         // Destination width, height
+                );
+                storyboardItem.append( canvas );
+
+
                 Object.assign( storyboardItem.style, {
                     backgroundColor: 'black',
                     textShadow: 'white 0px 0px 10px',
-                    backgroundImage: `url('${ imgElement.src }')`,
-                    backgroundPosition: `${ -x * itemWidth }px ${ -y * itemHeight }px`,
+                    // backgroundImage: `url('${ imgElement.src }')`,
+                    // backgroundPosition: `${ -x * itemWidth }px ${ -y * itemHeight }px`,
                     width: `${ itemWidth }px`,
-                    minWidth: `${ itemWidth }px`,
+                    // minWidth: `${ itemWidth }px`,
                     height: `${ itemHeight }px`,
                     margin: '1px',
                     border: 'solid white',
@@ -810,8 +889,8 @@ function elementsToArray ( els ) {
     return els instanceof Element ? [ els ] : els;
 }
 
-function contains ( selector, text ) {
-    const elsContaining = [ ...document.querySelectorAll( selector ) ].filter( ( el ) =>
+function contains ( selector, text, parent = document ) {
+    const elsContaining = [ ...parent.querySelectorAll( selector ) ].filter( ( el ) =>
         el.textContent.includes( text )
     );
     return elsContaining;

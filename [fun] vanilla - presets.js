@@ -13,7 +13,7 @@ function dialog ( title = '', contentElement, maxHeight = '300px' ) {
     // Create the header
     const header = document.createElement( 'div' );
     header.style.backgroundColor = '#e0e0e0';
-    header.style.padding = '10px';
+    // header.style.padding = '10px';
     header.style.cursor = 'move';
     header.style.display = 'flex';
     header.style.justifyContent = 'space-between';
@@ -22,6 +22,7 @@ function dialog ( title = '', contentElement, maxHeight = '300px' ) {
 
     // Create the collapse button
     const collapseBtn = document.createElement( 'button' );
+    collapseBtn.id = 'close-btn';
     collapseBtn.innerHTML = '+';
     collapseBtn.style.marginLeft = 'auto';
     collapseBtn.style.marginRight = '5px';
@@ -553,3 +554,189 @@ class modalBox {
     }
 
 }
+
+class ModalBox {
+    constructor ( options = {} ) {
+        this.options = {
+            width: options.width || '95%',
+            backgroundColor: options.backgroundColor || '#ffffff',
+            headerColor: options.headerColor || '#5cb85c',
+            headerTextColor: options.headerTextColor || '#ffffff',
+            closeButtonColor: options.closeButtonColor || '#ffffff',
+            animation: options.animation !== undefined ? options.animation : true,
+            closeOnEscape: options.closeOnEscape !== undefined ? options.closeOnEscape : true,
+            closeOnOutsideClick: options.closeOnOutsideClick !== undefined ? options.closeOnOutsideClick : true,
+        };
+
+        this.createStyles();
+        this.createModal();
+        this.setupEventListeners();
+    }
+
+    createStyles () {
+        const styles = `
+            .vanilla-modal {
+                display: none;
+                position: fixed;
+                z-index: 10000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.4);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .vanilla-modal.show {
+                opacity: 1;
+            }
+
+            .vanilla-modal-content {
+                position: relative;
+                background-color: ${ this.options.backgroundColor };
+                margin: 50px auto;
+                padding: 0;
+                border-radius: 8px;
+                width: ${ this.options.width };
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                transform: translateY(-50px);
+                transition: transform 0.3s ease;
+            }
+
+            .vanilla-modal.show .vanilla-modal-content {
+                transform: translateY(0);
+            }
+
+            .vanilla-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px 20px;
+                background-color: ${ this.options.headerColor };
+                color: ${ this.options.headerTextColor };
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+            }
+
+            .vanilla-modal-title {
+                margin: 0;
+                font-size: 1.25rem;
+                font-weight: 600;
+            }
+
+            .vanilla-modal-close {
+                color: ${ this.options.closeButtonColor };
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: color 0.2s ease;
+            }
+
+            .vanilla-modal-close:hover {
+                color: #000;
+            }
+
+            .vanilla-modal-body {
+                padding: 20px;
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+        `;
+
+        GM_addStyle( styles );
+    }
+
+    createModal () {
+
+        this.modal = generateElements( `
+            <div class="vanilla-modal-content">
+                <div class="vanilla-modal-header">
+                    <h2 class="vanilla-modal-title"></h2>
+                    <span class="vanilla-modal-close">&times;</span>
+                </div>
+                <div class="vanilla-modal-body"></div>
+            </div>
+            `);
+        this.modal.className = 'vanilla-modal';
+        document.body.appendChild( this.modal );
+
+        this.titleElement = this.modal.querySelector( '.vanilla-modal-title' );
+        this.bodyElement = this.modal.querySelector( '.vanilla-modal-body' );
+        this.closeButton = this.modal.querySelector( '.vanilla-modal-close' );
+    }
+
+    setupEventListeners () {
+        this.closeButton.addEventListener( 'click', () => this.destroy() );
+
+        if ( this.options.closeOnOutsideClick ) {
+            this.modal.addEventListener( 'click', ( e ) => {
+                if ( e.target === this.modal ) this.hide();
+            } );
+        }
+
+        if ( this.options.closeOnEscape ) {
+            document.addEventListener( 'keydown', ( e ) => {
+                if ( e.key === 'Escape' && this.isVisible() ) this.hide();
+            } );
+        }
+    }
+
+    setTitle ( title ) {
+        if ( typeof title === 'string' ) {
+            this.titleElement.textContent = title;
+        }
+        // else {
+        else if ( content instanceof Node ) {
+            this.titleElement.appendChild( title );
+        }
+    }
+
+    setContent ( content ) {
+        if ( typeof content === 'string' ) {
+            this.bodyElement.innerHTML = content;
+        } else if ( content instanceof Node ) {
+            let policy = trustedTypes.createPolicy( 'default', {
+                createHTML: ( input ) => input
+            } );
+            this.bodyElement.innerHTML = policy.createHTML( '' );
+
+            this.bodyElement.appendChild( content );
+        }
+    }
+
+    show () {
+        this.modal.style.display = 'block';
+        setTimeout( () => this.modal.classList.add( 'show' ), 10 );
+    }
+
+    hide () {
+        this.modal.classList.remove( 'show' );
+        setTimeout( () => {
+            this.modal.style.display = 'none';
+        }, 300 );
+    }
+
+    isVisible () {
+        return this.modal.style.display === 'block';
+    }
+
+    destroy () {
+        document.body.removeChild( this.modal );
+    }
+}
+
+// Usage example:
+// const modal = new ModalBox({
+//     width: '80%',
+//     backgroundColor: '#f0f0f0',
+//     headerColor: '#3498db',
+//     animation: true,
+//     closeOnEscape: true,
+//     closeOnOutsideClick: true
+// });
+//
+// modal.setTitle('Welcome');
+// modal.setContent('<p>This is a customizable modal box!</p>');
+// modal.show();

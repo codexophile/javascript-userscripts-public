@@ -1,108 +1,119 @@
 ( async function () {
-  'use strict'
+  'use strict';
 
-  $( 'a[title]' ).attr( 'title', '' )
+  $( 'a[title]' ).attr( 'title', '' );
 
   if ( location.href.includes( '/videos/' ) ) {
 
 
-    const fpplay = await waitFor( 'a.fp-play' )
-    fpplay.click()
-    const videoElement = await waitFor( 'video' )
+    const fpplay = await waitFor( 'a.fp-play' );
+    fpplay.click();
+    const videoElement = await waitFor( 'video' );
     videoElement.addEventListener( 'loadedmetadata', async ( event ) => {
-      event.target.pause()
-      if ( !!document.querySelector( `#slotsDiv` ).children.length )
-        return
-      const storyboard = await prepareStoryboard( $storyBoard[ 0 ], document, null, videoElement, 'flex' )
-      storyboard.scrollIntoView()
-    } )
 
-    let $storyBoard = $( `<div></div>` )
-    $( '.block-video' ).after( $storyBoard )
+      event.target.pause();
+      if ( !!document.querySelector( `#slotsDiv` )?.children.length )
+        return;
+      const storyboard = await prepareStoryboard( $storyBoard[ 0 ], document, null, videoElement, 'flex' );
+      storyboard.scrollIntoView();
 
-    const storyboard = await prepareStoryboard( $storyBoard[ 0 ], document, null, videoElement, 'flex' )
-    storyboard.scrollIntoView()
+      loadRelatedVideos();
+
+    } );
+
+    let $storyBoard = $( `<div></div>` );
+    $( '.block-video' ).after( $storyBoard );
 
     //* Related videos
 
-    // const relatedItems = document.querySelectorAll( `.list-videos .item` )
-    // lazyLoad( async item => {
-    //   const itemLink = item.querySelector( 'a' ).href
-    //   const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item )
-    //   const tempDoc = await GMXmlHttpRequest( itemLink )
-    //   try {
-    //     prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable', item )
+    function loadRelatedVideos () {
 
-    //   } catch ( error ) {
-    //     console.log( error )
-    //   }
-    // }, ...relatedItems )
+      document.querySelectorAll( `.list-videos .item` ).forEach( async item => {
 
-    document.querySelectorAll( `.list-videos .item` ).forEach( async item => {
+        const itemLink = item.querySelector( 'a' ).href;
+        const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item );
+        const tempDoc = await GMXmlHttpRequest( itemLink );
+        try {
+          prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable', item );
 
-      const itemLink = item.querySelector( 'a' ).href
-      const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item )
-      const tempDoc = await GMXmlHttpRequest( itemLink )
-      try {
-        prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable', item )
+        } catch ( error ) {
+          console.log( error );
+        }
+      } );
+    }
 
-      } catch ( error ) {
-        console.log( error )
-      }
-    } )
 
   }
   else {
 
     document.querySelectorAll( `.list-videos .item` ).forEach( async item => {
 
-      const itemLink = item.querySelector( 'a' ).href
-      const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item )
-      const tempDoc = await GMXmlHttpRequest( itemLink )
-      prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable' )
+      const itemLink = item.querySelector( 'a' ).href;
+      const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item );
+      const tempDoc = await GMXmlHttpRequest( itemLink );
+      prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable', item );
 
-    } )
+    } );
 
   }
 
-  function prepareStoryboard ( parent, scriptSource, linkToVid, videoElement, sbFunction, thisEl ) {
+  function prepareStoryboard ( storyboardParent, scriptSource, linkToVid, vidOnPage, sbFunction, thisEl ) {
 
-    let scriptEl
+    let scriptEl;
     if ( scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 2 ] )
-      scriptEl = scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 2 ]
+      scriptEl = scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 2 ];
     else
-      scriptEl = scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 1 ]
+      scriptEl = scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 1 ];
     // GM_setClipboard( scriptEl.innerHTML )
 
-    let frequencyPer = scriptEl.innerHTML.match( /timeline_screens_interval: '(\d+)'/ )[ 1 ]
+    let samplingFq = scriptEl.innerHTML.match( /timeline_screens_interval: '(\d+)'/ )[ 1 ];
 
-    const nOfSlotMatch = scriptEl.innerHTML.match( /timeline_screens_count: '(\d+)'/ )
-    let nOfSlots
+    const nOfSlotMatch = scriptEl.innerHTML.match( /timeline_screens_count: '(\d+)'/ );
+    let trueNoOfSlots;
     if ( nOfSlotMatch )
-      nOfSlots = nOfSlotMatch[ 1 ]
-    else if ( videoElement )
-      nOfSlots = videoElement.duration / frequencyPer
+      trueNoOfSlots = nOfSlotMatch[ 1 ];
+    else if ( vidOnPage )
+      trueNoOfSlots = vidOnPage.duration / samplingFq;
     else {
-      const durationString = thisEl.querySelector( '.duration' ).textContent
-      const duration = toSeconds( durationString )
-      nOfSlots = duration / frequencyPer
+      const durationString = thisEl.querySelector( '.duration' ).textContent;
+      const duration = toSeconds( durationString );
+      trueNoOfSlots = duration / samplingFq;
     }
-    const urlTemplate = scriptEl.innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ]
+    const urlTemplate = scriptEl.innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ];
 
-    let imgUrls = []
-    repeat( +nOfSlots, j => {
-      const thisUrl = urlTemplate.replace( '{time}', +j + 1 )
-      imgUrls.push( thisUrl )
-    } )
+    let imgUrls = [];
+    repeat( +trueNoOfSlots, j => {
+      const thisUrl = urlTemplate.replace( '{time}', +j + 1 );
+      imgUrls.push( thisUrl );
+    } );
 
     if ( sbFunction === 'flex' ) {
       // if ( !videoElement.duration ) return null
-      return storyboard( parent, 1, 1, linkToVid, videoElement, frequencyPer, nOfSlots, ...imgUrls )
+      return storyboard( {
+        storyboardParent,
+        horizontal: 1,
+        vertical: 1,
+        linkToVid,
+        vidOnPage,
+        samplingFq,
+        trueNoOfSlots,
+        imgUrls
+      } );
     }
     if ( sbFunction === 'toggleable' )
-      return storyboardToggleable( parent, 1, 1, linkToVid, videoElement, frequencyPer, nOfSlots, ...imgUrls )
+      return storyboardToggleable( {
+        storyboardParent,
+        horizontal: 1,
+        vertical: 1,
+        linkToVid,
+        vidOnPage,
+        samplingFq,
+        trueNoOfSlots,
+        imgUrls
+      }
+      );
 
   }
 
 
-} )()
+} )();

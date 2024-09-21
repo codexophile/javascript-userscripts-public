@@ -1,37 +1,39 @@
 ( async function () {
-  'use strict'
+  'use strict';
 
-  let activeVideo
-  const fastSpeed = 3
-  let timeIncrTiny = 6 / 160
-  let timeIncrSmall = 5
-  let timeIncrLarge = 60
+  let activeVideo;
+  const fastSpeed = 3;
+  let timeIncrTiny = 6 / 160;
+  let timeIncrSmall = 5;
+  let timeIncrLarge = 60;
 
-  let controlPanel, vidProgressEl, speedDispEl, volDispEl, slidVolFinEl, divHeightEl
+  let controlPanel, vidProgressEl, speedDispEl, volDispEl, slidVolFinEl, divHeightEl;
 
-  new MutationObserver( main ).observe( document.body, { childList: true, subtree: true } )
-  document.addEventListener( 'scroll', main )
-  document.addEventListener( "keyup", keyboardEvent, false )
+  new MutationObserver( main ).observe( document.body, { childList: true, subtree: true } );
+  document.addEventListener( 'scroll', main );
+  document.addEventListener( "keyup", keyboardEvent, false );
 
   async function main () {
 
-    activeVideo = getActiveVideo()
-    if ( !activeVideo ) { }
-    const vidContPanel = document.querySelector( `#video-controlPanel` )
+    activeVideo = getActiveVideo();
+    const vidContPanel = document.querySelector( `#video-controlPanel` );
+    if ( !activeVideo ) {
+      // vidContPanel.style.display = 'none';
+    }
 
     if ( activeVideo && !vidContPanel ) {
-      addToolbar()
-      const collapsibleCont = await waitFor( '#collapsibleContent' )
-      generateToolbarButton( '📹', collapsibleCont, null, () => { fadeToggle( document.querySelectorAll( `#video-controlPanel` ), 2500 ) } )
+      addToolbar();
+      const collapsibleCont = await waitFor( '#collapsibleContent' );
+      generateToolbarButton( '📹', collapsibleCont, null, () => { fadeToggle( document.querySelectorAll( `#video-controlPanel` ), 2500 ); } );
     }
     if ( !activeVideo && vidContPanel )
-      vidContPanel.style.display = 'none'
+      vidContPanel.style.display = 'none';
     else if ( vidContPanel )
-      vidContPanel.style.display = ''
+      vidContPanel.style.display = '';
 
     if ( activeVideo ) {
-      videoEventListeners( activeVideo )
-      initializeToolbar()
+      videoEventListeners( activeVideo );
+      initializeToolbar();
     }
 
   }
@@ -57,7 +59,7 @@
         width: 100%;
         background-color: #14855a;
       '>
-        <span class="divHeight text" > x </span>
+        <span class="divHeight text important" > x </span>
         <span id=spanCurrentTime class="text" ></span>
         <span id=spanRemainingTime       class="text" >x</span>
         <span id=spanActualRemainingTime class="text" >x</span>
@@ -83,7 +85,9 @@
         <button class="timejumpLTwo">            ➖ </button> 
         <button class="timejumpLOne important">  ➖ </button> 
         <button class="timejumpROne important">  ➕ </button> 
-        <button class="timejumpRTwo">            ➕ </button> 
+        <button class="timejumpRTwo">            ➕ </button>
+        <input type="checkbox" class=important title="Loop video" id="checkbox-loop-vid">
+
         <a      id=copyPageUrl title=Page  class="important button" href=${ location.href } > 📄 </a>
         <button id=copyVidSrc class=brsrc title=CurrentSrc> 🎞️ </button>
       </div>
@@ -100,7 +104,7 @@
       <input type="range" id=progress class="important vidContRange"  min="0" max="100"  step="0.001" value=0>
 
     </div>
-    ` )
+    ` );
     GM_addStyle( `
 
     .controlPanel        { opacity: 0.5; transition: 0.2s }
@@ -125,6 +129,8 @@
       margin: 1px;
       border-radius: 4px;
     }
+
+    /* slider toggles */
 
     /* Range controls*/
 
@@ -218,231 +224,232 @@
       }
     }
     
-    ` )
+    ` );
 
-    document.body.append( controlPanel )
-    controlPanel.querySelectorAll( ':not(.important)' ).forEach( item => { item.style.display = 'none' } )
+    document.body.append( controlPanel );
+    controlPanel.querySelectorAll( ':not(.important)' ).forEach( item => { item.style.display = 'none'; } );
 
-    const contPanelHeader = controlPanel.querySelector( '#contPanelHeader' )
-    vidProgressEl = controlPanel.querySelector( `#progress` )
-    speedDispEl = controlPanel.querySelector( '#speedDisp' )
-    volDispEl = controlPanel.querySelector( '#volDisp' )
-    slidVolFinEl = controlPanel.querySelector( `.slidVolFin` )
-    divHeightEl = controlPanel.querySelector( '.divHeight' )
+    const contPanelHeader = controlPanel.querySelector( '#contPanelHeader' );
+    vidProgressEl = controlPanel.querySelector( `#progress` );
+    speedDispEl = controlPanel.querySelector( '#speedDisp' );
+    volDispEl = controlPanel.querySelector( '#volDisp' );
+    slidVolFinEl = controlPanel.querySelector( `.slidVolFin` );
+    divHeightEl = controlPanel.querySelector( '.divHeight' );
 
-    dragElement( controlPanel, contPanelHeader )
-    contPanelHeader.addEventListener( 'mousedown', () => { controlPanel.style.transition = 'unset' } )
-    contPanelHeader.addEventListener( 'mouseup', () => { controlPanel.style.transition = 'left 0.5s, top 0.5s, opacity 0.2s' } )
+    dragElement( controlPanel, contPanelHeader );
+    contPanelHeader.addEventListener( 'mousedown', () => { controlPanel.style.transition = 'unset'; } );
+    contPanelHeader.addEventListener( 'mouseup', () => { controlPanel.style.transition = 'left 0.5s, top 0.5s, opacity 0.2s'; } );
 
-    controlPanel.querySelector( '.butClose' ).addEventListener( 'click', () => { fadeOut( controlPanel, 250 ) } )
-    controlPanel.querySelector( '.head' ).addEventListener( 'click', () => { toggle( controlPanel.querySelectorAll( ':not(.important)' ) ) } )
-    controlPanel.querySelector( '#speedToggle' ).addEventListener( 'click', () => { speedToggle() } )
-    controlPanel.querySelector( '#buttonPlay' ).addEventListener( 'click', () => { togglePlayPause() } )
+    controlPanel.querySelector( '.butClose' ).addEventListener( 'click', () => { fadeOut( controlPanel, 250 ); } );
+    controlPanel.querySelector( '.head' ).addEventListener( 'click', () => { toggle( controlPanel.querySelectorAll( ':not(.important)' ) ); } );
+    controlPanel.querySelector( '#speedToggle' ).addEventListener( 'click', () => { speedToggle(); } );
+    controlPanel.querySelector( '#buttonPlay' ).addEventListener( 'click', () => { togglePlayPause(); } );
 
-    vidProgressEl.addEventListener( 'input', ( e ) => { activeVideo.currentTime = e.target.value / 100 * activeVideo.duration } )
-    slidVolFinEl.addEventListener( 'input', ( e ) => { activeVideo.volume = parseFloat( parseFloat( e.target.value ) )/* ; volumeDisplay.value = this.value */ } )
+    vidProgressEl.addEventListener( 'input', ( e ) => { activeVideo.currentTime = e.target.value / 100 * activeVideo.duration; } );
+    slidVolFinEl.addEventListener( 'input', ( e ) => { activeVideo.volume = parseFloat( parseFloat( e.target.value ) );/* ; volumeDisplay.value = this.value */ } );
 
-    controlPanel.querySelector( '.timejumpLOne' ).addEventListener( 'click', () => { activeVideo.currentTime -= timeIncrSmall } )
-    controlPanel.querySelector( '.timejumpROne' ).addEventListener( 'click', () => { activeVideo.currentTime += timeIncrSmall } )
-    controlPanel.querySelector( '.timejumpLTwo' ).addEventListener( 'click', () => { activeVideo.currentTime -= timeIncrLarge } )
-    controlPanel.querySelector( '.timejumpRTwo' ).addEventListener( 'click', () => { activeVideo.currentTime += timeIncrLarge } )
+    controlPanel.querySelector( '.timejumpLOne' ).addEventListener( 'click', () => { activeVideo.currentTime -= timeIncrSmall; } );
+    controlPanel.querySelector( '.timejumpROne' ).addEventListener( 'click', () => { activeVideo.currentTime += timeIncrSmall; } );
+    controlPanel.querySelector( '.timejumpLTwo' ).addEventListener( 'click', () => { activeVideo.currentTime -= timeIncrLarge; } );
+    controlPanel.querySelector( '.timejumpRTwo' ).addEventListener( 'click', () => { activeVideo.currentTime += timeIncrLarge; } );
+    controlPanel.querySelector( '#checkbox-loop-vid' ).addEventListener( 'click', ( event ) => { activeVideo.loop = event.target.checked; } );
 
-    controlPanel.querySelector( `#muteButton` ).addEventListener( 'click', function () { activeVideo.muted = !activeVideo.muted } )
-    controlPanel.querySelector( `#frameStepL` ).addEventListener( 'click', () => { frameStep( 'left' ) } )
-    controlPanel.querySelector( `#frameStepR` ).addEventListener( 'click', () => { frameStep( 'right' ) } )
-    controlPanel.querySelector( '#buttonResize' ).addEventListener( 'click', () => { if ( activeVideo.videoHeight ) activeVideo.style.height = `${ activeVideo.videoHeight }px` } )
-    controlPanel.querySelector( '#buttonScroll' ).addEventListener( 'click', () => { activeVideo.scrollIntoView() } )
-    controlPanel.querySelector( '#buttonLog' ).addEventListener( 'click', () => { console.log( activeVideo ) } )
-    controlPanel.querySelector( '#copyPageUrl' ).addEventListener( 'click', ( e ) => { e.preventDefault(); GM_setClipboard( location.href ); return false } )
-    controlPanel.querySelector( '#copyVidSrc' ).addEventListener( 'click', ( e ) => { GM_setClipboard( activeVideo.currentSrc ) } )
-    controlPanel.querySelector( `#buttonSnap` ).addEventListener( 'click', () => { snap() } )
+    controlPanel.querySelector( `#muteButton` ).addEventListener( 'click', function () { activeVideo.muted = !activeVideo.muted; } );
+    controlPanel.querySelector( `#frameStepL` ).addEventListener( 'click', () => { frameStep( 'left' ); } );
+    controlPanel.querySelector( `#frameStepR` ).addEventListener( 'click', () => { frameStep( 'right' ); } );
+    controlPanel.querySelector( '#buttonResize' ).addEventListener( 'click', () => { if ( activeVideo.videoHeight ) activeVideo.style.height = `${ activeVideo.videoHeight }px`; } );
+    controlPanel.querySelector( '#buttonScroll' ).addEventListener( 'click', () => { activeVideo.scrollIntoView(); } );
+    controlPanel.querySelector( '#buttonLog' ).addEventListener( 'click', () => { console.log( activeVideo ); } );
+    controlPanel.querySelector( '#copyPageUrl' ).addEventListener( 'click', ( e ) => { e.preventDefault(); GM_setClipboard( location.href ); return false; } );
+    controlPanel.querySelector( '#copyVidSrc' ).addEventListener( 'click', ( e ) => { GM_setClipboard( activeVideo.currentSrc ); } );
+    controlPanel.querySelector( `#buttonSnap` ).addEventListener( 'click', () => { snap(); } );
 
-    speedDispEl.addEventListener( 'change', ( e ) => { activeVideo.playbackRate = e.target.value } )
-    volDispEl.addEventListener( 'change', ( e ) => { activeVideo.volume = e.target.value } )
+    speedDispEl.addEventListener( 'change', ( e ) => { activeVideo.playbackRate = e.target.value; } );
+    volDispEl.addEventListener( 'change', ( e ) => { activeVideo.volume = e.target.value; } );
 
-    return controlPanel
+    return controlPanel;
 
-    $( 'span.text' ).css( 'color', 'unset !important' )
+    $( 'span.text' ).css( 'color', 'unset !important' );
 
 
     $( `#progress` ).on( 'mousedown', function () {
-      if ( getActiveVideo().paused ) return
-      togglePlayPause()
-    } )
-    $( `#progress` ).on( 'mouseup', togglePlayPause )
+      if ( getActiveVideo().paused ) return;
+      togglePlayPause();
+    } );
+    $( `#progress` ).on( 'mouseup', togglePlayPause );
 
     //?pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
 
-    initializeToolbar()
+    initializeToolbar();
 
   }
 
   function initializeToolbar () {
 
-    slidVolFinEl.value = activeVideo.volume
-    volDispEl.value = activeVideo.volume
-    speedDispEl.value = activeVideo.playbackRate
-    divHeightEl.textContent = activeVideo.videoHeight
+    slidVolFinEl.value = activeVideo.volume;
+    volDispEl.value = activeVideo.volume;
+    speedDispEl.value = activeVideo.playbackRate;
+    divHeightEl.textContent = activeVideo.videoHeight;
 
   }
 
   function titler ( text ) {
     if ( document.getElementById( 'cbAutoSwitch' )?.checked )
-      document.title = text
+      document.title = text;
   }
 
   function videoEventListeners ( video ) {
 
-    if ( video.classList.contains( 'video-processed' ) ) return // 🛑
+    if ( video.classList.contains( 'video-processed' ) ) return; // 🛑
 
-    video.addEventListener( 'playing', () => { titler( "[media playing]" ) } )
-    video.addEventListener( 'pause', () => { titler( "[media  paused]" ) } )
-    video.addEventListener( 'waiting', () => { titler( "[media waiting]" ) } )
-    video.addEventListener( 'stalled', () => { titler( "[media stalled]" ) } )
+    video.addEventListener( 'playing', () => { titler( "[media playing]" ); } );
+    video.addEventListener( 'pause', () => { titler( "[media  paused]" ); } );
+    video.addEventListener( 'waiting', () => { titler( "[media waiting]" ); } );
+    video.addEventListener( 'stalled', () => { titler( "[media stalled]" ); } );
 
 
     video.addEventListener( 'timeupdate', ( event ) => {
 
-      if ( activeVideo != event.target ) return // 🛑
+      if ( activeVideo != event.target ) return; // 🛑
 
-      vidProgressEl.value = video.currentTime / video.duration * 100
+      vidProgressEl.value = video.currentTime / video.duration * 100;
 
-      const duration = video.duration
-      const currentTime = video.currentTime
+      const duration = video.duration;
+      const currentTime = video.currentTime;
 
-      const spanRemainingTime = document.querySelector( '#spanRemainingTime' )
-      const spanCurrentTime = document.querySelector( '#spanCurrentTime' )
-      const spanActualRemTime = document.querySelector( `#spanActualRemainingTime` )
+      const spanRemainingTime = document.querySelector( '#spanRemainingTime' );
+      const spanCurrentTime = document.querySelector( '#spanCurrentTime' );
+      const spanActualRemTime = document.querySelector( `#spanActualRemainingTime` );
 
-      fadeIn( spanRemainingTime )
-      fadeIn( spanCurrentTime )
+      fadeIn( spanRemainingTime );
+      fadeIn( spanCurrentTime );
 
-      const remainingTime = Math.round( duration - currentTime )
-      const readable = forHumans( remainingTime )
-      spanRemainingTime.textContent = readable
-      spanCurrentTime.textContent = forHumans( Math.round( currentTime ) )
+      const remainingTime = Math.round( duration - currentTime );
+      const readable = forHumans( remainingTime );
+      spanRemainingTime.textContent = readable;
+      spanCurrentTime.textContent = forHumans( Math.round( currentTime ) );
 
-      if ( video.playbackRate == 1 ) { fadeOut( spanActualRemTime ); return } // 🛑
-      fadeIn( spanActualRemTime )
-      const actualRemainingTime = Math.round( ( duration - currentTime ) / video.playbackRate )
-      const readableActual = forHumans( actualRemainingTime )
-      spanActualRemTime.textContent = readableActual
+      if ( video.playbackRate == 1 ) { fadeOut( spanActualRemTime ); return; } // 🛑
+      fadeIn( spanActualRemTime );
+      const actualRemainingTime = Math.round( ( duration - currentTime ) / video.playbackRate );
+      const readableActual = forHumans( actualRemainingTime );
+      spanActualRemTime.textContent = readableActual;
 
-    } )
+    } );
 
-    video.addEventListener( 'ratechange', ( event ) => { speedDispEl.value = event.target.playbackRate } )
+    video.addEventListener( 'ratechange', ( event ) => { speedDispEl.value = event.target.playbackRate; } );
     video.addEventListener( 'volumechange', ( event ) => {
-      volDispEl.value = event.target.volume
-      slidVolFinEl.value = event.target.volume
-    } )
+      volDispEl.value = event.target.volume;
+      slidVolFinEl.value = event.target.volume;
+    } );
 
-    video.classList.add( 'video-processed' )
+    video.classList.add( 'video-processed' );
 
   }
 
   function snap () {
 
-    const canvas = generateElements( '<canvas></canvas>', document.body )
-    canvas.width = activeVideo.videoWidth
-    canvas.height = activeVideo.videoHeight
-    const canvasContext = canvas.getContext( "2d" )
-    canvasContext.drawImage( activeVideo, 0, 0 )
-    const imageUrl = canvas.toDataURL( 'image/png' ).replace( "image/png", "image/octet-stream" )
-    console.log( imageUrl )
+    const canvas = generateElements( '<canvas></canvas>', document.body );
+    canvas.width = activeVideo.videoWidth;
+    canvas.height = activeVideo.videoHeight;
+    const canvasContext = canvas.getContext( "2d" );
+    canvasContext.drawImage( activeVideo, 0, 0 );
+    const imageUrl = canvas.toDataURL( 'image/png' ).replace( "image/png", "image/octet-stream" );
+    console.log( imageUrl );
 
-    const link = generateElements( '<a></a>', document.body )
-    const fileName = document.title ? document.title : location.href
-    link.setAttribute( 'download', `${ fileName }.png` )
-    link.setAttribute( 'href', imageUrl )
-    link.click()
+    const link = generateElements( '<a></a>', document.body );
+    const fileName = document.title ? document.title : location.href;
+    link.setAttribute( 'download', `${ fileName }.png` );
+    link.setAttribute( 'href', imageUrl );
+    link.click();
 
-    canvas.remove()
-    link.remove()
+    canvas.remove();
+    link.remove();
 
   }
 
   function keyboardEvent ( e ) {
 
-    let activeElementType = document.activeElement.tagName.toLowerCase()
-    if ( activeElementType === 'input' ) return // 🛑
+    let activeElementType = document.activeElement.tagName.toLowerCase();
+    if ( activeElementType === 'input' ) return; // 🛑
 
     if ( !activeVideo ) {
-      console.log( 'No activeVideo' )
-      return // 🛑
+      console.log( 'No activeVideo' );
+      return; // 🛑
     }
 
     if ( e.key == 'j' ) {
-      activeVideo.currentTime = activeVideo.currentTime - timeIncrSmall
+      activeVideo.currentTime = activeVideo.currentTime - timeIncrSmall;
     }
     if ( e.key == 'l' ) {
-      activeVideo.currentTime = activeVideo.currentTime + timeIncrSmall
+      activeVideo.currentTime = activeVideo.currentTime + timeIncrSmall;
     }
     if ( e.key == 'z' ) {
-      console.log( activeVideo )
-      speedToggle()
+      console.log( activeVideo );
+      speedToggle();
     }
     if ( e.key === 'x' ) {
-      activeVideo.playbackRate = activeVideo.playbackRate - 0.5
+      activeVideo.playbackRate = activeVideo.playbackRate - 0.5;
     }
     if ( e.key === 'c' ) {
-      activeVideo.playbackRate = activeVideo.playbackRate + 0.5
+      activeVideo.playbackRate = activeVideo.playbackRate + 0.5;
     }
     if ( e.key === "m" ) {
-      activeVideo.muted = !activeVideo.toggleAttribute( "muted" )
+      activeVideo.muted = !activeVideo.toggleAttribute( "muted" );
     }
     if ( e.code === "KeyB" ) {
-      activeVideo.volume -= 0.01
+      activeVideo.volume -= 0.01;
     }
     if ( e.code === "KeyN" ) {
-      activeVideo.volume += 0.01
+      activeVideo.volume += 0.01;
     }
     if ( e.shiftKey && e.code === "KeyB" ) {
-      activeVideo.volume -= 0.001
+      activeVideo.volume -= 0.001;
     }
     if ( e.shiftKey && e.code === "KeyN" ) {
-      activeVideo.volume += 0.001
+      activeVideo.volume += 0.001;
     }
     if ( e.shiftKey && e.code === "KeyM" ) {
-      activeVideo.muted = false
-      activeVideo.volume = 0.5
+      activeVideo.muted = false;
+      activeVideo.volume = 0.5;
     }
 
   }
 
   function togglePlayPause () {
-    activeVideo.paused ? activeVideo.play() : activeVideo.pause()
+    activeVideo.paused ? activeVideo.play() : activeVideo.pause();
   }
 
   function speedToggle () {
     if ( activeVideo.playbackRate == 1 ) {
-      activeVideo.playbackRate = fastSpeed
+      activeVideo.playbackRate = fastSpeed;
     } else {
-      activeVideo.playbackRate = 1
+      activeVideo.playbackRate = 1;
     }
     // $( activeVideo ).parent().addClass( 'speedManual' )
   }
 
   function getActiveVideo () {
 
-    let videos = [ ...document.querySelectorAll( "video, audio" ) ]
+    let mediaEls = [ ...document.querySelectorAll( "video, audio" ) ];
+    const workingMedia = mediaEls.filter( el => el.duration );
+    const playingMedia = mediaEls.filter( el => !el.paused );
+    let visibleEls = playingMedia.filter( el => isElementInViewport( el ) );
 
-    const playingVideos = videos.filter( video => !video.paused )
-    let visibleVideos = playingVideos.filter( video => isElementInViewport( video ) && video.videoHeight )
+    const activeMedia =
+      playingMedia.length ? playingMedia : visibleEls.length ? visibleEls : workingMedia;
 
-    const activeVideos =
-      playingVideos.length ? playingVideos : visibleVideos.length ? visibleVideos : videos
-
-    if ( activeVideos[ 0 ] ) return activeVideos[ 0 ]
-    return null
+    if ( activeMedia[ 0 ] ) return activeMedia[ 0 ];
+    return null;
 
   }
 
   function frameStep ( direction ) {
-    activeVideo.pause()
+    activeVideo.pause();
     if ( direction === 'left' )
-      activeVideo.currentTime -= timeIncrTiny
+      activeVideo.currentTime -= timeIncrTiny;
     if ( direction === 'right' )
-      activeVideo.currentTime += timeIncrTiny
+      activeVideo.currentTime += timeIncrTiny;
   }
 
-} )()
+} )();

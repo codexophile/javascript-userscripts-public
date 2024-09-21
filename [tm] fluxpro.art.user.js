@@ -1,51 +1,24 @@
 ( async function () {
-    'use strict'
+    'use strict';
 
-    const match = location.href.match( /\/create\?prompt=(.+)(#|&|$)/ )
+    const match = location.href.match( /\/create\?prompt=(.+)(#|&|$)/ );
     if ( match ) {
-        let queryString = decodeURIComponent( match[ 1 ] )
-        const promptTextarea = document.querySelector( `textarea` )
-        promptTextarea.value = queryString
+        let queryString = decodeURIComponent( match[ 1 ] );
+        const promptTextarea = document.querySelector( `textarea` );
+        promptTextarea.value = queryString;
     }
 
-    if ( location.href.includes( 'https://r2.' ) ) {
-        alert()
-    }
+    waitForEach( 'img[alt]', img => {
 
-    let observer = new MutationObserver( () => {
+        const $img = $( img );
+        const $toolbarEl = $img.parent().prev().children();
+        const imgAlt = img.alt;
+        const altLength = imgAlt.length;
 
+        const $characterCountEl = $( `<button>${ altLength }</button>` ).appendTo( $toolbarEl );
+        $characterCountEl[ 0 ].style.backgroundColor = 'black';
+        // console.log( $toolbarEl.children() );
 
-        $( 'img.rounded.max-w-full' ).each( function () {
+    } );
 
-            const $imgWrapper = $( this ).parent()
-            if ( $imgWrapper.has( '#dlBtn' ).length ) return // 🛑
-
-            GM_notification( '', 'Alert' )
-            $imgWrapper[ 0 ].removeAttribute( 'href' )
-            const $dlBtn = $( `<button id=dlBtn>D</button>` ).appendTo( $imgWrapper )
-            $dlBtn[ 0 ].style = 'z-index: 1; background-color: black;'
-
-            $dlBtn.on( 'click', () => {
-
-                const $image = $( this )
-                const uniqueFileName = generateUniqueString( 20 )
-                const promptText = $image.parent().parent().find( 'p' ).text()
-                // const model = $( 'button[role=combobox] span:contains("Model")' ).next().text()
-                // const seed = $( '#imagefx-seed-input' )[ 0 ].value
-                const finalFileName = `FluxPro.art - ${ uniqueFileName }`
-
-                downloadText( `${ finalFileName }.txt`, promptText )
-                GM_setClipboard( finalFileName )
-
-            } )
-
-        } )
-
-        return
-
-
-
-    } )
-    observer.observe( document.body, { childList: true, subtree: true } )
-
-} )()
+} )();
