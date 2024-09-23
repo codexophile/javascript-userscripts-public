@@ -865,21 +865,33 @@ function waitForNew ( selector ) {
 
 }
 
-function waitForEach ( selector, callback ) {
+function waitForEach ( selector, callback, options = {} ) {
+    const { timeout = 0, once = false } = options;
+    const processedElements = new Set();
 
-    document.querySelectorAll( `${ selector }:not(.waitForNewDone)` ).forEach( item => {
-        item.classList.add( 'waitForNewDone' );
-        callback( item );
-    } );
-
-    let observer = new MutationObserver( () => {
-        const elements = document.querySelectorAll( `${ selector }:not(.waitForNewDone)` );
-        elements.forEach( element => {
-            element.classList.add( 'waitForNewDone' );
-            callback( element );
+    function processElements () {
+        document.querySelectorAll( selector ).forEach( element => {
+            if ( !processedElements.has( element ) ) {
+                processedElements.add( element );
+                callback( element );
+            }
         } );
-    } );
+    }
+
+    // Initial processing
+    processElements();
+
+    // Set up the observer
+    const observer = new MutationObserver( processElements );
     observer.observe( document.body, { childList: true, subtree: true } );
+
+    // Set up the timeout if specified
+    if ( timeout > 0 ) {
+        setTimeout( () => observer.disconnect(), timeout );
+    }
+
+    // Return a function to stop observing
+    return () => observer.disconnect();
 }
 
 //ANCHOR - JQ Alternatives

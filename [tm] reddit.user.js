@@ -5,74 +5,74 @@
     main();
     window.addEventListener( 'urlchange', main );
 
-    function main () {
+    async function main () {
 
         let $activePost;
 
-        if ( !location.href.includes( '/comments/' ) ) {
+        if ( location.href.includes( '/comments/' ) ) return;
 
-            waitFor( 'main:not(.scrollEvAdded)' ).then( ( mainEl ) => {
-                mainEl.classList.add( 'scrollEvAdded' );
+        const mainEl = await waitFor( 'main:not(.scrollEvAdded)' );
+        mainEl.classList.add( 'scrollEvAdded' );
 
-                mainEl.parentElement.parentElement.addEventListener( 'wheel', ( event ) => {
+        mainEl.parentElement.parentElement.addEventListener( 'wheel', ( event ) => {
+            if ( event.altKey ) return;
+            event.preventDefault();
 
-                    let $scrollTo;
-                    if ( !$activePost?.length ) {
-                        $activePost = jQuery( `article` ).first();
-                        markAsActive( $activePost[ 0 ] );
-                        $scrollTo = $activePost;
-                    }
-                    else {
-                        if ( event.deltaY > 0 ) {
-                            $scrollTo = $activePost.nextAll( 'article' ).first();
-                            if ( !$scrollTo.length )
-                                $scrollTo = $activePost.nextAll().find( 'article ' ).first();
-                            if ( !$scrollTo.length )
-                                $scrollTo = $activePost.parent().nextAll( 'faceplate-batch' ).find( 'article ' ).first();
-                        }
-                        if ( event.deltaY < 0 ) {
-                            $scrollTo = $activePost.prevAll( 'article' ).first();
-                            if ( !$scrollTo.length )
-                                $scrollTo = $activePost.parent().prevAll( 'article' ).first();
-                            if ( !$scrollTo.length )
-                                $scrollTo = $activePost.parent().prevAll( 'faceplate-batch' ).first().find( 'article ' ).last();
-                        }
-                    }
-                    if ( !$scrollTo.length ) return; // 🛑
-
-                    event.preventDefault();
-                    $scrollTo[ 0 ].scrollIntoView( { block: 'end', behaviour: 'smooth' } );
-
-                    const formerPostId = $activePost.children().attr( 'permalink' ).match( /\/comments\/(.+?)\// )[ 1 ];
-                    filterList.push( formerPostId );
-                    filterList = [ ...new Set( filterList ) ];
-                    GM_setValue( 'filterList', filterList );
-
-                    markAsActive( $scrollTo[ 0 ], $activePost[ 0 ] );
-
-                    function markAsActive ( el, formerEl ) {
-                        if ( formerEl ) formerEl.style.outline = '';
-                        el.style.outline = 'solid red';
-                        $activePost = jQuery( el );
-                    }
-
-                } );
-
-            } );
-
-            function scrollToNext () {
-
+            let $scrollTo;
+            if ( !$activePost?.length ) {
+                $activePost = jQuery( `article` ).first();
+                markAsActive( $activePost[ 0 ] );
+                $scrollTo = $activePost;
             }
-            function scrollToPrev () {
-                if ( !$activePost )
-                    $activePost = document.querySelector( `article` );
-                const nextPost = $activePost.nextElementSibling.nextElementSibling;
-                nextPost.scrollIntoView( { block: 'center' } );
-                $activePost.style.outline = '';
-                nextPost.style.outline = 'solid red';
-                $activePost = nextPost;
+            else {
+                if ( event.deltaY > 0 ) {
+                    $scrollTo = $activePost.nextAll( 'article' ).first();
+                    if ( !$scrollTo.length )
+                        $scrollTo = $activePost.nextAll().find( 'article ' ).first();
+                    if ( !$scrollTo.length )
+                        $scrollTo = $activePost.parent().nextAll( 'faceplate-batch' ).find( 'article ' ).first();
+                }
+                if ( event.deltaY < 0 ) {
+                    $scrollTo = $activePost.prevAll( 'article' ).first();
+                    if ( !$scrollTo.length )
+                        $scrollTo = $activePost.parent().prevAll( 'article' ).first();
+                    if ( !$scrollTo.length )
+                        $scrollTo = $activePost.parent().prevAll( 'faceplate-batch' ).first().find( 'article ' ).last();
+                }
             }
+            if ( !$scrollTo.length ) return; // 🛑
+
+            $scrollTo[ 0 ].scrollIntoView( { block: 'end', behaviour: 'smooth' } );
+
+            const formerPostId = $activePost.children().attr( 'permalink' ).match( /\/comments\/(.+?)\// )[ 1 ];
+            filterList.push( formerPostId );
+            filterList = [ ...new Set( filterList ) ];
+            GM_setValue( 'filterList', filterList );
+
+            markAsActive( $scrollTo[ 0 ], $activePost[ 0 ] );
+
+            function markAsActive ( el, formerEl ) {
+                if ( formerEl ) formerEl.style.outline = '';
+                el.style.outline = 'solid red';
+                $activePost = jQuery( el );
+            }
+
+        } );
+
+
+        function scrollToNext () {
+
         }
+        function scrollToPrev () {
+            if ( !$activePost )
+                $activePost = document.querySelector( `article` );
+            const nextPost = $activePost.nextElementSibling.nextElementSibling;
+            nextPost.scrollIntoView( { block: 'center' } );
+            $activePost.style.outline = '';
+            nextPost.style.outline = 'solid red';
+            $activePost = nextPost;
+        }
+
 
     }
 
