@@ -11,7 +11,6 @@
 
 ( function () {
     'use strict';
-
     // Sample data structure
     const DEFAULT_DATA = {
         tabs: [
@@ -54,6 +53,55 @@
 
     // Styles
     const styles = `
+
+            .dragging-active .containers {
+            display: grid !important;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .dragging-active .containers.active-tab {
+            opacity: 1;
+        }
+
+        .tab-section {
+            margin-bottom: 30px;
+        }
+
+        .tab-label {
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .dragging-active .tab-label {
+            display: block;
+        }
+
+        .containers {
+            position: relative;
+        }
+
+        .drag-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--accent);
+            opacity: 0.1;
+            pointer-events: none;
+            display: none;
+        }
+
+        .containers.drag-hover .drag-indicator {
+            display: block;
+        }
+
+    
         :root {
             --bg-primary: #1a1b1e;
             --bg-secondary: #2c2d31;
@@ -188,6 +236,7 @@
         constructor () {
             this.data = GM_getValue( 'readLaterData', DEFAULT_DATA );
             this.activeTab = this.data.tabs[ 0 ].id;
+            this.isDragging = false;
             this.init();
         }
 
@@ -208,7 +257,7 @@
         }
 
         render () {
-            const app = document.body;
+            const app = document.getElementById( 'app' );
             app.innerHTML = `
                 <div class="header">
                     <h1>Read Later</h1>
@@ -225,26 +274,32 @@
                     `).join( '' ) }
                 </div>
                 ${ this.data.tabs.map( tab => `
-                    <div class="containers" data-tab-content="${ tab.id }" style="display: ${ tab.id === this.activeTab ? 'grid' : 'none' }">
-                        ${ tab.containers.map( container => `
-                            <div class="container">
-                                <div class="container-header">
-                                    <span class="container-name" data-container-id="${ container.id }">${ container.name }</span>
-                                    <button class="btn btn-delete" data-delete-container="${ container.id }">×</button>
+                    <div class="tab-section" data-tab-section="${ tab.id }">
+                        <div class="tab-label">${ tab.name }</div>
+                        <div class="containers ${ tab.id === this.activeTab ? 'active-tab' : '' }" 
+                             data-tab-content="${ tab.id }" 
+                             style="display: ${ tab.id === this.activeTab ? 'grid' : 'none' }">
+                            <div class="drag-indicator"></div>
+                            ${ tab.containers.map( container => `
+                                <div class="container">
+                                    <div class="container-header">
+                                        <span class="container-name" data-container-id="${ container.id }">${ container.name }</span>
+                                        <button class="btn btn-delete" data-delete-container="${ container.id }">×</button>
+                                    </div>
+                                    <div class="container-content" 
+                                         data-container-id="${ container.id }"
+                                         data-tab-id="${ tab.id }">
+                                        ${ container.links.map( link => `
+                                            <div class="link" data-link-id="${ link.id }">
+                                                <a href="${ link.url }" target="_blank">${ link.title }</a>
+                                                <button class="btn btn-delete" data-delete-link="${ link.id }">×</button>
+                                            </div>
+                                        `).join( '' ) }
+                                    </div>
                                 </div>
-                                <div class="container-content" 
-                                     data-container-id="${ container.id }"
-                                     data-tab-id="${ tab.id }">
-                                    ${ container.links.map( link => `
-                                        <div class="link" data-link-id="${ link.id }">
-                                            <a href="${ link.url }" target="_blank">${ link.title }</a>
-                                            <button class="btn btn-delete" data-delete-link="${ link.id }">×</button>
-                                        </div>
-                                    `).join( '' ) }
-                                </div>
-                            </div>
-                        `).join( '' ) }
-                        <button class="btn add-container-btn" data-add-container-tab="${ tab.id }">Add Container</button>
+                            `).join( '' ) }
+                            <button class="btn add-container-btn" data-add-container-tab="${ tab.id }">Add Container</button>
+                        </div>
                     </div>
                 `).join( '' ) }
             `;
@@ -329,9 +384,12 @@
         }
 
         switchTab ( tabId ) {
+            if ( this.isDragging ) return; // Don't switch tabs during drag
+
             this.activeTab = tabId;
             document.querySelectorAll( '.containers' ).forEach( cont => {
                 cont.style.display = cont.dataset.tabContent === tabId ? 'grid' : 'none';
+                cont.classList.toggle( 'active-tab', cont.dataset.tabContent === tabId );
             } );
             document.querySelectorAll( '.tab' ).forEach( tab => {
                 tab.classList.toggle( 'active', tab.dataset.tabId === tabId );
@@ -341,11 +399,28 @@
         initSortable () {
             document.querySelectorAll( '.container-content' ).forEach( container => {
                 new Sortable( container, {
-                    group: 'links', // This enables dragging between all containers
+                    group: 'links',
                     animation: 150,
                     ghostClass: 'sortable-ghost',
+                    onStart: ( evt ) => {
+                        document.body.classList.add( 'dragging-active' );
+                        this.isDragging = true;
+                    },
                     onEnd: ( evt ) => {
+                        document.body.classList.remove( 'dragging-active' );
+                        this.isDragging = false;
                         this.handleLinkMove( evt );
+                        // Return to normal view after drag
+                        this.switchTab( this.activeTab );
+                    },
+                    onChange: ( evt ) => {
+                        // Update drag hover effect
+                        document.querySelectorAll( '.containers' ).forEach( cont => {
+                            cont.classList.remove( 'drag-hover' );
+                        } );
+                        if ( evt.to ) {
+                            evt.to.closest( '.containers' ).classList.add( 'drag-hover' );
+                        }
                     }
                 } );
             } );
