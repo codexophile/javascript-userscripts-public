@@ -1,404 +1,435 @@
 // ==UserScript==
-// @name         Read Later App (Dark Theme)
+// @name         Later-List
 // @namespace    http://tampermonkey.net/
-// @version      1.3
-// @description  Save links to read later in tabs and containers with a dark theme
+// @version      1.0
+// @description  A sophisticated "read later" application with tabs and containers
+// @author       Your Name
 // @match        *://*/*
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant        GM_registerMenuCommand
 // @grant        GM_addStyle
 // ==/UserScript==
 
 ( function () {
     'use strict';
 
-    // Initialize storage with example data
-    const storage = {
-        tabs: GM_getValue( 'tabs', [
-            {
-                id: 'work',
-                name: 'Work',
-                containers: [
-                    { id: 'projects', name: 'Projects' },
-                    { id: 'research', name: 'Research' },
-                    { id: 'meetings', name: 'Meeting Notes' }
-                ]
-            },
-            {
-                id: 'personal',
-                name: 'Personal',
-                containers: [
-                    { id: 'reading', name: 'Reading List' },
-                    { id: 'shopping', name: 'Shopping' },
-                    { id: 'recipes', name: 'Recipes' }
-                ]
-            },
-            {
-                id: 'learning',
-                name: 'Learning',
-                containers: [
-                    { id: 'tutorials', name: 'Tutorials' },
-                    { id: 'courses', name: 'Online Courses' },
-                    { id: 'documentation', name: 'Documentation' }
-                ]
-            }
-        ] ),
-        links: GM_getValue( 'links', [
-            // Work tab links
-            { url: 'https://github.com/trending', title: 'GitHub Trending', tabId: 'work', containerId: 'projects', id: 'link1', faviconUrl: 'https://github.com/favicon.ico' },
-            { url: 'https://dev.to', title: 'DEV Community', tabId: 'work', containerId: 'research', id: 'link2' },
-            { url: 'https://meet.google.com', title: 'Team Sync Notes', tabId: 'work', containerId: 'meetings', id: 'link3' },
-
-            // Personal tab links
-            { url: 'https://medium.com', title: 'Medium Articles', tabId: 'personal', containerId: 'reading', id: 'link4' },
-            { url: 'https://amazon.com', title: 'Tech Gadgets List', tabId: 'personal', containerId: 'shopping', id: 'link5' },
-            { url: 'https://cooking.nytimes.com', title: 'NYT Cooking', tabId: 'personal', containerId: 'recipes', id: 'link6' },
-
-            // Learning tab links
-            { url: 'https://www.udemy.com', title: 'JavaScript Course', tabId: 'learning', containerId: 'courses', id: 'link7' },
-            { url: 'https://developer.mozilla.org', title: 'MDN Web Docs', tabId: 'learning', containerId: 'documentation', id: 'link8' },
-            { url: 'https://www.freecodecamp.org', title: 'FreeCodeCamp', tabId: 'learning', containerId: 'tutorials', id: 'link9' }
-        ] )
-    };
-
-    // Enhanced styles with tabs and containers
+    // Styles
     const styles = `
-        .tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #444;
-            gap: 5px;
-        }
-
-        .tab {
-            padding: 12px 24px;
-            background-color: #2c2c2c;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px 5px 0 0;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .tab.active {
-            background-color: #4CAF50;
-            color: white;
-            transform: translateY(2px);
-        }
-
-        .tab:hover:not(.active) {
-            background-color: #444;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 20px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .containers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .container {
-            background-color: #2c2c2c;
+        .later-list-popup {
+            position: fixed;
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #333;
             border-radius: 8px;
             padding: 15px;
-            min-height: 200px;
+            z-index: 9999;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 250px;
         }
 
-        .container h3 {
-            color: #4CAF50;
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #444;
+        .later-list-container {
+            background: #262626;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            min-height: 100px;
         }
 
-        li > a {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .later-list-tab {
+            background: #333;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 4px;
         }
 
-        .container li:hover .delete-btn { 
-            opacity: 1; 
+        .later-list-tab.active {
+            background: #4a4a4a;
         }
 
-        .delete-btn { 
-            opacity: 0;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: opacity 0.3s ease;
-        }
-
-        .container li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .later-list-link {
+            background: #363636;
             padding: 8px;
             margin: 5px 0;
-            background-color: #363636;
             border-radius: 4px;
-            transition: background-color 0.3s ease;
+            cursor: move;
+            transition: background 0.3s;
         }
 
-        .container li:hover {
-            background-color: #404040;
+        .later-list-link:hover {
+            background: #404040;
         }
 
-        #main { 
-            max-width: 1200px;
-            margin: 0 auto;
+        .later-list-link.dragging {
+            opacity: 0.5;
+        }
+
+        .later-list-button {
+            background: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .later-list-button:hover {
+            background: #5a5a5a;
+        }
+
+        .later-list-select {
+            background: #333;
+            color: white;
+            border: 1px solid #4a4a4a;
+            padding: 5px;
+            border-radius: 4px;
+            margin: 5px;
+        }
+
+        #later-list-main {
+            background: #1a1a1a;
+            color: white;
             padding: 20px;
-        }
-
-        .read-later-view {
-            background-color: #1a1a1a;
-            color: #fff;
-            font-family: system-ui, -apple-system, sans-serif;
             min-height: 100vh;
         }
 
-        .read-later-view h1 {
-            color: #4CAF50;
-            text-align: center;
-            font-size: 2em;
-            margin-bottom: 30px;
+        .later-list-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
 
-        .read-later-view ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
+        .later-list-container-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
-        .read-later-view a {
-            color: #FFC107;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-            
-        .read-later-view a:hover {
-            color: #FFD54F;
+        .later-list-tab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
-        .favicon {
-            width: 16px;
-            height: 16px;
-            margin-right: 8px;
-        }
-
-        .empty-container {
-            color: #666;
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
+        .dragover {
+            border: 2px dashed #666;
+            background: #2a2a2a;
         }
     `;
 
-    // Save link function
-    function saveLink ( url, title, tabId, containerId ) {
-        const faviconUrl = getFaviconUrl();
-        const id = generateUniqueString( 10 );
-        storage.links.push( { url, title, tabId, containerId, id, faviconUrl } );
-        GM_setValue( 'links', storage.links );
-        try { addHistoryEntry( url ); }
-        catch { fauxHistoryPushState( url ); }
+    // Initialize default data
+    const defaultData = {
+        tabs: [
+            {
+                id: 'tab1',
+                name: 'Reading List',
+                containers: [
+                    {
+                        id: 'container1',
+                        name: 'Articles',
+                        links: [
+                            { id: 'link1', url: 'https://example.com/article1', title: 'Sample Article 1' },
+                            { id: 'link2', url: 'https://example.com/article2', title: 'Sample Article 2' }
+                        ]
+                    },
+                    {
+                        id: 'container2',
+                        name: 'Tutorials',
+                        links: [
+                            { id: 'link3', url: 'https://example.com/tutorial1', title: 'Sample Tutorial 1' }
+                        ]
+                    }
+                ]
+            }
+        ]
+    };
+
+    // Load or initialize data
+    let data = GM_getValue( 'laterListData', defaultData );
+
+    // Save data
+    function saveData () {
+        GM_setValue( 'laterListData', data );
     }
 
-    function removeLink ( linkId ) {
-        storage.links = storage.links.filter( link => link.id !== linkId );
-        GM_setValue( "links", storage.links );
+    // Helper functions for managing tabs and containers
+    function addTab () {
+        const name = prompt( 'Enter tab name:' );
+        if ( name ) {
+            data.tabs.push( {
+                id: 'tab' + Date.now(),
+                name: name,
+                containers: []
+            } );
+            saveData();
+            renderMainView();
+        }
     }
 
-    // Create dedicated page for viewing saved links with tabs
-    function createViewPage () {
-        document.body.innerHTML = '';
-        document.body.className = 'read-later-view';
+    function deleteTab ( tabId ) {
+        if ( confirm( 'Are you sure you want to delete this tab and all its containers?' ) ) {
+            data.tabs = data.tabs.filter( tab => tab.id !== tabId );
+            saveData();
+            renderMainView();
+        }
+    }
 
-        const h1 = document.createElement( 'h1' );
-        h1.textContent = 'Read Later App';
-        document.body.appendChild( h1 );
+    function renameTab ( tabId ) {
+        const tab = data.tabs.find( t => t.id === tabId );
+        const newName = prompt( 'Enter new tab name:', tab.name );
+        if ( newName ) {
+            tab.name = newName;
+            saveData();
+            renderMainView();
+        }
+    }
 
-        const mainEl = generateElements( `<div id="main"></div>`, document.body );
-
-        // Create tabs container
-        const tabsContainer = generateElements( `<div class="tabs"></div>`, mainEl );
-
-        // Create content container
-        const contentContainer = generateElements( `<div class="content-container"></div>`, mainEl );
-
-        // Create tabs and their content
-        storage.tabs.forEach( ( tab, index ) => {
-            // Create tab button
-            const tabBtn = generateElements( `<button class="tab">${ tab.name }</button>`, tabsContainer );
-            if ( index === 0 ) tabBtn.classList.add( 'active' );
-
-            // Create tab content
-            const tabContent = generateElements( `<div class="tab-content"></div>`, contentContainer );
-            if ( index === 0 ) tabContent.classList.add( 'active' );
-
-            // Create containers grid
-            const containersGrid = generateElements( `<div class="containers-grid"></div>`, tabContent );
-
-            // Create containers
-            tab.containers.forEach( container => {
-                const containerEl = generateElements( `<div class="container"></div>`, containersGrid );
-                generateElements( `<h3>${ container.name }</h3>`, containerEl );
-
-                const ul = document.createElement( 'ul' );
-                const containerLinks = storage.links.filter(
-                    link => link.tabId === tab.id && link.containerId === container.id
-                );
-
-                if ( containerLinks.length === 0 ) {
-                    generateElements( `<div class="empty-container">No links saved yet</div>`, containerEl );
-                } else {
-                    containerLinks.forEach( link => {
-                        const li = document.createElement( 'li' );
-
-                        const a = document.createElement( 'a' );
-                        a.target = '_blank';
-                        a.href = link.url;
-
-                        if ( link.faviconUrl ) {
-                            const favicon = generateElements( `<img class="favicon" src="${ link.faviconUrl }">`, a );
-                            favicon.onerror = () => favicon.style.display = 'none';
-                        }
-
-                        const titleSpan = generateElements( `<span>${ link.title }</span>`, a );
-
-                        li.appendChild( a );
-
-                        const deleteBtn = generateElements( `<div class="delete-btn">✖️</div>`, li );
-                        deleteBtn.addEventListener( 'click', () => {
-                            removeLink( link.id );
-                            li.remove();
-                            if ( ul.children.length === 0 ) {
-                                containerEl.innerHTML = '<div class="empty-container">No links saved yet</div>';
-                            }
-                        } );
-
-                        ul.appendChild( li );
-                    } );
-                }
-                containerEl.appendChild( ul );
+    function addContainer ( tabId ) {
+        const name = prompt( 'Enter container name:' );
+        if ( name ) {
+            const tab = data.tabs.find( t => t.id === tabId );
+            tab.containers.push( {
+                id: 'container' + Date.now(),
+                name: name,
+                links: []
             } );
+            saveData();
+            renderMainView();
+        }
+    }
 
-            // Add tab click handler
-            tabBtn.addEventListener( 'click', () => {
-                document.querySelectorAll( '.tab' ).forEach( t => t.classList.remove( 'active' ) );
-                document.querySelectorAll( '.tab-content' ).forEach( c => c.classList.remove( 'active' ) );
+    function deleteContainer ( tabId, containerId ) {
+        if ( confirm( 'Are you sure you want to delete this container and all its links?' ) ) {
+            const tab = data.tabs.find( t => t.id === tabId );
+            tab.containers = tab.containers.filter( c => c.id !== containerId );
+            saveData();
+            renderMainView();
+        }
+    }
 
-                tabBtn.classList.add( 'active' );
-                tabContent.classList.add( 'active' );
-            } );
+    function renameContainer ( tabId, containerId ) {
+        const tab = data.tabs.find( t => t.id === tabId );
+        const container = tab.containers.find( c => c.id === containerId );
+        const newName = prompt( 'Enter new container name:', container.name );
+        if ( newName ) {
+            container.name = newName;
+            saveData();
+            renderMainView();
+        }
+    }
+
+    // Create popup for saving links
+    function createSavePopup ( x, y, linkUrl, linkTitle ) {
+        const popup = document.createElement( 'div' );
+        popup.className = 'later-list-popup';
+        popup.style.left = x + 'px';
+        popup.style.top = y + 'px';
+
+        const tabSelect = document.createElement( 'select' );
+        tabSelect.className = 'later-list-select';
+        data.tabs.forEach( tab => {
+            const option = document.createElement( 'option' );
+            option.value = tab.id;
+            option.textContent = tab.name;
+            tabSelect.appendChild( option );
         } );
+
+        const containerSelect = document.createElement( 'select' );
+        containerSelect.className = 'later-list-select';
+
+        function updateContainers () {
+            const selectedTab = data.tabs.find( t => t.id === tabSelect.value );
+            containerSelect.innerHTML = '';
+            selectedTab.containers.forEach( container => {
+                const option = document.createElement( 'option' );
+                option.value = container.id;
+                option.textContent = container.name;
+                containerSelect.appendChild( option );
+            } );
+        }
+
+        tabSelect.addEventListener( 'change', updateContainers );
+        updateContainers();
+
+        const saveButton = document.createElement( 'button' );
+        saveButton.className = 'later-list-button';
+        saveButton.textContent = 'Save';
+        saveButton.onclick = () => {
+            const selectedTab = data.tabs.find( t => t.id === tabSelect.value );
+            const selectedContainer = selectedTab.containers.find( c => c.id === containerSelect.value );
+            selectedContainer.links.push( {
+                id: 'link' + Date.now(),
+                url: linkUrl,
+                title: linkTitle
+            } );
+            saveData();
+            popup.remove();
+        };
+
+        popup.appendChild( tabSelect );
+        popup.appendChild( containerSelect );
+        popup.appendChild( saveButton );
+
+        document.body.appendChild( popup );
     }
 
-    // Register menu command to view saved links
-    GM_registerMenuCommand( 'View Saved Links', () => {
-        createViewPage();
-    } );
+    // Main view initialization
+    function initializeMainView () {
+        const mainContainer = document.createElement( 'div' );
+        mainContainer.id = 'later-list-main';
+
+        // Global controls
+        const controls = document.createElement( 'div' );
+        controls.className = 'later-list-controls';
+
+        const newTabButton = document.createElement( 'button' );
+        newTabButton.className = 'later-list-button';
+        newTabButton.textContent = 'New Tab';
+        newTabButton.onclick = addTab;
+
+        controls.appendChild( newTabButton );
+        mainContainer.appendChild( controls );
+
+        // Tabs
+        data.tabs.forEach( tab => {
+            const tabElement = document.createElement( 'div' );
+            tabElement.className = 'later-list-tab';
+
+            // Tab header with controls
+            const tabHeader = document.createElement( 'div' );
+            tabHeader.className = 'later-list-tab-header';
+            tabHeader.innerHTML = `
+                <span>${ tab.name }</span>
+                <div>
+                    <button class="later-list-button" onclick="return false;">Add Container</button>
+                    <button class="later-list-button" onclick="return false;">Rename Tab</button>
+                    <button class="later-list-button" onclick="return false;">Delete Tab</button>
+                </div>
+            `;
+
+            // Add event listeners for tab controls
+            const [ addContainerBtn, renameTabBtn, deleteTabBtn ] = tabHeader.querySelectorAll( 'button' );
+            addContainerBtn.onclick = () => addContainer( tab.id );
+            renameTabBtn.onclick = () => renameTab( tab.id );
+            deleteTabBtn.onclick = () => deleteTab( tab.id );
+
+            tabElement.appendChild( tabHeader );
+
+            // Containers
+            tab.containers.forEach( container => {
+                const containerElement = document.createElement( 'div' );
+                containerElement.className = 'later-list-container';
+                containerElement.dataset.containerId = container.id;
+                containerElement.dataset.tabId = tab.id;
+
+                // Container header with controls
+                const containerHeader = document.createElement( 'div' );
+                containerHeader.className = 'later-list-container-header';
+                containerHeader.innerHTML = `
+                    <span>${ container.name }</span>
+                    <div>
+                        <button class="later-list-button" onclick="return false;">Rename</button>
+                        <button class="later-list-button" onclick="return false;">Delete</button>
+                    </div>
+                `;
+
+                // Add event listeners for container controls
+                const [ renameContainerBtn, deleteContainerBtn ] = containerHeader.querySelectorAll( 'button' );
+                renameContainerBtn.onclick = () => renameContainer( tab.id, container.id );
+                deleteContainerBtn.onclick = () => deleteContainer( tab.id, container.id );
+
+                containerElement.appendChild( containerHeader );
+
+                // Links
+                const linksContainer = document.createElement( 'div' );
+                linksContainer.className = 'later-list-links';
+                container.links.forEach( link => {
+                    const linkElement = document.createElement( 'div' );
+                    linkElement.className = 'later-list-link';
+                    linkElement.draggable = true;
+                    linkElement.dataset.linkId = link.id;
+                    linkElement.innerHTML = `<a href="${ link.url }" target="_blank">${ link.title }</a>`;
+
+                    // Drag and drop handlers for links
+                    linkElement.addEventListener( 'dragstart', e => {
+                        e.dataTransfer.setData( 'text/plain', JSON.stringify( {
+                            linkId: link.id,
+                            sourceContainerId: container.id,
+                            sourceTabId: tab.id
+                        } ) );
+                        linkElement.classList.add( 'dragging' );
+                    } );
+
+                    linkElement.addEventListener( 'dragend', () => {
+                        linkElement.classList.remove( 'dragging' );
+                    } );
+
+                    linksContainer.appendChild( linkElement );
+                } );
+
+                containerElement.appendChild( linksContainer );
+
+                // Container drag and drop handlers
+                containerElement.addEventListener( 'dragover', e => {
+                    e.preventDefault();
+                    containerElement.classList.add( 'dragover' );
+                } );
+
+                containerElement.addEventListener( 'dragleave', () => {
+                    containerElement.classList.remove( 'dragover' );
+                } );
+
+                containerElement.addEventListener( 'drop', e => {
+                    e.preventDefault();
+                    containerElement.classList.remove( 'dragover' );
+
+                    const dropData = JSON.parse( e.dataTransfer.getData( 'text/plain' ) );
+                    const sourceTab = data.tabs.find( t => t.id === dropData.sourceTabId );
+                    const sourceContainer = sourceTab.containers.find( c => c.id === dropData.sourceContainerId );
+                    const targetTab = data.tabs.find( t => t.id === tab.id );
+                    const targetContainer = targetTab.containers.find( c => c.id === container.id );
+
+                    // Find and move the link
+                    const linkIndex = sourceContainer.links.findIndex( l => l.id === dropData.linkId );
+                    if ( linkIndex !== -1 ) {
+                        const [ movedLink ] = sourceContainer.links.splice( linkIndex, 1 );
+                        targetContainer.links.push( movedLink );
+                        saveData();
+                        renderMainView();
+                    }
+                } );
+
+                tabElement.appendChild( containerElement );
+            } );
+
+            mainContainer.appendChild( tabElement );
+        } );
+
+        // Clear and replace the main view
+        const existingMain = document.getElementById( 'later-list-main' );
+        if ( existingMain ) {
+            existingMain.remove();
+        }
+        document.body.appendChild( mainContainer );
+    }
 
     // Initialize the script
-    createViewPage();
-    GM_addStyle( styles );
-
-    // Context menu popup for saving links
-    const popupEl = generateElements( `<div id="popup"></div>`, document.body );
-    popupEl.style = `
-        display: none;
-        position: fixed;
-        z-index: 10;
-        background: #2c2c2c;
-        border-radius: 8px;
-        padding: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    `;
-
-    // Dynamically create buttons for each tab and container
-    storage.tabs.forEach( tab => {
-        const tabContainer = generateElements( `
-            <div style="margin-bottom: 10px;">
-                <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">${ tab.name }</div>
-            </div>
-        `, popupEl );
-
-        tab.containers.forEach( container => {
-            const btn = generateElements( `
-                <button style="
-                    display: block;
-                    width: 100%;
-                    padding: 5px 10px;
-                    margin: 2px 0;
-                    background: #444;
-                    border: none;
-                    color: #fff;
-                    cursor: pointer;
-                    border-radius: 4px;
-                ">${ container.name }</button>
-            `, tabContainer );
-
-            btn.addEventListener( 'click', () => {
-                saveLink( currentLink, currentTitle, tab.id, container.id );
-                closePopup();
-                alert( 'Link saved!' );
-            } );
+    if ( window.location.href === 'file:///D:/Mega/IDEs/JavaScript/[tm]%20laterList-view.html' ) {
+        GM_addStyle( styles );
+        initializeMainView();
+    } else {
+        // Add context menu handler for other pages
+        document.addEventListener( 'contextmenu', function ( e ) {
+            if ( e.ctrlKey ) {
+                e.preventDefault();
+                const link = e.target.closest( 'a' );
+                if ( link ) {
+                    createSavePopup( e.pageX, e.pageY, link.href, link.textContent );
+                }
+            }
         } );
-    } );
-
-    const btnClose = generateElements( `
-        <button style="
-            display: block;
-            width: 100%;
-            padding: 5px 10px;
-            margin-top: 10px;
-            background: #666;
-            border: none;
-            color: #fff;
-            cursor: pointer;
-            border-radius: 4px;
-        ">Close</button>
-    `, popupEl );
-
-    let currentLink, currentTitle;
-
-    btnClose.addEventListener( 'click', closePopup );
-
-    function closePopup () {
-        popupEl.style.display = 'none';
     }
-
-    document.addEventListener( 'contextmenu', ( event ) => {
-        const anchorEls = parents( event.target, 'a' );
-        if ( !event.ctrlKey ) return;
-        if ( event.target.matches( 'a' ) )
-            anchorEl = event.target;
-        else if ( anchorEls.length )
-            anchorEl = anchorEls[ 0 ];
-        else
-            return;
-        event.preventDefault();
-
-        popupEl.style.display = 'block';
-        popupEl.style.left = `${ event.x }px`;
-        popupEl.style.top = `${ event.y }px`;
-
-        currentLink = anchorEl.href;
-        currentTitle = anchorEl.textContent || currentLink;
-    } );
 } )();
