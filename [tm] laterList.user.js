@@ -209,10 +209,47 @@
 
         render () {
             const app = document.body;
-            app.innerHTML = this.getTemplate();
+            app.innerHTML = `
+                <div class="header">
+                    <h1>Read Later</h1>
+                    <button class="btn btn-primary" id="addTab">New Tab</button>
+                </div>
+                <div class="tabs">
+                    ${ this.data.tabs.map( tab => `
+                        <div class="tab ${ tab.id === this.activeTab ? 'active' : '' }" data-tab-id="${ tab.id }">
+                            <span>${ tab.name }</span>
+                            ${ this.data.tabs.length > 1 ? `
+                                <button class="btn btn-delete" data-delete-tab="${ tab.id }">×</button>
+                            ` : '' }
+                        </div>
+                    `).join( '' ) }
+                </div>
+                ${ this.data.tabs.map( tab => `
+                    <div class="containers" data-tab-content="${ tab.id }" style="display: ${ tab.id === this.activeTab ? 'grid' : 'none' }">
+                        ${ tab.containers.map( container => `
+                            <div class="container">
+                                <div class="container-header">
+                                    <span class="container-name" data-container-id="${ container.id }">${ container.name }</span>
+                                    <button class="btn btn-delete" data-delete-container="${ container.id }">×</button>
+                                </div>
+                                <div class="container-content" 
+                                     data-container-id="${ container.id }"
+                                     data-tab-id="${ tab.id }">
+                                    ${ container.links.map( link => `
+                                        <div class="link" data-link-id="${ link.id }">
+                                            <a href="${ link.url }" target="_blank">${ link.title }</a>
+                                            <button class="btn btn-delete" data-delete-link="${ link.id }">×</button>
+                                        </div>
+                                    `).join( '' ) }
+                                </div>
+                            </div>
+                        `).join( '' ) }
+                        <button class="btn add-container-btn" data-add-container-tab="${ tab.id }">Add Container</button>
+                    </div>
+                `).join( '' ) }
+            `;
             this.attachEventListeners();
         }
-
         getTemplate () {
             return `
                 <div class="header">
@@ -256,14 +293,12 @@
         }
 
         attachEventListeners () {
-            // Tab events
+            // Tab switching
             document.querySelectorAll( '.tab' ).forEach( tab => {
                 tab.addEventListener( 'click', ( e ) => {
                     const tabId = tab.dataset.tabId;
                     if ( tabId ) {
-                        this.activeTab = tabId;
-                        this.render();
-                        this.initSortable();
+                        this.switchTab( tabId );
                     }
                 } );
             } );
@@ -273,15 +308,16 @@
                 const deleteTab = e.target.dataset.deleteTab;
                 const deleteContainer = e.target.dataset.deleteContainer;
                 const deleteLink = e.target.dataset.deleteLink;
+                const addContainerTab = e.target.dataset.addContainerTab;
 
                 if ( deleteTab ) this.deleteTab( deleteTab );
                 if ( deleteContainer ) this.deleteContainer( deleteContainer );
                 if ( deleteLink ) this.deleteLink( deleteLink );
+                if ( addContainerTab ) this.addContainer( addContainerTab );
             } );
 
-            // Add new items
+            // Add new tab
             document.getElementById( 'addTab' )?.addEventListener( 'click', () => this.addTab() );
-            document.getElementById( 'addContainer' )?.addEventListener( 'click', () => this.addContainer() );
 
             // Container name edit
             document.querySelectorAll( '.container-name' ).forEach( nameEl => {
@@ -292,10 +328,20 @@
             } );
         }
 
+        switchTab ( tabId ) {
+            this.activeTab = tabId;
+            document.querySelectorAll( '.containers' ).forEach( cont => {
+                cont.style.display = cont.dataset.tabContent === tabId ? 'grid' : 'none';
+            } );
+            document.querySelectorAll( '.tab' ).forEach( tab => {
+                tab.classList.toggle( 'active', tab.dataset.tabId === tabId );
+            } );
+        }
+
         initSortable () {
             document.querySelectorAll( '.container-content' ).forEach( container => {
                 new Sortable( container, {
-                    group: 'links',
+                    group: 'links', // This enables dragging between all containers
                     animation: 150,
                     ghostClass: 'sortable-ghost',
                     onEnd: ( evt ) => {
@@ -309,19 +355,33 @@
             const linkId = evt.item.dataset.linkId;
             const toContainerId = evt.to.dataset.containerId;
             const fromContainerId = evt.from.dataset.containerId;
+            const toTabId = evt.to.dataset.tabId;
+            const fromTabId = evt.from.dataset.tabId;
 
-            if ( fromContainerId === toContainerId ) return;
+            // Find source and target tabs
+            const fromTab = this.data.tabs.find( tab => tab.id === fromTabId );
+            const toTab = this.data.tabs.find( tab => tab.id === toTabId );
 
-            const fromContainer = this.getCurrentTab().containers.find( c => c.id === fromContainerId );
-            const toContainer = this.getCurrentTab().containers.find( c => c.id === toContainerId );
+            // Find source and target containers
+            const fromContainer = fromTab.containers.find( c => c.id === fromContainerId );
+            const toContainer = toTab.containers.find( c => c.id === toContainerId );
 
+            // Find and remove link from source
             const linkIndex = fromContainer.links.findIndex( l => l.id === linkId );
             if ( linkIndex === -1 ) return;
 
             const [ link ] = fromContainer.links.splice( linkIndex, 1 );
+
+            // Add link to target
             toContainer.links.splice( evt.newIndex, 0, link );
 
             this.saveData();
+
+            // If moving to a hidden tab, re-render to maintain consistency
+            if ( fromTabId !== toTabId ) {
+                this.render();
+                this.initSortable();
+            }
         }
 
         addTab () {
@@ -351,12 +411,12 @@
             this.render();
         }
 
-        addContainer () {
+        addContainer ( tabId ) {
             const name = prompt( 'Enter container name:' );
             if ( !name ) return;
 
-            const currentTab = this.getCurrentTab();
-            currentTab.containers.push( {
+            const tab = this.data.tabs.find( t => t.id === tabId );
+            tab.containers.push( {
                 id: 'container-' + Date.now(),
                 name,
                 links: []
@@ -399,5 +459,6 @@
     }
 
     // Initialize the app
-    new ReadLaterApp();
+    if ( location.href === 'file:///D:/Mega/IDEs/JavaScript/[tm]%20laterList-view.html' )
+        new ReadLaterApp();
 } )();
