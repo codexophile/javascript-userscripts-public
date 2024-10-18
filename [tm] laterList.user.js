@@ -1,147 +1,50 @@
 // ==UserScript==
-// @name         Later-List
+// @name         Read Later App
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  A sophisticated "read later" application with tabs and containers
-// @author       Your Name
-// @match        *://*/*
+// @version      0.3
+// @description  Save and organize links for later reading
+// @match        file:///*laterList-view.html
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant        GM_addStyle
-// ==/UserScript== 
-
-// test comment
+// @require      https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js
+// ==/UserScript==
 
 ( function () {
     'use strict';
 
-    // Styles
-    const styles = `
-        .later-list-popup {
-            position: fixed;
-            background: #1a1a1a;
-            color: #ffffff;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
-            z-index: 9999;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            min-width: 250px;
-        }
-
-        .later-list-container {
-            background: #262626;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 10px 0;
-            min-height: 100px;
-        }
-
-        .later-list-tab {
-            background: #333;
-            padding: 10px;
-            margin: 5px;
-            border-radius: 4px;
-        }
-
-        .later-list-tab.active {
-            background: #4a4a4a;
-        }
-
-        .later-list-link {
-            background: #363636;
-            padding: 8px;
-            margin: 5px 0;
-            border-radius: 4px;
-            cursor: move;
-            transition: background 0.3s;
-        }
-
-        .later-list-link:hover {
-            background: #404040;
-        }
-
-        .later-list-link.dragging {
-            opacity: 0.5;
-        }
-
-        .later-list-button {
-            background: #4a4a4a;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-        }
-
-        .later-list-button:hover {
-            background: #5a5a5a;
-        }
-
-        .later-list-select {
-            background: #333;
-            color: white;
-            border: 1px solid #4a4a4a;
-            padding: 5px;
-            border-radius: 4px;
-            margin: 5px;
-        }
-
-        #later-list-main {
-            background: #1a1a1a;
-            color: white;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .later-list-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .later-list-container-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .later-list-tab-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .dragover {
-            border: 2px dashed #666;
-            background: #2a2a2a;
-        }
-    `;
-
-    // Initialize default data
-    const defaultData = {
+    // Sample data structure
+    const DEFAULT_DATA = {
         tabs: [
             {
-                id: 'tab1',
-                name: 'Reading List',
+                id: 'tab-1',
+                name: 'Programming',
                 containers: [
                     {
-                        id: 'container1',
-                        name: 'Articles',
+                        id: 'container-1',
+                        name: 'JavaScript',
                         links: [
-                            { id: 'link1', url: 'https://example.com/article1', title: 'Sample Article 1' },
-                            { id: 'link2', url: 'https://example.com/article2', title: 'Sample Article 2' }
+                            { id: 'link-1', title: 'MDN Web Docs', url: 'https://developer.mozilla.org' },
+                            { id: 'link-2', title: 'JavaScript.info', url: 'https://javascript.info' }
                         ]
                     },
                     {
-                        id: 'container2',
-                        name: 'Tutorials',
+                        id: 'container-2',
+                        name: 'Python',
                         links: [
-                            { id: 'link3', url: 'https://example.com/tutorial1', title: 'Sample Tutorial 1' }
+                            { id: 'link-3', title: 'Python Documentation', url: 'https://docs.python.org' }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'tab-2',
+                name: 'Reading List',
+                containers: [
+                    {
+                        id: 'container-3',
+                        name: 'Articles',
+                        links: [
+                            { id: 'link-4', title: 'Medium', url: 'https://medium.com' }
                         ]
                     }
                 ]
@@ -149,289 +52,352 @@
         ]
     };
 
-    // Load or initialize data
-    let data = GM_getValue( 'laterListData', defaultData );
-
-    // Save data
-    function saveData () {
-        GM_setValue( 'laterListData', data );
-    }
-
-    // Helper functions for managing tabs and containers
-    function addTab () {
-        const name = prompt( 'Enter tab name:' );
-        if ( name ) {
-            data.tabs.push( {
-                id: 'tab' + Date.now(),
-                name: name,
-                containers: []
-            } );
-            saveData();
-            renderMainView();
-        }
-    }
-
-    function deleteTab ( tabId ) {
-        if ( confirm( 'Are you sure you want to delete this tab and all its containers?' ) ) {
-            data.tabs = data.tabs.filter( tab => tab.id !== tabId );
-            saveData();
-            renderMainView();
-        }
-    }
-
-    function renameTab ( tabId ) {
-        const tab = data.tabs.find( t => t.id === tabId );
-        const newName = prompt( 'Enter new tab name:', tab.name );
-        if ( newName ) {
-            tab.name = newName;
-            saveData();
-            renderMainView();
-        }
-    }
-
-    function addContainer ( tabId ) {
-        const name = prompt( 'Enter container name:' );
-        if ( name ) {
-            const tab = data.tabs.find( t => t.id === tabId );
-            tab.containers.push( {
-                id: 'container' + Date.now(),
-                name: name,
-                links: []
-            } );
-            saveData();
-            renderMainView();
-        }
-    }
-
-    function deleteContainer ( tabId, containerId ) {
-        if ( confirm( 'Are you sure you want to delete this container and all its links?' ) ) {
-            const tab = data.tabs.find( t => t.id === tabId );
-            tab.containers = tab.containers.filter( c => c.id !== containerId );
-            saveData();
-            renderMainView();
-        }
-    }
-
-    function renameContainer ( tabId, containerId ) {
-        const tab = data.tabs.find( t => t.id === tabId );
-        const container = tab.containers.find( c => c.id === containerId );
-        const newName = prompt( 'Enter new container name:', container.name );
-        if ( newName ) {
-            container.name = newName;
-            saveData();
-            renderMainView();
-        }
-    }
-
-    // Create popup for saving links
-    function createSavePopup ( x, y, linkUrl, linkTitle ) {
-        const popup = document.createElement( 'div' );
-        popup.className = 'later-list-popup';
-        popup.style.left = x + 'px';
-        popup.style.top = y + 'px';
-
-        const tabSelect = document.createElement( 'select' );
-        tabSelect.className = 'later-list-select';
-        data.tabs.forEach( tab => {
-            const option = document.createElement( 'option' );
-            option.value = tab.id;
-            option.textContent = tab.name;
-            tabSelect.appendChild( option );
-        } );
-
-        const containerSelect = document.createElement( 'select' );
-        containerSelect.className = 'later-list-select';
-
-        function updateContainers () {
-            const selectedTab = data.tabs.find( t => t.id === tabSelect.value );
-            containerSelect.innerHTML = '';
-            selectedTab.containers.forEach( container => {
-                const option = document.createElement( 'option' );
-                option.value = container.id;
-                option.textContent = container.name;
-                containerSelect.appendChild( option );
-            } );
+    // Styles
+    const styles = `
+        :root {
+            --bg-primary: #1a1b1e;
+            --bg-secondary: #2c2d31;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent: #6366f1;
+            --border: #404040;
+            --hover: #3f3f46;
         }
 
-        tabSelect.addEventListener( 'change', updateContainers );
-        updateContainers();
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
 
-        const saveButton = document.createElement( 'button' );
-        saveButton.className = 'later-list-button';
-        saveButton.textContent = 'Save';
-        saveButton.onclick = () => {
-            const selectedTab = data.tabs.find( t => t.id === tabSelect.value );
-            const selectedContainer = selectedTab.containers.find( c => c.id === containerSelect.value );
-            selectedContainer.links.push( {
-                id: 'link' + Date.now(),
-                url: linkUrl,
-                title: linkTitle
-            } );
-            saveData();
-            popup.remove();
-        };
+        #app {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-        popup.appendChild( tabSelect );
-        popup.appendChild( containerSelect );
-        popup.appendChild( saveButton );
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-        document.body.appendChild( popup );
-    }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
 
-    // Main view initialization
-    function initializeMainView () {
-        const mainContainer = document.createElement( 'div' );
-        mainContainer.id = 'later-list-main';
+        .tab {
+            padding: 8px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
 
-        // Global controls
-        const controls = document.createElement( 'div' );
-        controls.className = 'later-list-controls';
+        .tab.active {
+            background: var(--accent);
+        }
 
-        const newTabButton = document.createElement( 'button' );
-        newTabButton.className = 'later-list-button';
-        newTabButton.textContent = 'New Tab';
-        newTabButton.onclick = addTab;
+        .containers {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
 
-        controls.appendChild( newTabButton );
-        mainContainer.appendChild( controls );
+        .container {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
 
-        // Tabs
-        data.tabs.forEach( tab => {
-            const tabElement = document.createElement( 'div' );
-            tabElement.className = 'later-list-tab';
+        .container-header {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-            // Tab header with controls
-            const tabHeader = document.createElement( 'div' );
-            tabHeader.className = 'later-list-tab-header';
-            tabHeader.innerHTML = `
-                <span>${ tab.name }</span>
-                <div>
-                    <button class="later-list-button" onclick="return false;">Add Container</button>
-                    <button class="later-list-button" onclick="return false;">Rename Tab</button>
-                    <button class="later-list-button" onclick="return false;">Delete Tab</button>
+        .container-content {
+            min-height: 100px;
+            padding: 12px;
+        }
+
+        .link {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+        }
+
+        .link a {
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: var(--hover);
+        }
+
+        .btn-delete {
+            padding: 4px 8px;
+            color: #ff4444;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .sortable-ghost {
+            opacity: 0.5;
+        }
+    `;
+
+    class ReadLaterApp {
+        constructor () {
+            this.data = GM_getValue( 'readLaterData', DEFAULT_DATA );
+            this.activeTab = this.data.tabs[ 0 ].id;
+            this.init();
+        }
+
+        init () {
+            this.injectStyles();
+            this.render();
+            this.initSortable();
+        }
+
+        injectStyles () {
+            const styleEl = document.createElement( 'style' );
+            styleEl.textContent = styles;
+            document.head.appendChild( styleEl );
+        }
+
+        saveData () {
+            GM_setValue( 'readLaterData', this.data );
+        }
+
+        render () {
+            const app = document.body;
+            app.innerHTML = this.getTemplate();
+            this.attachEventListeners();
+        }
+
+        getTemplate () {
+            return `
+                <div class="header">
+                    <h1>Read Later</h1>
+                    <button class="btn btn-primary" id="addTab">New Tab</button>
+                </div>
+                <div class="tabs">
+                    ${ this.data.tabs.map( tab => `
+                        <div class="tab ${ tab.id === this.activeTab ? 'active' : '' }" data-tab-id="${ tab.id }">
+                            <span>${ tab.name }</span>
+                            ${ this.data.tabs.length > 1 ? `
+                                <button class="btn btn-delete" data-delete-tab="${ tab.id }">×</button>
+                            ` : '' }
+                        </div>
+                    `).join( '' ) }
+                </div>
+                <div class="containers">
+                    ${ this.getCurrentTab().containers.map( container => `
+                        <div class="container">
+                            <div class="container-header">
+                                <span class="container-name" data-container-id="${ container.id }">${ container.name }</span>
+                                <button class="btn btn-delete" data-delete-container="${ container.id }">×</button>
+                            </div>
+                            <div class="container-content" data-container-id="${ container.id }">
+                                ${ container.links.map( link => `
+                                    <div class="link" data-link-id="${ link.id }">
+                                        <a href="${ link.url }" target="_blank">${ link.title }</a>
+                                        <button class="btn btn-delete" data-delete-link="${ link.id }">×</button>
+                                    </div>
+                                `).join( '' ) }
+                            </div>
+                        </div>
+                    `).join( '' ) }
+                    <button class="btn" id="addContainer">Add Container</button>
                 </div>
             `;
+        }
 
-            // Add event listeners for tab controls
-            const [ addContainerBtn, renameTabBtn, deleteTabBtn ] = tabHeader.querySelectorAll( 'button' );
-            addContainerBtn.onclick = () => addContainer( tab.id );
-            renameTabBtn.onclick = () => renameTab( tab.id );
-            deleteTabBtn.onclick = () => deleteTab( tab.id );
+        getCurrentTab () {
+            return this.data.tabs.find( tab => tab.id === this.activeTab );
+        }
 
-            tabElement.appendChild( tabHeader );
-
-            // Containers
-            tab.containers.forEach( container => {
-                const containerElement = document.createElement( 'div' );
-                containerElement.className = 'later-list-container';
-                containerElement.dataset.containerId = container.id;
-                containerElement.dataset.tabId = tab.id;
-
-                // Container header with controls
-                const containerHeader = document.createElement( 'div' );
-                containerHeader.className = 'later-list-container-header';
-                containerHeader.innerHTML = `
-                    <span>${ container.name }</span>
-                    <div>
-                        <button class="later-list-button" onclick="return false;">Rename</button>
-                        <button class="later-list-button" onclick="return false;">Delete</button>
-                    </div>
-                `;
-
-                // Add event listeners for container controls
-                const [ renameContainerBtn, deleteContainerBtn ] = containerHeader.querySelectorAll( 'button' );
-                renameContainerBtn.onclick = () => renameContainer( tab.id, container.id );
-                deleteContainerBtn.onclick = () => deleteContainer( tab.id, container.id );
-
-                containerElement.appendChild( containerHeader );
-
-                // Links
-                const linksContainer = document.createElement( 'div' );
-                linksContainer.className = 'later-list-links';
-                container.links.forEach( link => {
-                    const linkElement = document.createElement( 'div' );
-                    linkElement.className = 'later-list-link';
-                    linkElement.draggable = true;
-                    linkElement.dataset.linkId = link.id;
-                    linkElement.innerHTML = `<a href="${ link.url }" target="_blank">${ link.title }</a>`;
-
-                    // Drag and drop handlers for links
-                    linkElement.addEventListener( 'dragstart', e => {
-                        e.dataTransfer.setData( 'text/plain', JSON.stringify( {
-                            linkId: link.id,
-                            sourceContainerId: container.id,
-                            sourceTabId: tab.id
-                        } ) );
-                        linkElement.classList.add( 'dragging' );
-                    } );
-
-                    linkElement.addEventListener( 'dragend', () => {
-                        linkElement.classList.remove( 'dragging' );
-                    } );
-
-                    linksContainer.appendChild( linkElement );
-                } );
-
-                containerElement.appendChild( linksContainer );
-
-                // Container drag and drop handlers
-                containerElement.addEventListener( 'dragover', e => {
-                    e.preventDefault();
-                    containerElement.classList.add( 'dragover' );
-                } );
-
-                containerElement.addEventListener( 'dragleave', () => {
-                    containerElement.classList.remove( 'dragover' );
-                } );
-
-                containerElement.addEventListener( 'drop', e => {
-                    e.preventDefault();
-                    containerElement.classList.remove( 'dragover' );
-
-                    const dropData = JSON.parse( e.dataTransfer.getData( 'text/plain' ) );
-                    const sourceTab = data.tabs.find( t => t.id === dropData.sourceTabId );
-                    const sourceContainer = sourceTab.containers.find( c => c.id === dropData.sourceContainerId );
-                    const targetTab = data.tabs.find( t => t.id === tab.id );
-                    const targetContainer = targetTab.containers.find( c => c.id === container.id );
-
-                    // Find and move the link
-                    const linkIndex = sourceContainer.links.findIndex( l => l.id === dropData.linkId );
-                    if ( linkIndex !== -1 ) {
-                        const [ movedLink ] = sourceContainer.links.splice( linkIndex, 1 );
-                        targetContainer.links.push( movedLink );
-                        saveData();
-                        renderMainView();
+        attachEventListeners () {
+            // Tab events
+            document.querySelectorAll( '.tab' ).forEach( tab => {
+                tab.addEventListener( 'click', ( e ) => {
+                    const tabId = tab.dataset.tabId;
+                    if ( tabId ) {
+                        this.activeTab = tabId;
+                        this.render();
+                        this.initSortable();
                     }
                 } );
-
-                tabElement.appendChild( containerElement );
             } );
 
-            mainContainer.appendChild( tabElement );
-        } );
+            // Delete buttons
+            document.addEventListener( 'click', ( e ) => {
+                const deleteTab = e.target.dataset.deleteTab;
+                const deleteContainer = e.target.dataset.deleteContainer;
+                const deleteLink = e.target.dataset.deleteLink;
 
-        // Clear and replace the main view
-        const existingMain = document.getElementById( 'later-list-main' );
-        if ( existingMain ) {
-            existingMain.remove();
+                if ( deleteTab ) this.deleteTab( deleteTab );
+                if ( deleteContainer ) this.deleteContainer( deleteContainer );
+                if ( deleteLink ) this.deleteLink( deleteLink );
+            } );
+
+            // Add new items
+            document.getElementById( 'addTab' )?.addEventListener( 'click', () => this.addTab() );
+            document.getElementById( 'addContainer' )?.addEventListener( 'click', () => this.addContainer() );
+
+            // Container name edit
+            document.querySelectorAll( '.container-name' ).forEach( nameEl => {
+                nameEl.addEventListener( 'dblclick', () => {
+                    const containerId = nameEl.dataset.containerId;
+                    this.renameContainer( containerId );
+                } );
+            } );
         }
-        document.body.appendChild( mainContainer );
+
+        initSortable () {
+            document.querySelectorAll( '.container-content' ).forEach( container => {
+                new Sortable( container, {
+                    group: 'links',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: ( evt ) => {
+                        this.handleLinkMove( evt );
+                    }
+                } );
+            } );
+        }
+
+        handleLinkMove ( evt ) {
+            const linkId = evt.item.dataset.linkId;
+            const toContainerId = evt.to.dataset.containerId;
+            const fromContainerId = evt.from.dataset.containerId;
+
+            if ( fromContainerId === toContainerId ) return;
+
+            const fromContainer = this.getCurrentTab().containers.find( c => c.id === fromContainerId );
+            const toContainer = this.getCurrentTab().containers.find( c => c.id === toContainerId );
+
+            const linkIndex = fromContainer.links.findIndex( l => l.id === linkId );
+            if ( linkIndex === -1 ) return;
+
+            const [ link ] = fromContainer.links.splice( linkIndex, 1 );
+            toContainer.links.splice( evt.newIndex, 0, link );
+
+            this.saveData();
+        }
+
+        addTab () {
+            const name = prompt( 'Enter tab name:' );
+            if ( !name ) return;
+
+            const newTab = {
+                id: 'tab-' + Date.now(),
+                name,
+                containers: []
+            };
+
+            this.data.tabs.push( newTab );
+            this.activeTab = newTab.id;
+            this.saveData();
+            this.render();
+        }
+
+        deleteTab ( tabId ) {
+            if ( !confirm( 'Are you sure you want to delete this tab?' ) ) return;
+
+            this.data.tabs = this.data.tabs.filter( tab => tab.id !== tabId );
+            if ( this.activeTab === tabId ) {
+                this.activeTab = this.data.tabs[ 0 ].id;
+            }
+            this.saveData();
+            this.render();
+        }
+
+        addContainer () {
+            const name = prompt( 'Enter container name:' );
+            if ( !name ) return;
+
+            const currentTab = this.getCurrentTab();
+            currentTab.containers.push( {
+                id: 'container-' + Date.now(),
+                name,
+                links: []
+            } );
+
+            this.saveData();
+            this.render();
+            this.initSortable();
+        }
+
+        deleteContainer ( containerId ) {
+            if ( !confirm( 'Are you sure you want to delete this container?' ) ) return;
+
+            const currentTab = this.getCurrentTab();
+            currentTab.containers = currentTab.containers.filter( c => c.id !== containerId );
+            this.saveData();
+            this.render();
+        }
+
+        renameContainer ( containerId ) {
+            const container = this.getCurrentTab().containers.find( c => c.id === containerId );
+            const newName = prompt( 'Enter new name:', container.name );
+            if ( !newName ) return;
+
+            container.name = newName;
+            this.saveData();
+            this.render();
+        }
+
+        deleteLink ( linkId ) {
+            if ( !confirm( 'Are you sure you want to delete this link?' ) ) return;
+
+            const currentTab = this.getCurrentTab();
+            currentTab.containers.forEach( container => {
+                container.links = container.links.filter( link => link.id !== linkId );
+            } );
+            this.saveData();
+            this.render();
+        }
     }
 
-    // Initialize the script
-    if ( window.location.href === 'file:///D:/Mega/IDEs/JavaScript/[tm]%20laterList-view.html' ) {
-        GM_addStyle( styles );
-        initializeMainView();
-    } else {
-        // Add context menu handler for other pages
-        document.addEventListener( 'contextmenu', function ( e ) {
-            if ( e.ctrlKey ) {
-                e.preventDefault();
-                const link = e.target.closest( 'a' );
-                if ( link ) {
-                    createSavePopup( e.pageX, e.pageY, link.href, link.textContent );
-                }
-            }
-        } );
-    }
+    // Initialize the app
+    new ReadLaterApp();
 } )();
