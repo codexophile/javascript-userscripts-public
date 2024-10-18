@@ -1,7 +1,21 @@
 ( function () {
     'use strict';
 
+    //* video title
+    const newTitleEl = generateElements( `<div>${ document.title }</div>` );
+    console.log( newTitleEl );
+    document.body.prepend( newTitleEl );
+
+    //* setting video height
+    const videoContainerQuery =
+        '[style="display: block;position:relative;width:100%;height:100%;max-height:100%;"]';
+    const videoContainer = document.querySelector( videoContainerQuery );
+    videoContainer.style.height = '75vh';
+
+    //* fixing scroll
     document.body.style.overflow = 'scroll';
+
+    //* storyboard
     let videoId;
     if ( document.querySelector( 'input[name=fileCode]' ) )
         videoId = document.querySelector( 'input[name=fileCode]' )?.value;
@@ -23,6 +37,5 @@
         trueNoOfSlots: 100,
         imgUrls: [ imageUrl ]
     } );
-    // storyboard( $sbParent[ 0 ], 10, 10, null, vidOnPage, null, 100, imageUrl );
 
 } )();

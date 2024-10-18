@@ -1,3 +1,9 @@
+//* misc
+waitFor( `#video-controlPanel` ).then( ( el ) => {
+    let $el = $( el );
+    $el.offset( { top: 500, left: 1100 } );
+} );
+
 //* Capture context menu event
 $( document.body ).on( 'contextmenu', '[href*="/t/"]:has(img)', function ( event ) { clickMore( this, event ); } );
 
@@ -18,7 +24,7 @@ waitFor( `[aria-label="New message"]` ).then( ( el ) => {
 
 document.addEventListener( 'keydown', async ( event ) => {
 
-    if ( !event.ctrlKey ) return; // 🛑
+    if ( !event.altKey ) return; // 🛑
 
     switch ( event.key ) {
 
@@ -26,6 +32,7 @@ document.addEventListener( 'keydown', async ( event ) => {
             event.preventDefault();
             let $item = $( '[aria-label="Chats"] [href*="/t/"]' ).has( 'span[data-visualcompletion="ignore"]:visible' ).first();
             console.log( $item );
+            $item[ 0 ].scrollIntoView();
             $item[ 0 ].click();
             break;
         case "f": // photos
@@ -59,20 +66,14 @@ function clickMore ( element, event ) {
     waitFor( '[role=menuitem][href]' ).then( ( el ) => { window.open( `${ el.href }photos_by` ); } );
 }
 
-let observer = new MutationObserver( observerHandler );
-
-function observerHandler () {
-    let $items = $( '[href*="/t/"]:has(img)' ).parent().parent().parent().parent().parent();
-    $items.each( function () {
-        let $this = $( this );
-        if ( !$this.has( 'span[data-visualcompletion="ignore"]' ).length ) { // based on the unread marker
-            // if ( $this.has( ':contains("You: ")' ).length ) {                      // based on text 'You" '
-            $this.slideUp();
-        }
-    } );
-}
-
 function filter () {
-    observerHandler();
-    observer.observe( document.body, { childList: true, subtree: true } );
+    waitForEach( '[href*="/t/"]:has(img)', ( element ) => {
+        const $chatItem = $( element ).parent().parent().parent().parent().parent();
+        if ( $chatItem.has( 'span[data-visualcompletion="ignore"]' ).length ) // based on the unread marker
+            // if ( $this.has( ':contains("You: ")' ).length )                  // based on text 'You" '
+            return;
+        $chatItem.slideUp();
+    } );
+    // observerHandler();
+    // observer.observe( document.body, { childList: true, subtree: true } );
 }

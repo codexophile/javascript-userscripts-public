@@ -1,14 +1,18 @@
-if ( !location.href.includes( '?link=' ) ) return // 🛑
+( function () {
+  'use strict';
 
-link = location.href.match( /\?link=(.*$)/ )
-link = decodeURI( link[ 1 ] )
-$( '#link-upload-text input' ).val( link )
-$( '#upload-button' ).click()
-setTimeout( () => {
-  location.href = 'https://www.seedr.cc'
-}, 1000 )
-//     }, 5000);
-// } )
+  if ( !location.href.includes( '?link=' ) ) return; // 🛑
 
-return
-waitFor( '#account-image' ).then( ( el ) => { } )
+  const matches = location.href.match( /\?link=(.*$)/ );
+  if ( !matches ) return; // 🛑
+  const magnetLink = decodeURI( matches[ 1 ] );
+
+  const inputEl = document.querySelector( '#link-upload-text input' );
+  inputEl.value = magnetLink;
+  document.querySelector( '#upload-button' ).click();
+
+  setTimeout( () => {
+    location.href = 'https://www.seedr.cc';
+  }, 1000 );
+
+} )();

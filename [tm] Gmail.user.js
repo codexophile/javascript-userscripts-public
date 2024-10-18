@@ -156,6 +156,24 @@
 
                     switch ( feedTitle ) {
 
+                        case 'BoyFriendTv.com - RSS video Feed':
+
+                            const bftvDoc = await GMXmlHttpRequest( itemUrl );
+                            const bftvScript = bftvDoc.querySelector( 'script[type="application/ld+json"]' );
+                            const durationMatches = bftvScript.textContent.match( /"duration":"PT(.+?)H(.+?)M(.+?)S"/ );
+                            const durationString = `${ durationMatches[ 1 ] }:${ durationMatches[ 2 ] }:${ durationMatches[ 3 ] }`;
+                            const durationInSeconds = toSeconds( durationString );
+                            if ( durationInSeconds < 15 * 60 ) {
+                                item.remove();
+                                break;
+                            }
+
+                            const thumbnailSrc = bftvDoc.querySelector( 'meta[property="og:image"]' ).content;
+                            generateElements( `<img src=${ thumbnailSrc }>`, item );
+                            generateElements( `<div>${ durationString }</div>`, item );
+
+                            break;
+
                         //ANCHOR -  g.xtapes.to
                         case 'Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...':
                             const tempDoc__ = await GMXmlHttpRequest( itemUrl );
@@ -191,6 +209,8 @@
 
                             break;
 
+                        case 'GayPornHot':
+                        case 'HutGay':
                         case 'Super Tudo Gay – Porno Gay | Gay Amador | Sexo Gay':
                         case 'Gay Porn Hub':
                         //ANCHOR - 'GayCock4U':
@@ -269,6 +289,7 @@
 
                         //ANCHOR -  'New Videos (yesgay.xyz)':
                         case 'New Videos':
+                        case 'New Videos - GayHardFuck.com':
 
                             if ( item.querySelectorAll( '.thumbContainer' ).length ) {
                                 toggle( item.querySelector( '.thumbContainer' ) );
@@ -276,11 +297,12 @@
                             }
 
                             const tempDoc = await GMXmlHttpRequest( itemUrl );
-                            const script_ = tempDoc.querySelectorAll( 'script[type="text/javascript"]' );
-                            const screensCount = script_[ 1 ].innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ];
-                            const imgUrlTemplate = script_[ 1 ].innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ];
-                            const samplingFq_ = script_[ 1 ].innerHTML.match( /timeline_screens_interval: '(\d+)'/ )[ 1 ];
-                            const trueNoOfSlots_ = script_[ 1 ].innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ];
+                            const script_ = tempDoc.querySelectorAll( 'script[type="text/javascript"]' )[ 1 ];
+                            const screensCountMatch = script_.innerHTML.match( /timeline_screens_count: '(\d+)'/ );
+                            const screensCount = screensCountMatch ? screensCountMatch[ 1 ] : 108;
+                            const imgUrlTemplate = script_.innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ];
+                            const samplingFq_ = script_.innerHTML.match( /timeline_screens_interval: '(\d+)'/ )[ 1 ];
+                            // const trueNoOfSlots_ = script_.innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ];
 
                             let imgUrls = [];
                             repeat( +screensCount, j => {
@@ -288,7 +310,16 @@
                                 imgUrls.push( thisUrl );
                             } );
 
-                            const sb = await storyboardHorizontal( item, 1, 1, itemUrl, null, samplingFq_, trueNoOfSlots_, ...imgUrls );
+                            const sb = await storyboardToggleable( {
+                                storyboardParent: item,
+                                horizontal: 1,
+                                vertical: 1,
+                                linkToVid: itemUrl,
+                                samplingFq: samplingFq_,
+                                // trueNoOfSlots: trueNoOfSlots_,
+                                imgUrls
+                            } );
+                            // const sb = await storyboardHorizontal( item, 1, 1, itemUrl, null, samplingFq_, trueNoOfSlots_, ...imgUrls );
                             sb.style.width = '85vw';
 
                             expandBlogtrottrItem();
@@ -682,6 +713,11 @@
 
                     switch ( mbFeedTitle ) {
 
+                        case '4horlover':
+                            const doc = await GMXmlHttpRequest( itemHref );
+                            const entryContent = doc.querySelector( '.entry-content' );
+                            item.append( entryContent );
+                            break;
                         case 'GVDBlog':
                         case 'fxggxt.com':
                         case 'CocyStream':

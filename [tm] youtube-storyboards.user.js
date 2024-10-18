@@ -10,7 +10,6 @@
     //# window.addEventListener( 'yt-player-updated', addStoryboard )
     //? these didn't fire
     // window.addEventListener( 'yt-page-type-changed', findStuff )
-
     //* adding the main storyboard for the video page
     async function addStoryboard () {
         console.log( 'yt-player-updated' );

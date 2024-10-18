@@ -16,8 +16,15 @@
         const altLength = imgAlt.length;
 
         const $characterCountEl = $( `<button>${ altLength }</button>` ).appendTo( $toolbarEl );
-        $characterCountEl[ 0 ].style.backgroundColor = 'black';
+        if ( $characterCountEl[ 0 ] )
+            $characterCountEl[ 0 ].style.backgroundColor = 'black';
         // console.log( $toolbarEl.children() );
+
+
+        if ( +altLength > 500 ) {
+            // console.log( altLength );
+            $img.parent().parent().parent().hide();
+        }
 
     } );
 

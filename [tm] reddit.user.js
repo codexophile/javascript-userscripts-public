@@ -76,16 +76,16 @@
 
     }
 
-    waitFor( '#collapsibleContent' ).then( ( el ) => {
+    waitFor( '.collapsible-content' ).then( async ( el ) => {
 
-        el.parentElement.style.left = '';
-        el.parentElement.style.right = '5px';
+        // el.parentElement.style.left = '';
+        // el.parentElement.style.right = '5px';
 
-        const redditPopup = createToolbarPopup();
+        const collapsible = await Collapsible();
+        const redditPopup = collapsible.addPopup();
         redditPopup.id = 'redditPopup';
-        generateToolbarButton( 'Reddit', el, redditPopup );
+        collapsible.addButton( 'Reddit', redditPopup );
         const match = location.href.match( /\/\/.+?\.(.*)/ );
-        // const Link = `https://undelete.pullpush.io/r/Bitcoin/comments/7jzpir/`
         const oldLink = `https://old.${ match[ 1 ] }`;
         const newLink = `https://new.${ match[ 1 ] }`;
         const shLink = `https://sh.${ match[ 1 ] }`;

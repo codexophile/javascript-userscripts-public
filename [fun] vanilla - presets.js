@@ -1,3 +1,289 @@
+async function Collapsible ( togglerText = 'Toggle', options = {} ) {
+
+    await waitFor( 'body' );
+
+    //* Methods for adding elements and handling popups
+    function addButton ( text, popupEl = null, onclick ) {
+        const button = generateElements( `<button></button>` );
+        button.className = 'collapsible-button';
+        button.textContent = text;
+        collapsibleContent.appendChild( button );
+
+        if ( onclick ) {
+            button.addEventListener( 'click', onclick );
+        }
+
+        if ( popupEl ) {
+            button.addEventListener( 'click', ( e ) => {
+                e.stopPropagation();
+                popupEl.classList.toggle( 'visible' );
+            } );
+
+            document.addEventListener( 'click', ( e ) => {
+                if ( !button.contains( e.target ) ) {
+                    popupEl.classList.remove( 'visible' );
+                }
+            } );
+        }
+
+        return button;
+    }
+    function addPopup () {
+        const popup = document.createElement( 'div' );
+        popup.className = 'popup';
+        // popup.innerHTML = popupContent;
+        collapsibleContent.appendChild( popup );
+        return popup;
+    }
+    function addElement ( element ) {
+        collapsibleContent.appendChild( element );
+        return element;
+    }
+
+    let collapsibleContent;
+
+    //* check if it's already on the page
+    const alreadyOnPage = document.querySelector( `.collapsible-container` );
+    if ( alreadyOnPage ) {
+        const collapsibleStructure = alreadyOnPage;
+        const collapsibleToggler = alreadyOnPage.querySelector( '.collapsible-toggler' );
+        collapsibleContent = alreadyOnPage.querySelector( '.collapsible-content' );
+        return {
+            collapsibleStructure,
+            collapsibleToggler,
+            collapsibleContent,
+            addButton,
+            addElement,
+            addPopup
+        };
+    }
+
+    const {
+        bottom = '0px',
+        left = '0px',
+        backgroundColor = '#3498db',
+        hoverColor = '#2980b9',
+        textColor = 'white',
+        contentBgColor = '#f9f9f9',
+        fontSize = '14px',
+        borderRadius = '5px',
+        boxShadow = '0 2px 5px rgba(0,0,0,0.9)',
+        transition = 'all 0.3s ease-out',
+        width = '300px',
+        height = '200px',
+        collapsedWidth = '30px',
+        popupHeight = '150px',
+        buttonSize = '30px'
+    } = options;
+
+    const css = `
+        .collapsible-container {
+            font-family: Arial, sans-serif;
+            position: fixed;
+            bottom: ${ bottom };
+            left: ${ left };
+            /* transform: translateY(-50%); */
+            display: flex;
+            border-radius: ${ borderRadius };
+            box-shadow: ${ boxShadow };
+           /* overflow: hidden; */
+            transition: ${ transition };
+            width: ${ collapsedWidth };
+            /* height: ${ height }; */
+            z-index: 10000;
+            resize: both;
+        }
+        .collapsible-container.expanded {
+            width: ${ width };
+        }
+        .collapsible-toggler {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            background-color: ${ backgroundColor };
+            color: ${ textColor };
+            cursor: move;
+            padding: 15px 5px;
+            border: none;
+            outline: none;
+            font-size: ${ fontSize };
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: ${ collapsedWidth };
+            user-select: none;
+        }
+        .collapsible-toggler:hover {
+            background-color: ${ hoverColor };
+        }
+        .collapsible-content {
+            flex-grow: 1;
+            overflow: auto;
+            transition: ${ transition };
+            background-color: ${ contentBgColor };
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            padding: 3px;
+            box-sizing: border-box;
+        }
+        .collapsible-container:not(.expanded) .collapsible-content {
+            width: 0;
+            padding: 0;
+        }
+        .collapsible-content > * {
+            margin: 3px;
+        }
+        .collapsible-content > button {
+            background-color: ${ backgroundColor };
+            color: ${ textColor };
+            width: ${ buttonSize };
+            height: ${ buttonSize };
+            border: none;
+            /* padding: 10px; */
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        .collapsible-button:hover {
+            background-color: ${ hoverColor };
+        }
+        .popup {
+            display: none;
+            position: absolute;
+            left: 0px;
+            min-width: 150px;
+            height: ${ popupHeight };
+            top: -${ popupHeight };
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1001;
+            overflow: auto;
+            text-wrap: nowrap;
+        }
+        .popup.visible {
+            display: block;
+        }
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: ${ backgroundColor };
+            right: 0;
+            bottom: 0;
+            cursor: se-resize;
+        }
+    `;
+
+    const style = document.createElement( 'style' );
+    style.textContent = css;
+    document.head.appendChild( style );
+
+    const collapsibleStructure = generateElements( `
+                        <div>
+                                <button class="collapsible-toggler">${ togglerText }</button>
+                                <div class="collapsible-content"></div>
+                                <div class="resize-handle"></div>
+                        </div>
+                `, document.body );
+    collapsibleStructure.className = 'collapsible-container';
+
+    collapsibleContent = collapsibleStructure.querySelector( '.collapsible-content' );
+    const collapsibleToggler = collapsibleStructure.querySelector( '.collapsible-toggler' );
+    const resizeHandle = collapsibleStructure.querySelector( '.resize-handle' );
+
+    let isExpanded = false;
+    let expandedWidth = width;
+
+    collapsibleToggler.addEventListener( 'click', function ( e ) {
+        console.log( isDragging );
+        e.stopPropagation();
+        isExpanded = !isExpanded;
+        if ( isExpanded ) {
+            collapsibleStructure.style.width = expandedWidth;
+            collapsibleStructure.classList.add( 'expanded' );
+        } else {
+            expandedWidth = collapsibleStructure.style.width;
+            collapsibleStructure.style.width = collapsedWidth;
+            collapsibleStructure.classList.remove( 'expanded' );
+        }
+    } );
+
+    // Draggable and resizable functionality
+    let isDragging = false;
+    let isResizing = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    collapsibleToggler.addEventListener( 'mousedown', dragStart );
+    resizeHandle.addEventListener( 'mousedown', resizeStart );
+    document.addEventListener( 'mousemove', drag );
+    document.addEventListener( 'mouseup', dragEnd );
+
+    function dragStart ( e ) {
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+        isDragging = true;
+    }
+
+    function resizeStart ( e ) {
+        e.stopPropagation();
+        isResizing = true;
+    }
+
+    function drag ( e ) {
+        if ( isDragging ) {
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+            xOffset = currentX;
+            yOffset = currentY;
+            setTranslate( currentX, currentY, collapsibleStructure );
+        }
+
+        if ( isResizing ) {
+            e.preventDefault();
+            const newWidth = e.clientX - collapsibleStructure.getBoundingClientRect().left;
+            const newHeight = e.clientY - collapsibleStructure.getBoundingClientRect().top;
+            collapsibleStructure.style.width = `${ newWidth }px`;
+            collapsibleStructure.style.height = `${ newHeight }px`;
+            if ( isExpanded ) {
+                expandedWidth = `${ newWidth }px`;
+            }
+        }
+    }
+
+    function dragEnd ( e ) {
+        initialX = currentX;
+        initialY = currentY;
+        isDragging = false;
+        isResizing = false;
+    }
+
+    function setTranslate ( xPos, yPos, el ) {
+        el.style.transform = `translate3d(${ xPos }px, ${ yPos }px, 0)`;
+    }
+
+    return {
+        collapsibleStructure,
+        collapsibleToggler,
+        collapsibleContent,
+        addButton,
+        addElement,
+        addPopup
+    };
+}
+
 function dialog ( title = '', contentElement, maxHeight = '300px' ) {
     // Create the GUI container
     const guiContainer = document.createElement( 'div' );
@@ -22,7 +308,7 @@ function dialog ( title = '', contentElement, maxHeight = '300px' ) {
 
     // Create the collapse button
     const collapseBtn = document.createElement( 'button' );
-    collapseBtn.id = 'close-btn';
+    collapseBtn.id = 'expand-btn';
     collapseBtn.innerHTML = '+';
     collapseBtn.style.marginLeft = 'auto';
     collapseBtn.style.marginRight = '5px';
@@ -142,119 +428,6 @@ function addTooltip ( tooltipParent, tooltipContent ) {
         width:    fit-content;
     `);
     toolTip.append( tooltipContent );
-
-}
-
-// function calculateWidthAndExpand ( collapsibleContent )
-//? Moved to [fun] vanilla.js
-
-
-function collapsibleHorizontal ( maxHeight, togglerText = '' ) {
-
-    const { collapsibleStructure, collapsibleToggler, collapsibleContent } = collapsible( togglerText );
-    style( collapsibleStructure, `
-            max-height: ${ maxHeight };
-            display: flex;` );
-    collapsibleToggler.style.width = 'unset';
-    style( collapsibleContent, `
-            padding:     0;
-            max-height:  unset;
-            width:       0;
-            transition:  width 0.2s ease-out;
-        `);
-
-    let mouseDownX, mouseUpX, mouseDownY, mouseUpY;
-    collapsibleToggler.addEventListener( 'mousedown', ( event ) => {
-        mouseDownX = event.clientX;
-        mouseDownY = event.clientY;
-    } );
-    collapsibleToggler.addEventListener( 'mouseup', ( event ) => {
-        if ( event.button !== 0 ) return; // 🛑
-
-        mouseUpX = event.clientX;
-        mouseUpY = event.clientY;
-
-        if ( mouseDownX === mouseUpX && mouseDownY === mouseUpY ) {
-
-            event.target.classList.toggle( "togglerActive" );
-            if ( collapsibleContent.style.width === '0px' ) {
-                calculateWidthAndExpand( collapsibleContent );
-            } else {
-                collapsibleContent.style.width = 0;
-            }
-
-        }
-
-    } );
-
-    return { collapsibleStructure, collapsibleToggler, collapsibleContent };
-
-
-}
-
-function collapsibleVertical () {
-    const { collapsibleStructure, collapsibleToggler, collapsibleContent } = collapsible();
-    collapsibleToggler.addEventListener( "click", function () {
-        this.classList.toggle( "active" );
-        if ( collapsibleContent.style.maxHeight ) {
-            collapsibleContent.style.maxHeight = null;
-        } else {
-            collapsibleContent.style.maxHeight = collapsibleContent.scrollHeight + "px";
-        }
-    } );
-
-}
-
-function collapsible ( togglerText = '' ) {
-
-    const css = /*css*/`
-
-            /* * { box-sizing: border-box } */    
-            #collapsible-toggler {
-                width: 100%;
-                background-color: #777;
-                color: white;
-                cursor: pointer;
-                padding: 18px;
-                border: none;
-                text-align: left;
-                outline: none;
-                font-size: 15px;
-            }
-
-            .togglerActive, #collapsible-toggler:hover {
-                background-color: #555;
-            }
-
-            #collapsibleContent > * {
-                margin: 3px;
-            }
-
-            #collapsibleContent {
-                display: flex;
-                padding: 0 18px;
-                max-height: 0;
-                overflow: hidden;
-                transition: all 0.2s ease-out;
-                background-color: #f1f1f1;
-
-        `;
-    GM_addStyle( css );
-
-
-    const collapsibleStructure = generateElements( /*html*/`
-                <div id=collapsibleStructure'>
-                    <button id="collapsible-toggler" > ${ togglerText }</button>
-                    <div id=collapsibleContent>
-                    </div>
-                <div>
-        `, null, true );
-    document.body.prepend( collapsibleStructure );
-
-    const collapsibleContent = document.querySelector( `#collapsibleContent` );
-    const collapsibleToggler = document.querySelector( `#collapsible-toggler` );
-
-    return { collapsibleStructure, collapsibleToggler, collapsibleContent };
 
 }
 
@@ -726,17 +899,3 @@ class ModalBox {
         document.body.removeChild( this.modal );
     }
 }
-
-// Usage example:
-// const modal = new ModalBox({
-//     width: '80%',
-//     backgroundColor: '#f0f0f0',
-//     headerColor: '#3498db',
-//     animation: true,
-//     closeOnEscape: true,
-//     closeOnOutsideClick: true
-// });
-//
-// modal.setTitle('Welcome');
-// modal.setContent('<p>This is a customizable modal box!</p>');
-// modal.show();

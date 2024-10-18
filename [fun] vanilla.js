@@ -136,47 +136,38 @@ function setSlotSize ( sbParent, newWidth ) {
 
 async function sbControls ( video, trueNoOfSlots, sbParent ) {
 
-    const collapsibleEl = await waitFor( '#collapsibleContent' );
+    await waitFor( '.collapsible-content' );
+    const collapsible = await Collapsible();
 
     if ( video ) {
 
-        const createButton = ( text, className, clickHandler ) => {
-            const button = document.createElement( 'button' );
-            button.classList.add( 'storyboardControl', className );
-            button.textContent = text;
-            button.addEventListener( 'click', clickHandler );
-            return button;
-        };
-
-        const scrollBackBtn = createButton( '🔙', 'scrollBack', async () => {
+        collapsible.addButton( '🔙', null, async () => {
             const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].pop();
             targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } );
             await asyncTimeout( 250 );
             await blink( targetEl, 250, 2 );
-        } );
+        } ).classList.add( 'storyboardControl' );
 
-        const toggleBtn = createButton( '💠', 'toggle', () => {
+        collapsible.addButton( '💠', null, () => {
             const isHidden = sbParent.style.display === 'none';
             sbParent.style.display = isHidden ? 'block' : 'none';
             sbParent.scrollIntoView( { block: isHidden ? 'start' : 'center' } );
-        } );
-
-        collapsibleEl.append( scrollBackBtn, toggleBtn );
+        } ).classList.add( 'storyboardControl' );
 
         const sbSlider = generateElements( `
-            <input class=storyboardControl type="range" id="sizeSlider" min="50" max="300" value="100">`, collapsibleEl );
+            <input class=storyboardControl type="range" id="sizeSlider" min="50" max="300" value="100">` );
         sbSlider.addEventListener( 'input', function () {
             const scaleFactor = sbSlider.value / 100;
             setSlotScale( sbParent, scaleFactor );
         } );
+        collapsible.addElement( sbSlider );
+
     }
     else {
 
     }
 
-
-
-    calculateWidthAndExpand( collapsibleEl );
+    // calculateWidthAndExpand( collapsibleEl );
 
     const jumpToSlot = () => {
         const matches = location.hash.match( /#slot=(\d+?)($|#)/ );
@@ -218,14 +209,14 @@ async function storyboard ( {
     imgUrls = []
 } ) {
 
-    console.log( imgUrls );
-
     const slotsDiv = document.createElement( 'div' );
     storyboardParent.append( slotsDiv );
     slotsDiv.id = 'slotsDiv';
     slotsDiv.style.display = 'flex';
     slotsDiv.style.flexWrap = 'wrap';
     slotsDiv.style.justifyContent = 'space-evenly';
+
+    if ( !imgUrls.length ) alert( 'imgUrls: Error!' );
 
     const promises = imgUrls.map( ( url, index ) =>
         storyboardFlex( horizontal, vertical, url, index, trueNoOfSlots )
@@ -287,6 +278,7 @@ async function storyboardToggleable ( {
 }
 
 async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
+    console.log( imgSrc );
     const imgElement = new Image();
     imgElement.style.display = 'none';
     imgElement.src = imgSrc;
@@ -328,7 +320,6 @@ async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlo
                 );
                 storyboardItem.append( canvas );
 
-
                 Object.assign( storyboardItem.style, {
                     backgroundColor: 'black',
                     textShadow: 'white 0px 0px 10px',
@@ -347,6 +338,7 @@ async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlo
         };
 
         imgElement.onerror = () => {
+            console.log( `Storyboard image load error!: ${ imgSrc }` );
             const errorEl = document.createElement( 'div' );
             errorEl.textContent = 'Image load error';
             Object.assign( errorEl.style, {
@@ -363,6 +355,179 @@ async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlo
 
 
 //ANCHOR Rest
+
+function getAccentColorFromFavicon () {
+    return new Promise( ( resolve ) => {
+        // Find the favicon
+        const faviconElement = document.querySelector( "link[rel*='icon']" ) || document.createElement( 'link' );
+        const faviconUrl = faviconElement.href || '/favicon.ico';
+
+        // Create an image element to load the favicon
+        const img = new Image();
+        img.crossOrigin = "Anonymous";  // This allows us to work with images from other domains
+        img.src = faviconUrl;
+
+        img.onload = function () {
+            // Create a canvas to draw the image
+            const canvas = document.createElement( 'canvas' );
+            const ctx = canvas.getContext( '2d' );
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage( img, 0, 0, img.width, img.height );
+
+            // Get image data
+            const imageData = ctx.getImageData( 0, 0, canvas.width, canvas.height );
+            const data = imageData.data;
+
+            // Analyze colors
+            const colors = [];
+            for ( let i = 0; i < data.length; i += 4 ) {
+                const r = data[ i ];
+                const g = data[ i + 1 ];
+                const b = data[ i + 2 ];
+                const a = data[ i + 3 ];
+
+                // Skip fully transparent pixels
+                if ( a === 0 ) continue;
+
+                colors.push( { r, g, b } );
+            }
+
+            // Find the most vibrant color
+            let accentColor = { r: 0, g: 0, b: 0 };
+            let maxSaturation = 0;
+
+            for ( let color of colors ) {
+                const [ h, s, l ] = rgbToHsl( color.r, color.g, color.b );
+
+                // Choose the color with highest saturation, avoiding too dark or too light colors
+                if ( s > maxSaturation && l > 0.3 && l < 0.7 ) {
+                    maxSaturation = s;
+                    accentColor = color;
+                }
+            }
+
+            resolve( `rgb(${ accentColor.r }, ${ accentColor.g }, ${ accentColor.b })` );
+        };
+
+        img.onerror = function () {
+            // If favicon couldn't be loaded, return a default color
+            resolve( '#000000' );
+        };
+    } );
+}
+
+function getAccentColor () {
+    // Step 1: Extract colors from the page
+    const elements = document.getElementsByTagName( '*' );
+    const colors = [];
+
+    for ( let element of elements ) {
+        const style = window.getComputedStyle( element );
+        const backgroundColor = style.getPropertyValue( 'background-color' );
+        const color = style.getPropertyValue( 'color' );
+
+        if ( backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)' ) {
+            colors.push( backgroundColor );
+        }
+        if ( color ) {
+            colors.push( color );
+        }
+    }
+
+    // Step 2: Analyze colors to find a suitable accent color
+    const uniqueColors = [ ...new Set( colors ) ];
+    let accentColor = '#000000'; // Default to black
+    let maxSaturation = 0;
+
+    for ( let color of uniqueColors ) {
+        const [ r, g, b ] = color.match( /\d+/g ).map( Number );
+        const [ h, s, l ] = rgbToHsl( r, g, b );
+
+        // Choose the color with highest saturation, avoiding too dark or too light colors
+        if ( s > maxSaturation && l > 0.3 && l < 0.7 ) {
+            maxSaturation = s;
+            accentColor = color;
+        }
+    }
+
+    return accentColor;
+}
+
+// Helper function to convert RGB to HSL
+function rgbToHsl ( r, g, b ) {
+    r /= 255, g /= 255, b /= 255;
+    const max = Math.max( r, g, b ), min = Math.min( r, g, b );
+    let h, s, l = ( max + min ) / 2;
+
+    if ( max === min ) {
+        h = s = 0;
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / ( 2 - max - min ) : d / ( max + min );
+        switch ( max ) {
+            case r: h = ( g - b ) / d + ( g < b ? 6 : 0 ); break;
+            case g: h = ( b - r ) / d + 2; break;
+            case b: h = ( r - g ) / d + 4; break;
+        }
+        h /= 6;
+    }
+
+    return [ h, s, l ];
+}
+
+
+function copyImageToClipboard ( img ) {
+    if ( navigator.clipboard && navigator.clipboard.write ) {
+        // Modern method using Clipboard API
+        img.crossOrigin = "anonymous";
+        img.onload = function () {
+            const canvas = document.createElement( 'canvas' );
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext( '2d' ).drawImage( img, 0, 0 );
+            canvas.toBlob( blob => {
+                navigator.clipboard.write( [
+                    new ClipboardItem( { 'image/png': blob } )
+                ] ).then( () => {
+                    console.log( 'Image copied to clipboard successfully' );
+                } ).catch( err => {
+                    console.error( 'Error copying image to clipboard:', err );
+                    fallbackCopyMethod( img );
+                } );
+            }, 'image/png' );
+        };
+        img.onerror = function () {
+            console.error( 'Error loading image for clipboard' );
+            fallbackCopyMethod( img );
+        };
+        // Trigger a reload to ensure we have permission to read the image data
+        img.src = img.src;
+    } else {
+        // Fallback for browsers without Clipboard API support
+        fallbackCopyMethod( img );
+    }
+}
+
+function fallbackCopyMethod ( img ) {
+    const canvas = document.createElement( 'canvas' );
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext( '2d' ).drawImage( img, 0, 0 );
+    const dataURL = canvas.toDataURL( 'image/png' );
+    GM_setClipboard( dataURL, 'text/html' );
+    console.log( 'Image copied to clipboard using fallback method' );
+}
+
+function getFaviconUrl () {
+    const links = document.querySelectorAll( 'link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]' );
+    if ( links.length > 0 ) {
+        return links[ 0 ].href;
+    } else {
+        // Optionally return a default favicon if none is found
+        return '/favicon.ico';
+    }
+}
 
 function addAiImageDownloadButtons () {
 
@@ -414,6 +579,21 @@ function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
                     resolve( resText );
                 const tempDoc = generateDoc( resText, true );
                 resolve( tempDoc );
+            },
+            onerror: () => reject( 'onerror' ),
+            ontimeout: () => reject( 'ontimeout' )
+        } );
+        // function errorFunction () { reject( 'error loading page' ) }
+    } );
+
+}
+function GMXmlHttpRequestAsync ( url ) {
+
+    return new Promise( ( resolve, reject ) => {
+        GM_xmlhttpRequest( {
+            url: url,
+            onload: response => {
+                resolve( response.response );
             },
             onerror: () => reject( 'onerror' ),
             ontimeout: () => reject( 'ontimeout' )
@@ -637,6 +817,40 @@ function lazyLoad ( load, ...items ) {
 
 }
 
+function makeDraggable ( element ) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    const header = document.getElementById( "contPanelHeader" );
+
+    if ( header ) {
+        header.onmousedown = dragMouseDown;
+    } else {
+        element.onmousedown = dragMouseDown;
+    }
+
+    function dragMouseDown ( e ) {
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag ( e ) {
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        element.style.top = ( element.offsetTop - pos2 ) + "px";
+        element.style.left = ( element.offsetLeft - pos1 ) + "px";
+    }
+
+    function closeDragElement () {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+
 function dragElement ( targetEl, dragHandleEl ) {
 
     targetEl.style.position = 'fixed';
@@ -781,20 +995,20 @@ const downloadFile = ( file ) => {
     document.body.removeChild( element );
 };
 
-var saveData = ( function () {
-    var a = document.createElement( "a" );
-    document.body.appendChild( a );
-    a.style = "display: none";
-    return function ( data, fileName ) {
-        var json = JSON.stringify( data ),
-            blob = new Blob( [ json ], { type: "octet/stream" } ),
-            url = window.URL.createObjectURL( blob );
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        window.URL.revokeObjectURL( url );
-    };
-}() );
+// var saveData = ( function () {
+//     var a = document.createElement( "a" );
+//     document.body.appendChild( a );
+//     a.style = "display: none";
+//     return function ( data, fileName ) {
+//         var json = JSON.stringify( data ),
+//             blob = new Blob( [ json ], { type: "octet/stream" } ),
+//             url = window.URL.createObjectURL( blob );
+//         a.href = url;
+//         a.download = fileName;
+//         a.click();
+//         window.URL.revokeObjectURL( url );
+//     };
+// }() );
 
 function isInIframe () {
     return window !== window.parent;
@@ -892,6 +1106,14 @@ function waitForEach ( selector, callback, options = {} ) {
 
     // Return a function to stop observing
     return () => observer.disconnect();
+}
+
+//ANCHOR - Dom manipulations
+
+function empty ( element ) {
+    element.childNodes.forEach( node => {
+        node.remove();
+    } );
 }
 
 //ANCHOR - JQ Alternatives
@@ -1006,7 +1228,10 @@ function generateDoc ( html, returnTrusted ) {
 
     template.innerHTML = escapeHTMLPolicy.createHTML( html.trim() );
 
-    return template.content;
+    const templateContent = template.content;
+    template.remove();
+    return templateContent;
+    // return template.content;
 
 }
 
@@ -1033,7 +1258,7 @@ function generateToolbarButton ( text, parent, popup, onclick ) {
     const button = generateElements( `<button class=popupButton>${ text }</button>` );
     const collapsibleContent = document.querySelector( `#collapsibleContent` );
     parent.append( button );
-    calculateWidthAndExpand( collapsibleContent );
+    // calculateWidthAndExpand( collapsibleContent );
     if ( popup ) {
         button.addEventListener( 'click', () => { togglePopup( popup ); } );
     }
@@ -1042,7 +1267,21 @@ function generateToolbarButton ( text, parent, popup, onclick ) {
     return button;
 }
 
-function createToolbarPopup () {
+// function createToolbarPopup () {
+//     const toolbarPopup = generateElements( '<div></div>' );
+//     toolbarPopup.classList.add( 'toolbarPopup' );
+//     toolbarPopup.style = `
+//         font-size:  large;
+//         max-height: 50vh;
+//         position:   absolute;
+//         overflow:   auto;
+//         display:    none;
+//         background-color: gray;
+//     `;
+//     collapsibleContent.append( toolbarPopup );
+//     return toolbarPopup;
+// }
+function createToolbarPopup ( collapsibleContent ) {
     const toolbarPopup = generateElements( '<div></div>' );
     toolbarPopup.classList.add( 'toolbarPopup' );
     toolbarPopup.style = `
