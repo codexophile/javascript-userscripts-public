@@ -169,8 +169,28 @@
                             }
 
                             const thumbnailSrc = bftvDoc.querySelector( 'meta[property="og:image"]' ).content;
-                            generateElements( `<img src=${ thumbnailSrc }>`, item );
+                            const thumbEl = generateElements( `<img src=${ thumbnailSrc }>`, item );
+                            thumbEl.style.maxHeight = '300px';
                             generateElements( `<div>${ durationString }</div>`, item );
+
+                            const otherScript = contains( 'script', 'initPlayer', bftvDoc )[ 0 ];
+                            const thumbBase = otherScript.textContent.match( /thumbBase: '(.+?)'/ )[ 1 ];
+                            const thumbCount = otherScript.textContent.match( /thumbsCount: (\d+)/ )[ 1 ];
+                            let imgUrls_ = [];
+                            for ( let i = 1; i <= thumbCount; i++ ) {
+                                const thisUrl = thumbBase.replace( '{THUMB_ID}', i );
+                                imgUrls_.push( thisUrl );
+                            }
+
+                            const storyboardParent = generateElements( `<div></div>`, item );
+                            storyboardToggleable( {
+                                storyboardParent,
+                                horizontal: 1,
+                                vertical: 1,
+                                linkToVid: itemUrl,
+                                trueNoOfSlots: thumbCount,
+                                imgUrls: imgUrls_
+                            } );
 
                             break;
 

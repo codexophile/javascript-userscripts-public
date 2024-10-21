@@ -243,8 +243,10 @@ async function storyboard ( {
                 // slot.append( link );
             }
             slot.addEventListener( 'click', ev => {
-                const samplingFreq = samplingFq || ( vidOnPage.duration / ( horizontal * vertical ) );
-                vidOnPage.currentTime = ev.target.closest( 'div' ).index * samplingFreq;
+                const samplingFreq = samplingFq || ( vidOnPage.duration / trueNoOfSlots );
+                // const samplingFreq = samplingFq || ( vidOnPage.duration / ( horizontal * vertical ) );
+                const newTime = ev.target.closest( 'div' ).index * samplingFreq;
+                vidOnPage.currentTime = newTime;
                 vidOnPage.play();
                 vidOnPage.scrollIntoView( { behavior: 'instant', block: 'center' } );
             } );
