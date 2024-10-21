@@ -84,7 +84,7 @@
                     } );
 
                     if ( innerDiv.querySelectorAll( 'img' ).length > 5 ) {
-                        //! sometimes there arejj false positives here
+                        //! sometimes there are false positives here
                         innerDiv.style = `display: flex; flex-wrap: wrap;`;
                         item.style.maxWidth = 'unset';
                         item.style.width = '100%';
