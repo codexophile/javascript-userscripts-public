@@ -1,7 +1,14 @@
+//* link fixes
+let observer = new MutationObserver( () => {
+    $( 'a[href*="?ref"]' ).each( function () {
+        this.href = this.href.replace( /\?ref.*$/, '' );
+    } );
+} );
+observer.observe( document.body, { childList: true, subtree: true } );
+
+//#- External links
 const titleMatch = location.href.match( /\/title\/(tt\d+)/ );
 if ( titleMatch ) {
-
-    //#- External links
 
     const el = document.querySelector( `[data-testid="hero__pageTitle"] + ul` );
     const title = document.querySelector( `[data-testid="hero__pageTitle"]` ).textContent;
@@ -32,10 +39,3 @@ $moreFromSectionEl.insertBefore( '[data-testid="contribution"]' );
 if ( location.href.includes( 'https://m.' ) ) {
     location.replace( location.href.replace( 'https://m.', 'https://www.' ) );
 }
-
-let observer = new MutationObserver( () => {
-    $( 'a[href*="?ref"]' ).each( function () {
-        this.href = this.href.replace( /\?ref.*$/, '' );
-    } );
-} );
-observer.observe( document.body, { childList: true, subtree: true } );
