@@ -63,27 +63,58 @@
     } );
 
     //todo misspelled prompt
+    //* Audio download button
+    // const dataUrl = $( `audio > source` ).attr( 'src' );
+    // const fileName = dataUrl?.split( "/" ).pop();
+    // const link = document.createElement( "a" );
+    // link.href = dataUrl;
+    // link.download = fileName;
+    // $( link ).text( 'Download' );
+    // $( link ).attr( 'target', '_blank' );
+    // $( `audio` ).parent().parent().after( link );
 
-    //# Audio download button
+    //* Copy definition button
+    // const definitionSpans = document.querySelectorAll( '[data-dobid="dfn"]' );
+    // const $copyDefBtns = $( `<button> Copy </button>` ).insertAfter( definitionSpans );
+    // $copyDefBtns.on( 'click', ( event ) => {
+    //     const textToCopy = $( event.target ).prev().text();
+    //     navigator.clipboard.writeText( textToCopy );
+    // } );
 
-    const dataUrl = $( `audio > source` ).attr( 'src' );
-    const fileName = dataUrl?.split( "/" ).pop();
+    //* Flex view
+    // console.clear();
+    // const queryForLocator = '[target="_blank"]:not([class])';
+    // const locatorEls = document.querySelectorAll( queryForLocator );
+    // const parentEl = grandParent( locatorEls[ 0 ], 9 );
+    // const searchEl = document.querySelector( `#search` );
+    // const mainEl = document.querySelector( `#center_col` );
+    // const rcntEl = document.querySelector( `#rcnt` );
 
-    const link = document.createElement( "a" );
-    link.href = dataUrl;
-    link.download = fileName;
+    // console.log( parentEl );
+    // locatorEls.forEach( item => {
+    //     const resultEl = grandParent( item, 7 );
+    //     searchEl.append( resultEl );
+    //     style( resultEl, `
+    //         width: 45%;
+    //         padding: 10px;
+    //     `);
+    //     console.log( resultEl );
+    // } );
 
-    $( link ).text( 'Download' );
-    $( link ).attr( 'target', '_blank' );
-    $( `audio` ).parent().parent().after( link );
-
-    //# Copy definition button
-    const definitionSpans = document.querySelectorAll( '[data-dobid="dfn"]' );
-    const $copyDefBtns = $( `<button> Copy </button>` ).insertAfter( definitionSpans );
-    $copyDefBtns.on( 'click', ( event ) => {
-        const textToCopy = $( event.target ).prev().text();
-        navigator.clipboard.writeText( textToCopy );
-    } );
+    // style( searchEl, `
+    //     display: flex;
+    //     flex-wrap: wrap;
+    //     justify-content: center;
+    // `);
+    // style( rcntEl, `
+    //     max-width: unset !important;
+    // `);
+    // style( mainEl, `
+    //     margin: unset !important;
+    //     padding: 50px;
+    //     width: 100%;
+    // `);
+    // console.log( locatorEls );
 
 
 } )();
