@@ -1,5 +1,9 @@
+///@ts-check
+
+import { storyboard } from "./[fun] storyboards";
+
 ( function () {
-    'use strict'
+    'use strict';
 
     let blackList = [ 'suwa hamuwa', 'Rasa Madura', 'Manasika Saukkhya', 'Wawamu Rakemu', 'Rasawindana paya',
         'paththara sirasthala', 'Swayan Rakiya Athwala', 'Waiddhya Hamuwa', 'Mahapolowa', 'Lottery Draw',
@@ -21,124 +25,124 @@
         'වර්ණෝදය', 'ape paya', 'cricket gamata', 'rataa', 'hondatama pahila', 'sammadhitti', 'dreamvilla',
         'ms. traveller', 'shanida ayubowan', 'poyaprogramme', 'yathra', 'jathika wedikawa', 'ama wessa', 'kasawatha',
         'බෞද්ධ පුවත්', 'පෝදා විකාශය', 'මාතලේ අළුවිහාර', 'කිරුළ', 'සුන්දර ශනිදා', 'sanhida', 'sukkanama', 'nipuna piriwara',
-        'SLASSCOM INGENUITY AWARDS', 'lama puwath', 'T20WorldCup' ]
+        'SLASSCOM INGENUITY AWARDS', 'lama puwath', 'T20WorldCup' ];
 
     waitFor( '#collapsibleContent' ).then( ( el ) => {
 
-        const itemQuery = '.StreamPage article:has([href*="www.youtube.com"])'
+        const itemQuery = '.StreamPage article:has([href*="www.youtube.com"])';
 
         generateElements( '<button id=loadAllSbsInlineBtn>🎞️</button>', el ).addEventListener( 'click', () => {
             document.querySelectorAll( itemQuery ).forEach( article => {
-                loadSbInline( article )
-            } )
+                loadSbInline( article );
+            } );
             let observer = new MutationObserver( ( mutations ) => {
                 mutations.forEach( mutation => {
                     mutation.addedNodes.forEach( async item => {
                         if ( item.nodeType === 1 && item.matches( itemQuery ) ) {
-                            loadSbInline( item )
+                            loadSbInline( item );
                         }
-                    } )
-                } )
-            } )
-            observer.observe( document.body, { childList: true, subtree: true } )
+                    } );
+                } );
+            } );
+            observer.observe( document.body, { childList: true, subtree: true } );
 
             async function loadSbInline ( item ) {
-                const horSbParent = generateElements( '<div class=horSbParent style="width: -webkit-fill-available"></div>' )
-                item.after( horSbParent )
-                const linkToVid = item.querySelector( 'a' ).href
-                const ytHtml = await GMXmlHttpReqResponse( linkToVid )
-                const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml )
+                const horSbParent = generateElements( '<div class=horSbParent style="width: -webkit-fill-available"></div>' );
+                item.after( horSbParent );
+                const linkToVid = item.querySelector( 'a' ).href;
+                const ytHtml = await GMXmlHttpReqResponse( linkToVid );
+                const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
                 if ( !allUrls ) {
-                    console.log( 'error', item )
-                    const errorDiv = generateElements( '<div id=errorDiv>storyboard not available</div>', horSbParent )
+                    console.log( 'error', item );
+                    const errorDiv = generateElements( '<div id=errorDiv>storyboard not available</div>', horSbParent );
                     style( errorDiv, `
                         color:     red;
                         font-size: 20px;
-                    `)
-                    return
+                    `);
+                    return;
                 }
-                storyboard( horSbParent, 5, 5, linkToVid, null, null, trueNoOfSlots, ...allUrls )
+                storyboard( horSbParent, 5, 5, linkToVid, null, null, trueNoOfSlots, ...allUrls );
 
             }
 
-        } )
+        } );
 
         generateElements( '<button id=showFiltered>⚗️</button>', el ).addEventListener( 'click', () => {
-            modalBoxFilteredItems.display()
-        } )
+            modalBoxFilteredItems.display();
+        } );
 
-        calculateWidthAndExpand( el )
-    } )
+        calculateWidthAndExpand( el );
+    } );
 
     let observer = new MutationObserver( () => {
 
         $( `article.entry.cards:has([href*='/www.youtube.com/'])` ).each( function () {
-            const $item = $( this )
-            if ( $item.find( '.peek-button' ).length ) return // 🛑
-            const $peekButton = $( `<button class=peek-button>🫣</button>` )
-            $item.find( '.CardLayout' ).append( $peekButton )
-            $peekButton[ 0 ].style = 'position: absolute; left: 5px; top: 5px; z-index: 1;'
+            const $item = $( this );
+            if ( $item.find( '.peek-button' ).length ) return; // 🛑
+            const $peekButton = $( `<button class=peek-button>🫣</button>` );
+            $item.find( '.CardLayout' ).append( $peekButton );
+            $peekButton[ 0 ].style = 'position: absolute; left: 5px; top: 5px; z-index: 1;';
 
             $peekButton.on( 'click', async () => {
 
-                const videoLink = $item.find( '.EntryTitle > a' )
-                const videoUrl = videoLink[ 0 ].href
+                const videoLink = $item.find( '.EntryTitle > a' );
+                const videoUrl = videoLink[ 0 ].href;
 
-                const ytHtml = await GMXmlHttpReqResponse( videoUrl )
-                const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml )
+                const ytHtml = await GMXmlHttpReqResponse( videoUrl );
+                const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
 
                 const headerLink = generateElements(
-                    `<a href=${ videoUrl } target=_blank> ${ videoLink.text() } </a>` )
-                const modalBody = generateElements( '<div></div>' )
-                modalBoxEl.destroy()
-                modalBoxEl.headerAddContent( headerLink )
-                modalBoxEl.bodyAddContent( modalBody )
+                    `<a href=${ videoUrl } target=_blank> ${ videoLink.text() } </a>` );
+                const modalBody = generateElements( '<div></div>' );
+                modalBoxEl.destroy();
+                modalBoxEl.headerAddContent( headerLink );
+                modalBoxEl.bodyAddContent( modalBody );
 
-                await storyboard( modalBody, 5, 5, videoUrl, null, null, trueNoOfSlots, ...allUrls )
-                modalBoxEl.display()
+                await storyboard( modalBody, 5, 5, videoUrl, null, null, trueNoOfSlots, ...allUrls );
+                modalBoxEl.display();
 
-            } )
-        } )
+            } );
+        } );
 
-        const $titleEls = $( `:is(.EntryTitle, .EntrySummary):not(.done)` )
+        const $titleEls = $( `:is(.EntryTitle, .EntrySummary):not(.done)` );
         $titleEls.each( function () {
 
-            let $el = $( this )
-            let itemTitle = $el.text()
+            let $el = $( this );
+            let itemTitle = $el.text();
             // $el.attr( 'title', itemTitle )
 
-            let $item = $el.closest( 'article' )
+            let $item = $el.closest( 'article' );
             blackList.forEach( phrase => {
                 if ( itemTitle.toLowerCase().includes( phrase.toLowerCase() ) ) {
-                    $item.prepend( `<div>${ phrase }</div>` )
-                    let $readButton = $item.find( '[aria-label="Mark as Read"]' )
-                    $readButton.click()
-                    filteredItemsContainer.prepend( $item[ 0 ] )
-                    filteredCount++
-                    $( `#showFiltered` ).text( `⚗️ ${ filteredCount }` )
+                    $item.prepend( `<div>${ phrase }</div>` );
+                    let $readButton = $item.find( '[aria-label="Mark as Read"]' );
+                    $readButton.click();
+                    filteredItemsContainer.prepend( $item[ 0 ] );
+                    filteredCount++;
+                    $( `#showFiltered` ).text( `⚗️ ${ filteredCount }` );
                 }
-            } )
+            } );
 
-            $( '#feedlyPageHolderFX' ).scroll( function () { console.log( 'x' ) } )
+            $( '#feedlyPageHolderFX' ).scroll( function () { console.log( 'x' ); } );
 
-            $el.addClass( 'done' )
-        } )
+            $el.addClass( 'done' );
+        } );
 
 
 
-    } )
-    observer.observe( document.body, { childList: true, subtree: true } )
+    } );
+    observer.observe( document.body, { childList: true, subtree: true } );
 
-    const modalBoxEl = new modalBox()
-    const modalBoxFilteredItems = new modalBox()
-    const filteredItemsContainer = generateElements( '<div id=filteredItemsContainer></div>' )
-    modalBoxFilteredItems.bodyAddContent( filteredItemsContainer )
+    const modalBoxEl = new modalBox();
+    const modalBoxFilteredItems = new modalBox();
+    const filteredItemsContainer = generateElements( '<div id=filteredItemsContainer></div>' );
+    modalBoxFilteredItems.bodyAddContent( filteredItemsContainer );
 
     GM_addStyle( `
         article:hover .peek-button { display: inline;}
         .peek-button { display: none;}
-    ` )
+    ` );
 
-    let filteredCount = 0
+    let filteredCount = 0;
 
-} )()
+} )();
