@@ -5,8 +5,14 @@
     document.querySelectorAll( `[data-testid="title-cast-item"]` ).forEach( castItemEl => {
         generateElements( `<button>📅</button>`, castItemEl ).addEventListener( 'click', async ( event ) => {
             const actorUrl = castItemEl.querySelector( `a` ).href;
-            const result = await getActorAge( actorUrl );
-            alert( result );
+            event.target.textContent = '⌛';
+            try {
+                const result = await getActorAge( actorUrl );
+                event.target.textContent = '✅';
+                alert( result );
+            } catch {
+                event.target.textContent = '⚠️';
+            }
         } );
     } );
 
