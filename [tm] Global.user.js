@@ -2,13 +2,18 @@
     'use strict';
     if ( window.top != window.self ) return; //don't run on frames or iframes
 
-    //* main
+    //* Beep
+    if ( !document.hidden )
+        GM_setClipboard( `global-document-ready-${ document.title }` );
+
+    //* toolbar and toolbar buttons
     const collapsible = await Collapsible( "", {
         width: "300px",
         height: "50px",
         collapsedWidth: "40px",
     } );
     collapsible.collapsibleToggler.click();
+
 
     collapsible.addButton( "🔝", null, () => window.scrollTo( 0, 0 ) );
     const headersPopup = collapsible.addPopup();
@@ -38,4 +43,24 @@
                 break;
         }
     } );
+
+    collapsible.addButton( '🔊', null, () => {
+        const text = window.getSelection().toString().replaceAll( '\n', '. ' );
+        if ( !text ) return; // 🛑
+        location.href = `edge-tts:${ text }`;
+    } );
+
+    const rssLinks = document.querySelectorAll( 'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]' );
+    if ( rssLinks.length ) {
+        const rssFeedsContainer = collapsible.addPopup();
+        collapsible.addButton( '📶', rssFeedsContainer );
+        rssLinks.forEach( link => {
+            generateElements( `<a
+                        href='${ link.href }'
+                        target=_blank
+                        style='display: block;'
+                >${ link.title }</a>`, rssFeedsContainer );
+        } );
+    }
+
 } )();
