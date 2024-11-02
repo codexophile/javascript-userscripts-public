@@ -4,29 +4,31 @@
 
     const API_KEY = 'AIzaSyB41uuRwzZyKBJcMPr-kyNwXBpeOcESOpU';  // Replace this with your YouTube API Key
     const regionCode = 'US';  // Adjust this according to your preferred region
-    let newTitle, interval;
+    let newTitle, newContent;
 
     main();
     window.addEventListener( 'urlchange', main );
 
     async function main () {
-
-        clearInterval( interval );
-
         const videoId = getVideoId();
         if ( !videoId ) return;
         const categories = await fetchCategories();
         const categoryAndTags = await getVideoDetails( videoId, categories );
-        const newContent = JSON.stringify( categoryAndTags ).replaceAll( '"', '' );
+        newContent = JSON.stringify( categoryAndTags ).replaceAll( '"', '' );
         const videoTitleEl = await waitFor( '#title.ytd-watch-metadata yt-formatted-string' );
         const videoTitle = videoTitleEl.innerText;
         newTitle = `${ videoTitle } | ${ newContent }`;
-        interval = setInterval( () => {
-            document.title = newTitle;
-        }, 1000 );
-
-
+        document.title = newTitle;
     }
+
+    let titleObserver = new MutationObserver( () => {
+        if ( document.title.includes( '{category:' ) ) return;
+        if ( newTitle )
+            document.title = newTitle;
+        newTitle = null;
+    } );
+    titleObserver.observe( document.querySelector( 'title' ), { childList: true, subtree: true } );
+
     // Function to extract video ID from the URL
     function getVideoId () {
         const urlParams = new URLSearchParams( window.location.search );

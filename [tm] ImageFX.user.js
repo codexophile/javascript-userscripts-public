@@ -11,7 +11,7 @@
 
         GM_notification( {
             title: 'ImageFX',
-            // highlight: true,
+            highlight: true,
             img: img.src,
             text: ' ',
             timeout: 15000

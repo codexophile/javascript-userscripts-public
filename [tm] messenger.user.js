@@ -18,7 +18,6 @@
 
     document.addEventListener( 'keydown', async ( event ) => {
 
-        console.log( event );
         if ( !event.altKey ) return; // 🛑
 
         console.log( 'altkey present' );
@@ -68,7 +67,7 @@
             if ( $chatItem.has( 'span[data-visualcompletion="ignore"]' ).length ) // based on the unread marker
                 // if ( $this.has( ':contains("You: ")' ).length )                  // based on text 'You" '
                 return;
-            $chatItem.slideUp();
+            $chatItem.remove();
         } );
         // observerHandler();
         // observer.observe( document.body, { childList: true, subtree: true } );

@@ -144,7 +144,7 @@
                                 expandBlogtrottrItem();
 
                             }
-                            if ( link.href.match( /d000d|ds2play|d0000d|dood/ ) ) {
+                            if ( link.href.match( /d000d|ds2play|d0000d|dood|do0od/ ) ) {
                                 const resText = await GMXmlHttpRequest( link.href, null, true );
                                 const slidesId = resText.match( /\/(splash|snaps)\/(.+?)\.jpg/ )[ 2 ];
                                 const imgSrc = `https://img.doodcdn.co/slides/${ slidesId }.jpg`;
@@ -229,6 +229,7 @@
 
                             break;
 
+                        case 'OnlyBussy':
                         case 'GayPornHot':
                         case 'HutGay':
                         case 'Super Tudo Gay – Porno Gay | Gay Amador | Sexo Gay':

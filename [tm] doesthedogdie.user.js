@@ -35,6 +35,12 @@
 
     const locators = document.querySelectorAll( `.name > a` );
     locators.forEach( item => {
+
+        item.textContent = item.textContent
+            .replace( 'Is there', '' )
+            .replace( 'Are there', '' )
+            .replace( '?', '' );
+
         triggers.forEach( trigger => {
             if ( item.href.includes( trigger ) ) {
                 const el = grandParent( item, 5 );
