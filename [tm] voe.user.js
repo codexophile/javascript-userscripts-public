@@ -10,7 +10,8 @@
     const videoContainerQuery =
         '[style="display: block;position:relative;width:100%;height:100%;max-height:100%;"]';
     const videoContainer = document.querySelector( videoContainerQuery );
-    videoContainer.style.height = '75vh';
+    if ( videoContainer )
+        videoContainer.style.height = '75vh';
 
     //* fixing scroll
     document.body.style.overflow = 'scroll';
