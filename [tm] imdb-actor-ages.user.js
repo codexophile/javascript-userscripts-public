@@ -1,50 +1,156 @@
+// ==UserScript==
+// @name         IMDb Actor Ages Calculator
+// @description  Adds age calculation buttons to IMDb cast lists
+// @match        https://www.imdb.com/title/*
+// @grant        GM.xmlHttpRequest
+// ==/UserScript==
+
 ( function () {
     'use strict';
-    if ( window.top != window.self ) return; //don't run on frames or iframes
 
-    document.querySelectorAll( `[data-testid="title-cast-item"]` ).forEach( castItemEl => {
-        generateElements( `<button>📅</button>`, castItemEl ).addEventListener( 'click', async ( event ) => {
-            const actorUrl = castItemEl.querySelector( `a` ).href;
-            event.target.textContent = '⌛';
-            try {
-                const result = await getActorAge( actorUrl );
-                event.target.textContent = '✅';
-                alert( `
-                    Age at title release: ${ result[ 0 ] } years
-                    Age at death: ${ result[ 1 ] } years
-                    Age now: ${ result[ 2 ] } years
-                ` );
-            } catch {
-                event.target.textContent = '⚠️';
-            }
-        } );
-    } );
+    // Don't run on frames or iframes
+    if ( window.top !== window.self ) return;
 
-    async function getActorAge ( actorUrl ) {
+    // Constants
+    const SELECTORS = {
+        CAST_ITEM: '[data-testid="title-cast-item"]',
+        ACTOR_LINK: 'a',
+        BIRTH_DATE: '[data-testid="birth-and-death-birthdate"]',
+        DEATH_DATE: '[data-testid="birth-and-death-deathdate"]',
+        RELEASE_DATE: '[href$="/releaseinfo/"]'
+    };
 
-        const actorDoc = await GMXmlHttpRequest( actorUrl );
-        const birthdayElQuery = `[data-testid="birth-and-death-birthdate"]`;
-        const deathDayElQuery = `[data-testid="birth-and-death-deathdate"]`;
+    const BUTTON_STATES = {
+        INITIAL: '📅',
+        LOADING: '⌛',
+        SUCCESS: '✅',
+        ERROR: '⚠️'
+    };
 
-        const birthDay = actorDoc.querySelector( birthdayElQuery ).textContent.replace( /^Born/, '' ).trim();
-        const deathDay = actorDoc.querySelector( deathDayElQuery )?.textContent.replace( /^Died/, '' ).trim();
-        const titleReleaseDay = document.querySelectorAll( '[href$="/releaseinfo/"]' )[ 1 ].textContent.replace( /\(.+?\)/, '' ).trim();
-        const today = new Date();
-
-        const birthDayObj = new Date( birthDay );
-        const titleReleaseDayObj = new Date( titleReleaseDay );
-        const deathDayObj = new Date( deathDay );
-
-        const ageThen = convertToYears( titleReleaseDayObj - birthDayObj );
-        const ageNow = convertToYears( today - birthDayObj );
-        const ageAtDeath = convertToYears( deathDayObj - birthDayObj );
-
-        return [ ageThen, ageAtDeath, ageNow ];
-
-        function convertToYears ( DateObj ) {
-            return Math.floor( ( DateObj ) / ( 1000 * 60 * 60 * 24 * 365.25 ) );
+    class AgeCalculator {
+        static convertToYears ( milliseconds ) {
+            return Math.floor( milliseconds / ( 1000 * 60 * 60 * 24 * 365.25 ) );
         }
 
+        static calculateAges ( birthDate, releaseDate, deathDate = null ) {
+            const today = new Date();
+            const birthDateObj = new Date( birthDate );
+            const releaseDateObj = new Date( releaseDate );
+
+            const ageThen = this.convertToYears( releaseDateObj - birthDateObj );
+            const wouldBeToday = this.convertToYears( today - birthDateObj );
+            const ageAtDeath = deathDate ?
+                this.convertToYears( new Date( deathDate ) - birthDateObj ) :
+                null;
+
+            return { ageThen, wouldBeToday, ageAtDeath };
+        }
     }
 
+    class ActorDataFetcher {
+        static async fetchActorPage ( url ) {
+            try {
+                return await new Promise( ( resolve, reject ) => {
+                    GM.xmlHttpRequest( {
+                        method: 'GET',
+                        url: url,
+                        onload: ( response ) => {
+                            if ( response.status === 200 ) {
+                                const parser = new DOMParser();
+                                resolve( parser.parseFromString( response.responseText, 'text/html' ) );
+                            } else {
+                                reject( new Error( `Failed to fetch actor page: ${ response.status }` ) );
+                            }
+                        },
+                        onerror: () => reject( new Error( 'Network error occurred' ) ),
+                    } );
+                } );
+            } catch ( error ) {
+                throw new Error( `Failed to fetch actor data: ${ error.message }` );
+            }
+        }
+
+        static extractDates ( doc ) {
+            const birthDateEl = doc.querySelector( SELECTORS.BIRTH_DATE );
+            const deathDateEl = doc.querySelector( SELECTORS.DEATH_DATE );
+
+            if ( !birthDateEl ) {
+                throw new Error( 'Birth date not found' );
+            }
+
+            return {
+                birthDate: birthDateEl.textContent.replace( /^Born/, '' ).trim(),
+                deathDate: deathDateEl?.textContent.replace( /^Died/, '' ).trim() || null
+            };
+        }
+    }
+
+    class UIManager {
+        static createAgeButton () {
+            const button = document.createElement( 'button' );
+            button.textContent = BUTTON_STATES.INITIAL;
+            button.classList.add( 'age-calculator-button' );
+            return button;
+        }
+
+        static updateButtonState ( button, state ) {
+            button.textContent = BUTTON_STATES[ state ];
+        }
+
+        static displayAgeInfo ( { ageThen, wouldBeToday, ageAtDeath } ) {
+            const message = [
+                `Age at title release: ${ ageThen } years`,
+                `Would be today: ${ wouldBeToday } years`,
+                ageAtDeath ? `Age at death: ${ ageAtDeath } years` : 'Currently alive'
+            ].join( '\n' );
+
+            alert( message );
+        }
+    }
+
+    async function handleButtonClick ( event, actorUrl ) {
+        const button = event.target;
+        UIManager.updateButtonState( button, 'LOADING' );
+
+        try {
+            // Get release date from current page
+            const releaseDate = document.querySelectorAll( SELECTORS.RELEASE_DATE )[ 1 ]
+                ?.textContent.replace( /\(.+?\)/, '' ).trim();
+
+            if ( !releaseDate ) {
+                throw new Error( 'Release date not found' );
+            }
+
+            // Fetch and process actor data
+            const actorDoc = await ActorDataFetcher.fetchActorPage( actorUrl );
+            const { birthDate, deathDate } = ActorDataFetcher.extractDates( actorDoc );
+
+            // Calculate ages
+            const ages = AgeCalculator.calculateAges( birthDate, releaseDate, deathDate );
+
+            // Update UI
+            UIManager.updateButtonState( button, 'SUCCESS' );
+            UIManager.displayAgeInfo( ages );
+
+        } catch ( error ) {
+            console.error( 'Error calculating age:', error );
+            UIManager.updateButtonState( button, 'ERROR' );
+        }
+    }
+
+    // Initialize buttons for each cast member
+    function initialize () {
+        document.querySelectorAll( SELECTORS.CAST_ITEM ).forEach( castItemEl => {
+            const actorLink = castItemEl.querySelector( SELECTORS.ACTOR_LINK );
+            if ( !actorLink ) return;
+
+            const button = UIManager.createAgeButton();
+            button.addEventListener( 'click', ( event ) =>
+                handleButtonClick( event, actorLink.href ) );
+            castItemEl.appendChild( button );
+        } );
+    }
+
+    // Start the script
+    initialize();
 } )();
