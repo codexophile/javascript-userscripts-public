@@ -49,6 +49,7 @@ function forHumans ( seconds ) {
 
     for ( var i = 0, max = levels.length; i < max; i++ ) {
         if ( levels[ i ][ 0 ] === 0 ) continue;
+        // @ts-ignore
         returntext += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] );
     };
     return returntext.trim();
@@ -146,17 +147,21 @@ async function sbControls ( video, trueNoOfSlots, sbParent ) {
             targetEl.scrollIntoView( { behavior: 'instant', block: 'center' } );
             await asyncTimeout( 250 );
             await blink( targetEl, 250, 2 );
+            // @ts-ignore
         } ).classList.add( 'storyboardControl' );
 
         collapsible.addButton( '💠', null, () => {
             const isHidden = sbParent.style.display === 'none';
             sbParent.style.display = isHidden ? 'block' : 'none';
             sbParent.scrollIntoView( { block: isHidden ? 'start' : 'center' } );
+            // @ts-ignore
         } ).classList.add( 'storyboardControl' );
 
         const sbSlider = generateElements( `
             <input class=storyboardControl type="range" id="sizeSlider" min="50" max="300" value="100">` );
+        // @ts-ignore
         sbSlider.addEventListener( 'input', function () {
+            // @ts-ignore
             const scaleFactor = sbSlider.value / 100;
             setSlotScale( sbParent, scaleFactor );
         } );
@@ -222,6 +227,7 @@ async function storyboard ( {
         storyboardFlex( horizontal, vertical, url, index, trueNoOfSlots )
     );
 
+    // @ts-ignore
     const results = await Promise.allSettled( promises );
     let index = 0;
 
@@ -231,8 +237,11 @@ async function storyboard ( {
             slot.index = index;
             if ( linkToVid ) {
                 const link = wrap( `<a></a>`, slot.querySelector( 'canvas' ) );
+                // @ts-ignore
                 link.href = `${ linkToVid }#slot=${ index }`;
+                // @ts-ignore
                 link.target = '_blank';
+                // @ts-ignore
                 Object.assign( link.style, {
                     display: 'block',
                     width: '100%',
@@ -286,6 +295,7 @@ async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlo
     imgElement.src = imgSrc;
     document.body.appendChild( imgElement );
 
+    // @ts-ignore
     const promise = new Promise( ( resolve, reject ) => {
         imgElement.onload = () => {
             const allSlots = [];
@@ -362,6 +372,7 @@ function getAccentColorFromFavicon () {
     return new Promise( ( resolve ) => {
         // Find the favicon
         const faviconElement = document.querySelector( "link[rel*='icon']" ) || document.createElement( 'link' );
+        // @ts-ignore
         const faviconUrl = faviconElement.href || '/favicon.ico';
 
         // Create an image element to load the favicon
@@ -400,6 +411,7 @@ function getAccentColorFromFavicon () {
             let maxSaturation = 0;
 
             for ( let color of colors ) {
+                // @ts-ignore
                 const [ h, s, l ] = rgbToHsl( color.r, color.g, color.b );
 
                 // Choose the color with highest saturation, avoiding too dark or too light colors
@@ -444,6 +456,7 @@ function getAccentColor () {
 
     for ( let color of uniqueColors ) {
         const [ r, g, b ] = color.match( /\d+/g ).map( Number );
+        // @ts-ignore
         const [ h, s, l ] = rgbToHsl( r, g, b );
 
         // Choose the color with highest saturation, avoiding too dark or too light colors
@@ -517,6 +530,7 @@ function fallbackCopyMethod ( img ) {
     canvas.height = img.height;
     canvas.getContext( '2d' ).drawImage( img, 0, 0 );
     const dataURL = canvas.toDataURL( 'image/png' );
+    // @ts-ignore
     GM_setClipboard( dataURL, 'text/html' );
     console.log( 'Image copied to clipboard using fallback method' );
 }
@@ -524,6 +538,7 @@ function fallbackCopyMethod ( img ) {
 function getFaviconUrl () {
     const links = document.querySelectorAll( 'link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]' );
     if ( links.length > 0 ) {
+        // @ts-ignore
         return links[ 0 ].href;
     } else {
         // Optionally return a default favicon if none is found
@@ -570,6 +585,7 @@ async function load ( url, selector, parent ) {
 function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
 
     return new Promise( ( resolve, reject ) => {
+        // @ts-ignore
         GM_xmlhttpRequest( {
             method: 'GET',
             url: url,
@@ -592,6 +608,7 @@ function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
 function GMXmlHttpRequestAsync ( url ) {
 
     return new Promise( ( resolve, reject ) => {
+        // @ts-ignore
         GM_xmlhttpRequest( {
             url: url,
             onload: response => {
@@ -627,6 +644,7 @@ function sanitizeTrackingLinks ( selector, mainTrackerRegex, secondaryTrackerReg
 }
 
 function beep ( duration, frequency, volume, type, callback ) {
+    // @ts-ignore
     var audioCtx = new ( window.AudioContext || window.webkitAudioContext || window.audioContext );
 
     //All arguments are optional:
@@ -662,6 +680,7 @@ function markElAsProcessed ( el, markedEls, execute ) {
 async function GMXmlHttpReqResponse ( url ) {
 
     const promise = new Promise( ( resolve, reject ) => {
+        // @ts-ignore
         GM_xmlhttpRequest( {
             method: 'GET',
             url: url,
@@ -689,6 +708,7 @@ function generateAllYouTubeSbUrls ( fullYTHtml ) {
         // It can happen sometimes that the storyboard provided is of the ad, instead of the video itself.
         // But this seems to only happen on videos that don't have a storyboard available anyway.
         const temp = 'Storyboard not available for this video!';
+        // @ts-ignore
         return { temp, temp, temp };
     }
 
@@ -748,6 +768,7 @@ function eagerLoad ( selector, load, scrollableEl = window ) {
     let observer = new MutationObserver( ( mutations ) => {
         mutations.forEach( mutation => {
             mutation.addedNodes.forEach( item => {
+                // @ts-ignore
                 if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item );
             } );
         } );
@@ -780,6 +801,7 @@ function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
     let observer = new MutationObserver( ( mutations ) => {
         mutations.forEach( mutation => {
             mutation.addedNodes.forEach( item => {
+                // @ts-ignore
                 if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item );
             } );
         } );
@@ -894,6 +916,7 @@ function dragElement ( targetEl, dragHandleEl ) {
     }
 }
 
+// @ts-ignore
 function blink ( element, interval, numberOfTimes ) {
     return new Promise( async resolve => {
         element.style.transform = 'scale(1.3,1.3)';
@@ -908,6 +931,7 @@ function blink ( element, interval, numberOfTimes ) {
 }
 
 function fauxHistoryPushState ( url, timeout = 3000 ) {
+    // @ts-ignore
     const backgroundTab = GM_openInTab( url, true );
     setTimeout( () => { backgroundTab.close(); }, timeout );
 }
@@ -931,10 +955,14 @@ function removeEmptytextEls ( parent ) {
  * Modern browsers can download files that aren't from same origin this is a workaround to download a remote file
  * @param `url` Remote URL for the file to be downloaded
  */
+// @ts-ignore
 function Download ( { url, filename } ) {
+    // @ts-ignore
     const [ fetching, setFetching ] = useState( false );
+    // @ts-ignore
     const [ error, setError ] = useState( false );
 
+    // @ts-ignore
     const download = ( url, name ) => {
         if ( !url ) {
             throw new Error( "Resource URL not provided! You need to provide one" );
@@ -947,6 +975,7 @@ function Download ( { url, filename } ) {
                 const blobURL = URL.createObjectURL( blob );
                 const a = document.createElement( "a" );
                 a.href = blobURL;
+                // @ts-ignore
                 a.style = "display: none";
 
                 if ( name && name.length ) a.download = name;
@@ -970,6 +999,7 @@ function Download ( { url, filename } ) {
 function isElementInViewport ( el ) {
 
     // Special bonus for those using jQuery
+    // @ts-ignore
     if ( typeof jQuery === "function" && el instanceof jQuery ) {
         el = el[ 0 ];
     }
@@ -1082,6 +1112,7 @@ function waitForNew ( selector ) {
 }
 
 function waitForEach ( selector, callback, options = {} ) {
+    // @ts-ignore
     const { timeout = 0, once = false } = options;
     const processedElements = new Set();
 
@@ -1189,6 +1220,7 @@ function toggle ( els ) {
 function wrap ( wrapperHtml, ...els ) {
     const wrappingElement = generateElements( wrapperHtml, null, true );
     els[ 0 ].before( wrappingElement );
+    // @ts-ignore
     wrappingElement.append( ...els );
     return wrappingElement;
 }
@@ -1217,10 +1249,12 @@ function grandParent ( child, iterations ) {
 
 }
 
+// @ts-ignore
 function generateDoc ( html, returnTrusted ) {
 
     let escapeHTMLPolicy;
 
+    // @ts-ignore
     escapeHTMLPolicy = trustedTypes.createPolicy( "forceInner", {
         createHTML: ( to_escape ) => to_escape
     } );
@@ -1258,13 +1292,16 @@ function generateElements ( html, parent, returnTrusted ) {
 
 function generateToolbarButton ( text, parent, popup, onclick ) {
     const button = generateElements( `<button class=popupButton>${ text }</button>` );
+    // @ts-ignore
     const collapsibleContent = document.querySelector( `#collapsibleContent` );
     parent.append( button );
     // calculateWidthAndExpand( collapsibleContent );
     if ( popup ) {
+        // @ts-ignore
         button.addEventListener( 'click', () => { togglePopup( popup ); } );
     }
     if ( onclick )
+        // @ts-ignore
         button.addEventListener( 'click', onclick );
     return button;
 }
@@ -1285,7 +1322,9 @@ function generateToolbarButton ( text, parent, popup, onclick ) {
 // }
 function createToolbarPopup ( collapsibleContent ) {
     const toolbarPopup = generateElements( '<div></div>' );
+    // @ts-ignore
     toolbarPopup.classList.add( 'toolbarPopup' );
+    // @ts-ignore
     toolbarPopup.style = `
         font-size:  large;
         max-height: 50vh;
