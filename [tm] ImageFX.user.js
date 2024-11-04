@@ -18,7 +18,16 @@
         } );
 
         const $dlBtn = $( `<button id=dlBtn>D</button>` ).appendTo( $imgWrapper );
-        $dlBtn[ 0 ].style = 'z-index: 1; background-color: black;';
+        style( $dlBtn[ 0 ], `
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 1;
+            background-color: black;
+            color: white;
+            border-radius: 5px;
+            border: 5px;
+        `);
 
         $dlBtn.on( 'click', () => {
 
@@ -36,7 +45,10 @@
                 // await waitFor( '#imagefx-seed-input' );
 
                 const uniqueFileName = generateUniqueString( 20 );
-                const promptText = $( 'div[role=textbox]' ).text().replaceAll( 'arrow_drop_down', '' );
+                const promptEl =
+                    document.querySelector( `div[role=textbox]` ) ||
+                    document.querySelector( `img[alt*='A genera'] + div h4` );
+                const promptText = promptEl.textContent.replaceAll( 'arrow_drop_down', '' );
                 // const model = $( 'button[role=combobox] span:contains("Model")' ).next().text();
                 // const seed = $( '#imagefx-seed-input' )[ 0 ].value;
                 // const finalFileName = `GoogleImageFX - ${ model } - ${ seed } - ${ uniqueFileName }`;
