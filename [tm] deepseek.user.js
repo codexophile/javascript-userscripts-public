@@ -4,14 +4,14 @@
 
     waitForEach( 'div:has(>.ds-icon-button)[class]', ( el ) => {
         GM_setClipboard( `global-document-ready-${ document.title }` );
-        if ( document.hidden ) {
-            GM_notification( {
-                title: 'DeepSeek',
-                highlight: true,
-                text: 'Ready',
-                timeout: 1000
-            } );
-        }
+        if ( !document.hidden ) return;
+        GM_notification( {
+            title: 'DeepSeek',
+            highlight: true,
+            text: 'Ready',
+            timeout: 1000
+        } );
+
     } );
 
 } )();
