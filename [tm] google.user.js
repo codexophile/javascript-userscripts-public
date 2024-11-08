@@ -85,7 +85,12 @@
     if ( document.querySelector( `[role="complementary"]` ) ) return;
 
     console.clear();
-    const queryForLocator = '[target="_blank"]:not([class])';
+    const queryForLocator = '[target="_blank"]:has(>h3):not([class])';
+
+    // waitForEach( queryForLocator, ( item ) => {
+    //     console.log( 'xxx', item, grandParent( item, 7 ) );
+    // } );
+
     const locatorEls = document.querySelectorAll( queryForLocator );
     const parentEl = grandParent( locatorEls[ 0 ], 9 );
     const searchEl = document.querySelector( `#search` );
@@ -123,9 +128,6 @@
         padding: 10px;
         width: 100%;
     `);
-
-
-    debugger;
 
     document.querySelector( `[role=navigation]:has([role=navigation])` ).scrollIntoView();
 
