@@ -82,39 +82,51 @@
     // } );
 
     //* Flex view
-    // console.clear();
-    // const queryForLocator = '[target="_blank"]:not([class])';
-    // const locatorEls = document.querySelectorAll( queryForLocator );
-    // const parentEl = grandParent( locatorEls[ 0 ], 9 );
-    // const searchEl = document.querySelector( `#search` );
-    // const mainEl = document.querySelector( `#center_col` );
-    // const rcntEl = document.querySelector( `#rcnt` );
+    if ( document.querySelector( `[role="complementary"]` ) ) return;
 
-    // console.log( parentEl );
-    // locatorEls.forEach( item => {
-    //     const resultEl = grandParent( item, 7 );
-    //     searchEl.append( resultEl );
-    //     style( resultEl, `
-    //         width: 45%;
-    //         padding: 10px;
-    //     `);
-    //     console.log( resultEl );
-    // } );
+    console.clear();
+    const queryForLocator = '[target="_blank"]:not([class])';
+    const locatorEls = document.querySelectorAll( queryForLocator );
+    const parentEl = grandParent( locatorEls[ 0 ], 9 );
+    const searchEl = document.querySelector( `#search` );
+    const mainEl = document.querySelector( `#center_col` );
+    const rcntEl = document.querySelector( `#rcnt` );
+    console.log( { locatorEls, parentEl, searchEl, mainEl, rcntEl } );
 
-    // style( searchEl, `
-    //     display: flex;
-    //     flex-wrap: wrap;
-    //     justify-content: center;
-    // `);
-    // style( rcntEl, `
-    //     max-width: unset !important;
-    // `);
-    // style( mainEl, `
-    //     margin: unset !important;
-    //     padding: 50px;
-    //     width: 100%;
-    // `);
-    // console.log( locatorEls );
+    locatorEls.forEach( item => {
+        const resultEl = grandParent( item, 7 );
+        searchEl.append( resultEl );
+        style( resultEl, `
+            width: 45%;
+            padding: 10px;
+            outline: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 3px;
+        `);
 
+        console.log( resultEl );
+        resultEl.children[ 0 ].style.margin = 'unset';
+        // google search result item with outline rounded corners
+
+    } );
+
+    style( searchEl, `
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    `);
+    style( rcntEl, `
+        max-width: unset !important;
+    `);
+    style( mainEl, `
+        margin: unset !important;
+        padding: 10px;
+        width: 100%;
+    `);
+
+
+    debugger;
+
+    document.querySelector( `[role=navigation]:has([role=navigation])` ).scrollIntoView();
 
 } )();
