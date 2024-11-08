@@ -4,7 +4,7 @@
 ( async function () {
     'use strict';
     //
-    const temp = await GMXmlHttpRequest( 'https://www.gay720.com/gay/asian/watarus-wild-night-kouya-and-wataru/', null, true );
+    const temp = await GMXmlHttpRequest( 'https://www.boyfriendtv.org/videos/1259439/caught-in-locker-room-gay-sex/', null, true );
     GM_setClipboard( temp );
 
 
