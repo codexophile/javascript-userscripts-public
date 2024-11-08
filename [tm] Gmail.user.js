@@ -192,6 +192,8 @@
                                 imgUrls: imgUrls_
                             } );
 
+                            expandBlogtrottrItem();
+
                             break;
 
                         //ANCHOR -  g.xtapes.to
@@ -360,7 +362,13 @@
                             GM_addElement( innerDiv, 'div', { textContent: actorsList } );
 
                             const links = tempDoc_.querySelectorAll( 'p > [data-wpel-link="external"]' );
-                            innerDiv.append( ...links );
+                            const ExtLinksUl = generateElements( '<ul></ul>', innerDiv );
+                            links.forEach( link => {
+                                const linkHref = link.getAttribute( 'href' );
+                                const linkText = link.textContent;
+                                generateElements( `<li><a href=${ linkHref }>${ linkText }</a></li>`, ExtLinksUl );
+                                // GM_addElement( innerDiv, 'a', { href: linkHref, textContent: linkText } );
+                            } );
 
                             addPeekButtons( innerDiv );
 
