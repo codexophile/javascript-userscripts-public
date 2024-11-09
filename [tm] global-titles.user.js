@@ -38,6 +38,7 @@
             this.createDisplayElement();
             this.setupObserver();
             this.setupHoverEffect();
+            this.setupKeyboardControls();
         }
 
         createDisplayElement () {
@@ -76,6 +77,23 @@
                     characterData: true
                 } );
             }
+        }
+
+        setupKeyboardControls () {
+            this.isVisible = true;
+            document.addEventListener( 'keydown', ( event ) => {
+                if ( event.key === 'Control' ) {
+                    this.toggleVisibility();
+                }
+            } );
+        }
+
+        toggleVisibility () {
+            this.isVisible = !this.isVisible;
+            Object.assign( this.element.style, {
+                transform: this.isVisible ? 'translateX(0)' : 'translateX(100%)',
+                transition: 'transform 0.3s ease'
+            } );
         }
 
         setupHoverEffect () {
