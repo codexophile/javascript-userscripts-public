@@ -60,7 +60,11 @@
 
         updateContent () {
             this.element.textContent = document.title;
-            this.element.setAttribute( 'title', document.title );
+            this.element.setAttribute( 'title', `
+                ${ document.title }
+
+Press ctrl to toggle visibility
+            ` );
         }
 
         setupObserver () {
@@ -82,7 +86,7 @@
         setupKeyboardControls () {
             this.isVisible = true;
             document.addEventListener( 'keydown', ( event ) => {
-                if ( event.key === 'Control' ) {
+                if ( event.key === 'Alt' ) {
                     this.toggleVisibility();
                 }
             } );
