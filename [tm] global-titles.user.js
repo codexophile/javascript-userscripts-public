@@ -42,11 +42,14 @@
         }
 
         createDisplayElement () {
-            this.element = document.createElement( 'div' );
-            this.element.classList.add( 'title-display' );
+
+            this.element = generateElements( `<div class=title-display></div>` );
+            this.linkElement = generateElements( `<a target=_blank></a>`, this.element );
+
             this.updateContent();
             this.applyStyles();
             document.body.appendChild( this.element );
+
         }
 
         applyStyles () {
@@ -59,11 +62,11 @@
         }
 
         updateContent () {
-            this.element.textContent = document.title;
+            this.linkElement.textContent = document.title;
+            this.linkElement.href = location.href;
             this.element.setAttribute( 'title', `
                 ${ document.title }
-
-Press ctrl to toggle visibility
+                ${ location.href }
             ` );
         }
 
