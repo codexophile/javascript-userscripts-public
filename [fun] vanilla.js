@@ -13,6 +13,14 @@ function toSeconds ( timeString ) {
 
 }
 
+function toSecondsFromHMS ( hours, minutes, seconds ) {
+    let outputSeconds = 0;
+    if ( hours ) outputSeconds += +hours * 60 * 60;
+    if ( minutes ) outputSeconds += +minutes * 60;
+    if ( seconds ) outputSeconds += +seconds;
+    return outputSeconds;
+}
+
 function generateUniqueString ( length ) {
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -289,7 +297,6 @@ async function storyboardToggleable ( {
 }
 
 async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
-    console.log( imgSrc );
     const imgElement = new Image();
     imgElement.style.display = 'none';
     imgElement.src = imgSrc;
