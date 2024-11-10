@@ -86,7 +86,7 @@ Press ctrl to toggle visibility
         setupKeyboardControls () {
             this.isVisible = true;
             document.addEventListener( 'keydown', ( event ) => {
-                if ( event.key === 'Alt' ) {
+                if ( event.key === 'Shift' ) {
                     this.toggleVisibility();
                 }
             } );
