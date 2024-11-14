@@ -143,7 +143,7 @@ function setSlotSize ( sbParent, newWidth ) {
 
 }
 
-async function sbControls ( video, trueNoOfSlots, sbParent ) {
+async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
 
     const collapsible = await Collapsible();
 
@@ -163,6 +163,17 @@ async function sbControls ( video, trueNoOfSlots, sbParent ) {
             sbParent.scrollIntoView( { block: isHidden ? 'start' : 'center' } );
             // @ts-ignore
         } ).classList.add( 'storyboardControl' );
+
+        const imgUrlsPopupEl = collapsible.addPopup();
+        const imgUrlsListEl = generateElements( `<ol></ol>`, imgUrlsPopupEl );
+        imgUrls.forEach( ( url, index ) => {
+            generateElements( `
+                <li>
+                    <a href="${ url }" target="_blank">${ index }</a>
+                </li>
+            `, imgUrlsListEl );
+        } );
+        collapsible.addButton( '🌆', imgUrlsPopupEl ).classList.add( 'storyboardControl' );
 
         // const sbSlider = generateElements( `
         //     <input class=storyboardControl type="range" id="sizeSlider" min="50" max="300" value="100">` );
@@ -269,7 +280,7 @@ async function storyboard ( {
     } );
 
     setSlotSize( storyboardParent, '200' );
-    sbControls( vidOnPage, trueNoOfSlots, storyboardParent );
+    sbControls( vidOnPage, trueNoOfSlots, storyboardParent, imgUrls );
     return slotsDiv;
 }
 
