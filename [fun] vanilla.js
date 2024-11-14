@@ -145,7 +145,6 @@ function setSlotSize ( sbParent, newWidth ) {
 
 async function sbControls ( video, trueNoOfSlots, sbParent ) {
 
-    await waitFor( '.collapsible-content' );
     const collapsible = await Collapsible();
 
     if ( video ) {
@@ -165,15 +164,13 @@ async function sbControls ( video, trueNoOfSlots, sbParent ) {
             // @ts-ignore
         } ).classList.add( 'storyboardControl' );
 
-        const sbSlider = generateElements( `
-            <input class=storyboardControl type="range" id="sizeSlider" min="50" max="300" value="100">` );
-        // @ts-ignore
-        sbSlider.addEventListener( 'input', function () {
-            // @ts-ignore
-            const scaleFactor = sbSlider.value / 100;
-            setSlotScale( sbParent, scaleFactor );
-        } );
-        collapsible.addElement( sbSlider );
+        // const sbSlider = generateElements( `
+        //     <input class=storyboardControl type="range" id="sizeSlider" min="50" max="300" value="100">` );
+        // sbSlider.addEventListener( 'input', function () {
+        //     const scaleFactor = sbSlider.value / 100;
+        //     setSlotScale( sbParent, scaleFactor );
+        // } );
+        // collapsible.addElement( sbSlider );
 
     }
     else {
