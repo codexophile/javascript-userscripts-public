@@ -1,4 +1,4 @@
-( function () {
+( async function () {
     'use strict';
 
     //* moving video control panel
@@ -13,6 +13,56 @@
     } )();
 
     //* Expand button
+    const collapsibleObj = await Collapsible();
+
+    collapsibleObj.addButton( '♒', null, ( event ) => {
+
+        if ( !location.href.match( /instagram\.com\/.+?\// ) )
+            return;
+
+        const mainEl = document.querySelector( `[style="height: 100%;"]` );
+        const contentEl = mainEl.children[ 0 ];
+        const asideEl = mainEl.children[ 1 ];
+        const contentInnerEl = document.querySelector( 'main>div' );
+
+        style( contentEl, `
+            margin: unset;
+            width: 100%;
+        ` );
+        style( asideEl, `
+            display: none;
+        ` );
+        style( contentInnerEl, `
+            max-width: unset;
+            margin: unset;
+        ` );
+
+        const queryForRows = 'div:has(>div>[href*="/p/"]):not([style])';
+        const rowsParentEl = document.querySelector( queryForRows ).parentElement;
+
+        style( rowsParentEl, `
+            flex-direction: row;
+            flex-wrap: wrap;
+        `);
+
+        waitForEach( queryForRows, ( rowEl ) => {
+
+            rowEl.querySelectorAll( 'div' ).forEach( item => {
+                style( item, `
+                    width: 300px;
+                `);
+            } );
+
+            unwrap( rowEl );
+
+        } );
+
+        event.target.remove();
+
+    } );
+
+    return;
+
     waitFor( '#collapsibleContent' ).then( ( el ) => {
         generateToolbarButton( '♒', el, null, () => {
             if ( !location.href.match( /https:\/\/www\.instagram\.com\/.+?\/$/ ) ) return; // 🛑
@@ -51,6 +101,7 @@
         } );
     } );
 
+
     let observer = new MutationObserver( () => {
 
         //* Suggested accounts on profile pages
@@ -64,10 +115,10 @@
 
             $profilesLocators.each( function () {
                 const linkToProfile = this.querySelector( 'a' ).href;
-                const porfilePicSrc = this.querySelector( 'img' ).src;
+                const profilePicSrc = this.querySelector( 'img' ).src;
                 $profilesWrapper.append( `
                     <a href=${ linkToProfile } style='display: inline-block; width: 33%'>
-                        <img src=${ porfilePicSrc }>
+                        <img src=${ profilePicSrc }>
                     </a>
                 `);
             } );
@@ -119,7 +170,7 @@
             ctx.drawImage( tempImg, 0, 0 );
             const uri = c.toDataURL();
 
-            link = $( `<a></a>` )[ 0 ];
+            const link = $( `<a></a>` )[ 0 ];
             let fileName = `${ getUserId( image ) } - ${ getPostId( image ) } - instagram`;
             link.setAttribute( 'download', `${ fileName }.png` );
             link.setAttribute( 'href', uri );

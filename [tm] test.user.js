@@ -4,7 +4,7 @@
 ( async function () {
     'use strict';
     //
-    const temp = await GMXmlHttpRequest( 'https://www.boyfriendtv.org/videos/1259439/caught-in-locker-room-gay-sex/', null, true );
+    const temp = await GMXmlHttpRequest( 'https://moon-4uemks89-embed.com/ptsd/9k624a2f1t3s', null, true );
     GM_setClipboard( temp );
 
 

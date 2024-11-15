@@ -12,8 +12,6 @@
     // window.addEventListener( 'yt-page-type-changed', findStuff )
     //* adding the main storyboard for the video page
     async function addStoryboard () {
-        console.log( 'yt-player-updated' );
-
         if ( !location.href.includes( '/watch?v=' ) ) return; // 🛑
 
         document.querySelector( `#storyboardParent` )?.remove();

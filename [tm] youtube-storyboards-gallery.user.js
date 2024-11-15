@@ -3,8 +3,11 @@
     if ( window.top !== window.self ) return; // Don't run on frames or iframes
 
     const collapsible = await Collapsible();
+
     const laterlistCollapsibleBtn = collapsible.addButton( 'G', null, async ( event ) => {
+
         try {
+
             const allVideoLinks = gatherAllVideoLinks();
             if ( allVideoLinks.length === 0 ) {
                 console.warn( 'No video links found.' );
@@ -12,17 +15,45 @@
             }
 
             const results = await fetchAllVideoLinks( allVideoLinks );
-            console.log( results );
-            const storyboardUrls = processStoryboards( results );
-            console.log( storyboardUrls );
+            const storyboardObjs = processStoryboards( results );
 
-            openNewWindow( storyboardUrls );
+            const newWindow = window.open( '', '_blank' );
+            if ( !newWindow ) {
+                alert( 'Failed to open new window.' );
+                return;
+            }
+
+            storyboardObjs.forEach( ( item, index ) => {
+                item.href = allVideoLinks[ index ];
+                createStoryboardGalleryItem( item, newWindow );
+            } );
 
         } catch ( error ) {
             console.error( 'An error occurred:', error );
         }
 
     } );
+
+    function createStoryboardGalleryItem ( item, window ) {
+
+        const galleryItemEl = generateElements( `<div class="gallery-item"></div>` );
+        style( galleryItemEl, `
+            border: 1px solid black;
+            border-radius: 5px;
+            margin: 5px;
+        `);
+        const galleryItemLink = generateElements( `<a href="${ item.href }">${ item.href }</a>`, galleryItemEl );
+        storyboardToggleable( {
+            storyboardParent: galleryItemEl,
+            horizontal: 5,
+            vertical: 5,
+            linkToVid: item.href,
+            samplingFq: item.samplingFq,
+            trueNoOfSlots: item.trueNoOfSlots,
+            imgUrls: item.allUrls
+        } );
+        window.document.body.append( galleryItemEl );
+    }
 
     function gatherAllVideoLinks () {
         const videoLinks = Array.from( document.querySelectorAll( 'a[href*="watch?v="]' ), el => el.href );
@@ -41,16 +72,6 @@
             // and returns a storyboard URL
             return generateAllYouTubeSbUrls( response );
         } );
-    }
-
-    function openNewWindow ( urls ) {
-        const newWindow = window.open( '', '_blank' );
-        if ( newWindow ) {
-            const content = urls.map( url => `<div>${ url }</div>` ).join( '' );
-            generateElements( content, newWindow.document.body );
-        } else {
-            console.error( 'Failed to open new window.' );
-        }
     }
 
 } )();
