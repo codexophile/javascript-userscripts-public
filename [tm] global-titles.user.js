@@ -45,6 +45,8 @@
 
             this.element = generateElements( `<div class=title-display></div>` );
             this.linkElement = generateElements( `<a target=_blank></a>`, this.element );
+            this.linkElement.style.color = 'inherit';
+            this.linkElement.style.textDecoration = 'none';
 
             this.updateContent();
             this.applyStyles();
