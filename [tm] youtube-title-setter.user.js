@@ -4,29 +4,23 @@
 
     const API_KEY = 'AIzaSyB41uuRwzZyKBJcMPr-kyNwXBpeOcESOpU';  // Replace this with your YouTube API Key
     const regionCode = 'US';  // Adjust this according to your preferred region
-    let newTitle, newContent;
 
     main();
-    window.addEventListener( 'urlchange', main );
 
     async function main () {
         const videoId = getVideoId();
         if ( !videoId ) return;
+        if ( document.title.includes( '{category:' ) ) return;
         const categories = await fetchCategories();
         const categoryAndTags = await getVideoDetails( videoId, categories );
-        newContent = JSON.stringify( categoryAndTags ).replaceAll( '"', '' );
+        const newContent = JSON.stringify( categoryAndTags ).replaceAll( '"', '' );
         const videoTitleEl = await waitFor( '#title.ytd-watch-metadata yt-formatted-string' );
         const videoTitle = videoTitleEl.innerText;
-        newTitle = `${ videoTitle } | ${ newContent }`;
+        const newTitle = `${ videoTitle } | ${ newContent }`;
         document.title = newTitle;
     }
 
-    let titleObserver = new MutationObserver( () => {
-        if ( document.title.includes( '{category:' ) ) return;
-        if ( newTitle )
-            document.title = newTitle;
-        newTitle = null;
-    } );
+    let titleObserver = new MutationObserver( main );
     titleObserver.observe( document.querySelector( 'title' ), { childList: true, subtree: true } );
 
     // Function to extract video ID from the URL
@@ -38,7 +32,6 @@
     // Function to fetch video details (category and tags)
     async function getVideoDetails ( videoId, categories ) {
         const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${ videoId }&key=${ API_KEY }`;
-
         const response = await GMXmlHttpRequestAsync( apiUrl );
         const data = JSON.parse( response );
         const categoryId = data.items[ 0 ].snippet.categoryId;
@@ -58,7 +51,6 @@
                 categories[ category.id ] = category.snippet.title;
             } );
         }
-        console.log( categories );
         return categories;
     }
 
