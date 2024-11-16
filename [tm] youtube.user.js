@@ -71,30 +71,33 @@
         let video;
 
         //* Initialize stuff once the video element is loaded
-        waitFor( 'video' ).then( ( video ) => {
+        waitFor( 'video' ).then( ( video ) => { let autoPaused = false; } );
 
-            let autoPaused = false;
+        //* Auto pause on losing focus
 
-            //* Auto pause on losing focus
-            window.addEventListener( 'blur', () => {
-                if ( document.visibilityState !== 'hidden' ) {
-                    if ( document.querySelector( '#auto-pause-checkbox' ).checked ) return; // 🛑
-                    if ( video.paused ) return; // 🛑
-                    video.pause();
-                    autoPaused = true;
-                }
-            } );
-            window.addEventListener( 'focus', () => {
-                if ( document.querySelector( '#auto-pause-checkbox' ).checked ) return; // 🛑
-                if ( autoPaused ) video.play();
-            } );
-
-            video.onclick = () => {
-                if ( document.querySelector( '#auto-pause-checkbox' ).checked ) return; // 🛑
-                autoPaused = false;
-            };
-
+        window.addEventListener( 'blur', () => {
+            const autoPauseCheckboxEl = document.querySelector( `#auto-pause-checkbox` );
+            if ( !autoPauseCheckboxEl ) return;
+            if ( document.visibilityState !== 'hidden' ) {
+                if ( autoPauseCheckboxEl.checked ) return; // 🛑
+                if ( video.paused ) return; // 🛑
+                video.pause();
+                autoPaused = true;
+            }
         } );
+        window.addEventListener( 'focus', () => {
+            const autoPauseCheckboxEl = document.querySelector( `#auto-pause-checkbox` );
+            if ( !autoPauseCheckboxEl ) return;
+            if ( autoPauseCheckboxEl.checked ) return; // 🛑
+            if ( autoPaused ) video.play();
+        } );
+
+        video.onclick = () => {
+            const autoPauseCheckboxEl = document.querySelector( `#auto-pause-checkbox` );
+            if ( !autoPauseCheckboxEl ) return;
+            if ( autoPauseCheckboxEl.checked ) return; // 🛑
+            autoPaused = false;
+        };
 
     } );
 
