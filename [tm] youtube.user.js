@@ -63,10 +63,10 @@
 
     }
 
+    //* Auto pause on losing focus
     ( async function () {
         'use strict';
 
-        //* Auto pause on losing focus
 
         const video = await waitFor( 'video' );
         const autoPauseCheckboxEl = await waitFor( `#auto-pause-checkbox` );
@@ -97,17 +97,8 @@
 
     } )();
 
-    window.addEventListener( 'load', () => {
-
-        //* Toggle sidebar
-        waitFor( '#guide[opened]' ).then( () => { $( `#guide-button.ytd-masthead` ).click(); } );
-
-        let video;
-
-
-
-    } );
-
+    //* Toggle sidebar
+    waitFor( '#guide[opened]' ).then( () => { $( `#guide-button.ytd-masthead` ).click(); } );
 
     let observer = new MutationObserver( () => {
 
