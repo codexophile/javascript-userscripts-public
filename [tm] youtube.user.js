@@ -63,6 +63,40 @@
 
     }
 
+    ( async function () {
+        'use strict';
+
+        //* Auto pause on losing focus
+
+        const video = await waitFor( 'video' );
+        const autoPauseCheckboxEl = await waitFor( `#auto-pause-checkbox` );
+        let autoPaused = false;
+
+        window.addEventListener( 'blur', () => {
+            if ( document.visibilityState === 'hidden' ) return;
+            if ( !autoPauseCheckboxEl ) return;
+            if ( autoPauseCheckboxEl.checked ) return; // 🛑
+            if ( video.paused ) return; // 🛑
+            video.pause();
+            autoPaused = true;
+
+        } );
+        window.addEventListener( 'focus', () => {
+            if ( !autoPauseCheckboxEl ) return;
+            if ( autoPauseCheckboxEl.checked ) return; // 🛑
+            if ( !autoPaused ) return;
+            video.play();
+        } );
+
+        video.onclick = () => {
+            if ( !autoPauseCheckboxEl ) return;
+            if ( autoPauseCheckboxEl.checked ) return; // 🛑
+            autoPaused = false;
+        };
+
+
+    } )();
+
     window.addEventListener( 'load', () => {
 
         //* Toggle sidebar
@@ -70,34 +104,7 @@
 
         let video;
 
-        //* Initialize stuff once the video element is loaded
-        waitFor( 'video' ).then( ( video ) => { let autoPaused = false; } );
 
-        //* Auto pause on losing focus
-
-        window.addEventListener( 'blur', () => {
-            const autoPauseCheckboxEl = document.querySelector( `#auto-pause-checkbox` );
-            if ( !autoPauseCheckboxEl ) return;
-            if ( document.visibilityState !== 'hidden' ) {
-                if ( autoPauseCheckboxEl.checked ) return; // 🛑
-                if ( video.paused ) return; // 🛑
-                video.pause();
-                autoPaused = true;
-            }
-        } );
-        window.addEventListener( 'focus', () => {
-            const autoPauseCheckboxEl = document.querySelector( `#auto-pause-checkbox` );
-            if ( !autoPauseCheckboxEl ) return;
-            if ( autoPauseCheckboxEl.checked ) return; // 🛑
-            if ( autoPaused ) video.play();
-        } );
-
-        video.onclick = () => {
-            const autoPauseCheckboxEl = document.querySelector( `#auto-pause-checkbox` );
-            if ( !autoPauseCheckboxEl ) return;
-            if ( autoPauseCheckboxEl.checked ) return; // 🛑
-            autoPaused = false;
-        };
 
     } );
 
