@@ -9,8 +9,10 @@
     } );
     observer.observe( document.body, { childList: true, subtree: true } );
 
-    //#- External links
+    //* External links
+
     const titleMatch = location.href.match( /\/title\/(tt\d+)/ );
+
     if ( titleMatch ) {
 
         const el = document.querySelector( `[data-testid="hero__pageTitle"] ~ ul` );
