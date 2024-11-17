@@ -64,36 +64,44 @@
     }
 
     //* Auto pause on losing focus
+    // Auto pause video on losing focus
     ( async function () {
         'use strict';
 
+        // Helper function to check conditions
+        const shouldIgnoreEvent = ( requirePaused = false ) => {
+            const checkboxEl = document.querySelector( '#auto-pause-checkbox' );
+            if ( document.visibilityState === 'hidden' ) return true;
+            if ( !checkboxEl ) return true;
+            if ( checkboxEl.checked ) return true;
+            return requirePaused && video.paused;
+        };
 
         const video = await waitFor( 'video' );
-        const autoPauseCheckboxEl = await waitFor( `#auto-pause-checkbox` );
+        const autoPauseCheckboxEl = await waitFor( '#auto-pause-checkbox' );
         let autoPaused = false;
 
-        window.addEventListener( 'blur', () => {
-            if ( document.visibilityState === 'hidden' ) return;
-            if ( !autoPauseCheckboxEl ) return;
-            if ( autoPauseCheckboxEl.checked ) return; // 🛑
-            if ( video.paused ) return; // 🛑
+        // Event handlers
+        const handleBlur = () => {
+            if ( shouldIgnoreEvent( true ) ) return;
             video.pause();
             autoPaused = true;
+        };
 
-        } );
-        window.addEventListener( 'focus', () => {
-            if ( !autoPauseCheckboxEl ) return;
-            if ( autoPauseCheckboxEl.checked ) return; // 🛑
-            if ( !autoPaused ) return;
+        const handleFocus = () => {
+            if ( shouldIgnoreEvent() || !autoPaused ) return;
             video.play();
-        } );
+        };
 
-        video.onclick = () => {
-            if ( !autoPauseCheckboxEl ) return;
-            if ( autoPauseCheckboxEl.checked ) return; // 🛑
+        const handleVideoClick = () => {
+            if ( shouldIgnoreEvent() ) return;
             autoPaused = false;
         };
 
+        // Event listeners
+        window.addEventListener( 'blur', handleBlur );
+        window.addEventListener( 'focus', handleFocus );
+        video.addEventListener( 'click', handleVideoClick );
 
     } )();
 
