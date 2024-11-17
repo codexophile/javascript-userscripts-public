@@ -293,16 +293,29 @@ async function storyboardToggleable ( {
     vidOnPage,
     samplingFq = null,
     trueNoOfSlots,
-    imgUrls = [] } ) {
-    const slotsDiv = await storyboard( { storyboardParent, horizontal, vertical, linkToVid, vidOnPage, samplingFq, trueNoOfSlots, imgUrls } );
+    imgUrls = [],
+    maxHeight = '80vh', // Added default value for maxHeight
+} ) {
+    const slotsDiv = await storyboard( {
+        storyboardParent,
+        horizontal,
+        vertical,
+        linkToVid,
+        vidOnPage,
+        samplingFq,
+        trueNoOfSlots,
+        imgUrls,
+    } );
+
     Object.assign( slotsDiv.style, {
         maxWidth: '90vw',
-        maxHeight: '80vh',
+        maxHeight, // Using the optional maxHeight parameter
         overflow: 'auto',
     } );
 
     return slotsDiv;
 }
+
 
 async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
     const imgElement = new Image();
