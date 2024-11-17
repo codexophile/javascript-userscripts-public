@@ -50,7 +50,8 @@
             linkToVid: item.href,
             samplingFq: item.samplingFq,
             trueNoOfSlots: item.trueNoOfSlots,
-            imgUrls: item.allUrls
+            imgUrls: item.allUrls,
+            maxHeight: 'unset'
         } );
         window.document.body.append( galleryItemEl );
     }
