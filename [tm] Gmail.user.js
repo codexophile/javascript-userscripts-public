@@ -156,6 +156,10 @@
 
                     switch ( feedTitle ) {
 
+                        case 'GVUV2':
+                            addPeekButtons( innerDiv, item );
+                            break;
+
                         case 'BoyFriendTv.com - RSS video Feed':
 
                             const bftvDoc = await GMXmlHttpRequest( itemUrl );
