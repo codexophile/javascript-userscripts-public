@@ -154,9 +154,15 @@
 
                     }
 
+                    // console.log( innerDiv );
+
                     switch ( feedTitle ) {
 
                         case 'GVUV2':
+                            // select all p elements that does not have an a element
+                            innerDiv.querySelectorAll( 'p:not(:has(a))' ).forEach( el => {
+                                el.remove();
+                            } );
                             addPeekButtons( innerDiv, item );
                             break;
 
