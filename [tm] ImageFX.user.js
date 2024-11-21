@@ -9,13 +9,7 @@
         const $imgWrapper = $( img ).parent();
         if ( $imgWrapper.has( '#dlBtn' ).length ) return; // 🛑
 
-        GM_notification( {
-            title: 'ImageFX',
-            highlight: true,
-            img: img.src,
-            text: ' ',
-            timeout: 15000
-        } );
+        GM_setClipboard( `global-document-ready-${ document.title }` );
 
         const $dlBtn = $( `<button id=dlBtn>D</button>` ).appendTo( $imgWrapper );
         style( $dlBtn[ 0 ], `
