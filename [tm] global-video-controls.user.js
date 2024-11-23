@@ -187,7 +187,6 @@
         const canvasContext = canvas.getContext( "2d" );
         canvasContext.drawImage( activeVideo, 0, 0 );
         const imageUrl = canvas.toDataURL( 'image/png' ).replace( "image/png", "image/octet-stream" );
-        console.log( imageUrl );
 
         const link = generateElements( '<a></a>', document.body );
         const fileName = document.title ? document.title : location.href;
@@ -204,7 +203,6 @@
         activeVideo.currentTime = 0;
         setInterval( () => {
             activeVideo.currentTime += 60;
-            console.log( activeVideo.currentTime );
         }, 1000 );
         // while ( activeVideo.currentTime < activeVideo.duration ) {
         // }
@@ -216,7 +214,6 @@
         if ( activeElementType === 'input' ) return; // 🛑
 
         if ( !activeVideo ) {
-            console.log( 'No activeVideo' );
             return; // 🛑
         }
 
@@ -227,7 +224,6 @@
             activeVideo.currentTime = activeVideo.currentTime + timeIncrSmall;
         }
         if ( e.key == 'z' ) {
-            console.log( activeVideo );
             speedToggle();
         }
         if ( e.key === 'x' ) {
