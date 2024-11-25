@@ -11,6 +11,11 @@ async function fetchVideoDetails ( videoId, API_KEY ) {
     return data;
 }
 
+async function getChannelId ( videoId, API_KEY ) {
+    data = await fetchVideoDetails( videoId, API_KEY );
+    return data.items[ 0 ].snippet.channelId;
+}
+
 // Function to fetch video details (category and tags)
 async function getVideoCategoryAndTags ( videoId, categories, API_KEY ) {
     data = await fetchVideoDetails( videoId, API_KEY );
