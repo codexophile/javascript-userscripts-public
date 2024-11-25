@@ -1180,6 +1180,48 @@ function empty ( element ) {
 //ANCHOR - JQ Alternatives
 //# JQ Alternatives
 
+function convertElementType ( element, newType ) {
+    // Input validation
+    if ( !( element instanceof HTMLElement ) ) {
+        throw new Error( 'First parameter must be an HTML element' );
+    }
+    if ( typeof newType !== 'string' || !newType.trim() ) {
+        throw new Error( 'Second parameter must be a valid element type string' );
+    }
+
+    // Create the new element
+    const newElement = document.createElement( newType.toLowerCase() );
+
+    // Copy all attributes
+    Array.from( element.attributes ).forEach( attr => {
+        newElement.setAttribute( attr.name, attr.value );
+    } );
+
+    // Copy all child nodes
+    Array.from( element.childNodes ).forEach( child => {
+        newElement.appendChild( child.cloneNode( true ) );
+    } );
+
+    // Copy event listeners if using jQuery
+    if ( window.jQuery ) {
+        const events = jQuery._data( element, 'events' );
+        if ( events ) {
+            for ( let type in events ) {
+                events[ type ].forEach( event => {
+                    jQuery( newElement ).on( type, event.handler );
+                } );
+            }
+        }
+    }
+
+    // Replace the old element with the new one
+    if ( element.parentNode ) {
+        element.parentNode.replaceChild( newElement, element );
+    }
+
+    return newElement;
+}
+
 function elementsToArray ( els ) {
     return els instanceof Element ? [ els ] : els;
 }
