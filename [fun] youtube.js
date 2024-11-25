@@ -4,11 +4,16 @@ function getVideoId () {
     return urlParams.get( 'v' );
 }
 
-// Function to fetch video details (category and tags)
-async function getVideoDetails ( videoId, categories ) {
+async function fetchVideoDetails ( videoId, API_KEY ) {
     const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${ videoId }&key=${ API_KEY }`;
     const response = await GMXmlHttpRequestAsync( apiUrl );
     const data = JSON.parse( response );
+    return data;
+}
+
+// Function to fetch video details (category and tags)
+async function getVideoCategoryAndTags ( videoId, categories, API_KEY ) {
+    data = await fetchVideoDetails( videoId, API_KEY );
     const categoryId = data.items[ 0 ].snippet.categoryId;
     const category = categories[ categoryId ];
     const tags = data.items[ 0 ].snippet.tags;
@@ -16,7 +21,7 @@ async function getVideoDetails ( videoId, categories ) {
 }
 
 // Function to fetch available video categories from YouTube Data API
-async function fetchCategories () {
+async function fetchCategories ( regionCode, API_KEY ) {
     const apiUrl = `https://www.googleapis.com/youtube/v3/videoCategories?part=snippet&regionCode=${ regionCode }&key=${ API_KEY }`;
     const response = await GMXmlHttpRequestAsync( apiUrl );
     const data = JSON.parse( response );

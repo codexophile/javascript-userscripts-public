@@ -8,16 +8,22 @@
     main();
 
     async function main () {
+
         const videoId = getVideoId();
         if ( !videoId ) return;
         if ( document.title.includes( '{category:' ) ) return;
-        const categories = await fetchCategories();
-        const categoryAndTags = await getVideoDetails( videoId, categories );
-        const newContent = JSON.stringify( categoryAndTags ).replaceAll( '"', '' );
-        const videoTitleEl = await waitFor( '#title.ytd-watch-metadata yt-formatted-string' );
-        const videoTitle = videoTitleEl.innerText;
-        const newTitle = `${ videoTitle } | ${ newContent }`;
-        document.title = newTitle;
+
+        try {
+            const categories = await fetchCategories( regionCode, API_KEY );
+            const categoryAndTags = await getVideoCategoryAndTags( videoId, categories, API_KEY );
+            const newContent = JSON.stringify( categoryAndTags ).replaceAll( '"', '' );
+            const videoTitleEl = await waitFor( '#title.ytd-watch-metadata yt-formatted-string' );
+            const videoTitle = videoTitleEl.innerText;
+            const newTitle = `${ videoTitle } | ${ newContent }`;
+            document.title = newTitle;
+        } catch ( error ) {
+            alert( error );
+        }
     }
 
     let titleObserver = new MutationObserver( main );
