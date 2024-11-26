@@ -20,7 +20,6 @@
 
         if ( !event.altKey ) return; // 🛑
 
-        console.log( 'altkey present' );
         switch ( event.key ) {
 
             case "d": // next
@@ -62,15 +61,12 @@
     }
 
     function filter () {
-        waitForEach( '[href*="/t/"]:has(img)', ( element ) => {
-            const $chatItem = $( element ).parent().parent().parent().parent().parent();
-            if ( $chatItem.has( 'span[data-visualcompletion="ignore"]' ).length ) // based on the unread marker
-                // if ( $this.has( ':contains("You: ")' ).length )                  // based on text 'You" '
+        document.querySelectorAll( `[href*="/t/"]:has(img)` ).forEach( chatEl => {
+            if ( chatEl.querySelectorAll( 'span[data-visualcompletion="ignore"]' ).length ) // based on the unread marker
+                // if ( chatEl.has( ':contains("You: ")' ).length )                  // based on text 'You" '
                 return;
-            $chatItem.hide();
+            chatEl.style.display = 'none';
         } );
-        // observerHandler();
-        // observer.observe( document.body, { childList: true, subtree: true } );
     }
 
 } )();
