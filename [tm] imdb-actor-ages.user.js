@@ -78,9 +78,27 @@
                 throw new Error( 'Birth date not found' );
             }
 
+            const birthDateText = birthDateEl.textContent.replace( /^Born/, '' ).trim();
+            const deathDateText = deathDateEl?.textContent.replace( /^Died/, '' ).trim() || null;
+
+            // Year validation
+            const yearRegex = /\d{4}/;
+            if ( !yearRegex.test( birthDateText ) ) {
+                const errorText = `Incomplete birth date information: ${ birthDateText }. Full year is required.`;
+                alert( errorText );
+                throw new Error( errorText );
+            }
+
+            // Optional: Additional validation for death date if present
+            if ( deathDateText && !yearRegex.test( deathDateText ) ) {
+                const errorText = `Incomplete death date information: ${ deathDateText }. Full year is required.`;
+                alert( errorText );
+                throw new Error( errorText );
+            }
+
             return {
-                birthDate: birthDateEl.textContent.replace( /^Born/, '' ).trim(),
-                deathDate: deathDateEl?.textContent.replace( /^Died/, '' ).trim() || null
+                birthDate: birthDateText,
+                deathDate: deathDateText
             };
         }
     }
@@ -133,7 +151,7 @@
             UIManager.displayAgeInfo( ages );
 
         } catch ( error ) {
-            console.error( 'Error calculating age:', error );
+            alert( 'Error calculating age:', error );
             UIManager.updateButtonState( button, 'ERROR' );
         }
     }
