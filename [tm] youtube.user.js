@@ -1,29 +1,7 @@
 ( function () {
     'use strict';
 
-    //!SECTION Shortcuts
-
-    // window.addEventListener( 'keydown', ( event ) => {
-
-    //     const $activeTranscriptEl = document.querySelector( `ytd-transcript-segment-renderer.active` )
-
-    //     if ( event.key === 'Home' || event.key === 'End' ) {
-    //         event.preventDefault()
-    //         if ( !$activeTranscriptEl )
-    //             document.querySelector( 'ytd-video-description-transcript-section-renderer button' ).click()
-    //     }
-
-    //     let $elToBeClicked
-    //     if ( event.key === 'Home' )
-    //         $elToBeClicked = $activeTranscriptEl.prevAll( 'ytd-transcript-segment-renderer' )
-    //     if ( event.key === 'End' )
-    //         $elToBeClicked = $activeTranscriptEl.nextAll( 'ytd-transcript-segment-renderer' )
-
-    //     $elToBeClicked.first().children().click()
-
-    // } )
-
-    //!SECTION
+    const API_KEY = 'AIzaSyB41uuRwzZyKBJcMPr-kyNwXBpeOcESOpU';  // Replace this with your YouTube API Key
 
     waitFor( `#video-controlPanel` ).then( ( el ) => {
         el.style.top = '0px';
@@ -108,6 +86,34 @@
     //* Toggle sidebar
     waitFor( '#guide[opened]' ).then( () => { $( `#guide-button.ytd-masthead` ).click(); } );
 
+    //* channel names to a els
+    waitForEach( 'yt-formatted-string.ytd-channel-name', async ( channelNameEl ) => {
+
+        const closesAEl = channelNameEl.closest( 'a' );
+        if ( !closesAEl ) return;
+        const videoUrl = closesAEl.href;
+        const videoId = videoUrl.match( /\/watch\?v=(.{11})/ )[ 1 ];
+        if ( !videoId ) return;
+
+        const channelId = await getChannelId( videoId, API_KEY );
+        const channelUrl = `https://www.youtube.com/channel/${ channelId }/videos`;
+
+        const newChannelNameEl = convertElementType( channelNameEl, 'a' );
+        newChannelNameEl.href = channelUrl;
+        newChannelNameEl.target = '_blank';
+        style( newChannelNameEl, `
+            color: inherit;
+            text-decoration: none;
+        `);
+
+    } );
+
+    //* reddit links
+    waitForEach( `[href^="https://www.reddit"], [href^="https://reddit"]`, ( linkEl ) => {
+        linkEl.href = linkEl.href.replace( 'https://reddit', 'https://old.reddit' );
+        linkEl.href = linkEl.href.replace( 'https://www.reddit', 'https://old.reddit' );
+    } );
+
     let observer = new MutationObserver( () => {
 
         //* @channelName links -> @channelName/videos/
@@ -115,13 +121,6 @@
             if ( link.href.match( /\/videos\/?$/ ) ) return;
             link.href += '/videos/';
         } );
-
-        //* Watch later items
-        if ( location.href.includes( '?list=WL' ) ) {
-            // const vidLinks = document.querySelectorAll( `a#video-title:not([target])` )
-            const vidLinks = document.querySelectorAll( `ytd-playlist-video-renderer a` );
-            vidLinks.forEach( link => { link.setAttribute( 'target', '_blank' ); } );
-        }
 
         //* fixing hrefs
 
