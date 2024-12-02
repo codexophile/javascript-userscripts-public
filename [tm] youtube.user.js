@@ -108,15 +108,12 @@
 
     } );
 
-<<<<<<< HEAD
     //* reddit links
     waitForEach( `[href^="https://www.reddit"], [href^="https://reddit"]`, ( linkEl ) => {
         linkEl.href = linkEl.href.replace( 'https://reddit', 'https://old.reddit' );
         linkEl.href = linkEl.href.replace( 'https://www.reddit', 'https://old.reddit' );
     } );
 
-=======
->>>>>>> f629f23946296abcd1b437eb3fab63262f1c6fe6
     let observer = new MutationObserver( () => {
 
         //* @channelName links -> @channelName/videos/
