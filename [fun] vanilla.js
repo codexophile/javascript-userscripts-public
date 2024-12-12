@@ -270,7 +270,8 @@ async function storyboard ( {
   vidOnPage,
   samplingFq = null,
   trueNoOfSlots,
-  imgUrls = []
+  imgUrls = [],
+  offset = 0
 } ) {
 
   const slotsDiv = document.createElement( 'div' );
@@ -311,9 +312,12 @@ async function storyboard ( {
         // slot.append( link );
       }
       slot.addEventListener( 'click', ev => {
-        const samplingFreq = samplingFq || ( vidOnPage.duration / trueNoOfSlots );
+        const samplingFreq =
+          samplingFq ||
+          ( vidOnPage.duration / trueNoOfSlots ) ||
+          ( vidOnPage.duration / ( horizontal * vertical ) );
         // const samplingFreq = samplingFq || ( vidOnPage.duration / ( horizontal * vertical ) );
-        const newTime = ev.target.closest( 'div' ).index * samplingFreq;
+        const newTime = ( ev.target.closest( 'div' ).index + offset ) * samplingFreq;
         vidOnPage.currentTime = newTime;
         vidOnPage.play();
         vidOnPage.scrollIntoView( { behavior: 'instant', block: 'center' } );
