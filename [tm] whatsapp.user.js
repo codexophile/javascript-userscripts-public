@@ -1,32 +1,58 @@
 ( function () {
   'use strict';
 
-  setInterval( () => {
+  const USER_TIMEZONE_MAP = {
+    'Kevin Andrés': 'America/Guayaquil',
+    'Ravi Tissera': 'Europe/Paris'
+  };
+
+  function updateUserTime () {
+
     const profileNameParentEl = document.querySelector( '[title="Profile details"]+[role=button]' );
     if ( !profileNameParentEl ) return;
-    let userTimeEl = document.querySelector( '#user-time' );
-    const profileNameEl = profileNameParentEl.querySelector( '[aria-label' );
-    let userTime = '';
-    switch ( profileNameEl.textContent ) {
-      case 'Kevin Andrés':
-        userTime = getTimezoneDateTime( 'America/Guayaquil' ).fullDateTime;
-        break;
-    }
-    if ( !userTime ) return;
-    if ( !userTimeEl )
-      userTimeEl = generateElements( `<div id=user-time></div>`, profileNameParentEl );
-    userTimeEl.textContent = userTime;
-  }, 1000 );
 
-  return;
-  waitForEach( '[title="Profile details"]+[role=button]', ( el ) => {
-    switch ( el.textContent ) {
-      case 'Kevin Andrés':
-        const time = getTimezoneDateTime( 'America/Guayaquil' ).fullDateTime;
-        console.log( time );
-        break;
+    const profileNameEl = profileNameParentEl.querySelector( '[dir="auto"]' );
+    if ( !profileNameEl ) return;
+
+    const userName = profileNameEl.textContent;
+    const userTimezone = USER_TIMEZONE_MAP[ userName ];
+    if ( !userTimezone ) return;
+
+    try {
+      const userTime = getTimezoneDateTime( userTimezone ).fullDateTime;
+
+      let userTimeEl = document.getElementById( 'user-time' );
+      if ( !userTimeEl ) {
+        userTimeEl = document.createElement( 'div' );
+        userTimeEl.id = 'user-time';
+        profileNameParentEl.appendChild( userTimeEl );
+      }
+
+      userTimeEl.textContent = `${ userTimezone } - ${ userTime }`;
+    } catch ( error ) {
+      console.error( `Failed to update time for ${ userName }:`, error );
     }
-  } );
+  }
+
+  // Use requestAnimationFrame for more efficient periodic updates
+  function startUserTimeUpdates () {
+    let lastUpdateTime = 0;
+
+    function checkAndUpdateTime ( currentTime ) {
+      // Update every second (1000 ms)
+      if ( currentTime - lastUpdateTime >= 1000 ) {
+        updateUserTime();
+        lastUpdateTime = currentTime;
+      }
+
+      requestAnimationFrame( checkAndUpdateTime );
+    }
+
+    requestAnimationFrame( checkAndUpdateTime );
+  }
+
+  // Start the updates
+  startUserTimeUpdates();
 
   //* Auto exiting when inactive
   return;
