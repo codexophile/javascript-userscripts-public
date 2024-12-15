@@ -3,7 +3,10 @@
 
   const USER_TIMEZONE_MAP = {
     'Kevin Andrés': 'America/Guayaquil',
-    'Ravi Tissera': 'Europe/Paris'
+    'Ravi Tissera': 'Europe/Paris',
+    'Vidyuth Rajan': 'Asia/Muscat',
+    'Gelo Santos': 'Asia/Dubai',
+    'Chathun Hashan Komasaru': 'Europe/London'
   };
 
   function updateUserTime () {
@@ -53,6 +56,20 @@
 
   // Start the updates
   startUserTimeUpdates();
+
+  //* Local time for message items
+  waitForEach( '[data-pre-plain-text] [aria-hidden]', ( timestampEl ) => {
+    try {
+      const grandParentEl = grandParent( timestampEl, 4 );
+      // console.log( timestampDisplayEl );
+      const timestampDisplayEl = grandParentEl.querySelector( '[dir=auto]:not(.copyable-text)' );
+      timestampDisplayEl.textContent = `${ timestampDisplayEl.textContent } • test`;
+      timestampDisplayEl.parentElement.parentElement.style.marginTop = 'unset';
+    } catch ( error ) {
+      alert( error );
+      console.log( error );
+    }
+  } );
 
   //* Auto exiting when inactive
   return;
