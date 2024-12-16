@@ -83,6 +83,51 @@
 
   } )();
 
+  GM_addStyle( `
+
+        :is(
+            ytd-rich-item-renderer,
+            ytd-compact-video-renderer,
+            ytd-video-renderer,
+            ytd-playlist-video-renderer > #content
+        ):hover > #buttonsContainer { display: flex }
+        #buttonsContainer { display: none }
+
+        #buttonsContainer > * {
+
+            width: 30px;
+            height: 25px;
+            line-height: 25px;
+            /* making height = line-height, makes text center vertically */
+            text-align: center;
+            color: white;
+            text-shadow: white 0px 0px 10px;
+
+            display: block;
+            border-radius: 4px;
+            margin: 1px;
+            border: none;
+            background-color: #000000;
+        }
+        #buttonsContainer > *:hover {
+        background: #202020;
+        }
+        #buttonsContainer > *:active {
+            transform: matrix( 0.9, 0, 0, 0.9, 0, 2 );
+        }
+        #peekFullResThumb {
+            text-decoration: none;
+        }
+
+    ` );
+
+  const queryForThumbEls = 'ytd-video-renderer, ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-playlist-video-renderer > #content';
+  waitForEach( queryForThumbEls, ( thumbEl ) => {
+    const buttonsContainer = generateElements( `<div id=buttonsContainer></div>` );
+    thumbEl.append( buttonsContainer );
+    buttonsContainer.style = 'position: absolute; left: 5px; top: 5px;';
+  } );
+
   //* Toggle sidebar
   waitFor( '#guide[opened]' ).then( () => { $( `#guide-button.ytd-masthead` ).click(); } );
 
