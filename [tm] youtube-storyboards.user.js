@@ -1,43 +1,43 @@
 ( function () {
-    'use strict';
+  'use strict';
 
-    //? events in order they occur
-    // window.addEventListener( 'yt-navigate', findStuff )
-    // window.addEventListener( 'urlchange', findStuff )
-    //
-    window.addEventListener( 'yt-navigate-finish', addStoryboard );
-    // window.addEventListener( 'yt-page-data-updated', addStoryboard )
-    //# window.addEventListener( 'yt-player-updated', addStoryboard )
-    //? these didn't fire
-    // window.addEventListener( 'yt-page-type-changed', findStuff )
-    //* adding the main storyboard for the video page
-    async function addStoryboard () {
-        if ( !location.href.includes( '/watch?v=' ) ) return; // 🛑
+  //? events in order they occur
+  // window.addEventListener( 'yt-navigate', findStuff )
+  // window.addEventListener( 'urlchange', findStuff )
+  //
+  window.addEventListener( 'yt-navigate-finish', addStoryboard );
+  // window.addEventListener( 'yt-page-data-updated', addStoryboard )
+  //# window.addEventListener( 'yt-player-updated', addStoryboard )
+  //? these didn't fire
+  // window.addEventListener( 'yt-page-type-changed', findStuff )
+  //* adding the main storyboard for the video page
+  async function addStoryboard () {
+    if ( !location.href.includes( '/watch?v=' ) ) return; // 🛑
 
-        document.querySelector( `#storyboardParent` )?.remove();
-        document.querySelectorAll( `#collapsibleContent > .storyboardControl` ).forEach( item => { item.remove(); } );
+    document.querySelector( `#storyboardParent` )?.remove();
+    document.querySelectorAll( `#collapsibleContent > .storyboardControl` ).forEach( item => { item.remove(); } );
 
-        const sbLocator = await waitFor( '#above-the-fold > #top-row' );
-        const sbParent = generateElements( `<div id=storyboardParent></div>` );
-        sbLocator.after( sbParent );
-        const ytHtml = await GMXmlHttpReqResponse( location.href );
-        const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
-        const video = document.querySelector( `video` );
-        storyboard( {
-            storyboardParent: sbParent,
-            horizontal: 5,
-            vertical: 5,
-            vidOnPage: video,
-            samplingFq: samplingFq,
-            trueNoOfSlots: trueNoOfSlots,
-            imgUrls: [ ...allUrls ]
-        } );
+    const sbLocator = await waitFor( '#above-the-fold > #top-row' );
+    const sbParent = generateElements( `<div id=storyboardParent></div>` );
+    sbLocator.after( sbParent );
+    const ytHtml = await GMXmlHttpReqResponse( location.href );
+    const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
+    const video = document.querySelector( `video` );
+    storyboard( {
+      storyboardParent: sbParent,
+      horizontal: 5,
+      vertical: 5,
+      vidOnPage: video,
+      samplingFq: samplingFq,
+      trueNoOfSlots: trueNoOfSlots,
+      imgUrls: [ ...allUrls ]
+    } );
 
-    }
+  }
 
-    const modalBoxEl = new modalBox();
+  const modalBoxEl = new modalBox();
 
-    GM_addStyle( `
+  GM_addStyle( `
 
         :is(
             ytd-rich-item-renderer,
@@ -75,129 +75,95 @@
 
     ` );
 
-    let observer = new MutationObserver( observerHandler );
-    observer.observe( document.body, { childList: true, subtree: true } );
+  let observer = new MutationObserver( observerHandler );
+  observer.observe( document.body, { childList: true, subtree: true } );
 
-    function observerHandler () {
+  function observerHandler () {
 
-        //* adding peek buttons
+    //* adding peek buttons
 
-        let peekParentQuery;
-        let videoLinkWithTitleQuery;
-        if ( location.href.includes( '/results?' ) ) {
-            peekParentQuery = 'ytd-video-renderer';
-            videoLinkWithTitleQuery = 'a#video-title';
-        }
-        if ( location.href.includes( '/watch?v=' ) ) {
-            peekParentQuery = 'ytd-compact-video-renderer';
-            videoLinkWithTitleQuery = 'a:has(#video-title)';
-        }
-        if ( location.href.match( /https:\/\/www.youtube.com\/$/ )
-            // matches: https://www.youtube.com/ 
-            || location.href.match( /\/(@.+?|channel)\// ) ) {
-            // matches https://www.youtube.com/@comedyland573/videos or https://www.youtube.com/channel/UClfq6WEgQm3MG6b30xJhX3g/videos
-            peekParentQuery = `ytd-rich-item-renderer`;
-            videoLinkWithTitleQuery = '#video-title-link';
-        }
-        if ( location.href === 'https://www.youtube.com/playlist?list=WL' )
-            peekParentQuery = 'ytd-playlist-video-renderer > #content';
+    let peekParentQuery;
+    let videoLinkWithTitleQuery;
+    if ( location.href.includes( '/results?' ) ) {
+      peekParentQuery = 'ytd-video-renderer';
+      videoLinkWithTitleQuery = 'a#video-title';
+    }
+    if ( location.href.includes( '/watch?v=' ) ) {
+      peekParentQuery = 'ytd-compact-video-renderer';
+      videoLinkWithTitleQuery = 'a:has(#video-title)';
+    }
+    if ( location.href.match( /https:\/\/www.youtube.com\/$/ )
+      // matches: https://www.youtube.com/ 
+      || location.href.match( /\/(@.+?|channel)\// ) ) {
+      // matches https://www.youtube.com/@comedyland573/videos or https://www.youtube.com/channel/UClfq6WEgQm3MG6b30xJhX3g/videos
+      peekParentQuery = `ytd-rich-item-renderer`;
+      videoLinkWithTitleQuery = '#video-title-link';
+    }
+    if ( location.href === 'https://www.youtube.com/playlist?list=WL' )
+      peekParentQuery = 'ytd-playlist-video-renderer > #content';
 
-        const videoThumbs = document.querySelectorAll( peekParentQuery );
-        videoThumbs.forEach( function ( thumb ) {
+    const videoThumbs = document.querySelectorAll( peekParentQuery );
+    videoThumbs.forEach( function ( thumb ) {
 
-            if ( thumb.querySelectorAll( '#buttonsContainer' ).length ) return; // 🛑
+      if ( thumb.querySelectorAll( '#buttonsContainer' ).length ) return; // 🛑
 
-            const buttonsContainer = generateElements( `<div id=buttonsContainer></div>` );
-            thumb.append( buttonsContainer );
-            buttonsContainer.style = 'position: absolute; left: 5px; top: 5px;';
+      const buttonsContainer = generateElements( `<div id=buttonsContainer></div>` );
+      thumb.append( buttonsContainer );
+      buttonsContainer.style = 'position: absolute; left: 5px; top: 5px;';
 
-            if ( !buttonsContainer.querySelectorAll( '.peekButton' ).length ) {
-                const peekButton = generateElements( `<button class=peekButton>🫣</button>` );
-                buttonsContainer.append( peekButton );
-                peekButton.addEventListener( 'click', async () => {
+      if ( !buttonsContainer.querySelectorAll( '.peekButton' ).length ) {
+        const peekButton = generateElements( `<button class=peekButton>🫣</button>` );
+        buttonsContainer.append( peekButton );
+        peekButton.addEventListener( 'click', async () => {
 
-                    const videoLink = thumb.querySelector( videoLinkWithTitleQuery );
-                    const videoUrl = videoLink.href;
+          const videoLink = thumb.querySelector( videoLinkWithTitleQuery );
+          const videoUrl = videoLink.href;
 
-                    const ytHtml = await GMXmlHttpReqResponse( videoUrl );
-                    const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
+          const ytHtml = await GMXmlHttpReqResponse( videoUrl );
+          const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
 
-                    const headerLink = generateElements(
-                        `<a href=${ videoUrl } target=_blank> ${ videoLink.textContent } </a>` );
-                    const modalBody = generateElements( '<div></div>' );
+          const headerLink = generateElements(
+            `<a href=${ videoUrl } target=_blank> ${ videoLink.textContent } </a>` );
+          const modalBody = generateElements( '<div></div>' );
 
-                    const modal = new ModalBox( {
-                        width: '95vw',
-                        backgroundColor: '#f0f0f0',
-                        headerColor: '#3498db',
-                        animation: true,
-                        closeOnEscape: true,
-                        closeOnOutsideClick: true
-                    } );
+          const modal = new ModalBox( {
+            width: '95vw',
+            backgroundColor: '#f0f0f0',
+            headerColor: '#3498db',
+            animation: true,
+            closeOnEscape: true,
+            closeOnOutsideClick: true
+          } );
 
-                    console.log( modal );
+          console.log( modal );
 
-                    modal.setTitle( headerLink );
-                    modal.setContent( modalBody );
-                    modal.show();
+          modal.setTitle( headerLink );
+          modal.setContent( modalBody );
+          modal.show();
 
-                    await storyboard( {
-                        storyboardParent: modalBody,
-                        horizontal: 5,
-                        vertical: 5,
-                        linkToVid: videoUrl,
-                        trueNoOfSlots,
-                        imgUrls: [ ...allUrls ]
-                    } );
-
-                } );
-            }
-
-            if ( !buttonsContainer.querySelectorAll( ' #sbHorzBtn' ).length ) {
-
-                const sbHorzBtn = generateElements( `<button id=sbHorzBtn>🎞️</button>` );
-                buttonsContainer.append( sbHorzBtn );
-                sbHorzBtn.addEventListener( 'click', async ( event ) => {
-
-                    const nextElIsSbParent = next( event.target.parentElement.parentElement, '.horSbParent' );
-                    if ( nextElIsSbParent ) {
-                        toggle( nextElIsSbParent );
-                        return;
-                    }
-                    const wrappers = parents( event.target, '#contents.ytd-rich-grid-row, ytd-rich-grid-row' );
-                    wrappers.forEach( item => { unwrap( item ); } );
-
-                    const videoLink = thumb.querySelector( videoLinkWithTitleQuery );
-                    const videoUrl = videoLink.href;
-
-                    const ytHtml = await GMXmlHttpReqResponse( videoUrl );
-                    const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
-                    const horSbParent = generateElements( '<div class=horSbParent style="width: -webkit-fill-available"></div>' );
-                    thumb.after( horSbParent );
-
-                    await storyboard( {
-                        parent: horSbParent,
-                        horizontal: 5,
-                        vertical: 5,
-                        linkToVid: videoUrl,
-                        trueNoOfSlots,
-                        imgUrls: [ ...allUrls ]
-                    } );
-
-                } );
-            }
-
-            if ( !thumb.querySelectorAll( '#peekFullResThumb' ).length ) {
-                const videoLink = thumb.querySelector( 'a#thumbnail' );
-                if ( !videoLink ) return;
-                const videoId = videoLink.href.match( /(\/shorts\/|\?v=)(.{11})/ )[ 2 ];
-                const fullResSrc = `https://i.ytimg.com/vi_webp/${ videoId }/maxresdefault.webp`;
-                const peekfullResThumbBtn = generateElements( `<a id=peekFullResThumb href=${ fullResSrc } target=_blank>🖼️</a>` );
-                buttonsContainer.append( peekfullResThumbBtn );
-            }
+          await storyboard( {
+            storyboardParent: modalBody,
+            horizontal: 5,
+            vertical: 5,
+            linkToVid: videoUrl,
+            trueNoOfSlots,
+            imgUrls: [ ...allUrls ]
+          } );
 
         } );
-    }
+      }
+
+      if ( !thumb.querySelectorAll( '#peekFullResThumb' ).length ) {
+        const videoLink = thumb.querySelector( 'a#thumbnail' );
+        if ( !videoLink ) return;
+        const videoId = videoLink.href.match( /(\/shorts\/|\?v=)(.{11})/ )[ 2 ];
+        const fullResSrc = `https://i.ytimg.com/vi_webp/${ videoId }/maxresdefault.webp`;
+        const peekfullResThumbBtn = generateElements( `<a id=peekFullResThumb href=${ fullResSrc } target=_blank>🖼️</a>` );
+        buttonsContainer.append( peekfullResThumbBtn );
+      }
+
+    } );
+  }
 
 
 
