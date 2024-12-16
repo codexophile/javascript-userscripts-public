@@ -103,7 +103,7 @@ const styles = `
     margin: ${ margins } 0;
   }
 
-  .numinp, button, .button {
+  #video-controlPanel :is(.numinp, button, .button) {
     background-color: #3498db;
     border: none;
     color: #fff;
@@ -114,11 +114,11 @@ const styles = `
     transition: background-color 0.3s;
   }
 
-  .numinp:hover, button:hover, .button:hover {
+  #video-controlPanel :is(.numinp:hover, button:hover, .button:hover) {
     background-color: #2980b9;
   }
 
-  input[type="checkbox"] {
+  #video-controlPanel input[type="checkbox"] {
     margin: 0 ${ margins };
   }
 
