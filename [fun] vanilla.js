@@ -1,5 +1,32 @@
 //ANCHOR - Text functions
 
+function convertTimeToTimezone ( timeString, sourceTimezone, targetTimezone ) {
+  // Validate input
+  if ( !/^\d{2}:\d{2}$/.test( timeString ) ) {
+    throw new Error( 'Invalid time format. Use HH:mm (24-hour format)' );
+  }
+
+  // Parse the input time
+  const [ hours, minutes ] = timeString.split( ':' ).map( Number );
+
+  // Create a Date object in the source timezone
+  const sourceDate = new Date().toLocaleString( 'en-US', { timeZone: sourceTimezone } );
+  const sourceDateObj = new Date( sourceDate );
+  sourceDateObj.setHours( hours, minutes, 0, 0 );
+
+  // Convert to target timezone
+  const targetTime = sourceDateObj.toLocaleString( 'en-US', {
+    timeZone: targetTimezone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  } );
+
+  // Extract and format time
+  const [ targetTimeString ] = targetTime.split( ',' ).reverse();
+  return targetTimeString.trim();
+}
+
 function getTimezoneDateTime ( timeZone ) {
   try {
     // Validate timezone input
