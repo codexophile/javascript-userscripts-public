@@ -4,20 +4,30 @@
   const USER_TIMEZONE_MAP = {
     'Kevin Andrés': 'America/Guayaquil',
     'Ravi Tissera': 'Europe/Paris',
+    'Chathun Hashan Komasaru': 'Europe/London',
     'Vidyuth Rajan': 'Asia/Muscat',
     'Gelo Santos': 'Asia/Dubai',
-    'Chathun Hashan Komasaru': 'Europe/London'
+    'Pasi': 'Australia/Perth'
   };
 
-  function updateUserTime () {
-
+  function getUserName () {
     const profileNameParentEl = document.querySelector( '[title="Profile details"]+[role=button]' );
     if ( !profileNameParentEl ) return;
 
     const profileNameEl = profileNameParentEl.querySelector( '[dir="auto"]' );
     if ( !profileNameEl ) return;
 
-    const userName = profileNameEl.textContent;
+    return profileNameEl.textContent;
+  }
+
+  function updateUserTime () {
+
+    const profileNameParentEl = document.querySelector( '[title="Profile details"]+[role=button]' );
+    if ( !profileNameParentEl ) return;
+
+    const userName = getUserName();
+    if ( !userName ) return;
+
     const userTimezone = USER_TIMEZONE_MAP[ userName ];
     if ( !userTimezone ) return;
 
@@ -60,13 +70,22 @@
   //* Local time for message items
   waitForEach( '[data-pre-plain-text] [aria-hidden]', ( timestampEl ) => {
     try {
+
+      const userName = getUserName();
+      if ( !userName ) return;
+
+      const userTimezone = USER_TIMEZONE_MAP[ userName ];
+      if ( !userTimezone ) return;
+
       const grandParentEl = grandParent( timestampEl, 4 );
-      // console.log( timestampDisplayEl );
       const timestampDisplayEl = grandParentEl.querySelector( '[dir=auto]:not(.copyable-text)' );
-      timestampDisplayEl.textContent = `${ timestampDisplayEl.textContent } • test`;
+
+      const originalTimestamp = timestampDisplayEl.textContent;
+      const newTimestamp = convertTimeToTimezone( originalTimestamp, 'Asia/Colombo', userTimezone );
+
+      timestampDisplayEl.textContent = `${ timestampDisplayEl.textContent } • ${ newTimestamp }`;
       timestampDisplayEl.parentElement.parentElement.style.marginTop = 'unset';
     } catch ( error ) {
-      alert( error );
       console.log( error );
     }
   } );
