@@ -2,7 +2,7 @@
   'use strict';
 
   const blackList = [ 'Food', 'Food Generic', 'Habit (Bad)', 'Total Carbohydrate', 'Magnesium', 'Sodium', 'Potassium', 'Calcium',
-    'Iron', 'Total Fat', 'Saturated Fat', 'Protein (Plant)', 'Protein (Animal)', 'Cholesterol', 'Cobalamin', 'Vitamin B', 'Vitamin C',
+    'Iron', 'Total Fat', 'Saturated Fat', 'Cholesterol', 'Cobalamin', 'Vitamin B', 'Vitamin C',
     'Vitamin D', 'Caffeine', 'Food Generic', 'Egg (all)'
   ];
 
