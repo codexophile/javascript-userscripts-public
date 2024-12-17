@@ -92,10 +92,15 @@
   } );
 
   //* keyboard shortcut for translation
-  document.addEventListener( 'keydown', function ( event ) {
+  document.addEventListener( 'keydown', async function ( event ) {
     if ( !( event.altKey && event.key === 'r' ) ) return;
     event.preventDefault();
-    alert( event.key );
+
+    const inputBoxEl = document.querySelector( 'footer .lexical-rich-text-input' );
+    const inputText = inputBoxEl.textContent;
+    const translationObj = await getTranslation( inputText, 'es' );
+    console.log( translationObj );
+    alert( translationObj.translatedText );
   } );
 
   //* Auto exiting when inactive

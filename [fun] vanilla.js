@@ -6,7 +6,7 @@ async function getTranslation ( text, outputLanguage = 'en', inputLanguage = 'au
       method: "POST",
       url: "http://127.0.0.1:5000/translate",
       data: JSON.stringify( {
-        q: text, // Changed from hardcoded string to use the actual input text
+        q: text,
         source: inputLanguage,
         target: outputLanguage,
         format: "text",

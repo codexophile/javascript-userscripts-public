@@ -144,7 +144,6 @@
     const channelUrl = `https://www.youtube.com/channel/${ channelId }/videos`;
 
     const newEl = generateElements( `<a>📂</a>`, buttonsContainerEl );
-    console.log( newEl );
     newEl.href = channelUrl;
     newEl.target = '_blank';
     style( newEl, `

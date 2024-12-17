@@ -35,48 +35,47 @@
 
   }
 
-  waitForEach( '#buttonsContainer', ( btnsContainerEl ) => {
+  waitForEach( '#buttonsContainer', async ( btnsContainerEl ) => {
+
+    const videoLinkEl = btnsContainerEl.parentElement.querySelector( 'a' );
+    const videoUrl = videoLinkEl.href;
+
+    const ytHtml = await GMXmlHttpReqResponse( videoUrl );
+    const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
+
+    const headerLink = generateElements(
+      `<a href=${ videoUrl } target=_blank> ${ videoLinkEl.textContent } </a>` );
+    const modalBody = generateElements( '<div></div>' );
+
+    const modal = new ModalBox( {
+      width: '95vw',
+      backgroundColor: '#f0f0f0',
+      headerColor: '#3498db',
+      animation: true,
+      closeOnEscape: true,
+      closeOnOutsideClick: true
+    } );
+
+
+    modal.setTitle( headerLink );
+    modal.setContent( modalBody );
+
+    await storyboard( {
+      storyboardParent: modalBody,
+      horizontal: 5,
+      vertical: 5,
+      linkToVid: videoUrl,
+      trueNoOfSlots,
+      imgUrls: [ ...allUrls ]
+    } );
+
     const peekButton = generateElements( `<button class=peekButton>🫣</button>` );
     btnsContainerEl.append( peekButton );
+
     peekButton.addEventListener( 'click', async () => {
-
-      const videoLinkEl = btnsContainerEl.parentElement.querySelector( 'a' );
-      const videoUrl = videoLinkEl.href;
-      alert( videoUrl );
-      return;
-
-      const ytHtml = await GMXmlHttpReqResponse( videoUrl );
-      const { allUrls, trueNoOfSlots, samplingFq } = generateAllYouTubeSbUrls( ytHtml );
-
-      const headerLink = generateElements(
-        `<a href=${ videoUrl } target=_blank> ${ videoLinkEl.textContent } </a>` );
-      const modalBody = generateElements( '<div></div>' );
-
-      const modal = new ModalBox( {
-        width: '95vw',
-        backgroundColor: '#f0f0f0',
-        headerColor: '#3498db',
-        animation: true,
-        closeOnEscape: true,
-        closeOnOutsideClick: true
-      } );
-
-      console.log( modal );
-
-      modal.setTitle( headerLink );
-      modal.setContent( modalBody );
       modal.show();
-
-      await storyboard( {
-        storyboardParent: modalBody,
-        horizontal: 5,
-        vertical: 5,
-        linkToVid: videoUrl,
-        trueNoOfSlots,
-        imgUrls: [ ...allUrls ]
-      } );
-
     } );
+
   } );
 
 } )();
