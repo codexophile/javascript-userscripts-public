@@ -1,82 +1,82 @@
 async function Collapsible ( togglerText = 'Toggle', options = {} ) {
 
-    await waitFor( 'body' );
+  await waitFor( 'body' );
 
-    //* Methods for adding elements and handling popups
-    function addButton ( text, popupEl = null, onclick ) {
-        const button = generateElements( `<button></button>` );
-        button.className = 'collapsible-button';
-        button.textContent = text;
-        collapsibleContent.appendChild( button );
+  //* Methods for adding elements and handling popups
+  function addButton ( text, popupEl = null, onclick ) {
+    const button = generateElements( `<button></button>` );
+    button.className = 'collapsible-button';
+    button.textContent = text;
+    collapsibleContent.appendChild( button );
 
-        if ( onclick ) {
-            button.addEventListener( 'click', onclick );
+    if ( onclick ) {
+      button.addEventListener( 'click', onclick );
+    }
+
+    if ( popupEl ) {
+      button.addEventListener( 'click', ( e ) => {
+        e.stopPropagation();
+        popupEl.classList.toggle( 'visible' );
+      } );
+
+      document.addEventListener( 'click', ( e ) => {
+        if ( !button.contains( e.target ) ) {
+          popupEl.classList.remove( 'visible' );
         }
-
-        if ( popupEl ) {
-            button.addEventListener( 'click', ( e ) => {
-                e.stopPropagation();
-                popupEl.classList.toggle( 'visible' );
-            } );
-
-            document.addEventListener( 'click', ( e ) => {
-                if ( !button.contains( e.target ) ) {
-                    popupEl.classList.remove( 'visible' );
-                }
-            } );
-        }
-
-        return button;
-    }
-    function addPopup () {
-        const popup = document.createElement( 'div' );
-        popup.className = 'popup';
-        // popup.innerHTML = popupContent;
-        collapsibleContent.appendChild( popup );
-        return popup;
-    }
-    function addElement ( element ) {
-        collapsibleContent.appendChild( element );
-        return element;
+      } );
     }
 
-    let collapsibleContent;
+    return button;
+  }
+  function addPopup () {
+    const popup = document.createElement( 'div' );
+    popup.className = 'popup';
+    // popup.innerHTML = popupContent;
+    collapsibleContent.appendChild( popup );
+    return popup;
+  }
+  function addElement ( element ) {
+    collapsibleContent.appendChild( element );
+    return element;
+  }
 
-    //* check if it's already on the page
-    const alreadyOnPage = document.querySelector( `.collapsible-container` );
-    if ( alreadyOnPage ) {
-        const collapsibleStructure = alreadyOnPage;
-        const collapsibleToggler = alreadyOnPage.querySelector( '.collapsible-toggler' );
-        collapsibleContent = alreadyOnPage.querySelector( '.collapsible-content' );
-        return {
-            collapsibleStructure,
-            collapsibleToggler,
-            collapsibleContent,
-            addButton,
-            addElement,
-            addPopup
-        };
-    }
+  let collapsibleContent;
 
-    const {
-        bottom = '0px',
-        left = '0px',
-        backgroundColor = '#3498db',
-        hoverColor = '#2980b9',
-        textColor = 'white',
-        contentBgColor = '#f9f9f9',
-        fontSize = '14px',
-        borderRadius = '5px',
-        boxShadow = '0 2px 5px rgba(0,0,0,0.9)',
-        transition = 'all 0.3s ease-out',
-        width = '300px',
-        height = '200px',
-        collapsedWidth = '30px',
-        popupHeight = '150px',
-        buttonSize = '30px'
-    } = options;
+  //* check if it's already on the page
+  const alreadyOnPage = document.querySelector( `.collapsible-container` );
+  if ( alreadyOnPage ) {
+    const collapsibleStructure = alreadyOnPage;
+    const collapsibleToggler = alreadyOnPage.querySelector( '.collapsible-toggler' );
+    collapsibleContent = alreadyOnPage.querySelector( '.collapsible-content' );
+    return {
+      collapsibleStructure,
+      collapsibleToggler,
+      collapsibleContent,
+      addButton,
+      addElement,
+      addPopup
+    };
+  }
 
-    const css = `
+  const {
+    bottom = '0px',
+    left = '0px',
+    backgroundColor = '#3498db',
+    hoverColor = '#2980b9',
+    textColor = 'white',
+    contentBgColor = '#f9f9f9',
+    fontSize = '14px',
+    borderRadius = '5px',
+    boxShadow = '0 2px 5px rgba(0,0,0,0.9)',
+    transition = 'all 0.3s ease-out',
+    width = '300px',
+    height = '200px',
+    collapsedWidth = '30px',
+    popupHeight = '150px',
+    buttonSize = '30px'
+  } = options;
+
+  const css = `
         .collapsible-container {
             font-family: Arial, sans-serif;
             position: fixed;
@@ -181,204 +181,204 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
         }
     `;
 
-    const style = document.createElement( 'style' );
-    style.textContent = css;
-    document.head.appendChild( style );
+  const style = document.createElement( 'style' );
+  style.textContent = css;
+  document.head.appendChild( style );
 
-    const collapsibleStructure = generateElements( `
+  const collapsibleStructure = generateElements( `
                         <div>
                                 <button class="collapsible-toggler">${ togglerText }</button>
                                 <div class="collapsible-content"></div>
                                 <div class="resize-handle"></div>
                         </div>
                 `, document.body );
-    collapsibleStructure.className = 'collapsible-container';
+  collapsibleStructure.className = 'collapsible-container';
 
-    collapsibleContent = collapsibleStructure.querySelector( '.collapsible-content' );
-    const collapsibleToggler = collapsibleStructure.querySelector( '.collapsible-toggler' );
-    const resizeHandle = collapsibleStructure.querySelector( '.resize-handle' );
+  collapsibleContent = collapsibleStructure.querySelector( '.collapsible-content' );
+  const collapsibleToggler = collapsibleStructure.querySelector( '.collapsible-toggler' );
+  const resizeHandle = collapsibleStructure.querySelector( '.resize-handle' );
 
-    let isExpanded = false;
-    let expandedWidth = width;
+  let isExpanded = false;
+  let expandedWidth = width;
 
-    collapsibleToggler.addEventListener( 'click', function ( e ) {
-        console.log( isDragging );
-        e.stopPropagation();
-        isExpanded = !isExpanded;
-        if ( isExpanded ) {
-            collapsibleStructure.style.width = expandedWidth;
-            collapsibleStructure.classList.add( 'expanded' );
-        } else {
-            expandedWidth = collapsibleStructure.style.width;
-            collapsibleStructure.style.width = collapsedWidth;
-            collapsibleStructure.classList.remove( 'expanded' );
-        }
-    } );
+  collapsibleToggler.addEventListener( 'click', function ( e ) {
+    console.log( isDragging );
+    e.stopPropagation();
+    isExpanded = !isExpanded;
+    if ( isExpanded ) {
+      collapsibleStructure.style.width = expandedWidth;
+      collapsibleStructure.classList.add( 'expanded' );
+    } else {
+      expandedWidth = collapsibleStructure.style.width;
+      collapsibleStructure.style.width = collapsedWidth;
+      collapsibleStructure.classList.remove( 'expanded' );
+    }
+  } );
 
-    // Draggable and resizable functionality
-    let isDragging = false;
-    let isResizing = false;
-    let currentX;
-    let currentY;
-    let initialX;
-    let initialY;
-    let xOffset = 0;
-    let yOffset = 0;
+  // Draggable and resizable functionality
+  let isDragging = false;
+  let isResizing = false;
+  let currentX;
+  let currentY;
+  let initialX;
+  let initialY;
+  let xOffset = 0;
+  let yOffset = 0;
 
-    collapsibleToggler.addEventListener( 'mousedown', dragStart );
-    resizeHandle.addEventListener( 'mousedown', resizeStart );
-    document.addEventListener( 'mousemove', drag );
-    document.addEventListener( 'mouseup', dragEnd );
+  collapsibleToggler.addEventListener( 'mousedown', dragStart );
+  resizeHandle.addEventListener( 'mousedown', resizeStart );
+  document.addEventListener( 'mousemove', drag );
+  document.addEventListener( 'mouseup', dragEnd );
 
-    function dragStart ( e ) {
-        initialX = e.clientX - xOffset;
-        initialY = e.clientY - yOffset;
-        isDragging = true;
+  function dragStart ( e ) {
+    initialX = e.clientX - xOffset;
+    initialY = e.clientY - yOffset;
+    isDragging = true;
+  }
+
+  function resizeStart ( e ) {
+    e.stopPropagation();
+    isResizing = true;
+  }
+
+  function drag ( e ) {
+    if ( isDragging ) {
+      e.preventDefault();
+      currentX = e.clientX - initialX;
+      currentY = e.clientY - initialY;
+      xOffset = currentX;
+      yOffset = currentY;
+      setTranslate( currentX, currentY, collapsibleStructure );
     }
 
-    function resizeStart ( e ) {
-        e.stopPropagation();
-        isResizing = true;
+    if ( isResizing ) {
+      e.preventDefault();
+      const newWidth = e.clientX - collapsibleStructure.getBoundingClientRect().left;
+      const newHeight = e.clientY - collapsibleStructure.getBoundingClientRect().top;
+      collapsibleStructure.style.width = `${ newWidth }px`;
+      collapsibleStructure.style.height = `${ newHeight }px`;
+      if ( isExpanded ) {
+        expandedWidth = `${ newWidth }px`;
+      }
     }
+  }
 
-    function drag ( e ) {
-        if ( isDragging ) {
-            e.preventDefault();
-            currentX = e.clientX - initialX;
-            currentY = e.clientY - initialY;
-            xOffset = currentX;
-            yOffset = currentY;
-            setTranslate( currentX, currentY, collapsibleStructure );
-        }
+  function dragEnd ( e ) {
+    initialX = currentX;
+    initialY = currentY;
+    isDragging = false;
+    isResizing = false;
+  }
 
-        if ( isResizing ) {
-            e.preventDefault();
-            const newWidth = e.clientX - collapsibleStructure.getBoundingClientRect().left;
-            const newHeight = e.clientY - collapsibleStructure.getBoundingClientRect().top;
-            collapsibleStructure.style.width = `${ newWidth }px`;
-            collapsibleStructure.style.height = `${ newHeight }px`;
-            if ( isExpanded ) {
-                expandedWidth = `${ newWidth }px`;
-            }
-        }
-    }
+  function setTranslate ( xPos, yPos, el ) {
+    el.style.transform = `translate3d(${ xPos }px, ${ yPos }px, 0)`;
+  }
 
-    function dragEnd ( e ) {
-        initialX = currentX;
-        initialY = currentY;
-        isDragging = false;
-        isResizing = false;
-    }
-
-    function setTranslate ( xPos, yPos, el ) {
-        el.style.transform = `translate3d(${ xPos }px, ${ yPos }px, 0)`;
-    }
-
-    return {
-        collapsibleStructure,
-        collapsibleToggler,
-        collapsibleContent,
-        addButton,
-        addElement,
-        addPopup
-    };
+  return {
+    collapsibleStructure,
+    collapsibleToggler,
+    collapsibleContent,
+    addButton,
+    addElement,
+    addPopup
+  };
 }
 
 function dialog ( title = '', contentElement, maxHeight = '300px' ) {
-    // Create the GUI container
-    const guiContainer = document.createElement( 'div' );
-    guiContainer.style.position = 'fixed';
-    guiContainer.style.top = '100px';
-    guiContainer.style.right = '50px';
-    guiContainer.style.width = '300px';
-    guiContainer.style.border = '1px solid #ccc';
-    guiContainer.style.backgroundColor = '#f0f0f0';
-    guiContainer.style.zIndex = '9999';
-    guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
+  // Create the GUI container
+  const guiContainer = document.createElement( 'div' );
+  guiContainer.style.position = 'fixed';
+  guiContainer.style.top = '100px';
+  guiContainer.style.right = '50px';
+  guiContainer.style.width = '300px';
+  guiContainer.style.border = '1px solid #ccc';
+  guiContainer.style.backgroundColor = '#f0f0f0';
+  guiContainer.style.zIndex = '9999';
+  guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
 
-    // Create the header
-    const header = document.createElement( 'div' );
-    header.style.backgroundColor = '#e0e0e0';
-    // header.style.padding = '10px';
-    header.style.cursor = 'move';
-    header.style.display = 'flex';
-    header.style.justifyContent = 'space-between';
-    header.style.alignItems = 'center';
-    header.innerText = title;
+  // Create the header
+  const header = document.createElement( 'div' );
+  header.style.backgroundColor = '#e0e0e0';
+  // header.style.padding = '10px';
+  header.style.cursor = 'move';
+  header.style.display = 'flex';
+  header.style.justifyContent = 'space-between';
+  header.style.alignItems = 'center';
+  header.innerText = title;
 
-    // Create the collapse button
-    const collapseBtn = document.createElement( 'button' );
-    collapseBtn.id = 'expand-btn';
-    collapseBtn.innerHTML = '+';
-    collapseBtn.style.marginLeft = 'auto';
-    collapseBtn.style.marginRight = '5px';
-    collapseBtn.onclick = () => {
-        if ( body.style.display === 'none' ) {
-            body.style.display = 'block';
-            collapseBtn.innerHTML = '-';
-        } else {
-            body.style.display = 'none';
-            collapseBtn.innerHTML = '+';
-        }
-    };
+  // Create the collapse button
+  const collapseBtn = document.createElement( 'button' );
+  collapseBtn.id = 'expand-btn';
+  collapseBtn.innerHTML = '+';
+  collapseBtn.style.marginLeft = 'auto';
+  collapseBtn.style.marginRight = '5px';
+  collapseBtn.onclick = () => {
+    if ( body.style.display === 'none' ) {
+      body.style.display = 'block';
+      collapseBtn.innerHTML = '-';
+    } else {
+      body.style.display = 'none';
+      collapseBtn.innerHTML = '+';
+    }
+  };
 
-    // Create the close button
-    const closeBtn = document.createElement( 'button' );
-    closeBtn.innerHTML = 'x';
-    closeBtn.onclick = () => {
-        guiContainer.remove();
-    };
+  // Create the close button
+  const closeBtn = document.createElement( 'button' );
+  closeBtn.innerHTML = 'x';
+  closeBtn.onclick = () => {
+    guiContainer.remove();
+  };
 
-    // Append buttons to the header
-    header.appendChild( collapseBtn );
-    header.appendChild( closeBtn );
+  // Append buttons to the header
+  header.appendChild( collapseBtn );
+  header.appendChild( closeBtn );
 
-    // Create the body
-    const body = document.createElement( 'div' );
-    body.style.display = 'none';
-    body.style.padding = '10px';
-    body.style.backgroundColor = '#fff';
-    body.style.maxHeight = maxHeight;
-    body.style.overflow = 'auto';
-    // adding the content element given by the function parameter
-    body.append( contentElement );
+  // Create the body
+  const body = document.createElement( 'div' );
+  body.style.display = 'none';
+  body.style.padding = '10px';
+  body.style.backgroundColor = '#fff';
+  body.style.maxHeight = maxHeight;
+  body.style.overflow = 'auto';
+  // adding the content element given by the function parameter
+  body.append( contentElement );
 
-    // Append header and body to the container
-    guiContainer.appendChild( header );
-    guiContainer.appendChild( body );
+  // Append header and body to the container
+  guiContainer.appendChild( header );
+  guiContainer.appendChild( body );
 
-    // Append the container to the document body
-    document.body.appendChild( guiContainer );
+  // Append the container to the document body
+  document.body.appendChild( guiContainer );
 
-    // Make the GUI draggable
-    let isDragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
+  // Make the GUI draggable
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
 
-    header.onmousedown = ( e ) => {
-        isDragging = true;
-        offsetX = e.clientX - guiContainer.getBoundingClientRect().left;
-        offsetY = e.clientY - guiContainer.getBoundingClientRect().top;
-    };
+  header.onmousedown = ( e ) => {
+    isDragging = true;
+    offsetX = e.clientX - guiContainer.getBoundingClientRect().left;
+    offsetY = e.clientY - guiContainer.getBoundingClientRect().top;
+  };
 
-    document.onmousemove = ( e ) => {
-        if ( isDragging ) {
-            guiContainer.style.left = `${ e.clientX - offsetX }px`;
-            guiContainer.style.top = `${ e.clientY - offsetY }px`;
-        }
-    };
+  document.onmousemove = ( e ) => {
+    if ( isDragging ) {
+      guiContainer.style.left = `${ e.clientX - offsetX }px`;
+      guiContainer.style.top = `${ e.clientY - offsetY }px`;
+    }
+  };
 
-    document.onmouseup = () => {
-        isDragging = false;
-    };
+  document.onmouseup = () => {
+    isDragging = false;
+  };
 
-    return guiContainer;
+  return guiContainer;
 
 }
 
 function addTooltip ( tooltipParent, tooltipContent ) {
 
-    addStyle( /*css*/`
+  addStyle( /*css*/`
         .tooltipParent {
             position: relative;
             display: inline-block;
@@ -419,21 +419,21 @@ function addTooltip ( tooltipParent, tooltipContent ) {
         }
     `);
 
-    tooltipParent.classList.add( 'tooltipParent' );
-    const toolTip = generateElements( '<span class=tooltip></span>', null, true );
-    tooltipParent.after( toolTip );
-    const wrapper = wrap( '<div class=wrapper></div>', tooltipParent, toolTip );
-    style( wrapper, `
+  tooltipParent.classList.add( 'tooltipParent' );
+  const toolTip = generateElements( '<span class=tooltip></span>', null, true );
+  tooltipParent.after( toolTip );
+  const wrapper = wrap( '<div class=wrapper></div>', tooltipParent, toolTip );
+  style( wrapper, `
         position: relative;
         width:    fit-content;
     `);
-    toolTip.append( tooltipContent );
+  toolTip.append( tooltipContent );
 
 }
 
 function slideshowGallery () {
 
-    GM_addStyle( `
+  GM_addStyle( `
 
         #slideShowGallery { display: ; }
 
@@ -540,7 +540,7 @@ function slideshowGallery () {
         }
     ` );
 
-    const sgContent = generateElements( /*html*/ `
+  const sgContent = generateElements( /*html*/ `
             <div id=slideShowGallery>
                 <h2 style="text-align:center">Slideshow Gallery</h2>
                 <div class="container">
@@ -554,73 +554,73 @@ function slideshowGallery () {
                 </div>
             </div>
             `);
-    document.body.append( sgContent );
+  document.body.append( sgContent );
 
-    const fullImgContainer = document.querySelector( `#fullImgCont` );
-    const row = document.querySelector( `.row` );
-    for ( const item in arguments ) {
-        fullImgContainer.append( generateElements( /*html*/`
+  const fullImgContainer = document.querySelector( `#fullImgCont` );
+  const row = document.querySelector( `.row` );
+  for ( const item in arguments ) {
+    fullImgContainer.append( generateElements( /*html*/`
             <div class=mySlides>
                 <div class=numbertext>${ +item + 1 } / ${ arguments.length }</div>
                 <img src=${ arguments[ item ] } style='width:100%'>
             </div>
         `) );
-        row.append( generateElements( /*html*/`
+    row.append( generateElements( /*html*/`
             <div class=column>
                 <img class='demo cursor' src=${ arguments[ item ] } style='width:100%'>
             </div>
             `) );
-    }
+  }
 
-    document.querySelector( `.prev` ).addEventListener( 'click', () => { plusSlides( -1 ); } );
-    document.querySelector( `.next` ).addEventListener( 'click', () => { plusSlides( 1 ); } );
-    document.querySelectorAll( `.demo` ).forEach( item => {
-        item.addEventListener( 'click', ( event ) => {
-            const element = event.target.parentNode;
-            const index = Array.from( element.parentNode.children ).indexOf( element ) + 1;
-            currentSlide( index );
-        } );
+  document.querySelector( `.prev` ).addEventListener( 'click', () => { plusSlides( -1 ); } );
+  document.querySelector( `.next` ).addEventListener( 'click', () => { plusSlides( 1 ); } );
+  document.querySelectorAll( `.demo` ).forEach( item => {
+    item.addEventListener( 'click', ( event ) => {
+      const element = event.target.parentNode;
+      const index = Array.from( element.parentNode.children ).indexOf( element ) + 1;
+      currentSlide( index );
     } );
+  } );
 
 
-    let slideIndex = 1;
-    showSlides( slideIndex );
+  let slideIndex = 1;
+  showSlides( slideIndex );
 
-    function plusSlides ( n ) {
-        showSlides( slideIndex += n );
+  function plusSlides ( n ) {
+    showSlides( slideIndex += n );
+  }
+
+  function currentSlide ( n ) {
+    showSlides( slideIndex = n );
+  }
+
+  function showSlides ( n ) {
+    let i;
+    let slides = document.getElementsByClassName( "mySlides" );
+    let dots = document.getElementsByClassName( "demo" );
+    let captionText = document.getElementById( "caption" );
+    if ( n > slides.length ) { slideIndex = 1; }
+    if ( n < 1 ) { slideIndex = slides.length; }
+    for ( i = 0; i < slides.length; i++ ) {
+      slides[ i ].style.display = "none";
     }
-
-    function currentSlide ( n ) {
-        showSlides( slideIndex = n );
+    for ( i = 0; i < dots.length; i++ ) {
+      dots[ i ].className = dots[ i ].className.replace( " active", "" );
     }
+    slides[ slideIndex - 1 ].style.display = "block";
+    dots[ slideIndex - 1 ].className += " active";
+    captionText.innerHTML = dots[ slideIndex - 1 ].alt;
+  }
 
-    function showSlides ( n ) {
-        let i;
-        let slides = document.getElementsByClassName( "mySlides" );
-        let dots = document.getElementsByClassName( "demo" );
-        let captionText = document.getElementById( "caption" );
-        if ( n > slides.length ) { slideIndex = 1; }
-        if ( n < 1 ) { slideIndex = slides.length; }
-        for ( i = 0; i < slides.length; i++ ) {
-            slides[ i ].style.display = "none";
-        }
-        for ( i = 0; i < dots.length; i++ ) {
-            dots[ i ].className = dots[ i ].className.replace( " active", "" );
-        }
-        slides[ slideIndex - 1 ].style.display = "block";
-        dots[ slideIndex - 1 ].className += " active";
-        captionText.innerHTML = dots[ slideIndex - 1 ].alt;
-    }
-
-    return sgContent;
+  return sgContent;
 
 }
 
 class modalBox {
 
-    constructor () {
+  constructor () {
 
-        GM_addStyle( `
+    GM_addStyle( `
 
             #vanilla-presets-modal {
                 display: none; /* Hidden by default */
@@ -682,7 +682,7 @@ class modalBox {
 
         ` );
 
-        this.modal = generateElements( `
+    this.modal = generateElements( `
             <div id=vanilla-presets-modal class=modal>
                 <div id=modal-content>
                     <div id=modal-header>
@@ -694,60 +694,60 @@ class modalBox {
             </div>
             ` );
 
-        document.body.append( this.modal );
-        this.header = this.modal.querySelector( '#header-content' );
-        this.body = this.modal.querySelector( '#modal-body' );
-        const dismiss = this.modal.querySelector( '#dismiss' );
-        dismiss.addEventListener( 'click', () => { this.destroy(); } );
+    document.body.append( this.modal );
+    this.header = this.modal.querySelector( '#header-content' );
+    this.body = this.modal.querySelector( '#modal-body' );
+    const dismiss = this.modal.querySelector( '#dismiss' );
+    dismiss.addEventListener( 'click', () => { this.destroy(); } );
 
-    }
+  }
 
-    display () {
-        this.modal.style.display = 'block';
-    }
-    headerAddContent ( content ) {
-        this.header.append( content );
-    }
-    bodyAddContent ( content ) {
-        this.body.append( content );
-    }
-    hide () {
-        this.modal.style.display = 'none';
-    }
-    flushHeader () {
-        this.modal.querySelector( '#header-content' ).replaceChildren();
-    }
-    flushBody () {
-        this.modal.querySelector( '#modal-body' ).replaceChildren();
-    }
-    destroy () {
-        this.flushHeader();
-        this.flushBody();
-        this.hide();
-    }
+  display () {
+    this.modal.style.display = 'block';
+  }
+  headerAddContent ( content ) {
+    this.header.append( content );
+  }
+  bodyAddContent ( content ) {
+    this.body.append( content );
+  }
+  hide () {
+    this.modal.style.display = 'none';
+  }
+  flushHeader () {
+    this.modal.querySelector( '#header-content' ).replaceChildren();
+  }
+  flushBody () {
+    this.modal.querySelector( '#modal-body' ).replaceChildren();
+  }
+  destroy () {
+    this.flushHeader();
+    this.flushBody();
+    this.hide();
+  }
 
 }
 
 class ModalBox {
-    constructor ( options = {} ) {
-        this.options = {
-            width: options.width || '95%',
-            backgroundColor: options.backgroundColor || '#ffffff',
-            headerColor: options.headerColor || '#5cb85c',
-            headerTextColor: options.headerTextColor || '#ffffff',
-            closeButtonColor: options.closeButtonColor || '#ffffff',
-            animation: options.animation !== undefined ? options.animation : true,
-            closeOnEscape: options.closeOnEscape !== undefined ? options.closeOnEscape : true,
-            closeOnOutsideClick: options.closeOnOutsideClick !== undefined ? options.closeOnOutsideClick : true,
-        };
+  constructor ( options = {} ) {
+    this.options = {
+      width: options.width || '95%',
+      backgroundColor: options.backgroundColor || '#ffffff',
+      headerColor: options.headerColor || '#5cb85c',
+      headerTextColor: options.headerTextColor || '#ffffff',
+      closeButtonColor: options.closeButtonColor || '#ffffff',
+      animation: options.animation !== undefined ? options.animation : true,
+      closeOnEscape: options.closeOnEscape !== undefined ? options.closeOnEscape : true,
+      closeOnOutsideClick: options.closeOnOutsideClick !== undefined ? options.closeOnOutsideClick : true,
+    };
 
-        this.createStyles();
-        this.createModal();
-        this.setupEventListeners();
-    }
+    this.createStyles();
+    this.createModal();
+    this.setupEventListeners();
+  }
 
-    createStyles () {
-        const styles = `
+  createStyles () {
+    const styles = `
             .vanilla-modal {
                 display: none;
                 position: fixed;
@@ -818,12 +818,12 @@ class ModalBox {
             }
         `;
 
-        GM_addStyle( styles );
-    }
+    GM_addStyle( styles );
+  }
 
-    createModal () {
+  createModal () {
 
-        this.modal = generateElements( `
+    this.modal = generateElements( `
             <div class="vanilla-modal-content">
                 <div class="vanilla-modal-header">
                     <h2 class="vanilla-modal-title"></h2>
@@ -832,70 +832,71 @@ class ModalBox {
                 <div class="vanilla-modal-body"></div>
             </div>
             `);
-        this.modal.className = 'vanilla-modal';
-        document.body.appendChild( this.modal );
+    this.modal.className = 'vanilla-modal';
+    document.body.appendChild( this.modal );
 
-        this.titleElement = this.modal.querySelector( '.vanilla-modal-title' );
-        this.bodyElement = this.modal.querySelector( '.vanilla-modal-body' );
-        this.closeButton = this.modal.querySelector( '.vanilla-modal-close' );
+    this.titleElement = this.modal.querySelector( '.vanilla-modal-title' );
+    this.bodyElement = this.modal.querySelector( '.vanilla-modal-body' );
+    this.closeButton = this.modal.querySelector( '.vanilla-modal-close' );
+  }
+
+  setupEventListeners () {
+    this.closeButton.addEventListener( 'click', () => this.destroy() );
+
+    if ( this.options.closeOnOutsideClick ) {
+      this.modal.addEventListener( 'click', ( e ) => {
+        if ( e.target === this.modal ) this.hide();
+      } );
     }
 
-    setupEventListeners () {
-        this.closeButton.addEventListener( 'click', () => this.destroy() );
-
-        if ( this.options.closeOnOutsideClick ) {
-            this.modal.addEventListener( 'click', ( e ) => {
-                if ( e.target === this.modal ) this.hide();
-            } );
-        }
-
-        if ( this.options.closeOnEscape ) {
-            document.addEventListener( 'keydown', ( e ) => {
-                if ( e.key === 'Escape' && this.isVisible() ) this.hide();
-            } );
-        }
+    if ( this.options.closeOnEscape ) {
+      document.addEventListener( 'keydown', ( e ) => {
+        if ( e.key === 'Escape' && this.isVisible() ) this.hide();
+      } );
     }
+  }
 
-    setTitle ( title ) {
-        if ( typeof title === 'string' ) {
-            this.titleElement.textContent = title;
-        }
-        // else {
-        else if ( content instanceof Node ) {
-            this.titleElement.appendChild( title );
-        }
+  setTitle ( title ) {
+    if ( typeof title === 'string' ) {
+      this.titleElement.textContent = title;
     }
-
-    setContent ( content ) {
-        if ( typeof content === 'string' ) {
-            this.bodyElement.innerHTML = content;
-        } else if ( content instanceof Node ) {
-            let policy = trustedTypes.createPolicy( 'default', {
-                createHTML: ( input ) => input
-            } );
-            this.bodyElement.innerHTML = policy.createHTML( '' );
-
-            this.bodyElement.appendChild( content );
-        }
+    // else {
+    else if ( content instanceof Node ) {
+      this.titleElement.appendChild( title );
     }
+  }
 
-    show () {
-        this.modal.style.display = 'block';
-        setTimeout( () => this.modal.classList.add( 'show' ), 10 );
-    }
+  setContent ( content ) {
+    if ( typeof content === 'string' ) {
+      this.bodyElement.innerHTML = content;
+    } else if ( content instanceof Node ) {
+      const uniqueString = generateUniqueString();
+      let policy = trustedTypes.createPolicy( uniqueString, {
+        createHTML: ( input ) => input
+      } );
+      this.bodyElement.innerHTML = policy.createHTML( '' );
 
-    hide () {
-        this.modal.classList.remove( 'show' );
-        setTimeout( () => {
-            this.modal.style.display = 'none';
-        }, 300 );
+      this.bodyElement.appendChild( content );
     }
+  }
 
-    isVisible () {
-        return this.modal.style.display === 'block';
-    }
+  show () {
+    this.modal.style.display = 'block';
+    setTimeout( () => this.modal.classList.add( 'show' ), 10 );
+  }
 
-    destroy () {
-        document.body.removeChild( this.modal );
-    }
+  hide () {
+    this.modal.classList.remove( 'show' );
+    setTimeout( () => {
+      this.modal.style.display = 'none';
+    }, 300 );
+  }
+
+  isVisible () {
+    return this.modal.style.display === 'block';
+  }
+
+  destroy () {
+    document.body.removeChild( this.modal );
+  }
 }
