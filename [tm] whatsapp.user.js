@@ -7,7 +7,8 @@
     'Chathun Hashan Komasaru': 'Europe/London',
     'Vidyuth Rajan': 'Asia/Muscat',
     'Gelo Santos': 'Asia/Dubai',
-    'Pasi': 'Australia/Perth'
+    'Pasi': 'Australia/Perth',
+    'Hans Ignacio': 'Asia/Manila'
   };
 
   function getUserName () {
