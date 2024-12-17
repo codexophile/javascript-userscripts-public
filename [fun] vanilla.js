@@ -1,5 +1,36 @@
 //ANCHOR - Text functions
 
+async function getTranslation ( text, outputLanguage = 'en', inputLanguage = 'auto', alts = 3 ) {
+  return new Promise( ( resolve, reject ) => {
+    GM.xmlHttpRequest( {
+      method: "POST",
+      url: "http://127.0.0.1:5000/translate",
+      data: JSON.stringify( {
+        q: text, // Changed from hardcoded string to use the actual input text
+        source: inputLanguage,
+        target: outputLanguage,
+        format: "text",
+        alternatives: alts,
+        api_key: ""
+      } ),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      onload: function ( response ) {
+        try {
+          const jsonResponse = JSON.parse( response.responseText );
+          resolve( jsonResponse );
+        } catch ( error ) {
+          reject( error );
+        }
+      },
+      onerror: function ( error ) {
+        reject( error );
+      }
+    } );
+  } );
+}
+
 function convertTimeToTimezone ( timeString, sourceTimezone, targetTimezone ) {
   // Validate input
   if ( !/^\d{2}:\d{2}$/.test( timeString ) ) {
