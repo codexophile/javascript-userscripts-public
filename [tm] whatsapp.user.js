@@ -91,6 +91,13 @@
     }
   } );
 
+  //* keyboard shortcut for translation
+  document.addEventListener( 'keydown', function ( event ) {
+    if ( !( event.altKey && event.key === 'r' ) ) return;
+    event.preventDefault();
+    alert( event.key );
+  } );
+
   //* Auto exiting when inactive
   return;
 
