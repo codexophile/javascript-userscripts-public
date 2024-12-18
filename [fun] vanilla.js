@@ -1249,12 +1249,12 @@ function waitForNew ( selector ) {
 function waitForEach ( selector, callback, options = {} ) {
   // @ts-ignore
   const { timeout = 0, once = false } = options;
-  const processedElements = new Set();
+  const processedEls = new Set();
 
   function processElements () {
     document.querySelectorAll( selector ).forEach( element => {
-      if ( !processedElements.has( element ) ) {
-        processedElements.add( element );
+      if ( !processedEls.has( element ) ) {
+        processedEls.add( element );
         callback( element );
       }
     } );
@@ -1272,7 +1272,12 @@ function waitForEach ( selector, callback, options = {} ) {
     setTimeout( () => observer.disconnect(), timeout );
   }
 
-  return observer;
+  function reload () {
+    processedEls.clear();
+    processElements();
+  }
+
+  return { observer, reload };
 }
 
 //ANCHOR - Dom manipulations
