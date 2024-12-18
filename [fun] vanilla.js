@@ -934,8 +934,8 @@ function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
   let observer = new MutationObserver( ( mutations ) => {
     mutations.forEach( mutation => {
       mutation.addedNodes.forEach( item => {
-        // @ts-ignore
-        if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item );
+        if ( item.nodeType === 1 && item.matches( selector ) )
+          items.push( item );
       } );
     } );
   } );
