@@ -35,7 +35,7 @@
 
   }
 
-  waitForEach( '#buttonsContainer', async ( btnsContainerEl ) => {
+  lazyLoadWithObserver( '#buttonsContainer', async ( btnsContainerEl ) => {
 
     const videoLinkEl = btnsContainerEl.parentElement.querySelector( 'a' );
     const videoUrl = videoLinkEl.href;
@@ -55,7 +55,6 @@
       closeOnEscape: true,
       closeOnOutsideClick: true
     } );
-
 
     modal.setTitle( headerLink );
     modal.setContent( modalBody );

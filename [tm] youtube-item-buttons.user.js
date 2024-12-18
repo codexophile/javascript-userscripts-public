@@ -3,11 +3,17 @@
   if ( window.top != window.self ) return; //don't run on frames or iframes
 
   const API_KEY = 'AIzaSyB41uuRwzZyKBJcMPr-kyNwXBpeOcESOpU';
+  const thumbElSelectorsArr = [
+    'ytd-video-renderer',
+    'ytd-compact-video-renderer',
+    'ytd-rich-item-renderer',
+    'ytd-playlist-video-renderer > #content' ];
+  const queryForThumbEls = thumbElSelectorsArr.join( ', ' );
 
-  const queryForThumbEls = 'ytd-video-renderer, ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-playlist-video-renderer > #content';
   waitForEach( queryForThumbEls, ( thumbEl ) => {
     const buttonsContainerEl = createButtonsContainer( thumbEl );
-    addVideosButton( thumbEl, buttonsContainerEl );
+    if ( !location.href.match( /\/@|\/channel\// ) )
+      addVideosButton( thumbEl, buttonsContainerEl );
     addHighResThumbButton( thumbEl, buttonsContainerEl );
   } );
 

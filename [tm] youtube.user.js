@@ -85,13 +85,7 @@
 
   GM_addStyle( `
 
-        :is(
-            ytd-rich-item-renderer,
-            ytd-compact-video-renderer,
-            ytd-video-renderer,
-            ytd-playlist-video-renderer > #content
-        ):hover > #buttonsContainer { display: flex }
-        #buttonsContainer { display: none }
+        #buttonsContainer { display: flex }
 
         #buttonsContainer > * {
 
