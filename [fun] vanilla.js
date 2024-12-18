@@ -934,8 +934,10 @@ function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
   let observer = new MutationObserver( ( mutations ) => {
     mutations.forEach( mutation => {
       mutation.addedNodes.forEach( item => {
-        if ( item.nodeType === 1 && item.matches( selector ) )
+        if ( item.nodeType === 1 && item.matches( selector ) ) {
           items.push( item );
+          lazy();
+        }
       } );
     } );
   } );
@@ -1270,8 +1272,7 @@ function waitForEach ( selector, callback, options = {} ) {
     setTimeout( () => observer.disconnect(), timeout );
   }
 
-  // Return a function to stop observing
-  return () => observer.disconnect();
+  return observer;
 }
 
 //ANCHOR - Dom manipulations
