@@ -1,7 +1,7 @@
 ( function () {
   'use strict';
 
-  const API_KEY = 'AIzaSyB41uuRwzZyKBJcMPr-kyNwXBpeOcESOpU';  // Replace this with your YouTube API Key
+  const API_KEY = 'AIzaSyB41uuRwzZyKBJcMPr-kyNwXBpeOcESOpU';
 
   waitFor( `#video-controlPanel` ).then( ( el ) => {
     el.style.top = '0px';
@@ -121,37 +121,8 @@
 
     ` );
 
-  const queryForThumbEls = 'ytd-video-renderer, ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-playlist-video-renderer > #content';
-  waitForEach( queryForThumbEls, ( thumbEl ) => {
-    const buttonsContainer = generateElements( `<div id=buttonsContainer></div>` );
-    thumbEl.append( buttonsContainer );
-    buttonsContainer.style = 'position: absolute; left: 5px; top: 5px;';
-  } );
-
   //* Toggle sidebar
   waitFor( '#guide[opened]' ).then( () => { $( `#guide-button.ytd-masthead` ).click(); } );
-
-  //* channel names to a els
-  waitForEach( '#buttonsContainer', async ( buttonsContainerEl ) => {
-
-    const videoLinkEl = buttonsContainerEl.parentElement.querySelector( 'a' );
-    if ( !videoLinkEl ) return;
-    const videoUrl = videoLinkEl.href;
-    const videoId = videoUrl.match( /\/watch\?v=(.{11})/ )[ 1 ];
-    if ( !videoId ) return;
-
-    const channelId = await getChannelId( videoId, API_KEY );
-    const channelUrl = `https://www.youtube.com/channel/${ channelId }/videos`;
-
-    const newEl = generateElements( `<a>📂</a>`, buttonsContainerEl );
-    newEl.href = channelUrl;
-    newEl.target = '_blank';
-    style( newEl, `
-            color: inherit;
-            text-decoration: none;
-        `);
-
-  } );
 
   //* reddit links
   waitForEach( `[href^="https://www.reddit"], [href^="https://reddit"]`, ( linkEl ) => {
