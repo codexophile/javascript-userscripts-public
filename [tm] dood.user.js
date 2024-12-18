@@ -1,4 +1,12 @@
-//# This script runs only on the top frame to avoid confusion
+'use strict';
+if ( window.top != window.self ) return; //don't run on frames or iframes
+
+const $errorDispEl = $( `p:contains("502 - Bad Gateway .")` );
+if ( $errorDispEl.length ) {
+  const newUrl = location.href.replace( '.li', '.re' );
+  location.href = newUrl;
+  return;
+}
 
 if ( location.href.includes( 'c_poster=' ) )
   location.href = location.href.replace( /c_poster=.+$/, '' );
