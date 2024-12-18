@@ -24,6 +24,7 @@
 
   async function addVideosButton ( thumbEl, parentEl ) {
     const linkToChannel = await getLinkToChannel( thumbEl );
+    console.log( linkToChannel );
     const linkToVideos = `${ linkToChannel }/videos`;
     const newEl = generateElements( `<a>Vid</a>`, parentEl );
     newEl.href = linkToVideos;
@@ -44,7 +45,8 @@
     const videoLinkEl = thumbEl.querySelector( 'a' );
     if ( !videoLinkEl ) return null;
     const videoId = getVideoIdFromLink( videoLinkEl );
-    const channelId = await getLinkToChannel( videoId, API_KEY );
+    const channelId = await getChannelId( videoId, API_KEY );
+    console.log( channelId );
     return `https://www.youtube.com/channel/${ channelId }`;
   }
 
