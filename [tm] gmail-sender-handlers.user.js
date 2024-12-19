@@ -1,6 +1,4 @@
-function blogtrottrHandler () {
 
-}
 
 function dailyDevHandler () {
 
