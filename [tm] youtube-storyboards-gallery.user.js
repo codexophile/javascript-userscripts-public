@@ -57,6 +57,7 @@
   }
 
   function gatherAllVideoLinks () {
+    const query = `a[href*="watch?v="]:not(#slotsDiv a)`;
     const videoLinks = Array.from( document.querySelectorAll( 'a[href*="watch?v="]' ), el => el.href );
     return [ ...new Set( videoLinks ) ];
   }
