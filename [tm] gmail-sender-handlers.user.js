@@ -1,5 +1,3 @@
-
-
 function dailyDevHandler () {
 
   const itemsParentEl = document.querySelector( 'div[dir="ltr"] > table' );
