@@ -2,39 +2,16 @@ function blogtrottrHandler () {
 
   // document.querySelectorAll( '[href*="li.blogtrottr.com"]' ).forEach( element => { element.remove(); } );
   // this gets rid of the ads by blogtrottr
-  // Alternatively an adblocker can remove these automatically too
+  // Alternatively an ad blocker can remove these automatically too
 
-  let titleElement = document.querySelector( 'span[style="font-family:Helvetica,sans-serif;font-size:20px;font-weight:bold;line-height:16px"]' );
+  const queryForTitleEl = 'span[style="font-family:Helvetica,sans-serif;font-size:20px;font-weight:bold;line-height:16px"]';
+  const titleElement = document.querySelector( queryForTitleEl );
   titleElement.classList.add( 'fixedCSS' );
-  let feedTitle = titleElement.textContent;
+  const feedTitle = titleElement.textContent;
   console.log( `%c📶 ${ feedTitle }`, 'font-size: large; color: gold' );
-
-  // Open all button
-  const titleGrandParent = titleElement.parentNode.parentNode.parentNode.parentNode.parentNode;
-  const openAllButton = generateElements( '<button>Open All</button>', titleGrandParent, true );
-  openAllButton.addEventListener( 'click', () => {
-    // items variable is defined below
-    items.forEach( item => {
-      itemHref = item.querySelector( 'a' )?.href;
-      GM_openInTab( itemHref, true );
-    } );
-  } );
-  titleGrandParent.style.display = `flex`;
 
   let items = Array.from( document.querySelectorAll( '[cellpadding="3"][class]' ) );
   const parent = items[ 0 ].parentNode;
-
-
-  //? removing empty items not working currently
-  // Array.from( document.querySelectorAll( '[cellpadding="3"]:not([class])' ) ).slice( 1, -1 )
-  //     .forEach( emptyItem => { emptyItem.remove() } )
-
-  //? fix this too
-  // let mediaLinks = parent.querySelectorAll( 'a:nth-child(2)' )
-  // mediaLinks.forEach( mediaLink => {
-  //     mediaLink.after( generateElements( `<img src=${ mediaLink.href }>`, null, true ) )
-  // } )
-
   parent.style.flexWrap = `wrap`;
   parent.style.display = `flex`;
 
@@ -42,10 +19,6 @@ function blogtrottrHandler () {
 
     item.removeAttribute( 'width' );
 
-    //? what is this? 👇
-    if ( !item.querySelectorAll( '[style="font-family:Helvetica,sans-serif;letter-spacing:-1px;margin:0;padding:0 0 2px;font-weight:bold;font-size:19px;line-height:20px;color:#222"]' ).length ) {
-      //item.remove()
-    }
     const innerDiv = item.querySelectorAll( 'tbody > tr > td > div' )[ 1 ];
 
     if ( !innerDiv ) {
@@ -133,7 +106,9 @@ function blogtrottrHandler () {
 
     }
 
-    // console.log( innerDiv );
+    const feedTitleHandlers = {
+
+    };
 
     switch ( feedTitle ) {
 
@@ -195,7 +170,6 @@ function blogtrottrHandler () {
 
         break;
 
-      //ANCHOR -  g.xtapes.to
       case 'Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...':
         const tempDoc__ = await GMXmlHttpRequest( itemUrl );
         addIframeHrefs( tempDoc__ );
@@ -235,17 +209,13 @@ function blogtrottrHandler () {
       case 'HutGay':
       case 'Super Tudo Gay – Porno Gay | Gay Amador | Sexo Gay':
       case 'Gay Porn Hub':
-      //ANCHOR - 'GayCock4U':
       case 'GayCock4U':
-      //ANCHOR -  'TURBOGVIDEOS.COM':
       case 'TURBOGVIDEOS.COM':
       case 'Gay – Faply':
-      //ANCHOR - iGay69
       case 'iGay69':
         addIframeHrefs();
         break;
 
-      //ANCHOR - 4horlover
       case '4horlover':
         tempDoc = await GMXmlHttpRequest( itemUrl );
         const centerEl = tempDoc.querySelector( 'main center' );
@@ -262,26 +232,21 @@ function blogtrottrHandler () {
         } );
         break;
 
-      //ANCHOR -  'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
       case 'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
         item.querySelector( '[href="https://meumundogay.net"]' ).remove();
         addIframeHrefs();
         break;
 
-      //ANCHOR -  'porno gay latinos':
       case 'porno gay latinos':
 
-      //ANCHOR -  'GayVids.tube | GayVids, gaybb, porn gay hd, gay porn online, czech hunter, gayvids, freeonlinegayporn, gay porn, gay por...':
       case 'GayVids.tube | GayVids, gaybb, porn gay hd, gay porn online, czech hunter, gayvids, freeonlinegayporn, gay porn, gay por...':
 
-      //ANCHOR -  'GayGuy.Top':
       case 'GayGuy.Top':
       case 'GayGuy.Top - Watch Gay Porn Videos Free':
         removeEmptytextEls( innerDiv );
         addIframeHrefs();
         break;
 
-      //ANCHOR -  'Gaystream':
       case 'Gaystream':
       case 'Gaystream is brat':
         const tempDocGstrm = await GMXmlHttpRequest( itemUrl );
@@ -299,7 +264,6 @@ function blogtrottrHandler () {
         innerDiv.prepend( imgEl );
         break;
 
-      //ANCHOR -  'FreePornVideosHDGay.com – Videos online free gay porn':
       case 'FreePornVideosHDGay.com – Videos online free gay porn':
         const tempDocD = await GMXmlHttpRequest( itemUrl );
         tempDocD.querySelectorAll( '.button_choice_server' ).forEach( item => {
@@ -309,7 +273,6 @@ function blogtrottrHandler () {
         addPeekButtons( innerDiv, item );
         break;
 
-      //ANCHOR -  'New Videos (yesgay.xyz)':
       case 'New Videos':
       case 'New Videos - GayHardFuck.com':
 
@@ -348,7 +311,6 @@ function blogtrottrHandler () {
 
         break;
 
-      //ANCHOR -  'NurGAY.to':
       case 'NurGAY.to':
 
         const newDiv = document.createElement( 'div' );
@@ -373,7 +335,6 @@ function blogtrottrHandler () {
 
         break;
 
-      //ANCHOR -  'Hacker News: Front Page':
       case 'Hacker News: Front Page':
         GM_xmlhttpRequest( {
           method: 'GET',
@@ -390,7 +351,6 @@ function blogtrottrHandler () {
         innerDiv.prepend( item.querySelector( '[href*="news.ycombinator.com"]' ) );
       // no break here because reddit has some stuff in common
 
-      //ANCHOR -  'reddit.com: search results - sri lanka':
       case 'reddit.com: search results - sri lanka':
 
         // console.log( innerDiv )
