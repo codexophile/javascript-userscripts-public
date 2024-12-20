@@ -58,7 +58,7 @@
 
   function gatherAllVideoLinks () {
     const query = `a[href*="watch?v="]:not(#slotsDiv a)`;
-    const videoLinks = Array.from( document.querySelectorAll( 'a[href*="watch?v="]' ), el => el.href );
+    const videoLinks = Array.from( document.querySelectorAll( query ), el => el.href );
     return [ ...new Set( videoLinks ) ];
   }
 
@@ -70,8 +70,6 @@
 
   function processStoryboards ( responses ) {
     return responses.map( response => {
-      // Assuming generateAllYouTubeSbUrls is a function that processes the response
-      // and returns a storyboard URL
       return generateAllYouTubeSbUrls( response );
     } );
   }
