@@ -18,25 +18,35 @@
   } );
 
   function addHighResThumbButton ( thumbEl, parentEl ) {
-    const videoLink = thumbEl.querySelector( 'a' );
-    const videoId = getVideoIdFromLink( videoLink );
-    const fullResSrc = `https://i.ytimg.com/vi_webp/${ videoId }/maxresdefault.webp`;
-    const btnEl = generateElements( `<a >🖼️</a>` );
+
+    const btnEl = generateElements( `<a>🖼️</a>` );
     btnEl.id = 'peekFullResThumb';
-    btnEl.href = fullResSrc;
     btnEl.target = '_blank';
     parentEl.append( btnEl );
+
+    btnEl.addEventListener( 'mouseover', () => {
+      const videoLink = thumbEl.querySelector( 'a' );
+      const videoId = getVideoIdFromLink( videoLink );
+      const fullResSrc = `https://i.ytimg.com/vi_webp/${ videoId }/maxresdefault.webp`;
+      btnEl.href = fullResSrc;
+    } );
+
   }
 
   async function addVideosButton ( thumbEl, parentEl ) {
-    const linkToChannel = await getLinkToChannel( thumbEl );
-    const linkToVideos = `${ linkToChannel }/videos`;
+
     const newEl = generateElements( `<a>Vid</a>`, parentEl );
-    newEl.href = linkToVideos;
     newEl.target = '_blank';
     style( newEl, `
       text-decoration: none;
     `);
+
+    newEl.addEventListener( 'mouseover', async () => {
+      const linkToChannel = await getLinkToChannel( thumbEl );
+      const linkToVideos = `${ linkToChannel }/videos`;
+      newEl.href = linkToVideos;
+    } );
+
     return newEl;
   }
 
