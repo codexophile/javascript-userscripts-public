@@ -84,7 +84,6 @@
   //* Flex view
   if ( document.querySelector( `[role="complementary"]` ) ) return;
 
-  console.clear();
   const queryForLocator = '[target="_blank"]:has(>h3):not([class])';
 
   // waitForEach( queryForLocator, ( item ) => {
@@ -96,7 +95,6 @@
   const searchEl = document.querySelector( `#search` );
   const mainEl = document.querySelector( `#center_col` );
   const rcntEl = document.querySelector( `#rcnt` );
-  console.log( { locatorEls, parentEl, searchEl, mainEl, rcntEl } );
 
   locatorEls.forEach( item => {
     const resultEl = grandParent( item, 7 );
