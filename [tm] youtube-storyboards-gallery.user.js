@@ -5,43 +5,101 @@
   const collapsible = await Collapsible();
 
   const laterlistCollapsibleBtn = collapsible.addButton( 'G', null, async ( event ) => {
-
     try {
+      // Create progress indicator container
+      const progressContainer = document.createElement( 'div' );
+      style( progressContainer, `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        z-index: 9999;
+        font-size: 14px;
+      `);
+      document.body.appendChild( progressContainer );
 
       const allVideoLinks = gatherAllVideoLinks();
       if ( allVideoLinks.length === 0 ) {
         console.warn( 'No video links found.' );
+        progressContainer.remove();
         return;
       }
 
-      const results = await fetchAllVideoLinks( allVideoLinks );
-      const storyboardObjs = processStoryboards( results );
+      // Initialize progress display
+      const totalVideos = allVideoLinks.length;
+      let loadedVideos = 0;
+      updateProgress( loadedVideos, totalVideos );
 
       const newWindow = window.open( '', '_blank' );
       if ( !newWindow ) {
         alert( 'Failed to open new window.' );
+        progressContainer.remove();
         return;
       }
 
-      storyboardObjs.forEach( ( item, index ) => {
-        item.href = allVideoLinks[ index ];
-        createStoryboardGalleryItem( item, newWindow );
-      } );
+      // Add progress indicator to new window
+      const newWindowProgress = newWindow.document.createElement( 'div' );
+      style( newWindowProgress, `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        z-index: 9999;
+        font-size: 14px;
+      `);
+      newWindow.document.body.appendChild( newWindowProgress );
+
+      // Fetch and process videos one by one to show accurate progress
+      for ( let i = 0; i < allVideoLinks.length; i++ ) {
+        try {
+          const response = await GMXmlHttpReqResponse( allVideoLinks[ i ] );
+          const storyboardObj = generateAllYouTubeSbUrls( response );
+          storyboardObj.href = allVideoLinks[ i ];
+          createStoryboardGalleryItem( storyboardObj, newWindow );
+
+          loadedVideos++;
+          updateProgress( loadedVideos, totalVideos );
+          updateNewWindowProgress( loadedVideos, totalVideos, newWindowProgress );
+        } catch ( error ) {
+          console.error( `Error processing video ${ allVideoLinks[ i ] }:`, error );
+        }
+      }
+
+      // Remove progress indicators after completion
+      setTimeout( () => {
+        progressContainer.remove();
+        newWindowProgress.remove();
+      }, 2000 );
 
     } catch ( error ) {
       console.error( 'An error occurred:', error );
     }
-
   } );
 
-  function createStoryboardGalleryItem ( item, window ) {
+  function updateProgress ( current, total ) {
+    const progressContainer = document.querySelector( '[data-progress-container]' );
+    if ( progressContainer ) {
+      progressContainer.textContent = `Loading: ${ current }/${ total } storyboards`;
+    }
+  }
 
+  function updateNewWindowProgress ( current, total, progressElement ) {
+    progressElement.textContent = `Loaded: ${ current }/${ total } storyboards`;
+  }
+
+  function createStoryboardGalleryItem ( item, window ) {
     const galleryItemEl = generateElements( `<div class="gallery-item"></div>` );
     style( galleryItemEl, `
-            border: 1px solid black;
-            border-radius: 5px;
-            margin: 5px;
-        `);
+      border: 1px solid black;
+      border-radius: 5px;
+      margin: 5px;
+    `);
     const galleryItemLink = generateElements( `<a href="${ item.href }">${ item.href }</a>`, galleryItemEl );
     storyboardToggleable( {
       storyboardParent: galleryItemEl,
@@ -60,18 +118,6 @@
     const query = `a[href*="watch?v="]:not(#slotsDiv a)`;
     const videoLinks = Array.from( document.querySelectorAll( query ), el => el.href );
     return [ ...new Set( videoLinks ) ];
-  }
-
-  async function fetchAllVideoLinks ( urls ) {
-    const promises = urls.map( url => GMXmlHttpReqResponse( url ) );
-    const results = await Promise.allSettled( promises );
-    return results.filter( result => result.status === 'fulfilled' ).map( result => result.value );
-  }
-
-  function processStoryboards ( responses ) {
-    return responses.map( response => {
-      return generateAllYouTubeSbUrls( response );
-    } );
   }
 
 } )();
