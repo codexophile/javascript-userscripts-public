@@ -23,13 +23,18 @@
     btnEl.id = 'peekFullResThumb';
     btnEl.target = '_blank';
     parentEl.append( btnEl );
+    setHref();
 
-    btnEl.addEventListener( 'mouseover', () => {
+    btnEl.addEventListener( 'mouseover', setHref );
+
+    function setHref () {
+      btnEl.textContent = '⏳';
       const videoLink = thumbEl.querySelector( 'a' );
       const videoId = getVideoIdFromLink( videoLink );
       const fullResSrc = `https://i.ytimg.com/vi_webp/${ videoId }/maxresdefault.webp`;
       btnEl.href = fullResSrc;
-    } );
+      btnEl.textContent = '🖼️';
+    }
 
   }
 
@@ -40,14 +45,20 @@
     style( newEl, `
       text-decoration: none;
     `);
+    setHref();
 
-    newEl.addEventListener( 'mouseover', async () => {
+    newEl.addEventListener( 'mouseover', setHref );
+
+    async function setHref () {
+      newEl.textContent = '⏳';
       const linkToChannel = await getLinkToChannel( thumbEl );
       const linkToVideos = `${ linkToChannel }/videos`;
       newEl.href = linkToVideos;
-    } );
+      newEl.textContent = 'Vid';
+    }
 
     return newEl;
+
   }
 
   async function getLinkToChannel ( thumbEl ) {
