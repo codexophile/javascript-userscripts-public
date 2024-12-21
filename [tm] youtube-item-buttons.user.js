@@ -44,9 +44,7 @@
   async function addVideosButton ( thumbEl, parentEl ) {
     const newEl = generateElements( `<a>Vid</a>`, parentEl );
     newEl.target = '_blank';
-    style( newEl, `
-      text-decoration: none;
-    `);
+    style( newEl, `text-decoration: none;` );
     setLinkToVidsHref( newEl, thumbEl );
     newEl.addEventListener( 'mouseover', setLinkToVidsHref );
     return newEl;
