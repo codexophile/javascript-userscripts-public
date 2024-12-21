@@ -18,7 +18,8 @@
     addHighResThumbButton( thumbEl, buttonsContainerEl );
 
     thumbEl.addEventListener( 'mouseover', () => {
-
+      const fullResThumbBtnEl = buttonsContainerEl.querySelector( '#peekFullResThumb' );
+      setPreviewImgHref( fullResThumbBtnEl, thumbEl );
     } );
 
   } );
