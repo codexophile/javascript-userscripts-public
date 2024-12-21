@@ -1,162 +1,163 @@
 ( async function () {
-    'use strict';
+  'use strict';
 
-    //* moving video control panel
-    ( async function () {
-        'use strict';
-        const videoControlPanel = await waitFor( '#video-controlPanel' );
-        style( videoControlPanel, `
+  //* moving video control panel
+  ( async function () {
+    'use strict';
+    const videoControlPanel = await waitFor( '#video-controlPanel' );
+    style( videoControlPanel, `
                 left: unset;
                 right: 100px;
                 top: 50vh;
             `);
-    } )();
+  } )();
 
-    //* Expand button
-    const collapsibleObj = await Collapsible();
+  //* Expand button
+  const collapsibleObj = await Collapsible();
 
-    collapsibleObj.addButton( '♒', null, ( event ) => {
+  collapsibleObj.addButton( '♒', null, ( event ) => {
 
-        if ( !location.href.match( /instagram\.com\/.+?\// ) )
-            return;
+    if ( !location.href.match( /instagram\.com\/.+?\// ) )
+      return;
 
-        const mainEl = document.querySelector( `[style="height: 100%;"]` );
-        const contentEl = mainEl.children[ 0 ];
-        const asideEl = mainEl.children[ 1 ];
-        const contentInnerEl = document.querySelector( 'main>div' );
+    const mainEl = document.querySelector( `[style="height: 100%;"]` );
+    const contentEl = mainEl.children[ 0 ];
+    const asideEl = mainEl.children[ 1 ];
+    const contentInnerEl = document.querySelector( 'main>div' );
 
-        style( contentEl, `
+    style( contentEl, `
             margin: unset;
             width: 100%;
         ` );
-        style( asideEl, `
+    style( asideEl, `
             display: none;
         ` );
-        style( contentInnerEl, `
+    style( contentInnerEl, `
             max-width: unset;
             margin: unset;
         ` );
 
-        const queryForRows = 'div:has(>div>[href*="/p/"]):not([style])';
-        const rowsParentEl = document.querySelector( queryForRows ).parentElement;
+    const queryForRows = 'div:has(>div>[href*="/p/"]):not([style])';
+    const rowsParentEl = document.querySelector( queryForRows ).parentElement;
 
-        style( rowsParentEl, `
+    style( rowsParentEl, `
             flex-direction: row;
             flex-wrap: wrap;
         `);
 
-        waitForEach( queryForRows, ( rowEl ) => {
+    waitForEach( queryForRows, ( rowEl ) => {
 
-            rowEl.querySelectorAll( 'div' ).forEach( item => {
-                style( item, `
+      rowEl.querySelectorAll( 'div' ).forEach( item => {
+        style( item, `
                     width: 300px;
                 `);
-            } );
+      } );
 
-            unwrap( rowEl );
-
-        } );
-
-        event.target.remove();
+      unwrap( rowEl );
 
     } );
 
+    event.target.remove();
 
-    let observer = new MutationObserver( () => {
+  } );
 
-        //* Suggested accounts on profile pages
-        const $profilesLocators = $( `[style="width: 170px;"]` );
-        if ( $profilesLocators.length ) {
 
-            const $grandParent = $( grandParent( $profilesLocators[ 0 ], 6 ) );
-            if ( $grandParent.parent().find( '#profilesWrapper' ).length ) return; // 🛑
+  let observer = new MutationObserver( () => {
 
-            const $profilesWrapper = $( `<div id=profilesWrapper></div>` ).insertAfter( $grandParent.prev() );
+    //* Suggested accounts on profile pages
+    const $profilesLocators = $( `[style="width: 170px;"]` );
+    if ( $profilesLocators.length ) {
 
-            $profilesLocators.each( function () {
-                const linkToProfile = this.querySelector( 'a' ).href;
-                const profilePicSrc = this.querySelector( 'img' ).src;
-                $profilesWrapper.append( `
+      const $grandParent = $( grandParent( $profilesLocators[ 0 ], 6 ) );
+      if ( $grandParent.parent().find( '#profilesWrapper' ).length ) return; // 🛑
+
+      const $profilesWrapper = $( `<div id=profilesWrapper></div>` ).insertAfter( $grandParent.prev() );
+
+      $profilesLocators.each( function () {
+        const linkToProfile = this.querySelector( 'a' ).href;
+        const profilePicSrc = this.querySelector( 'img' ).src;
+        $profilesWrapper.append( `
                     <a href=${ linkToProfile } style='display: inline-block; width: 33%'>
                         <img src=${ profilePicSrc }>
+                        <div>Link</div>
                     </a>
                 `);
-            } );
+      } );
 
-        }
+    }
 
-        //* click all 'see translation' button
-        $( `[role=button]:contains('See translation')` ).click();
+    //* click all 'see translation' button
+    $( `[role=button]:contains('See translation')` ).click();
 
-        // const $imagesOpened = $( '[style*="padding-bottom:"] > img[src]:not(.imgProcessed)' )
-        const queryForIGPosts = 'img[crossorigin="anonymous"][style="object-fit: cover;"]:not(.imgProcessed)';
-        const queryForIGAllImagesItems = '#igAllImages > * > img';
-        const $imagesOpened = $( `${ queryForIGAllImagesItems }, ${ queryForIGPosts }` );
-        $imagesOpened.each( function () {
+    // const $imagesOpened = $( '[style*="padding-bottom:"] > img[src]:not(.imgProcessed)' )
+    const queryForIGPosts = 'img[crossorigin="anonymous"][style="object-fit: cover;"]:not(.imgProcessed)';
+    const queryForIGAllImagesItems = '#igAllImages > * > img';
+    const $imagesOpened = $( `${ queryForIGAllImagesItems }, ${ queryForIGPosts }` );
+    $imagesOpened.each( function () {
 
-            this.classList.add( 'imgProcessed' );
-            const $this = $( this );
-            const imgSrc = this.src;
+      this.classList.add( 'imgProcessed' );
+      const $this = $( this );
+      const imgSrc = this.src;
 
-            const $linksContainer = $( `<div></div>` ).insertAfter( $this );
-            style( $linksContainer[ 0 ], `
+      const $linksContainer = $( `<div></div>` ).insertAfter( $this );
+      style( $linksContainer[ 0 ], `
                 position: absolute;
                 top:      5px;
                 left:     5px;
                 z-index:  1000;
             `);
-            $linksContainer.append( `<a href='${ imgSrc }' target=_blank> 🔗 </a>` );
-            $( `<button>⬇️</button>` ).appendTo( $linksContainer ).on( 'click', () => clickHandler( this ) );
-
-        } );
-
-        const $videos = $( `video` );
-        $videos.each( function ( index, element ) {
-            // element.pause()
-        } );
+      $linksContainer.append( `<a href='${ imgSrc }' target=_blank> 🔗 </a>` );
+      $( `<button>⬇️</button>` ).appendTo( $linksContainer ).on( 'click', () => clickHandler( this ) );
 
     } );
-    observer.observe( document.body, { childList: true, subtree: true } );
 
-    const clickHandler = ( image ) => {
+    const $videos = $( `video` );
+    $videos.each( function ( index, element ) {
+      // element.pause()
+    } );
 
-        const tempImg = GM_addElement( 'img', { src: image.src, crossorigin: "anonymous" } );
-        tempImg.addEventListener( 'load', () => {
+  } );
+  observer.observe( document.body, { childList: true, subtree: true } );
 
-            var c = $( `canvas` )[ 0 ];
-            c.width = tempImg.naturalWidth;
-            c.height = tempImg.naturalHeight;
-            var ctx = c.getContext( "2d" );
-            ctx.drawImage( tempImg, 0, 0 );
-            const uri = c.toDataURL();
+  const clickHandler = ( image ) => {
 
-            const link = $( `<a></a>` )[ 0 ];
-            let fileName = `${ getUserId( image ) } - ${ getPostId( image ) } - instagram`;
-            link.setAttribute( 'download', `${ fileName }.png` );
-            link.setAttribute( 'href', uri );
-            link.click();
+    const tempImg = GM_addElement( 'img', { src: image.src, crossorigin: "anonymous" } );
+    tempImg.addEventListener( 'load', () => {
 
-        } );
-    };
+      var c = $( `canvas` )[ 0 ];
+      c.width = tempImg.naturalWidth;
+      c.height = tempImg.naturalHeight;
+      var ctx = c.getContext( "2d" );
+      ctx.drawImage( tempImg, 0, 0 );
+      const uri = c.toDataURL();
 
-    function getUserId ( image ) {
-        let $parent;
-        if ( location.href === 'https://www.instagram.com/' )
-            $parent = $( image ).closest( 'article' );
-        if ( location.href.includes( '/p/' ) )
-            $parent = $( `main` ).first();
-        const userId = $parent.find( '[href^="/"]' ).first().attr( 'href' ).match( /\/(.+?)\// )[ 1 ];
-        console.log( userId );
-        return userId;
-    }
+      const link = $( `<a></a>` )[ 0 ];
+      let fileName = `${ getUserId( image ) } - ${ getPostId( image ) } - instagram`;
+      link.setAttribute( 'download', `${ fileName }.png` );
+      link.setAttribute( 'href', uri );
+      link.click();
 
-    function getPostId ( image ) {
-        let href;
-        if ( location.href === 'https://www.instagram.com/' )
-            href = $( image ).closest( 'article' ).find( '[href*="/p/"]' ).attr( 'href' );
-        if ( location.href.includes( '/p/' ) )
-            href = location.href;
-        return href.match( /\/p\/(.+?)(\/|$)/ )[ 1 ];
-    }
+    } );
+  };
+
+  function getUserId ( image ) {
+    let $parent;
+    if ( location.href === 'https://www.instagram.com/' )
+      $parent = $( image ).closest( 'article' );
+    if ( location.href.includes( '/p/' ) )
+      $parent = $( `main` ).first();
+    const userId = $parent.find( '[href^="/"]' ).first().attr( 'href' ).match( /\/(.+?)\// )[ 1 ];
+    console.log( userId );
+    return userId;
+  }
+
+  function getPostId ( image ) {
+    let href;
+    if ( location.href === 'https://www.instagram.com/' )
+      href = $( image ).closest( 'article' ).find( '[href*="/p/"]' ).attr( 'href' );
+    if ( location.href.includes( '/p/' ) )
+      href = location.href;
+    return href.match( /\/p\/(.+?)(\/|$)/ )[ 1 ];
+  }
 
 } )();
