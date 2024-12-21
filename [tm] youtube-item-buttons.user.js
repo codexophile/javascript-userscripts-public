@@ -19,7 +19,9 @@
 
     thumbEl.addEventListener( 'mouseover', () => {
       const fullResThumbBtnEl = buttonsContainerEl.querySelector( '#peekFullResThumb' );
+      const linkToVidsEl = buttonsContainerEl.querySelector( '#linkToVids' );
       setPreviewImgHref( fullResThumbBtnEl, thumbEl );
+      setLinkToVidsHref( linkToVidsEl, thumbEl );
     } );
 
   } );
@@ -44,6 +46,7 @@
   async function addVideosButton ( thumbEl, parentEl ) {
     const newEl = generateElements( `<a>Vid</a>`, parentEl );
     newEl.target = '_blank';
+    newEl.id = 'linkToVids';
     style( newEl, `text-decoration: none;` );
     setLinkToVidsHref( newEl, thumbEl );
     newEl.addEventListener( 'mouseover', setLinkToVidsHref );
