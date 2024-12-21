@@ -11,10 +11,16 @@
   const queryForThumbEls = thumbElSelectorsArr.join( ', ' );
 
   waitForEach( queryForThumbEls, ( thumbEl ) => {
+
     const buttonsContainerEl = createButtonsContainer( thumbEl );
     if ( !location.href.match( /\/@|\/channel\// ) )
       addVideosButton( thumbEl, buttonsContainerEl );
     addHighResThumbButton( thumbEl, buttonsContainerEl );
+
+    thumbEl.addEventListener( 'mouseover', () => {
+
+    } );
+
   } );
 
   function addHighResThumbButton ( thumbEl, parentEl ) {
@@ -79,6 +85,10 @@
     const buttonsContainer = generateElements( `<div id=buttonsContainer></div>` );
     parent.append( buttonsContainer );
     buttonsContainer.style = 'position: absolute; left: 5px; top: 5px;';
+    GM_addStyle( `
+      #buttonsContainer { display: none; }
+      :is(${ queryForThumbEls }):hover #buttonsContainer { display: flex; }
+    ` );
     return buttonsContainer;
   }
 
