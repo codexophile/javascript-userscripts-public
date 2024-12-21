@@ -24,24 +24,20 @@
   } );
 
   function addHighResThumbButton ( thumbEl, parentEl ) {
-
     const btnEl = generateElements( `<a>🖼️</a>` );
     btnEl.id = 'peekFullResThumb';
     btnEl.target = '_blank';
     parentEl.append( btnEl );
-    setHref();
+    setPreviewImgHref( btnEl, thumbEl );
+  }
 
-    btnEl.addEventListener( 'mouseover', setHref );
-
-    function setHref () {
-      btnEl.textContent = '⏳';
-      const videoLink = thumbEl.querySelector( 'a' );
-      const videoId = getVideoIdFromLink( videoLink );
-      const fullResSrc = `https://i.ytimg.com/vi_webp/${ videoId }/maxresdefault.webp`;
-      btnEl.href = fullResSrc;
-      btnEl.textContent = '🖼️';
-    }
-
+  function setPreviewImgHref ( btnEl, thumbEl ) {
+    btnEl.textContent = '⏳';
+    const videoLink = thumbEl.querySelector( 'a' );
+    const videoId = getVideoIdFromLink( videoLink );
+    const fullResSrc = `https://i.ytimg.com/vi_webp/${ videoId }/maxresdefault.webp`;
+    btnEl.href = fullResSrc;
+    btnEl.textContent = '🖼️';
   }
 
   async function addVideosButton ( thumbEl, parentEl ) {
