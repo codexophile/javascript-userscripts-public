@@ -35,7 +35,7 @@
 
       const newWindow = window.open( '', '_blank' );
       if ( !newWindow ) {
-        alert( 'Failed to open new window.' );
+        console.log( 'Failed to open new window.' );
         progressContainer.remove();
         return;
       }
