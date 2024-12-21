@@ -42,26 +42,22 @@
   }
 
   async function addVideosButton ( thumbEl, parentEl ) {
-
     const newEl = generateElements( `<a>Vid</a>`, parentEl );
     newEl.target = '_blank';
     style( newEl, `
       text-decoration: none;
     `);
-    setHref();
-
-    newEl.addEventListener( 'mouseover', setHref );
-
-    async function setHref () {
-      newEl.textContent = '⏳';
-      const linkToChannel = await getLinkToChannel( thumbEl );
-      const linkToVideos = `${ linkToChannel }/videos`;
-      newEl.href = linkToVideos;
-      newEl.textContent = 'Vid';
-    }
-
+    setLinkToVidsHref( newEl, thumbEl );
+    newEl.addEventListener( 'mouseover', setLinkToVidsHref );
     return newEl;
+  }
 
+  async function setLinkToVidsHref ( newEl, thumbEl ) {
+    newEl.textContent = '⏳';
+    const linkToChannel = await getLinkToChannel( thumbEl );
+    const linkToVideos = `${ linkToChannel }/videos`;
+    newEl.href = linkToVideos;
+    newEl.textContent = 'Vid';
   }
 
   async function getLinkToChannel ( thumbEl ) {
