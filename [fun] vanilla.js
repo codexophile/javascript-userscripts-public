@@ -754,6 +754,23 @@ function GMXmlHttpRequestAsync ( url ) {
   } );
 
 }
+async function GMXmlHttpReqResponse ( url ) {
+
+  const promise = new Promise( ( resolve, reject ) => {
+    // @ts-ignore
+    GM_xmlhttpRequest( {
+      method: 'GET',
+      url: url,
+      responseType: 'document',
+      onload: function ( response ) {
+        resolve( response.responseText );
+      }
+      ,
+      onerror: () => { reject( 'error' ); }
+    } );
+  } );
+  return await promise;
+}
 
 
 function pipeline ( ...functions ) {
@@ -808,24 +825,6 @@ function markElAsProcessed ( el, markedEls, execute ) {
     markedEls.push( el );
     execute( el );
   }
-}
-
-async function GMXmlHttpReqResponse ( url ) {
-
-  const promise = new Promise( ( resolve, reject ) => {
-    // @ts-ignore
-    GM_xmlhttpRequest( {
-      method: 'GET',
-      url: url,
-      responseType: 'document',
-      onload: function ( response ) {
-        resolve( response.responseText );
-      }
-      ,
-      onerror: () => { reject( 'error' ); }
-    } );
-  } );
-  return await promise;
 }
 
 function generateAllYouTubeSbUrls ( fullYTHtml ) {
@@ -1533,4 +1532,42 @@ function calculateWidthAndExpand ( collapsibleContent ) {
     totalWidth += ( widthValue ? widthValue : 0 ) + marginValue * 2;
   }
   collapsibleContent.style.width = `${ totalWidth }px`;
+}
+
+//ANCHOR - Site specific functions
+
+async function bftStoryboardFromUrl ( bftvUrl, sbGrandParent ) {
+
+  const bftvDoc = await GMXmlHttpRequest( bftvUrl );
+  const bftvScript = bftvDoc.querySelector( 'script[type="application/ld+json"]' );
+
+  const durationMatches = bftvScript.textContent.match( /"duration":"PT(.+?)H(.+?)M(.+?)S"/ );
+  const durationString = `${ durationMatches[ 1 ] }:${ durationMatches[ 2 ] }:${ durationMatches[ 3 ] }`;
+  const durationInSeconds = toSeconds( durationString );
+
+  // const thumbnailSrc = bftvDoc.querySelector( 'meta[property="og:image"]' ).content;
+  // const thumbEl = generateElements( `<img src=${ thumbnailSrc }>`, item );
+  // thumbEl.style.maxHeight = '300px';
+  // generateElements( `<div>${ durationString }</div>`, item );
+
+  const otherScript = contains( 'script', 'initPlayer', bftvDoc )[ 0 ];
+  const thumbBase = otherScript.textContent.match( /thumbBase: '(.+?)'/ )[ 1 ];
+  const thumbCount = otherScript.textContent.match( /thumbsCount: (\d+)/ )[ 1 ];
+  let imgUrls = [];
+  for ( let i = 1; i <= thumbCount; i++ ) {
+    const thisUrl = thumbBase.replace( '{THUMB_ID}', i );
+    imgUrls.push( thisUrl );
+  }
+  console.log( imgUrls );
+
+  const storyboardParent = generateElements( '<div></div>', sbGrandParent );
+  storyboardToggleable( {
+    storyboardParent,
+    horizontal: 1,
+    vertical: 1,
+    linkToVid: bftvUrl,
+    trueNoOfSlots: thumbCount,
+    imgUrls: imgUrls
+  } );
+
 }
