@@ -7,7 +7,9 @@
     'ytd-video-renderer',
     'ytd-compact-video-renderer',
     'ytd-rich-item-renderer',
-    'ytd-playlist-video-renderer > #content' ];
+    'ytd-playlist-video-renderer > #content',
+    'a.ytp-videowall-still'
+  ];
   const queryForThumbEls = thumbElSelectorsArr.join( ', ' );
 
   waitForEach( queryForThumbEls, ( thumbEl ) => {
