@@ -423,9 +423,17 @@ async function storyboardToggleable ( {
 
 
 async function storyboardFlex ( horizontal, vertical, imgSrc, index, trueNoOfSlots ) {
-  const imgElement = new Image();
+
+  let imgElement;
+  try {
+    imgElement = GM_addElement( document.body, 'img', { src: imgSrc } );
+  } catch ( error ) {
+    console.log( error );
+    imgElement = generateElements( `<img>`, document.body );
+    imgElement.src = imgSrc;
+  }
+
   imgElement.style.display = 'none';
-  imgElement.src = imgSrc;
   document.body.appendChild( imgElement );
 
   // @ts-ignore
@@ -714,6 +722,7 @@ async function load ( url, selector, parent ) {
   }
   return selected;
 }
+
 
 function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
 
@@ -1537,6 +1546,7 @@ function calculateWidthAndExpand ( collapsibleContent ) {
 //ANCHOR - Site specific functions
 
 async function bftStoryboardFromUrl ( bftvUrl, sbGrandParent ) {
+  console.log( bftvUrl );
 
   const bftvDoc = await GMXmlHttpRequest( bftvUrl );
   const bftvScript = bftvDoc.querySelector( 'script[type="application/ld+json"]' );
@@ -1558,7 +1568,6 @@ async function bftStoryboardFromUrl ( bftvUrl, sbGrandParent ) {
     const thisUrl = thumbBase.replace( '{THUMB_ID}', i );
     imgUrls.push( thisUrl );
   }
-  console.log( imgUrls );
 
   const storyboardParent = generateElements( '<div></div>', sbGrandParent );
   storyboardToggleable( {
