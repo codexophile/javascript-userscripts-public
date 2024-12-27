@@ -156,8 +156,15 @@ async function storyboard ( {
           top: '0px',
           left: '0px',
         } );
-        // slot.append( link );
       }
+
+      const timeStringEl = generateElements( `<div>test</div>`, slot );
+      style( timeStringEl, `
+        position: relative;
+        color: black;
+        top: -50px;
+      `);
+
       slot.addEventListener( 'click', ev => {
         const samplingFreq =
           samplingFq ||
