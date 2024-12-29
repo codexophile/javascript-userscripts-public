@@ -65,13 +65,24 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
     } );
     collapsible.addButton( '🌆', imgUrlsPopupEl ).classList.add( 'storyboardControl' );
 
-    // const sbSlider = generateElements( `
-    //     <input class=storyboardControl type="range" id="sizeSlider" min="50" max="300" value="100">` );
-    // sbSlider.addEventListener( 'input', function () {
-    //     const scaleFactor = sbSlider.value / 100;
-    //     setSlotScale( sbParent, scaleFactor );
-    // } );
-    // collapsible.addElement( sbSlider );
+    if ( video.readyState > 0 ) jumpToSlot();
+    video.addEventListener( 'loadeddata', jumpToSlot );
+
+    video.addEventListener( 'timeupdate', () => {
+      const duration = video.duration;
+      const currentSlotNo = Math.round( ( video.currentTime * trueNoOfSlots ) / duration );
+      const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' );
+
+      storyboardItems.forEach( ( item, index ) => {
+        if ( index <= currentSlotNo ) {
+          item.classList.add( 'wentPast' );
+          item.style.border = '3px solid red';
+        } else {
+          item.classList.remove( 'wentPast' );
+          item.style.border = '3px solid white';
+        }
+      } );
+    } );
 
   }
   else {
@@ -80,7 +91,7 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
 
   // calculateWidthAndExpand( collapsibleEl );
 
-  const jumpToSlot = () => {
+  function jumpToSlot () {
     const matches = location.hash.match( /#slot=(\d+?)($|#)/ );
     if ( !matches ) return;
 
@@ -89,24 +100,7 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
     if ( slotNo ) playVideo( video, trueNoOfSlots, slotNo );
   };
 
-  if ( video.readyState > 0 ) jumpToSlot();
-  video.addEventListener( 'loadeddata', jumpToSlot );
 
-  video.addEventListener( 'timeupdate', () => {
-    const duration = video.duration;
-    const currentSlotNo = Math.round( ( video.currentTime * trueNoOfSlots ) / duration );
-    const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' );
-
-    storyboardItems.forEach( ( item, index ) => {
-      if ( index <= currentSlotNo ) {
-        item.classList.add( 'wentPast' );
-        item.style.border = '3px solid red';
-      } else {
-        item.classList.remove( 'wentPast' );
-        item.style.border = '3px solid white';
-      }
-    } );
-  } );
 }
 
 async function storyboard ( {
