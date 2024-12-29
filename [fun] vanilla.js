@@ -437,6 +437,10 @@ function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
         const resText = response.responseText;
         if ( returnHtml )
           resolve( resText );
+        if ( !resText ) {
+          reject( 'no response text' );
+          return false;
+        }
         const tempDoc = generateDoc( resText, true );
         resolve( tempDoc );
       },
@@ -1246,7 +1250,6 @@ function calculateWidthAndExpand ( collapsibleContent ) {
 //ANCHOR - Site specific functions
 
 async function bftStoryboardFromUrl ( bftvUrl, sbGrandParent ) {
-  console.log( bftvUrl );
 
   const bftvDoc = await GMXmlHttpRequest( bftvUrl );
   const bftvScript = bftvDoc.querySelector( 'script[type="application/ld+json"]' );
@@ -1270,7 +1273,7 @@ async function bftStoryboardFromUrl ( bftvUrl, sbGrandParent ) {
   }
 
   const storyboardParent = generateElements( '<div></div>', sbGrandParent );
-  storyboardToggleable( {
+  return await storyboard( {
     storyboardParent,
     horizontal: 1,
     vertical: 1,
