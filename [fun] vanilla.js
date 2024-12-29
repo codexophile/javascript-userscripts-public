@@ -435,19 +435,18 @@ function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
       responseType: 'document',
       onload: response => {
         const resText = response.responseText;
-        if ( returnHtml )
-          resolve( resText );
         if ( !resText ) {
           reject( 'no response text' );
           return false;
         }
+        if ( returnHtml )
+          resolve( resText );
         const tempDoc = generateDoc( resText, true );
         resolve( tempDoc );
       },
       onerror: () => reject( 'onerror' ),
       ontimeout: () => reject( 'ontimeout' )
     } );
-    // function errorFunction () { reject( 'error loading page' ) }
   } );
 
 }
