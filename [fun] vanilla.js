@@ -687,6 +687,125 @@ function lazyLoad ( load, ...items ) {
 
 }
 
+function makeElementDraggableAndResizable ( element ) {
+  let isDragging = false;
+  let isResizing = false;
+  let currentX;
+  let currentY;
+  let initialX;
+  let initialY;
+  let xOffset = 0;
+  let yOffset = 0;
+
+  // Create and append resize handle
+  const resizeHandle = document.createElement( 'div' );
+  resizeHandle.style.cssText = `
+        width: 10px;
+        height: 10px;
+        background-color: #666;
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        cursor: se-resize;
+    `;
+  element.appendChild( resizeHandle );
+
+  // Make sure the element is positioned relatively or absolutely
+  if ( getComputedStyle( element ).position === 'static' ) {
+    element.style.position = 'relative';
+  }
+
+  // Add necessary styles
+  element.style.cursor = 'move';
+  element.style.userSelect = 'none';
+
+  // Drag functionality
+  function dragStart ( e ) {
+    if ( e.target === resizeHandle ) return;
+
+    isDragging = true;
+
+    if ( e.type === "touchstart" ) {
+      initialX = e.touches[ 0 ].clientX - xOffset;
+      initialY = e.touches[ 0 ].clientY - yOffset;
+    } else {
+      initialX = e.clientX - xOffset;
+      initialY = e.clientY - yOffset;
+    }
+  }
+
+  function dragEnd () {
+    isDragging = false;
+    isResizing = false;
+    initialX = currentX;
+    initialY = currentY;
+  }
+
+  function drag ( e ) {
+    if ( isDragging ) {
+      e.preventDefault();
+
+      if ( e.type === "touchmove" ) {
+        currentX = e.touches[ 0 ].clientX - initialX;
+        currentY = e.touches[ 0 ].clientY - initialY;
+      } else {
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+      }
+
+      xOffset = currentX;
+      yOffset = currentY;
+
+      element.style.transform = `translate(${ currentX }px, ${ currentY }px)`;
+    }
+  }
+
+  // Resize functionality
+  function resizeStart ( e ) {
+    if ( e.target === resizeHandle ) {
+      isResizing = true;
+      e.stopPropagation();
+    }
+  }
+
+  function resize ( e ) {
+    if ( isResizing ) {
+      e.preventDefault();
+
+      const rect = element.getBoundingClientRect();
+      let width, height;
+
+      if ( e.type === "touchmove" ) {
+        width = e.touches[ 0 ].clientX - rect.left;
+        height = e.touches[ 0 ].clientY - rect.top;
+      } else {
+        width = e.clientX - rect.left;
+        height = e.clientY - rect.top;
+      }
+
+      // Set minimum size
+      width = Math.max( 50, width );
+      height = Math.max( 50, height );
+
+      element.style.width = width + 'px';
+      element.style.height = height + 'px';
+    }
+  }
+
+  // Add event listeners
+  element.addEventListener( 'mousedown', dragStart );
+  element.addEventListener( 'touchstart', dragStart );
+  document.addEventListener( 'mousemove', drag );
+  document.addEventListener( 'touchmove', drag );
+  document.addEventListener( 'mouseup', dragEnd );
+  document.addEventListener( 'touchend', dragEnd );
+
+  resizeHandle.addEventListener( 'mousedown', resizeStart );
+  resizeHandle.addEventListener( 'touchstart', resizeStart );
+  document.addEventListener( 'mousemove', resize );
+  document.addEventListener( 'touchmove', resize );
+}
+
 function makeDraggable ( element ) {
   let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
   const header = document.getElementById( "contPanelHeader" );
