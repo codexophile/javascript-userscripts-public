@@ -58,7 +58,7 @@
       this.element = generateElements( `<div class="title-display"></div>` );
 
       // Create toggle button
-      this.toggleButton = generateElements( `<button type="button">◀</button>` );
+      this.toggleButton = generateElements( `<button type="button">▶</button>` );
       Object.assign( this.toggleButton.style, this.options.buttonStyle );
 
       // Create container for content
@@ -86,7 +86,7 @@
       this.isVisible = !this.isVisible;
       const translateX = this.isVisible ? '0' : `calc(100% - ${ this.toggleButton.offsetWidth }px)`;
       this.element.style.transform = `translateX(${ translateX })`;
-      this.toggleButton.textContent = this.isVisible ? '◀' : '▶';
+      this.toggleButton.textContent = this.isVisible ? '▶' : '◀';
     }
 
     applyStyles () {
