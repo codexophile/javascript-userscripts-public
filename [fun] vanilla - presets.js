@@ -150,8 +150,7 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
         }
         .collapsible-button:hover {
             background-color: ${ hoverColor };
-        }
-        .popup {
+        }        .collapsible-container .popup {
             display: none;
             position: absolute;
             left: 0px;
@@ -167,10 +166,10 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
             overflow: auto;
             text-wrap: nowrap;
         }
-        .popup.visible {
+        .collapsible-container .popup.visible {
             display: block;
         }
-        .resize-handle {
+        .collapsible-container .resize-handle {
             position: absolute;
             width: 10px;
             height: 10px;
@@ -202,7 +201,6 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
   let expandedWidth = width;
 
   collapsibleToggler.addEventListener( 'click', function ( e ) {
-    console.log( isDragging );
     e.stopPropagation();
     isExpanded = !isExpanded;
     if ( isExpanded ) {
