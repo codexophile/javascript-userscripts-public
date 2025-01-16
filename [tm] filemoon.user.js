@@ -18,9 +18,9 @@
   }
 
   const thumbElement = await waitFor( '.jw-time-thumb' );
-  // alert( 'test' );
   const sbUrl = thumbElement.style.backgroundImage.match( /url\("(.+?)"/ )[ 1 ];
   const $sbParent = $( `<div id=sbMain></div>` ).appendTo( document.body );
+  alert( $sbParent[ 0 ] );
   const vidOnPage = await waitFor( 'video' );
   vidOnPage.addEventListener( 'loadeddata', () => {
     const samplingFq = vidOnPage.duration / 100;
