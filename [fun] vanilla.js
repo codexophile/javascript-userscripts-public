@@ -207,6 +207,51 @@ function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionP
 
 }
 
+//ANCHOR - Time related
+
+function timer ( interval = 1000, tick = null, done = null ) {
+
+  let timerInterval;
+  let timeLeft;
+  let isPaused = false;
+
+  function startTimer ( timerDuration ) {
+    timeLeft = timerDuration; // Set the initial time
+    isPaused = false; // Reset paused state
+    timerInterval = setInterval( () => {
+      if ( timeLeft <= 0 ) {
+        clearInterval( timerInterval );
+        done();
+      } else {
+        tick( timeLeft );
+        timeLeft--; // Decrease time left
+      }
+    }, interval );
+  }
+
+  function pauseTimer () {
+    if ( !isPaused ) {
+      clearInterval( timerInterval ); // Stop the timer
+      isPaused = true; // Set paused state
+      console.log( 'Timer paused' );
+    }
+  }
+
+  function resumeTimer () {
+    if ( isPaused ) {
+      startTimer( timeLeft ); // Resume with remaining time
+      console.log( 'Timer resumed' );
+    }
+  }
+
+  function updateTimer ( newDuration ) {
+    clearInterval( timerInterval ); // Clear existing interval
+    startTimer( newDuration ); // Start with new duration
+  }
+
+  return { startTimer, pauseTimer, resumeTimer, updateTimer };
+}
+
 //ANCHOR Rest
 
 function getAccentColorFromFavicon () {
