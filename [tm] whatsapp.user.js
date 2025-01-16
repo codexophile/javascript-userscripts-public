@@ -8,7 +8,8 @@
     'Vidyuth Rajan': 'Asia/Muscat',
     'Gelo Santos': 'Asia/Dubai',
     'Pasi': 'Australia/Perth',
-    'Hans Ignacio': 'Asia/Manila'
+    'Hans Ignacio': 'Asia/Manila',
+    'Rajitha': 'Australia/Melbourne'
   };
 
   function getUserName () {
