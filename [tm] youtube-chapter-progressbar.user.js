@@ -27,14 +27,26 @@
     currentChapter.style.display = `flex`;
     currentChapter.style.flexWrap = `wrap`;
     if ( !currentChapter.querySelector( '#chapterProgressBar' ) ) {
-      // await asyncTimeout( 2000 )
+
+      const progressbarEl = createProgressbar();
+
+      const chapterTitleEl = currentChapter.querySelector( 'h4' );
+      progressbarEl.after( chapterTitleEl );
+
+      progressbarEl.addEventListener( 'input', ( e ) => {
+        const seekTo = e.target.value * chapterDuration / 100 + startTime;
+        thisVideo.currentTime = seekTo;
+      } );
+
+    }
+    document.querySelector( `#chapterProgressBar` ).value = chapterProgress;
+
+    function createProgressbar () {
       const html = `<input type="range" id="chapterProgressBar" min="0" max="100" step="1">`;
       const progressBar = generateElements( html, currentChapter );
       progressBar.style.width = '-webkit-fill-available';
-      const chapterTitleEl = currentChapter.querySelector( 'h4' );
-      progressBar.after( chapterTitleEl );
+      return progressBar;
     }
-    document.querySelector( `#chapterProgressBar` ).value = chapterProgress;
 
   } );
 
