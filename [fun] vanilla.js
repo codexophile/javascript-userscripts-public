@@ -1412,6 +1412,15 @@ function calculateWidthAndExpand ( collapsibleContent ) {
 
 //ANCHOR - Site specific functions
 
+async function getVoeStoryboardImg ( voeUrl ) {
+  const levelOneHtml = await GMXmlHttpRequest( voeUrl, null, true );
+  const levelTwoUrl = levelOneHtml.match( /window\.location\.href = '(.+?)'/ )[ 1 ];
+  const levelTwoDoc = await GMXmlHttpRequest( levelTwoUrl );
+  const posterImgUrl = levelTwoDoc.querySelector( '[name="og:image"]' ).content;
+  const storyboardUrl = posterImgUrl.replace( /_storyboard_L\d+/, '_storyboard_L0' );
+  return storyboardUrl;
+}
+
 async function bftStoryboardFromUrl ( bftvUrl, sbGrandParent ) {
 
   const bftvDoc = await GMXmlHttpRequest( bftvUrl );
