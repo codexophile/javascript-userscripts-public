@@ -897,4 +897,4 @@ class ModalBox {
   destroy () {
     document.body.removeChild( this.modal );
   }
-}
+};
