@@ -43,7 +43,8 @@
     vertical: 10,
     vidOnPage,
     trueNoOfSlots: 100,
-    imgUrls: [ imageUrl ]
+    imgUrls: [ imageUrl ],
+    offset: -1
   } );
 
 } )();
