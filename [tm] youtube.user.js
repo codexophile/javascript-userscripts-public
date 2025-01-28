@@ -5,7 +5,7 @@
 
   waitFor( `#video-controlPanel` ).then( ( el ) => {
     el.style.top = '0px';
-    el.style.left = '160px';
+    el.style.left = '260px';
   } );
 
   fixUrl();
