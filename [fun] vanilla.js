@@ -1,4 +1,4 @@
-//ANCHOR - Text functions
+// MARK: Text functions
 
 async function getTranslation ( text, outputLanguage = 'en', inputLanguage = 'auto', alts = 3 ) {
   return new Promise( ( resolve, reject ) => {
@@ -154,17 +154,17 @@ function forHumans ( seconds ) {
     [ Math.floor( ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) / 60 ), 'm' ],
     [ ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) % 60, 's' ],
   ];
-  var returntext = '';
+  var returnText = '';
 
   for ( var i = 0, max = levels.length; i < max; i++ ) {
     if ( levels[ i ][ 0 ] === 0 ) continue;
     // @ts-ignore
-    returntext += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] );
+    returnText += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] );
   };
-  return returntext.trim();
+  return returnText.trim();
 }
 
-//ANCHOR - Style related
+//#region - Style related
 
 function getStyleOrComputedStyle ( element, property ) {
   return element.style[ property ] ? element.style[ property ] : getComputedStyle( element )[ property ];
@@ -207,7 +207,11 @@ function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionP
 
 }
 
-//ANCHOR - Time related
+//#region Time related
+
+function asyncTimeout ( ms ) {
+  return new Promise( resolve => setTimeout( resolve, ms ) );
+}
 
 function timer ( interval = 1000, tick = null, done = null ) {
 
@@ -252,7 +256,182 @@ function timer ( interval = 1000, tick = null, done = null ) {
   return { startTimer, pauseTimer, resumeTimer, updateTimer };
 }
 
-//ANCHOR Rest
+//#region Functions that use Mutation Observers
+
+function waitNotExist ( selector ) {
+
+  return new Promise( ( resolve ) => {
+
+    if ( !document.querySelector( selector ) ) {
+      return resolve( 'at start' );
+    }
+
+    const observer = new MutationObserver( () => {
+      if ( !document.querySelector( selector ) ) {
+        observer.disconnect();
+        return resolve( 'observer' );
+      }
+    } );
+
+    observer.observe( document.body, { childList: true, subtree: true } );
+
+  } );
+
+}
+function waitForAll ( selector ) {
+  // waitFor( '[role=main]' ).then( ( els ) => {} )
+
+  return new Promise( ( resolve ) => {
+
+    if ( document.querySelector( selector ) ) { return resolve( document.querySelectorAll( selector ) ); }
+
+    const observer = new MutationObserver( () => {
+      if ( document.querySelector( selector ) ) {
+        resolve( document.querySelectorAll( selector ) );
+        observer.disconnect();
+      }
+    } );
+
+    observer.observe( document.body, { childList: true, subtree: true } );
+
+  } );
+
+}
+function waitFor ( selector ) {
+  // waitFor( '[role=main]' ).then( ( el ) => {} )
+  return new Promise( ( resolve ) => {
+    waitForAll( selector ).then( ( els ) => { resolve( els[ 0 ] ); } );
+  } );
+}
+function waitForNew ( selector ) {
+
+  document.querySelectorAll( selector ).forEach( item => { item.classList.add( 'waitForNewDone' ); } );
+
+  return new Promise( async ( resolve ) => {
+    const newEl = await waitFor( `${ selector }:not(.waitForNewDone)` );
+    resolve( newEl );
+  } );
+
+}
+function waitForEach ( selector, callback, options = {} ) {
+  // @ts-ignore
+  const { timeout = 0, once = false } = options;
+  const processedEls = new Set();
+
+  function processElements () {
+    document.querySelectorAll( selector ).forEach( element => {
+      if ( !processedEls.has( element ) ) {
+        processedEls.add( element );
+        callback( element );
+      }
+    } );
+  }
+
+  // Initial processing
+  processElements();
+
+  // Set up the observer
+  const observer = new MutationObserver( processElements );
+  observer.observe( document.body, { childList: true, subtree: true } );
+
+  // Set up the timeout if specified
+  if ( timeout > 0 ) {
+    setTimeout( () => observer.disconnect(), timeout );
+  }
+
+  function reload () {
+    processedEls.clear();
+    processElements();
+  }
+
+  return { observer, reload };
+}
+
+function eagerLoad ( selector, load, scrollableEl = window ) {
+
+  let items = [];
+
+  // for all the elements that exist at page load
+  document.querySelectorAll( selector ).forEach( item => { items.push( item ); } );
+  // for the elements that appear after page load
+  let observer = new MutationObserver( ( mutations ) => {
+    mutations.forEach( mutation => {
+      mutation.addedNodes.forEach( item => {
+        // @ts-ignore
+        if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item );
+      } );
+    } );
+  } );
+  observer.observe( document.body, { childList: true, subtree: true } );
+
+  eventTrigger();
+  scrollableEl.addEventListener( 'scroll', eventTrigger );
+  'DOMContentLoaded load resize'.split( ' ' ).forEach( event => {
+    window.addEventListener( event, eventTrigger );
+  } );
+
+  function eventTrigger () {
+    items.forEach( ( item, index ) => {
+      if ( item.getBoundingClientRect().top - window.innerHeight > 500 ) return; // 🛑
+      items.splice( index, 1 );
+      load( item );
+    } );
+  }
+
+}
+function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
+
+  let items = [];
+
+  // for all the elements that exist at page load
+  document.querySelectorAll( selector ).forEach( item => { items.push( item ); } );
+  console.log( selector );
+  // for the elements that appear after page load
+  let observer = new MutationObserver( ( mutations ) => {
+    mutations.forEach( mutation => {
+      mutation.addedNodes.forEach( item => {
+        if ( item.nodeType === 1 && item.matches( selector ) ) {
+          items.push( item );
+          lazy();
+        }
+      } );
+    } );
+  } );
+  observer.observe( document.body, { childList: true, subtree: true } );
+
+  lazy();
+  scrollableEl.addEventListener( 'scroll', lazy );
+  'DOMContentLoaded load resize'.split( ' ' ).forEach( event => {
+    window.addEventListener( event, lazy );
+  } );
+
+  function lazy () {
+    items.forEach( ( item, index ) => {
+      if ( !isElementInViewport( item ) ) return; // 🛑
+      items.splice( index, 1 );
+      load( item );
+    } );
+  }
+
+}
+function lazyLoad ( load, ...items ) {
+
+  lazy();
+  'DOMContentLoaded load resize scroll'.split( ' ' ).forEach( event => {
+    window.addEventListener( event, lazy );
+  } );
+
+  function lazy () {
+    items.forEach( ( item, index ) => {
+      if ( !isElementInViewport( item ) ) return; // 🛑
+      items.splice( index, 1 );
+      load( item );
+    } );
+  }
+
+}
+
+//#region Rest
 
 function getAccentColorFromFavicon () {
   return new Promise( ( resolve ) => {
@@ -445,9 +624,7 @@ function isIterable ( obj ) {
 }
 
 
-function asyncTimeout ( ms ) {
-  return new Promise( resolve => setTimeout( resolve, ms ) );
-}
+
 
 function getTextNodes ( el ) {
   let textNodes = [];
@@ -531,8 +708,8 @@ async function GMXmlHttpReqResponse ( url ) {
 
 
 function pipeline ( ...functions ) {
-  functions.reduce( ( accumilator, currentFn ) => {
-    return currentFn( accumilator );
+  functions.reduce( ( accumulator, currentFn ) => {
+    return currentFn( accumulator );
   } );
 }
 
@@ -647,90 +824,7 @@ function repeat ( times, repeatWhat ) {
   }
 }
 
-function eagerLoad ( selector, load, scrollableEl = window ) {
 
-  let items = [];
-
-  // for all the elements that exist at page load
-  document.querySelectorAll( selector ).forEach( item => { items.push( item ); } );
-  // for the elements that appear after page load
-  let observer = new MutationObserver( ( mutations ) => {
-    mutations.forEach( mutation => {
-      mutation.addedNodes.forEach( item => {
-        // @ts-ignore
-        if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item );
-      } );
-    } );
-  } );
-  observer.observe( document.body, { childList: true, subtree: true } );
-
-  eventTrigger();
-  scrollableEl.addEventListener( 'scroll', eventTrigger );
-  'DOMContentLoaded load resize'.split( ' ' ).forEach( event => {
-    window.addEventListener( event, eventTrigger );
-  } );
-
-  function eventTrigger () {
-    items.forEach( ( item, index ) => {
-      if ( item.getBoundingClientRect().top - window.innerHeight > 500 ) return; // 🛑
-      items.splice( index, 1 );
-      load( item );
-    } );
-  }
-
-}
-function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
-
-  let items = [];
-
-  // for all the elements that exist at page load
-  document.querySelectorAll( selector ).forEach( item => { items.push( item ); } );
-  console.log( selector );
-  // for the elements that appear after page load
-  let observer = new MutationObserver( ( mutations ) => {
-    mutations.forEach( mutation => {
-      mutation.addedNodes.forEach( item => {
-        if ( item.nodeType === 1 && item.matches( selector ) ) {
-          items.push( item );
-          lazy();
-        }
-      } );
-    } );
-  } );
-  observer.observe( document.body, { childList: true, subtree: true } );
-
-  lazy();
-  scrollableEl.addEventListener( 'scroll', lazy );
-  'DOMContentLoaded load resize'.split( ' ' ).forEach( event => {
-    window.addEventListener( event, lazy );
-  } );
-
-  function lazy () {
-    items.forEach( ( item, index ) => {
-      if ( !isElementInViewport( item ) ) return; // 🛑
-      items.splice( index, 1 );
-      load( item );
-    } );
-  }
-
-}
-
-function lazyLoad ( load, ...items ) {
-
-  lazy();
-  'DOMContentLoaded load resize scroll'.split( ' ' ).forEach( event => {
-    window.addEventListener( event, lazy );
-  } );
-
-  function lazy () {
-    items.forEach( ( item, index ) => {
-      if ( !isElementInViewport( item ) ) return; // 🛑
-      items.splice( index, 1 );
-      load( item );
-    } );
-  }
-
-}
 
 function makeElementDraggableAndResizable ( element ) {
   let isDragging = false;
@@ -1062,100 +1156,9 @@ function iframeRef ( frameRef ) {
     : frameRef.contentDocument;
 }
 
-function waitNotExist ( selector ) {
 
-  return new Promise( ( resolve ) => {
 
-    if ( !document.querySelector( selector ) ) {
-      return resolve( 'at start' );
-    }
-
-    const observer = new MutationObserver( () => {
-      if ( !document.querySelector( selector ) ) {
-        observer.disconnect();
-        return resolve( 'observer' );
-      }
-    } );
-
-    observer.observe( document.body, { childList: true, subtree: true } );
-
-  } );
-
-}
-
-function waitForAll ( selector ) {
-  // waitFor( '[role=main]' ).then( ( els ) => {} )
-
-  return new Promise( ( resolve ) => {
-
-    if ( document.querySelector( selector ) ) { return resolve( document.querySelectorAll( selector ) ); }
-
-    const observer = new MutationObserver( () => {
-      if ( document.querySelector( selector ) ) {
-        resolve( document.querySelectorAll( selector ) );
-        observer.disconnect();
-      }
-    } );
-
-    observer.observe( document.body, { childList: true, subtree: true } );
-
-  } );
-
-}
-
-function waitFor ( selector ) {
-  // waitFor( '[role=main]' ).then( ( el ) => {} )
-  return new Promise( ( resolve ) => {
-    waitForAll( selector ).then( ( els ) => { resolve( els[ 0 ] ); } );
-  } );
-}
-
-function waitForNew ( selector ) {
-
-  document.querySelectorAll( selector ).forEach( item => { item.classList.add( 'waitForNewDone' ); } );
-
-  return new Promise( async ( resolve ) => {
-    const newEl = await waitFor( `${ selector }:not(.waitForNewDone)` );
-    resolve( newEl );
-  } );
-
-}
-
-function waitForEach ( selector, callback, options = {} ) {
-  // @ts-ignore
-  const { timeout = 0, once = false } = options;
-  const processedEls = new Set();
-
-  function processElements () {
-    document.querySelectorAll( selector ).forEach( element => {
-      if ( !processedEls.has( element ) ) {
-        processedEls.add( element );
-        callback( element );
-      }
-    } );
-  }
-
-  // Initial processing
-  processElements();
-
-  // Set up the observer
-  const observer = new MutationObserver( processElements );
-  observer.observe( document.body, { childList: true, subtree: true } );
-
-  // Set up the timeout if specified
-  if ( timeout > 0 ) {
-    setTimeout( () => observer.disconnect(), timeout );
-  }
-
-  function reload () {
-    processedEls.clear();
-    processElements();
-  }
-
-  return { observer, reload };
-}
-
-//ANCHOR - Dom manipulations
+//#region Dom manipulations
 
 function empty ( element ) {
   element.childNodes.forEach( node => {
@@ -1163,7 +1166,7 @@ function empty ( element ) {
   } );
 }
 
-//ANCHOR - JQ Alternatives
+//#region JQ Alternatives
 //# JQ Alternatives
 
 function convertElementType ( element, newType ) {
@@ -1343,7 +1346,7 @@ function generateElements ( html, parent, returnTrusted ) {
 
 }
 
-//ANCHOR - Functions for global script
+//#region Functions for global script
 //# Functions for global script
 
 function generateToolbarButton ( text, parent, popup, onclick ) {
@@ -1410,7 +1413,7 @@ function calculateWidthAndExpand ( collapsibleContent ) {
   collapsibleContent.style.width = `${ totalWidth }px`;
 }
 
-//ANCHOR - Site specific functions
+//#region Site specific functions
 
 async function getVoeStoryboardImg ( voeUrl ) {
   const levelOneHtml = await GMXmlHttpRequest( voeUrl, null, true );
