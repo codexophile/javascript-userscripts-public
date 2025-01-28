@@ -25,15 +25,7 @@
         ` );
 
     return;
-    //? Code beyond this point is only for youtube
-    if ( !youtubeID ) return; // 🛑
-    location.replace( `https://www.youtube.com/results?search_query="${ youtubeID }"` );
 
-    // $parent.append( `
-    // <div>
-    //     <span> ID: </span>
-    //     <a href=https://www.youtube.com/results?search_query="${youtubeID}" > ${youtubeID}🔍 </a>
-    // </div>` )
   }
 
   if ( location.href.includes( '#newTab' ) ) {
@@ -61,76 +53,5 @@
             `);
     } );
   } );
-
-  //todo misspelled prompt
-  //* Audio download button
-  // const dataUrl = $( `audio > source` ).attr( 'src' );
-  // const fileName = dataUrl?.split( "/" ).pop();
-  // const link = document.createElement( "a" );
-  // link.href = dataUrl;
-  // link.download = fileName;
-  // $( link ).text( 'Download' );
-  // $( link ).attr( 'target', '_blank' );
-  // $( `audio` ).parent().parent().after( link );
-
-  //* Copy definition button
-  // const definitionSpans = document.querySelectorAll( '[data-dobid="dfn"]' );
-  // const $copyDefBtns = $( `<button> Copy </button>` ).insertAfter( definitionSpans );
-  // $copyDefBtns.on( 'click', ( event ) => {
-  //     const textToCopy = $( event.target ).prev().text();
-  //     navigator.clipboard.writeText( textToCopy );
-  // } );
-
-  //* Flex view
-  if ( document.querySelector( `[role="complementary"]` ) ) return;
-
-  const queryForLocator = '[target="_blank"]:has(>h3):not([class])';
-
-  // waitForEach( queryForLocator, ( item ) => {
-  //     console.log( 'xxx', item, grandParent( item, 7 ) );
-  // } );
-
-  const locatorEls = document.querySelectorAll( queryForLocator );
-  const parentEl = grandParent( locatorEls[ 0 ], 9 );
-  const searchEl = document.querySelector( `#search` );
-  const mainEl = document.querySelector( `#center_col` );
-  const rcntEl = document.querySelector( `#rcnt` );
-
-  locatorEls.forEach( item => {
-    const resultEl = grandParent( item, 7 );
-    searchEl.append( resultEl );
-    style( resultEl, `
-            width: 45%;
-            padding: 10px;
-            outline: 1px solid #ccc;
-            border-radius: 5px;
-            margin: 3px;
-        `);
-
-    console.log( resultEl );
-    resultEl.children[ 0 ].style.margin = 'unset';
-    // google search result item with outline rounded corners
-
-  } );
-
-  style( searchEl, `
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-    `);
-  style( rcntEl, `
-        max-width: unset !important;
-        display: block;
-    `);
-  style( mainEl, `
-        margin: unset !important;
-        padding: 10px;
-        width: 100%;
-    `);
-  style( mainEl.parentElement, `
-    display: block;
-  `);
-
-  document.querySelector( `[role=navigation]:has([role=navigation])` ).scrollIntoView();
 
 } )();
