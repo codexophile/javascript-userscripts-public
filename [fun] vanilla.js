@@ -414,6 +414,66 @@ function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
   }
 
 }
+function lazyLoadScrollPast ( selector, load, scrollableEl = window ) {
+  let items = [];
+  let enteredViewport = new WeakSet(); // Track elements that have entered viewport
+
+  // Initialize with existing elements
+  document.querySelectorAll( selector ).forEach( item => {
+    items.push( item );
+  } );
+
+  // Observer for dynamically added elements
+  let observer = new MutationObserver( ( mutations ) => {
+    mutations.forEach( mutation => {
+      mutation.addedNodes.forEach( item => {
+        if ( item.nodeType === 1 && item.matches( selector ) ) {
+          items.push( item );
+          checkElements();
+        }
+      } );
+    } );
+  } );
+
+  observer.observe( document.body, { childList: true, subtree: true } );
+
+  // Check if element has fully passed through viewport
+  function hasPassedViewport ( element ) {
+    const rect = element.getBoundingClientRect();
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    return rect.bottom < 0 || rect.top > windowHeight;
+  }
+
+  // Check if element is currently in viewport
+  function isInViewport ( element ) {
+    const rect = element.getBoundingClientRect();
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    return rect.top < windowHeight && rect.bottom > 0;
+  }
+
+  function checkElements () {
+    items.forEach( ( item, index ) => {
+      // If element is in viewport, mark it
+      if ( isInViewport( item ) ) {
+        enteredViewport.add( item );
+      }
+      // If element has been in viewport before and is now completely out of viewport
+      else if ( enteredViewport.has( item ) && hasPassedViewport( item ) ) {
+        items.splice( index, 1 );
+        load( item );
+      }
+    } );
+  }
+
+  // Add event listeners
+  scrollableEl.addEventListener( 'scroll', checkElements );
+  'DOMContentLoaded load resize'.split( ' ' ).forEach( event => {
+    window.addEventListener( event, checkElements );
+  } );
+
+  // Initial check
+  checkElements();
+}
 function lazyLoad ( load, ...items ) {
 
   lazy();
