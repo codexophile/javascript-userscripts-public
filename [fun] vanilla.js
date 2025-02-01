@@ -256,7 +256,24 @@ function timer ( interval = 1000, tick = null, done = null ) {
   return { startTimer, pauseTimer, resumeTimer, updateTimer };
 }
 
-//#region Functions that use Mutation Observers
+//#region Mutation Observer (Functions that use)
+
+function markAsRead ( selector ) {
+  let filterList = GM_getValue( 'filterList', [] );
+
+  const formerPostId = $activePost.children().attr( 'permalink' ).match( /\/comments\/(.+?)\// )[ 1 ];
+  filterList.push( formerPostId );
+  filterList = [ ...new Set( filterList ) ];
+  GM_setValue( 'filterList', filterList );
+
+  if ( filterList.includes( articleId ) ) {
+    filteredCount++;
+    jQuery( '#filteredCountDiv' ).text( filteredCount );
+
+    $this.replaceWith( `<div><h3>Filtered</h3><a target=_blank href=${ permalink }>${ title }</a></div>` );
+    // $this.remove()
+  }
+}
 
 function waitNotExist ( selector ) {
 
@@ -414,9 +431,15 @@ function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
   }
 
 }
-function lazyLoadScrollPast ( selector, load, scrollableEl = window ) {
+function lazyLoadScrollPast ( selector, load, scrollableEl = window, direction = 'up' ) {
   let items = [];
-  let enteredViewport = new WeakSet(); // Track elements that have entered viewport
+  let enteredViewport = new WeakSet();
+  let lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
+  // Validate direction parameter
+  if ( ![ 'up', 'down', 'both' ].includes( direction ) ) {
+    throw new Error( "Direction must be 'up', 'down', or 'both'" );
+  }
 
   // Initialize with existing elements
   document.querySelectorAll( selector ).forEach( item => {
@@ -437,11 +460,23 @@ function lazyLoadScrollPast ( selector, load, scrollableEl = window ) {
 
   observer.observe( document.body, { childList: true, subtree: true } );
 
-  // Check if element has fully passed through viewport
+  // Check if element has passed through viewport based on direction
   function hasPassedViewport ( element ) {
     const rect = element.getBoundingClientRect();
     const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-    return rect.bottom < 0 || rect.top > windowHeight;
+    const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    const isScrollingUp = currentScrollPosition < lastScrollPosition;
+
+    switch ( direction ) {
+      case 'down':
+        return isScrollingUp && rect.bottom > windowHeight;
+      case 'up':
+        return !isScrollingUp && rect.top < 0;
+      case 'both':
+        return rect.bottom < 0 || rect.top > windowHeight;
+      default:
+        return false;
+    }
   }
 
   // Check if element is currently in viewport
@@ -452,17 +487,21 @@ function lazyLoadScrollPast ( selector, load, scrollableEl = window ) {
   }
 
   function checkElements () {
+    const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
     items.forEach( ( item, index ) => {
       // If element is in viewport, mark it
       if ( isInViewport( item ) ) {
         enteredViewport.add( item );
       }
-      // If element has been in viewport before and is now completely out of viewport
+      // If element has been in viewport before and has passed through based on direction
       else if ( enteredViewport.has( item ) && hasPassedViewport( item ) ) {
         items.splice( index, 1 );
         load( item );
       }
     } );
+
+    lastScrollPosition = currentScrollPosition;
   }
 
   // Add event listeners
