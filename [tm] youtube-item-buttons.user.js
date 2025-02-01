@@ -2,7 +2,7 @@
   'use strict';
   if ( window.top != window.self ) return; //don't run on frames or iframes
 
-  const API_KEY = 'AIzaSyB41uuRwzZyKBJcMPr-kyNwXBpeOcESOpU';
+  const API_KEY = getYoutubeAPI();
   const thumbElSelectorsArr = [
     'ytd-video-renderer',
     'ytd-compact-video-renderer',

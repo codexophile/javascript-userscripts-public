@@ -1,7 +1,7 @@
 ( function () {
   'use strict';
 
-  const API_KEY = 'AIzaSyB41uuRwzZyKBJcMPr-kyNwXBpeOcESOpU';
+  const API_KEY = getYoutubeAPI();
 
   waitFor( `#video-controlPanel` ).then( ( el ) => {
     el.style.top = '0px';

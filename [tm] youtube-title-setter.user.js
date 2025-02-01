@@ -7,17 +7,8 @@
   main();
 
   async function main () {
-    let API_KEY = GM_getValue( 'apiKey', '' );
 
-    if ( !API_KEY ) {
-      API_KEY = prompt( 'Please enter your YouTube API key:' );
-      if ( API_KEY ) {
-        GM_setValue( 'apiKey', API_KEY );
-      } else {
-        alert( 'API key is required to run this script.' );
-        return;
-      }
-    }
+    let API_KEY = getYoutubeAPI();
 
     const videoId = getVideoId();
     if ( !videoId ) return;
