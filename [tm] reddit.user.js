@@ -42,7 +42,7 @@
       }
       if ( !$scrollTo.length ) return; // 🛑
 
-      $scrollTo[ 0 ].scrollIntoView( { block: 'end', behaviour: 'smooth' } );
+      $scrollTo[ 0 ].scrollIntoView( { block: 'center', behaviour: 'smooth' } );
 
       const formerPostId = $activePost.children().attr( 'permalink' ).match( /\/comments\/(.+?)\// )[ 1 ];
       filterList.push( formerPostId );
