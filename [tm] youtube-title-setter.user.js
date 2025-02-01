@@ -39,26 +39,5 @@
   let titleObserver = new MutationObserver( main );
   titleObserver.observe( document.querySelector( 'title' ), { childList: true, subtree: true } );
 
-  function getVideoId () {
-    const urlParams = new URLSearchParams( window.location.search );
-    return urlParams.get( 'v' );
-  }
-
-  async function fetchCategories ( regionCode, apiKey ) {
-    const url = `https://www.googleapis.com/youtube/v3/videoCategories?part=snippet&regionCode=${ regionCode }&key=${ apiKey }`;
-    const response = await fetch( url );
-    const data = await response.json();
-    return data.items;
-  }
-
-  async function getVideoCategoryAndTags ( videoId, categories, apiKey ) {
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${ videoId }&key=${ apiKey }`;
-    const response = await fetch( url );
-    const data = await response.json();
-    const categoryId = data.items[ 0 ].snippet.categoryId;
-    const category = categories.find( cat => cat.id === categoryId ).snippet.title;
-    const tags = data.items[ 0 ].snippet.tags || [];
-    return { category, tags };
-  }
 
 } )();
