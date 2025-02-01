@@ -124,6 +124,13 @@
     linkEl.href = linkEl.href.replace( 'https://www.reddit', 'https://old.reddit' );
   } );
 
+  //* video flex fix in 'videos' pages
+  //? adding this because stylus css fix doesn't work
+  waitForEach( 'ytd-two-column-browse-results-renderer', ( element ) => {
+    element.style.width = 'unset !important';
+    element.style.maxWidth = 'unset !important';
+  } );
+
   let observer = new MutationObserver( () => {
 
     //* @channelName links -> @channelName/videos/
