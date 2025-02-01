@@ -2,6 +2,7 @@
   'use strict';
 
   const USER_TIMEZONE_MAP = {
+
     'Kevin Andrés': 'America/Guayaquil',
     'Ravi Tissera': 'Europe/Paris',
     'Chathun Hashan Komasaru': 'Europe/London',
@@ -9,12 +10,16 @@
     'Ijas Mohomed': 'Asia/Dubai',
     'Vidyuth Rajan': 'Asia/Muscat',
     'Gelo Santos': 'Asia/Dubai',
+
     'Pasi': 'Australia/Perth',
     'Rajitha': 'Australia/Melbourne',
     'Dilaksha': 'Australia/Melbourne',
+    'Vinura Thirimanna': 'Australia/Melbourne',
+
     'Hans Ignacio': 'Asia/Manila',
     'Mineth': 'Europe/Rome',
     'Patricio Sanhueza': 'America/Santiago'
+
   };
 
   function getUserName () {
