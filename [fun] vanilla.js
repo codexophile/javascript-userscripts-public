@@ -801,10 +801,11 @@ async function GMXmlHttpReqResponse ( url ) {
   return await promise;
 }
 
-function pipeline ( ...functions ) {
-  functions.reduce( ( accumulator, currentFn ) => {
+function pipeline ( input, ...functions ) {
+  return functions.reduce( ( accumulator, currentFn ) => {
+    console.log( accumulator, currentFn );
     return currentFn( accumulator );
-  } );
+  }, input );
 }
 
 function sanitizeTrackingLinks ( selector, mainTrackerRegex, secondaryTrackerRegex ) {
