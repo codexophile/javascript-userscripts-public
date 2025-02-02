@@ -10,6 +10,7 @@
     'Chathun Hashan Komasaru': 'Europe/London',
     'Dinuka Fernando': 'Europe/London',
     'Mineth': 'Europe/Rome',
+    'Nicole Alan': 'Europe/Athens',
 
     'Ijas Mohomed': 'Asia/Dubai',
     'Vidyuth Rajan': 'Asia/Muscat',
