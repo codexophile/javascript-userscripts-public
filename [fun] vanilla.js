@@ -803,7 +803,6 @@ async function GMXmlHttpReqResponse ( url ) {
 
 function pipeline ( input, ...functions ) {
   return functions.reduce( ( accumulator, currentFn ) => {
-    console.log( accumulator, currentFn );
     return currentFn( accumulator );
   }, input );
 }
