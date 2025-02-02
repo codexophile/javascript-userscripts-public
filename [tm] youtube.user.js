@@ -127,6 +127,7 @@
   //* video flex fix in 'videos' pages
   //? adding this because stylus css fix doesn't work
   waitForEach( 'ytd-two-column-browse-results-renderer', ( element ) => {
+    if ( !location.href.includes( '/videos' ) ) return;
     element.style.width = 'unset !important';
     element.style.maxWidth = 'unset !important';
   } );
