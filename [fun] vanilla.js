@@ -158,13 +158,13 @@ function forHumans ( seconds ) {
 
   for ( var i = 0, max = levels.length; i < max; i++ ) {
     if ( levels[ i ][ 0 ] === 0 ) continue;
-    // @ts-ignore
+
     returnText += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] );
   };
   return returnText.trim();
 }
 
-//#region - Style related
+// MARK: - Style related
 
 function getStyleOrComputedStyle ( element, property ) {
   return element.style[ property ] ? element.style[ property ] : getComputedStyle( element )[ property ];
@@ -207,7 +207,7 @@ function positionRelativeToElement ( targetEl, staticEl, x = 0, y = 0, positionP
 
 }
 
-//#region Time related
+// MARK: Time related
 
 function asyncTimeout ( ms ) {
   return new Promise( resolve => setTimeout( resolve, ms ) );
@@ -256,7 +256,7 @@ function timer ( interval = 1000, tick = null, done = null ) {
   return { startTimer, pauseTimer, resumeTimer, updateTimer };
 }
 
-//#region Mutation Observer (Functions that use)
+// MARK: Mutation Observer (Functions that use)
 
 function markAsRead ( selector ) {
   let filterList = GM_getValue( 'filterList', [] );
@@ -331,7 +331,7 @@ function waitForNew ( selector ) {
 
 }
 function waitForEach ( selector, callback, options = {} ) {
-  // @ts-ignore
+
   const { timeout = 0, once = false } = options;
   const processedEls = new Set();
 
@@ -374,7 +374,7 @@ function eagerLoad ( selector, load, scrollableEl = window ) {
   let observer = new MutationObserver( ( mutations ) => {
     mutations.forEach( mutation => {
       mutation.addedNodes.forEach( item => {
-        // @ts-ignore
+
         if ( item.nodeType === 1 && item.matches( selector ) ) items.push( item );
       } );
     } );
@@ -530,13 +530,13 @@ function lazyLoad ( load, ...items ) {
 
 }
 
-//#region Rest
+// MARK: Rest
 
 function getAccentColorFromFavicon () {
   return new Promise( ( resolve ) => {
     // Find the favicon
     const faviconElement = document.querySelector( "link[rel*='icon']" ) || document.createElement( 'link' );
-    // @ts-ignore
+
     const faviconUrl = faviconElement.href || '/favicon.ico';
 
     // Create an image element to load the favicon
@@ -575,7 +575,7 @@ function getAccentColorFromFavicon () {
       let maxSaturation = 0;
 
       for ( let color of colors ) {
-        // @ts-ignore
+
         const [ h, s, l ] = rgbToHsl( color.r, color.g, color.b );
 
         // Choose the color with highest saturation, avoiding too dark or too light colors
@@ -620,7 +620,7 @@ function getAccentColor () {
 
   for ( let color of uniqueColors ) {
     const [ r, g, b ] = color.match( /\d+/g ).map( Number );
-    // @ts-ignore
+
     const [ h, s, l ] = rgbToHsl( r, g, b );
 
     // Choose the color with highest saturation, avoiding too dark or too light colors
@@ -694,7 +694,7 @@ function fallbackCopyMethod ( img ) {
   canvas.height = img.height;
   canvas.getContext( '2d' ).drawImage( img, 0, 0 );
   const dataURL = canvas.toDataURL( 'image/png' );
-  // @ts-ignore
+
   GM_setClipboard( dataURL, 'text/html' );
   console.log( 'Image copied to clipboard using fallback method' );
 }
@@ -702,7 +702,7 @@ function fallbackCopyMethod ( img ) {
 function getFaviconUrl () {
   const links = document.querySelectorAll( 'link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]' );
   if ( links.length > 0 ) {
-    // @ts-ignore
+
     return links[ 0 ].href;
   } else {
     // Optionally return a default favicon if none is found
@@ -721,9 +721,6 @@ function isIterable ( obj ) {
   }
   return typeof obj[ Symbol.iterator ] === 'function';
 }
-
-
-
 
 function getTextNodes ( el ) {
   let textNodes = [];
@@ -744,11 +741,10 @@ async function load ( url, selector, parent ) {
   return selected;
 }
 
-
 function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
 
   return new Promise( ( resolve, reject ) => {
-    // @ts-ignore
+
     GM_xmlhttpRequest( {
       method: 'GET',
       url: url,
@@ -774,7 +770,7 @@ function GMXmlHttpRequest ( url, headers = '', returnHtml ) {
 function GMXmlHttpRequestAsync ( url ) {
 
   return new Promise( ( resolve, reject ) => {
-    // @ts-ignore
+
     GM_xmlhttpRequest( {
       url: url,
       onload: response => {
@@ -790,7 +786,7 @@ function GMXmlHttpRequestAsync ( url ) {
 async function GMXmlHttpReqResponse ( url ) {
 
   const promise = new Promise( ( resolve, reject ) => {
-    // @ts-ignore
+
     GM_xmlhttpRequest( {
       method: 'GET',
       url: url,
@@ -804,7 +800,6 @@ async function GMXmlHttpReqResponse ( url ) {
   } );
   return await promise;
 }
-
 
 function pipeline ( ...functions ) {
   functions.reduce( ( accumulator, currentFn ) => {
@@ -827,7 +822,7 @@ function sanitizeTrackingLinks ( selector, mainTrackerRegex, secondaryTrackerReg
 }
 
 function beep ( duration, frequency, volume, type, callback ) {
-  // @ts-ignore
+
   var audioCtx = new ( window.AudioContext || window.webkitAudioContext || window.audioContext );
 
   //All arguments are optional:
@@ -873,7 +868,7 @@ function generateAllYouTubeSbUrls ( fullYTHtml ) {
     // It can happen sometimes that the storyboard provided is of the ad, instead of the video itself.
     // But this seems to only happen on videos that don't have a storyboard available anyway.
     const temp = 'Storyboard not available for this video!';
-    // @ts-ignore
+
     return { temp, temp, temp };
   }
 
@@ -922,8 +917,6 @@ function repeat ( times, repeatWhat ) {
     repeatWhat( index );
   }
 }
-
-
 
 function makeElementDraggableAndResizable ( element ) {
   let isDragging = false;
@@ -1119,7 +1112,7 @@ function dragElement ( targetEl, dragHandleEl ) {
   }
 }
 
-// @ts-ignore
+
 function blink ( element, interval, numberOfTimes ) {
   return new Promise( async resolve => {
     element.style.transform = 'scale(1.3,1.3)';
@@ -1134,7 +1127,7 @@ function blink ( element, interval, numberOfTimes ) {
 }
 
 function fauxHistoryPushState ( url, timeout = 3000 ) {
-  // @ts-ignore
+
   const backgroundTab = GM_openInTab( url, true );
   setTimeout( () => { backgroundTab.close(); }, timeout );
 }
@@ -1158,14 +1151,14 @@ function removeEmptytextEls ( parent ) {
  * Modern browsers can download files that aren't from same origin this is a workaround to download a remote file
  * @param `url` Remote URL for the file to be downloaded
  */
-// @ts-ignore
+
 function Download ( { url, filename } ) {
-  // @ts-ignore
+
   const [ fetching, setFetching ] = useState( false );
-  // @ts-ignore
+
   const [ error, setError ] = useState( false );
 
-  // @ts-ignore
+
   const download = ( url, name ) => {
     if ( !url ) {
       throw new Error( "Resource URL not provided! You need to provide one" );
@@ -1178,7 +1171,7 @@ function Download ( { url, filename } ) {
         const blobURL = URL.createObjectURL( blob );
         const a = document.createElement( "a" );
         a.href = blobURL;
-        // @ts-ignore
+
         a.style = "display: none";
 
         if ( name && name.length ) a.download = name;
@@ -1202,7 +1195,7 @@ function Download ( { url, filename } ) {
 function isElementInViewport ( el ) {
 
   // Special bonus for those using jQuery
-  // @ts-ignore
+
   if ( typeof jQuery === "function" && el instanceof jQuery ) {
     el = el[ 0 ];
   }
@@ -1257,7 +1250,7 @@ function iframeRef ( frameRef ) {
 
 
 
-//#region Dom manipulations
+// MARK: Dom manipulations
 
 function empty ( element ) {
   element.childNodes.forEach( node => {
@@ -1265,7 +1258,7 @@ function empty ( element ) {
   } );
 }
 
-//#region JQ Alternatives
+// MARK: JQ Alternatives
 //# JQ Alternatives
 
 function convertElementType ( element, newType ) {
@@ -1378,7 +1371,7 @@ function toggle ( els ) {
 function wrap ( wrapperHtml, ...els ) {
   const wrappingElement = generateElements( wrapperHtml, null, true );
   els[ 0 ].before( wrappingElement );
-  // @ts-ignore
+
   wrappingElement.append( ...els );
   return wrappingElement;
 }
@@ -1407,12 +1400,12 @@ function grandParent ( child, iterations ) {
 
 }
 
-// @ts-ignore
+
 function generateDoc ( html, returnTrusted ) {
 
   let escapeHTMLPolicy;
 
-  // @ts-ignore
+
   escapeHTMLPolicy = trustedTypes.createPolicy( "forceInner", {
     createHTML: ( to_escape ) => to_escape
   } );
@@ -1445,21 +1438,21 @@ function generateElements ( html, parent, returnTrusted ) {
 
 }
 
-//#region Functions for global script
+// MARK: Functions for global script
 //# Functions for global script
 
 function generateToolbarButton ( text, parent, popup, onclick ) {
   const button = generateElements( `<button class=popupButton>${ text }</button>` );
-  // @ts-ignore
+
   const collapsibleContent = document.querySelector( `#collapsibleContent` );
   parent.append( button );
   // calculateWidthAndExpand( collapsibleContent );
   if ( popup ) {
-    // @ts-ignore
+
     button.addEventListener( 'click', () => { togglePopup( popup ); } );
   }
   if ( onclick )
-    // @ts-ignore
+
     button.addEventListener( 'click', onclick );
   return button;
 }
@@ -1480,9 +1473,9 @@ function generateToolbarButton ( text, parent, popup, onclick ) {
 // }
 function createToolbarPopup ( collapsibleContent ) {
   const toolbarPopup = generateElements( '<div></div>' );
-  // @ts-ignore
+
   toolbarPopup.classList.add( 'toolbarPopup' );
-  // @ts-ignore
+
   toolbarPopup.style = `
         font-size:  large;
         max-height: 50vh;
@@ -1512,7 +1505,7 @@ function calculateWidthAndExpand ( collapsibleContent ) {
   collapsibleContent.style.width = `${ totalWidth }px`;
 }
 
-//#region Site specific functions
+// MARK: Site specific functions
 
 async function getVoeStoryboardImg ( voeUrl ) {
   const levelOneHtml = await GMXmlHttpRequest( voeUrl, null, true );
