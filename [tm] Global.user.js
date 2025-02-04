@@ -36,7 +36,7 @@
       case "IFRAME":
         generateElements(
           `<a href=${ element.src } target=_blank>${ element.src }</a>`
-        );
+          , iframesPopup );
         break;
 
       default:
