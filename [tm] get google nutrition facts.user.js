@@ -1,1 +1,0 @@
-$( '[data-attrid="kc:/food/food:energy"]' )
