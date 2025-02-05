@@ -132,11 +132,11 @@
 
     try {
       // Get release date from current page
-      const releaseDate = document.querySelectorAll( SELECTORS.RELEASE_DATE )[ 1 ]
+      const releaseDate = document.querySelectorAll( SELECTORS.RELEASE_DATE )[ 0 ]
         ?.textContent.replace( /\(.+?\)/, '' ).trim();
 
       if ( !releaseDate ) {
-
+        alert( 'Release date not found' );
         throw new Error( 'Release date not found' );
       }
 
