@@ -58,6 +58,12 @@
   if ( rssLinks.length ) {
     const rssFeedsContainer = collapsible.addPopup();
     collapsible.addButton( '📶', rssFeedsContainer );
+
+    const addFeedBtnEl = generateElements( `<a>➕ Inoreader</a>`, rssFeedsContainer );
+    var encodedURI = encodeURIComponent( window.location );
+    addFeedBtnEl.href = `https://www.inoreader.com/search/feeds/${ encodedURI }`;
+    addFeedBtnEl.target = '_blank';
+
     rssLinks.forEach( link => {
       generateElements( `<a
                         href='${ link.href }'
