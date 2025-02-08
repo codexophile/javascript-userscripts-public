@@ -58,8 +58,23 @@ function capitalizeFirstLetter ( string ) {
 //  MARK: Time Text functions
 
 function timeAgo ( date, shortForm = false ) {
+  // Handle null or undefined input
+  if ( !date ) {
+    throw new Error( 'Date parameter is required' );
+  }
+
   // Convert input to Date object if it's a string
   const inputDate = typeof date === 'string' ? new Date( date ) : date;
+
+  // Check if the date is valid
+  if ( !( inputDate instanceof Date ) || isNaN( inputDate.getTime() ) ) {
+    throw new Error( 'Invalid date format' );
+  }
+
+  // Check if the date is in the future
+  if ( inputDate.getTime() > Date.now() ) {
+    throw new Error( 'Date cannot be in the future' );
+  }
 
   // Get time difference in milliseconds
   const diff = Date.now() - inputDate.getTime();
