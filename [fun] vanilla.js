@@ -57,6 +57,50 @@ function capitalizeFirstLetter ( string ) {
 
 //  MARK: Time Text functions
 
+function timeAgo ( date, shortForm = false ) {
+  // Convert input to Date object if it's a string
+  const inputDate = typeof date === 'string' ? new Date( date ) : date;
+
+  // Get time difference in milliseconds
+  const diff = Date.now() - inputDate.getTime();
+
+  // Convert to various time units
+  const minutes = Math.floor( diff / 60000 );
+  const hours = Math.floor( minutes / 60 );
+  const days = Math.floor( hours / 24 );
+
+  // Calculate remaining units
+  const remainingHours = hours % 24;
+  const remainingMinutes = minutes % 60;
+
+  // Helper function to format parts
+  const formatPart = ( value, unit, shortUnit ) => {
+    if ( value === 0 ) return '';
+    if ( shortForm ) {
+      return `${ value }${ shortUnit }`;
+    }
+    return `${ value } ${ unit }${ value !== 1 ? 's' : '' }`;
+  };
+
+  // Build the time ago string
+  let result = '';
+
+  if ( days > 0 ) {
+    result += formatPart( days, 'day', 'd' );
+  }
+
+  if ( remainingHours > 0 ) {
+    result += result ? ' ' : '';
+    result += formatPart( remainingHours, 'hour', 'h' );
+  }
+
+  if ( remainingMinutes > 0 || ( days === 0 && remainingHours === 0 ) ) {
+    result += result ? ' ' : '';
+    result += formatPart( remainingMinutes, 'minute', 'm' );
+  }
+
+  return result + ' ago';
+}
 
 function convertTimeToTimezone ( timeString, sourceTimezone, targetTimezone ) {
   // Validate input
