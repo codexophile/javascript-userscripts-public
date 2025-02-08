@@ -57,7 +57,7 @@ function capitalizeFirstLetter ( string ) {
 
 //  MARK: Time Text functions
 
-function timeAgo ( date, shortForm = false ) {
+function timeSince ( date, shortForm = false ) {
   // Handle null or undefined input
   if ( !date ) {
     throw new Error( 'Date parameter is required' );
@@ -71,16 +71,13 @@ function timeAgo ( date, shortForm = false ) {
     throw new Error( 'Invalid date format' );
   }
 
-  // Check if the date is in the future
-  if ( inputDate.getTime() > Date.now() ) {
-    throw new Error( 'Date cannot be in the future' );
-  }
-
   // Get time difference in milliseconds
-  const diff = Date.now() - inputDate.getTime();
+  const diff = inputDate.getTime() - Date.now();
+  const isPast = diff < 0;
+  const absDiff = Math.abs( diff );
 
   // Convert to various time units
-  const minutes = Math.floor( diff / 60000 );
+  const minutes = Math.floor( absDiff / 60000 );
   const hours = Math.floor( minutes / 60 );
   const days = Math.floor( hours / 24 );
 
@@ -97,7 +94,12 @@ function timeAgo ( date, shortForm = false ) {
     return `${ value } ${ unit }${ value !== 1 ? 's' : '' }`;
   };
 
-  // Build the time ago string
+  // Handle "just now" / "right now" cases
+  if ( minutes === 0 ) {
+    return isPast ? 'just now' : 'right now';
+  }
+
+  // Build the time string
   let result = '';
 
   if ( days > 0 ) {
@@ -114,7 +116,7 @@ function timeAgo ( date, shortForm = false ) {
     result += formatPart( remainingMinutes, 'minute', 'm' );
   }
 
-  return result + ' ago';
+  return isPast ? result + ' ago' : 'in ' + result;
 }
 
 function convertTimeToTimezone ( timeString, sourceTimezone, targetTimezone ) {
