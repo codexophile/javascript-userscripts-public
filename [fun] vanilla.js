@@ -31,6 +31,33 @@ async function getTranslation ( text, outputLanguage = 'en', inputLanguage = 'au
   } );
 }
 
+function generateUniqueString ( length ) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  let counter = 0;
+  while ( counter < length ) {
+    result += characters.charAt( Math.floor( Math.random() * charactersLength ) );
+    counter += 1;
+  }
+  return result;
+}
+
+function downloadText ( filename, text ) {
+  const dlLink = document.createElement( 'a' );
+  const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`;
+  dlLink.href = uriContent;
+  dlLink.setAttribute( 'download', filename );
+  dlLink.click();
+}
+
+function capitalizeFirstLetter ( string ) {
+  return string.charAt( 0 ).toUpperCase() + string.slice( 1 );
+}
+
+//  MARK: Time Text functions
+
+
 function convertTimeToTimezone ( timeString, sourceTimezone, targetTimezone ) {
   // Validate input
   if ( !/^\d{2}:\d{2}$/.test( timeString ) ) {
@@ -120,30 +147,6 @@ function toSecondsFromHMS ( hours, minutes, seconds ) {
   if ( minutes ) outputSeconds += +minutes * 60;
   if ( seconds ) outputSeconds += +seconds;
   return outputSeconds;
-}
-
-function generateUniqueString ( length ) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  let counter = 0;
-  while ( counter < length ) {
-    result += characters.charAt( Math.floor( Math.random() * charactersLength ) );
-    counter += 1;
-  }
-  return result;
-}
-
-function downloadText ( filename, text ) {
-  const dlLink = document.createElement( 'a' );
-  const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`;
-  dlLink.href = uriContent;
-  dlLink.setAttribute( 'download', filename );
-  dlLink.click();
-}
-
-function capitalizeFirstLetter ( string ) {
-  return string.charAt( 0 ).toUpperCase() + string.slice( 1 );
 }
 
 function forHumans ( seconds ) {
