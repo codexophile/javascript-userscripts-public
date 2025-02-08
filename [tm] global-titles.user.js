@@ -20,7 +20,6 @@
       backdropFilter: 'blur(5px)',
       border: '1px solid rgba(0, 0, 0, 0.1)',
       overflow: 'hidden',
-      textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     },
     buttonStyle: {
@@ -45,6 +44,8 @@
       this.element = null;
       this.observer = null;
       this.isVisible = true;
+      this.pageLoadTime = new Date();
+      this.updateInterval = null;
       this.init();
     }
 
@@ -52,20 +53,39 @@
       this.createDisplayElement();
       this.setupObserver();
       this.setupHoverEffect();
+      this.startTimeUpdates();
     }
 
     createDisplayElement () {
-      this.element = generateElements( `<div class="title-display"></div>` );
+      this.element = document.createElement( 'div' );
+      this.element.className = 'title-display';
 
       // Create toggle button
-      this.toggleButton = generateElements( `<button type="button">▶</button>` );
+      this.toggleButton = document.createElement( 'button' );
+      this.toggleButton.type = 'button';
+      this.toggleButton.textContent = '▶';
       Object.assign( this.toggleButton.style, this.options.buttonStyle );
 
       // Create container for content
-      this.contentContainer = generateElements( `<div style="margin-left: 24px;"></div>` );
-      this.linkElement = generateElements( `<a target="_blank"></a>`, this.contentContainer );
+      this.contentContainer = document.createElement( 'div' );
+      this.contentContainer.style.marginLeft = '24px';
+      this.contentContainer.style.display = 'flex';
+      this.contentContainer.style.flexDirection = 'column';
+      this.contentContainer.style.gap = '2px';
+
+      // Title link
+      this.linkElement = document.createElement( 'a' );
+      this.linkElement.target = '_blank';
       this.linkElement.style.color = 'inherit';
       this.linkElement.style.textDecoration = 'none';
+
+      // Time element
+      this.timeElement = document.createElement( 'div' );
+      this.timeElement.style.fontSize = '10px';
+      this.timeElement.style.opacity = '0.8';
+
+      this.contentContainer.appendChild( this.linkElement );
+      this.contentContainer.appendChild( this.timeElement );
 
       this.element.appendChild( this.toggleButton );
       this.element.appendChild( this.contentContainer );
@@ -74,6 +94,20 @@
       this.applyStyles();
       this.setupToggleButton();
       document.body.appendChild( this.element );
+    }
+
+    startTimeUpdates () {
+      // Update immediately
+      this.updateTimeDisplay();
+
+      // Update every second
+      this.updateInterval = setInterval( () => {
+        this.updateTimeDisplay();
+      }, 1000 );
+    }
+
+    updateTimeDisplay () {
+      this.timeElement.textContent = `Open: ${ timeSince( this.pageLoadTime, true ) }`;
     }
 
     setupToggleButton () {
@@ -167,6 +201,9 @@
     destroy () {
       if ( this.observer ) {
         this.observer.disconnect();
+      }
+      if ( this.updateInterval ) {
+        clearInterval( this.updateInterval );
       }
       if ( this.element && this.element.parentNode ) {
         this.element.parentNode.removeChild( this.element );
