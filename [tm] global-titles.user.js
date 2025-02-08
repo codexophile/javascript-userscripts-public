@@ -23,18 +23,15 @@
       whiteSpace: 'nowrap'
     },
     buttonStyle: {
-      position: 'absolute',
-      left: '0',
-      top: '0',
-      bottom: '0',
-      width: '20px',
       backgroundColor: 'inherit',
       border: 'none',
       borderRight: '1px solid rgba(0, 0, 0, 0.1)',
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      width: '20px',
+      height: '100%'
     }
   };
 
@@ -60,15 +57,32 @@
       this.element = document.createElement( 'div' );
       this.element.className = 'title-display';
 
-      // Create toggle button
-      this.toggleButton = document.createElement( 'button' );
-      this.toggleButton.type = 'button';
-      this.toggleButton.textContent = '▶';
-      Object.assign( this.toggleButton.style, this.options.buttonStyle );
+      // Create buttons container
+      const buttonsContainer = document.createElement( 'div' );
+      buttonsContainer.style.display = 'flex';
+      buttonsContainer.style.position = 'absolute';
+      buttonsContainer.style.left = '0';
+      buttonsContainer.style.top = '0';
+      buttonsContainer.style.bottom = '0';
+
+      // Toggle button
+      this.toggleButton = this.createButton( '▶', () => this.toggleVisibility() );
+
+      // Copy title button
+      this.copyTitleButton = this.createButton( 'T', () => this.copyToClipboard( document.title, 'title' ) );
+      this.copyTitleButton.title = 'Copy title';
+
+      // Copy URL button
+      this.copyUrlButton = this.createButton( 'U', () => this.copyToClipboard( location.href, 'URL' ) );
+      this.copyUrlButton.title = 'Copy URL';
+
+      buttonsContainer.appendChild( this.toggleButton );
+      buttonsContainer.appendChild( this.copyTitleButton );
+      buttonsContainer.appendChild( this.copyUrlButton );
 
       // Create container for content
       this.contentContainer = document.createElement( 'div' );
-      this.contentContainer.style.marginLeft = '24px';
+      this.contentContainer.style.marginLeft = '64px'; // Adjusted for three buttons
       this.contentContainer.style.display = 'flex';
       this.contentContainer.style.flexDirection = 'column';
       this.contentContainer.style.gap = '2px';
@@ -87,20 +101,54 @@
       this.contentContainer.appendChild( this.linkElement );
       this.contentContainer.appendChild( this.timeElement );
 
-      this.element.appendChild( this.toggleButton );
+      this.element.appendChild( buttonsContainer );
       this.element.appendChild( this.contentContainer );
 
       this.updateContent();
       this.applyStyles();
-      this.setupToggleButton();
       document.body.appendChild( this.element );
     }
 
-    startTimeUpdates () {
-      // Update immediately
-      this.updateTimeDisplay();
+    createButton ( text, onClick ) {
+      const button = document.createElement( 'button' );
+      button.type = 'button';
+      button.textContent = text;
+      Object.assign( button.style, this.options.buttonStyle );
+      button.addEventListener( 'click', onClick );
+      return button;
+    }
 
-      // Update every second
+    async copyToClipboard ( text, type ) {
+      try {
+        await navigator.clipboard.writeText( text );
+        this.showCopyAnimation( type );
+      } catch ( err ) {
+        console.error( 'Failed to copy:', err );
+      }
+    }
+
+    showCopyAnimation ( type ) {
+      // Animate the element
+      requestAnimationFrame( () => {
+        this.element.style.animation = 'none';
+        this.element.offsetHeight; // Trigger reflow
+        this.element.style.animation = 'copyPulse 0.5s ease-in-out';
+      } );
+
+      // Show temporary success indicator
+      const originalText = type === 'title' ? this.copyTitleButton.textContent : this.copyUrlButton.textContent;
+      const button = type === 'title' ? this.copyTitleButton : this.copyUrlButton;
+      button.textContent = '✓';
+      button.style.color = '#4CAF50';
+
+      setTimeout( () => {
+        button.textContent = originalText;
+        button.style.color = 'inherit';
+      }, 1000 );
+    }
+
+    startTimeUpdates () {
+      this.updateTimeDisplay();
       this.updateInterval = setInterval( () => {
         this.updateTimeDisplay();
       }, 1000 );
@@ -108,12 +156,6 @@
 
     updateTimeDisplay () {
       this.timeElement.textContent = `Open: ${ timeSince( this.pageLoadTime, true ) }`;
-    }
-
-    setupToggleButton () {
-      this.toggleButton.addEventListener( 'click', () => {
-        this.toggleVisibility();
-      } );
     }
 
     toggleVisibility () {
@@ -182,19 +224,10 @@
 
     animateUpdate () {
       if ( !this.isVisible ) return;
-
-      this.element.style.animation = 'none';
-      this.element.offsetHeight;
-      this.element.style.animation = 'pulseSize 0.3s ease-in-out';
-
       requestAnimationFrame( () => {
-        const targetWidth = this.element.offsetWidth;
-        const targetHeight = this.element.offsetHeight;
-
-        document.documentElement.style.setProperty( '--start-width', `${ targetWidth }px` );
-        document.documentElement.style.setProperty( '--target-width', `${ targetWidth }px` );
-        document.documentElement.style.setProperty( '--start-height', `${ targetHeight }px` );
-        document.documentElement.style.setProperty( '--target-height', `${ targetHeight }px` );
+        this.element.style.animation = 'none';
+        this.element.offsetHeight; // Trigger reflow
+        this.element.style.animation = 'pulseSize 0.3s ease-in-out';
       } );
     }
 
@@ -213,23 +246,20 @@
 
   const style = document.createElement( 'style' );
   style.textContent = `
-    :root {
-      --start-width: 0px;
-      --target-width: 0px;
-      --start-height: 0px;
-      --target-height: 0px;
+    .title-display {
+      animation: none;
     }
     
     @keyframes pulseSize {
-      0% {
-        transform: scale(0.95);
-      }
-      50% {
-        transform: scale(1.02);
-      }
-      100% {
-        transform: scale(1);
-      }
+      0% { transform: scale(0.95); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes copyPulse {
+      0% { background-color: rgba(255, 255, 255, 0.9); }
+      50% { background-color: rgba(76, 175, 80, 0.2); }
+      100% { background-color: rgba(255, 255, 255, 0.9); }
     }
   `;
   document.head.appendChild( style );
