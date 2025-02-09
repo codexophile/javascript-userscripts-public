@@ -1,5 +1,4 @@
 async function Collapsible ( togglerText = 'Toggle', options = {} ) {
-
   await waitFor( 'body' );
 
   //* Methods for adding elements and handling popups
@@ -28,13 +27,14 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
 
     return button;
   }
+
   function addPopup () {
     const popup = document.createElement( 'div' );
     popup.className = 'popup';
-    // popup.innerHTML = popupContent;
     collapsibleContent.appendChild( popup );
     return popup;
   }
+
   function addElement ( element ) {
     collapsibleContent.appendChild( element );
     return element;
@@ -61,13 +61,13 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
   const {
     bottom = '0px',
     left = '0px',
-    backgroundColor = '#3498db',
-    hoverColor = '#2980b9',
-    textColor = 'white',
-    contentBgColor = '#f9f9f9',
+    backgroundColor = '#1e1e1e', // Darker background
+    hoverColor = '#2c2c2c', // Darker hover
+    textColor = '#e0e0e0', // Light gray text
+    contentBgColor = '#2d2d2d', // Dark gray content background
     fontSize = '14px',
     borderRadius = '5px',
-    boxShadow = '0 2px 5px rgba(0,0,0,0.9)',
+    boxShadow = '0 2px 5px rgba(0,0,0,0.95)', // Darker shadow
     transition = 'all 0.3s ease-out',
     width = '300px',
     height = '200px',
@@ -82,16 +82,14 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
             position: fixed;
             bottom: ${ bottom };
             left: ${ left };
-            /* transform: translateY(-50%); */
             display: flex;
             border-radius: ${ borderRadius };
             box-shadow: ${ boxShadow };
-           /* overflow: hidden; */
             transition: ${ transition };
             width: ${ collapsedWidth };
-            /* height: ${ height }; */
             z-index: 10000;
             resize: both;
+            border: 1px solid #404040; // Added border for better definition
         }
         .collapsible-container.expanded {
             width: ${ width };
@@ -142,7 +140,6 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
             width: ${ buttonSize };
             height: ${ buttonSize };
             border: none;
-            /* padding: 10px; */
             cursor: pointer;
             border-radius: 3px;
             transition: background-color 0.2s;
@@ -150,21 +147,23 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
         }
         .collapsible-button:hover {
             background-color: ${ hoverColor };
-        }        .collapsible-container .popup {
+        }
+        .collapsible-container .popup {
             display: none;
             position: absolute;
             left: 0px;
             min-width: 150px;
             height: ${ popupHeight };
             top: -${ popupHeight };
-            background-color: white;
-            border: 1px solid #ddd;
+            background-color: ${ backgroundColor };
+            border: 1px solid #404040;
             border-radius: 4px;
             padding: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             z-index: 1001;
             overflow: auto;
             text-wrap: nowrap;
+            color: ${ textColor };
         }
         .collapsible-container .popup.visible {
             display: block;
@@ -173,10 +172,26 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
             position: absolute;
             width: 10px;
             height: 10px;
-            background-color: ${ backgroundColor };
+            background-color: #404040;
             right: 0;
             bottom: 0;
             cursor: se-resize;
+        }
+        
+        /* Scrollbar styling for dark mode */
+        .collapsible-content::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .collapsible-content::-webkit-scrollbar-track {
+            background: ${ backgroundColor };
+        }
+        .collapsible-content::-webkit-scrollbar-thumb {
+            background: #505050;
+            border-radius: 4px;
+        }
+        .collapsible-content::-webkit-scrollbar-thumb:hover {
+            background: #606060;
         }
     `;
 
@@ -185,12 +200,12 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
   document.head.appendChild( style );
 
   const collapsibleStructure = generateElements( `
-                        <div>
-                                <button class="collapsible-toggler">${ togglerText }</button>
-                                <div class="collapsible-content"></div>
-                                <div class="resize-handle"></div>
-                        </div>
-                `, document.body );
+    <div>
+      <button class="collapsible-toggler">${ togglerText }</button>
+      <div class="collapsible-content"></div>
+      <div class="resize-handle"></div>
+    </div>
+  `, document.body );
   collapsibleStructure.className = 'collapsible-container';
 
   collapsibleContent = collapsibleStructure.querySelector( '.collapsible-content' );
