@@ -3,8 +3,13 @@
   if ( window.top != window.self ) return; //don't run on frames or iframes
 
   //* Beep
-  if ( !document.hidden )
-    GM_setClipboard( `global-document-ready-${ document.title }` );
+  beep();
+  function beep () {
+    if ( !document.hidden ) {
+      GM_setClipboard( `global-document-ready-${ document.title }` );
+    }
+  }
+  navigation.addEventListener( 'navigatesuccess', beep );
 
   //* toolbar and toolbar buttons
   const collapsible = await Collapsible( "", {
