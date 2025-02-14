@@ -9,7 +9,6 @@
       GM_setClipboard( `global-document-ready-${ document.title }` );
     }
   }
-  navigation.addEventListener( 'navigatesuccess', beep );
 
   //* toolbar and toolbar buttons
   const collapsible = await Collapsible( "", {
