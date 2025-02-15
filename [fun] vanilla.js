@@ -1,3 +1,23 @@
+//  MARK: Advanced
+
+function debounce ( func, wait ) {
+  let timeout;
+  return function executedFunction ( ...args ) {
+    const later = () => {
+      clearTimeout( timeout );
+      func( ...args );
+    };
+    clearTimeout( timeout );
+    timeout = setTimeout( later, wait );
+  };
+}
+
+function pipeline ( input, ...functions ) {
+  return functions.reduce( ( accumulator, currentFn ) => {
+    return currentFn( accumulator );
+  }, input );
+}
+
 // MARK: Text functions
 
 async function getTranslation ( text, outputLanguage = 'en', inputLanguage = 'auto', alts = 3 ) {
@@ -863,12 +883,6 @@ async function GMXmlHttpReqResponse ( url ) {
     } );
   } );
   return await promise;
-}
-
-function pipeline ( input, ...functions ) {
-  return functions.reduce( ( accumulator, currentFn ) => {
-    return currentFn( accumulator );
-  }, input );
 }
 
 function sanitizeTrackingLinks ( selector, mainTrackerRegex, secondaryTrackerRegex ) {
