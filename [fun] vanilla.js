@@ -1,5 +1,11 @@
 //  MARK: Advanced
 
+function repeat ( times, repeatWhat ) {
+  for ( let index = 0; index < times; index++ ) {
+    repeatWhat( index );
+  }
+}
+
 function throttle ( func, limit ) {
   let inThrottle = false;
   let lastArgs = null;
@@ -1019,12 +1025,6 @@ function generateAllYouTubeSbUrls ( fullYTHtml ) {
 
   return { allUrls, trueNoOfSlots, samplingFq };
 
-}
-
-function repeat ( times, repeatWhat ) {
-  for ( let index = 0; index < times; index++ ) {
-    repeatWhat( index );
-  }
 }
 
 function makeElementDraggableAndResizable ( element ) {
