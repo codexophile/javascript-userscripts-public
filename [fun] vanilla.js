@@ -1,5 +1,36 @@
 //  MARK: Advanced
 
+function throttle ( func, limit ) {
+  let inThrottle = false;
+  let lastArgs = null;
+  let lastThis = null;
+  let timeoutId = null;
+
+  return function throttled ( ...args ) {
+    // Save the context and arguments for potential delayed execution
+    lastArgs = args;
+    lastThis = this;
+
+    // If we're not currently throttled, execute the function immediately
+    if ( !inThrottle ) {
+      func.apply( lastThis, lastArgs );
+      inThrottle = true;
+
+      // Set up the throttle period
+      setTimeout( () => {
+        inThrottle = false;
+
+        // If there were calls during the throttle period, execute one last time
+        if ( lastArgs ) {
+          throttled.apply( lastThis, lastArgs );
+          lastArgs = null;
+          lastThis = null;
+        }
+      }, limit );
+    }
+  };
+}
+
 function debounce ( func, wait ) {
   let timeout;
   return function executedFunction ( ...args ) {
