@@ -89,13 +89,15 @@
     const oldLink = `https://old.${ match[ 1 ] }`;
     const newLink = `https://new.${ match[ 1 ] }`;
     const shLink = `https://sh.${ match[ 1 ] }`;
+    const wwwLink = `https://www.${ match[ 1 ] }`;
 
     function blockAnchor ( href, text ) {
       generateElements( `<a href=${ href }>${ text }</a>`, redditPopup ).style.display = 'block';
-    }
+    };
     blockAnchor( newLink, 'New' );
     blockAnchor( shLink, 'SH' );
     blockAnchor( oldLink, 'Old' );
+    blockAnchor( wwwLink, 'WWW' );
 
     //? regex -> (.+?/r/.+?)(/|$)
     const subredditMatch = location.href.match( /(.+?\/r\/.+?)(\/|$)/ );
