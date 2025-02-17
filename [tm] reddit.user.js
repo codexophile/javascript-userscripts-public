@@ -92,7 +92,8 @@
     const wwwLink = `https://www.${ match[ 1 ] }`;
 
     function blockAnchor ( href, text ) {
-      generateElements( `<a href=${ href }>${ text }</a>`, redditPopup ).style.display = 'block';
+      generateElements( `<a href=${ href }>${ text }</a>`, redditPopup )
+        .style.display = 'block';
     };
     blockAnchor( newLink, 'New' );
     blockAnchor( shLink, 'SH' );
@@ -114,7 +115,8 @@
       } );
     }
 
-    const $filteredCountDiv = jQuery( `<div id=filteredCountDiv style='color:black'>F</div>` );
+    const $filteredCountDiv = jQuery(
+      `<div id=filteredCountDiv style='color:black'>F</div>` );
     $filteredCountDiv.appendTo( el );
 
   } );
@@ -125,19 +127,20 @@
 
     //* filtering
 
-    const allArticles = jQuery( 'article:not(.filterDone)' ).addClass( 'filterDone' ).each( function () {
-      const $this = jQuery( this );
-      const permalink = $this.children().attr( 'permalink' );
-      const title = $this.attr( 'aria-label' );
-      const articleId = permalink.match( /\/comments\/(.+?)\// )[ 1 ];
-      if ( filterList.includes( articleId ) ) {
-        filteredCount++;
-        jQuery( '#filteredCountDiv' ).text( filteredCount );
+    const allArticles = jQuery( 'article:not(.filterDone)' )
+      .addClass( 'filterDone' ).each( function () {
+        const $this = jQuery( this );
+        const permalink = $this.children().attr( 'permalink' );
+        const title = $this.attr( 'aria-label' );
+        const articleId = permalink.match( /\/comments\/(.+?)\// )[ 1 ];
+        if ( filterList.includes( articleId ) ) {
+          filteredCount++;
+          jQuery( '#filteredCountDiv' ).text( filteredCount );
 
-        $this.replaceWith( `<div><h3>Filtered</h3><a target=_blank href=${ permalink }>${ title }</a></div>` );
-        // $this.remove()
-      }
-    } );
+          $this.replaceWith( `<div><h3>Filtered</h3><a target=_blank href=${ permalink }>${ title }</a></div>` );
+          // $this.remove()
+        }
+      } );
 
     //* gallery
     jQuery( 'gallery-carousel:not(.galleryDone)' ).each( function () {
