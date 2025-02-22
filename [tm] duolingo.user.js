@@ -5,7 +5,9 @@
   document.addEventListener( 'keyup', doc_keyUp, false );
   // had to use keyup variation because a certain key combination didn't work in the other
 
-
+  waitForEach( '[spellcheck="false"]', el => {
+    el.setAttribute( 'spellcheck', 'true' );
+  } );
 
   function doc_keyDown ( e ) {
 
