@@ -16,7 +16,10 @@
     // numbers from 1 to 9 for word hints
     if ( e.key.charCodeAt( 0 ) >= 49 && e.key.charCodeAt( 0 ) <= 57 ) {
       e.preventDefault();
-      document.querySelectorAll( "div[data-test='hint-token'],[data-test='challenge-tap-token']" )[ e.key.charCodeAt( 0 ) - 49 ].click();
+      const query = '[data-test="hint-token"],[data-test="challenge-tap-token"]';
+      const wordHintEls = document.querySelectorAll( query );
+      const selectedWordHintEl = wordHintEls[ e.key.charCodeAt( 0 ) - 49 ];
+      selectedWordHintEl.click();
     }
 
     // backspace, space and a-z keys focuses the text area and send the pressed key again in the text area
