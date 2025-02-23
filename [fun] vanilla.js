@@ -1,5 +1,13 @@
 //  MARK: Advanced
 
+function reEnableConsole () {
+  const tempIframeEl = document.createElement( 'iframe' );
+  tempIframeEl.style.display = 'none';
+  document.body.appendChild( tempIframeEl );
+  window.console = tempIframeEl.contentWindow.console;
+  tempIframeEl.remove();
+}
+
 function repeat ( times, repeatWhat ) {
   for ( let index = 0; index < times; index++ ) {
     repeatWhat( index );
