@@ -8,6 +8,11 @@ function reEnableConsole () {
   tempIframeEl.remove();
 }
 
+function disableConsoleClear () {
+  const console = window.console;
+  console.clear = () => { };
+}
+
 function repeat ( times, repeatWhat ) {
   for ( let index = 0; index < times; index++ ) {
     repeatWhat( index );
