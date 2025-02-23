@@ -1,6 +1,9 @@
 ( function () {
   'use strict';
 
+  reEnableConsole();
+  console.log( 'Userscript startup' );
+
   document.addEventListener( 'keydown', doc_keyDown, false );
   document.addEventListener( 'keyup', doc_keyUp, false );
   // had to use keyup variation because a certain key combination didn't work in the other
