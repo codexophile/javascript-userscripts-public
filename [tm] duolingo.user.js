@@ -12,18 +12,26 @@
     el.setAttribute( 'spellcheck', 'true' );
   } );
 
+  function handleNumericKeyPresses ( event ) {
+    const keyCode = +event.key;
+    if ( !Number.isInteger( keyCode ) ) return;
+
+    const isKeyCodeGreaterThanOne = keyCode >= 1;
+    const isKeyCodeLessThanTen = keyCode <= 9;
+    if ( !( isKeyCodeGreaterThanOne && isKeyCodeLessThanTen ) ) return;
+
+    event.preventDefault();
+    const query = '[data-test="hint-token"],[data-test="challenge-tap-token"]';
+    const wordHintEls = document.querySelectorAll( query );
+    const selectedWordHintEl = wordHintEls[ keyCode ];
+    selectedWordHintEl.click();
+
+  }
+
   function doc_keyDown ( e ) {
 
-    console.log( e.key.charCodeAt( 0 ) - 49 );
-
     // numbers from 1 to 9 for word hints
-    if ( e.key.charCodeAt( 0 ) >= 49 && e.key.charCodeAt( 0 ) <= 57 ) {
-      e.preventDefault();
-      const query = '[data-test="hint-token"],[data-test="challenge-tap-token"]';
-      const wordHintEls = document.querySelectorAll( query );
-      const selectedWordHintEl = wordHintEls[ e.key.charCodeAt( 0 ) - 49 ];
-      selectedWordHintEl.click();
-    }
+    handleNumericKeyPresses( e );
 
     // backspace, space and a-z keys focuses the text area and send the pressed key again in the text area
     if ( ( e.code == "Backspace" || e.code == "Space" || ( e.key.charCodeAt( 0 ) >= 97 && e.key.charCodeAt( 0 ) <= 122 ) ) && document.getElementsByTagName( 'textarea' )[ 0 ] ) {
