@@ -281,21 +281,29 @@ function toSecondsFromHMS ( hours, minutes, seconds ) {
 }
 
 function forHumans ( seconds ) {
-  var levels = [
-    [ Math.floor( seconds / 31536000 ), 'years' ],
-    [ Math.floor( ( seconds % 31536000 ) / 86400 ), 'days' ],
-    [ Math.floor( ( ( seconds % 31536000 ) % 86400 ) / 3600 ), 'H' ],
-    [ Math.floor( ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) / 60 ), 'm' ],
-    [ ( ( ( seconds % 31536000 ) % 86400 ) % 3600 ) % 60, 's' ],
+  if ( seconds === 0 ) return '0s';
+  if ( !Number.isInteger( seconds ) || seconds < 0 ) return 'Invalid input';
+
+  const timeUnits = [
+    { value: 31536000, label: 'year' },
+    { value: 86400, label: 'day' },
+    { value: 3600, label: 'h' },
+    { value: 60, label: 'm' },
+    { value: 1, label: 's' }
   ];
-  var returnText = '';
 
-  for ( var i = 0, max = levels.length; i < max; i++ ) {
-    if ( levels[ i ][ 0 ] === 0 ) continue;
+  let remainingSeconds = seconds;
+  const parts = [];
 
-    returnText += ' ' + levels[ i ][ 0 ] + ' ' + ( levels[ i ][ 0 ] === 1 ? levels[ i ][ 1 ].substr( 0, levels[ i ][ 1 ].length - 1 ) : levels[ i ][ 1 ] );
-  };
-  return returnText.trim();
+  for ( const unit of timeUnits ) {
+    const count = Math.floor( remainingSeconds / unit.value );
+    if ( count > 0 ) {
+      parts.push( `${ count }${ unit.label }${ count > 1 && unit.label !== 'h' && unit.label !== 'm' && unit.label !== 's' ? 's' : '' }` );
+      remainingSeconds %= unit.value;
+    }
+  }
+
+  return parts.join( ' ' );
 }
 
 // MARK: - Style related
