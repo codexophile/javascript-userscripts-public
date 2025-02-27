@@ -55,7 +55,7 @@
   } );
 
   const ytdlpBtn = collapsible.addButton( 'ytdlp', null, () => {
-    GM_setClipboard( `initiate-ytdlp:title:${ document.title }::url:${ location.href }::` );
+    GM_setClipboard( `initiate-ytdlp:url:${ location.href }::` );
   } );
 
   const rssLinks = document.querySelectorAll( 'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]' );
