@@ -4,7 +4,7 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
   //* Methods for adding elements and handling popups
   function addButton ( text, popupEl = null, onclick ) {
     const button = generateElements( `<button></button>` );
-    button.className = 'collapsible-button';
+    button.className = 'collapsible-button button-like';
     button.textContent = text;
     collapsibleContent.appendChild( button );
 
@@ -134,7 +134,7 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
         .collapsible-content > * {
             margin: 3px;
         }
-        .collapsible-content > button {
+        .collapsible-content > .button-like {
             background-color: ${ backgroundColor };
             color: ${ textColor };
             width: ${ buttonSize };
@@ -144,6 +144,9 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
             border-radius: 3px;
             transition: background-color 0.2s;
             position: relative;
+        }
+        .button-like > * {
+          width: inherit;
         }
         .collapsible-button:hover {
             background-color: ${ hoverColor };
