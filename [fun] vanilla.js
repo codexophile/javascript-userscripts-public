@@ -436,15 +436,18 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
       document.getElementById( 'filteredCountDiv' ).textContent = filteredCountAllTime;
 
       // Get information for the replacement div
-      const title = item.querySelector( 'h2, h3, a' )?.textContent || 'Filtered Item';
+      const title = item.querySelector( 'h2, h3, a' )?.textContent || '';
       const permalink = item.getAttribute( 'permalink' ) ||
         item.querySelector( 'a' )?.getAttribute( 'href' ) || '#';
 
       // Replace with filtered message
-      item.innerHTML = `<div style="padding: 10px; background-color: #f0f0f0; border: 1px solid #ccc;">
-                         <h3>Filtered</h3>
-                         <a target="_blank" href="${ permalink }">${ title }</a>
-                       </div>`;
+      item.outerHTML = `
+        <div>
+          <hr>
+          <div>Filtered</div>
+          <a target="_blank" href="${ permalink }">${ title }</a>
+        </div>
+      `;
 
       // Alternative: completely remove the item
       // item.remove();
