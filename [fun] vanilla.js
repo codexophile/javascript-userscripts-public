@@ -400,21 +400,98 @@ function timer ( interval = 1000, tick = null, done = null ) {
 
 // MARK: Mutation Observer (Functions that use)
 
-function markAsRead ( selector ) {
+function markAndFilter ( itemSelector, uidSelector ) {
+  // Initialize filter list from storage
   let filterList = GM_getValue( 'filterList', [] );
+  let filteredCount = GM_getValue( 'filteredCount', 0 );
 
-  const formerPostId = $activePost.children().attr( 'permalink' ).match( /\/comments\/(.+?)\// )[ 1 ];
-  filterList.push( formerPostId );
-  filterList = [ ...new Set( filterList ) ];
-  GM_setValue( 'filterList', filterList );
-
-  if ( filterList.includes( articleId ) ) {
-    filteredCount++;
-    jQuery( '#filteredCountDiv' ).text( filteredCount );
-
-    $this.replaceWith( `<div><h3>Filtered</h3><a target=_blank href=${ permalink }>${ title }</a></div>` );
-    // $this.remove()
+  // Create UI for filtered count if it doesn't exist
+  if ( !document.getElementById( 'filteredCountDiv' ) ) {
+    const countDiv = document.createElement( 'div' );
+    countDiv.id = 'filteredCountDiv';
+    countDiv.style.position = 'fixed';
+    countDiv.style.top = '10px';
+    countDiv.style.right = '10px';
+    countDiv.style.padding = '5px';
+    countDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    countDiv.style.color = 'white';
+    countDiv.style.borderRadius = '5px';
+    countDiv.style.zIndex = '9999';
+    countDiv.textContent = filteredCount;
+    document.body.appendChild( countDiv );
   }
+
+  // Set up scroll detection to mark items that are scrolled past
+  lazyLoadScrollPast( itemSelector, ( item ) => {
+    // Extract the unique ID from the element
+    const uniqueId = item.querySelector( uidSelector )?.getAttribute( 'id' ) ||
+      item.getAttribute( 'id' ) ||
+      item.getAttribute( 'data-id' ) ||
+      item.getAttribute( 'permalink' )?.match( /\/comments\/(.+?)\// )?.[ 1 ];
+
+    if ( uniqueId && !filterList.includes( uniqueId ) ) {
+      // Add the ID to the filter list
+      filterList.push( uniqueId );
+      // Ensure unique values
+      filterList = [ ...new Set( filterList ) ];
+      // Save to storage
+      GM_setValue( 'filterList', filterList );
+      console.log( `Added item to filter list: ${ uniqueId }` );
+    }
+  }, window, 'both' );
+
+  // Filter items as they appear in the page
+  waitForEach( itemSelector, ( item ) => {
+    // Extract the unique ID using the same method as above
+    const uniqueId = item.querySelector( uidSelector )?.getAttribute( 'id' ) ||
+      item.getAttribute( 'id' ) ||
+      item.getAttribute( 'data-id' ) ||
+      item.getAttribute( 'permalink' )?.match( /\/comments\/(.+?)\// )?.[ 1 ];
+
+    if ( uniqueId && filterList.includes( uniqueId ) ) {
+      // Increase the filtered count
+      filteredCount++;
+      GM_setValue( 'filteredCount', filteredCount );
+
+      // Update the counter display
+      document.getElementById( 'filteredCountDiv' ).textContent = filteredCount;
+
+      // Get information for the replacement div
+      const title = item.querySelector( 'h2, h3, a' )?.textContent || 'Filtered Item';
+      const permalink = item.getAttribute( 'permalink' ) ||
+        item.querySelector( 'a' )?.getAttribute( 'href' ) || '#';
+
+      // Replace with filtered message
+      item.innerHTML = `<div style="padding: 10px; background-color: #f0f0f0; border: 1px solid #ccc;">
+                         <h3>Filtered</h3>
+                         <a target="_blank" href="${ permalink }">${ title }</a>
+                       </div>`;
+
+      // Alternative: completely remove the item
+      // item.remove();
+
+      console.log( `Filtered item: ${ uniqueId }` );
+    }
+  } );
+
+  // Return methods for manual control
+  return {
+    addToFilter: ( uniqueId ) => {
+      if ( !filterList.includes( uniqueId ) ) {
+        filterList.push( uniqueId );
+        GM_setValue( 'filterList', filterList );
+      }
+    },
+    removeFromFilter: ( uniqueId ) => {
+      filterList = filterList.filter( id => id !== uniqueId );
+      GM_setValue( 'filterList', filterList );
+    },
+    clearFilters: () => {
+      GM_setValue( 'filterList', [] );
+      GM_setValue( 'filteredCount', 0 );
+      document.getElementById( 'filteredCountDiv' ).textContent = '0';
+    }
+  };
 }
 
 function waitNotExist ( selector ) {
