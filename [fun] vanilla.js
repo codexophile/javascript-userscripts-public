@@ -446,13 +446,13 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
         item.querySelector( 'a' )?.getAttribute( 'href' ) || '#';
 
       // Replace with filtered message
-      item.outerHTML = `
+      replaceWith( item, `
         <div>
           <hr>
           <div>Filtered</div>
           <a target="_blank" href="${ permalink }">${ title }</a>
         </div>
-      `;
+      `);
 
       // Alternative: completely remove the item
       // item.remove();
@@ -1663,7 +1663,7 @@ function generateElements ( html, parent, returnTrusted ) {
 
 function replaceWith ( toBeReplacedEl, html ) {
   const newEl = generateElements( html );
-  this.parentNode.replaceChild( newEl, toBeReplacedEl );
+  toBeReplacedEl.parentNode.replaceChild( newEl, toBeReplacedEl );
   return newEl;
 }
 
