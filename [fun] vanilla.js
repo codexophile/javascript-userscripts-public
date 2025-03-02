@@ -441,7 +441,7 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
       document.getElementById( 'filteredCountDiv' ).textContent = filteredCountAllTime;
 
       // Get information for the replacement div
-      const title = item.querySelector( 'h2, h3, a' )?.textContent || '';
+      const title = item.querySelector( 'h2, h3, a' )?.textContent || 'Link';
       const permalink = item.getAttribute( 'permalink' ) ||
         item.querySelector( 'a' )?.getAttribute( 'href' ) || '#';
 
