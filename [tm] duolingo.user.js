@@ -4,6 +4,18 @@
   reEnableConsole();
   console.log( 'Userscript startup' );
 
+  waitForEach( '[data-test^="blame blame-correct"]', () => {
+    //* auto advance when the answer is correct
+    const btnEl = document.querySelector( `[data-test="player-next"]` );
+    if ( btnEl ) btnEl.click();
+  } );
+
+  waitForEach( '[data-test="player-skip"]', skipBtnEl => {
+    if ( skipBtnEl.textContent === "Can't speak now" ) {
+      skipBtnEl.click();
+    }
+  } );
+
   document.addEventListener( 'keydown', doc_keyDown, false );
   document.addEventListener( 'keyup', doc_keyUp, false );
   // had to use keyup variation because a certain key combination didn't work in the other
