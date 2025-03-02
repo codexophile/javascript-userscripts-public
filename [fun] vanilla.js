@@ -446,12 +446,15 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
         item.querySelector( 'a' )?.getAttribute( 'href' ) || '#';
 
       // Replace with filtered message
-      replaceWith( item, `
+      const filterNoticeEl = replaceWith( item, `
         <div>
           <hr>
           <div>Filtered</div>
           <a target="_blank" href="${ permalink }">${ title }</a>
         </div>
+      `);
+      style( filterNoticeEl, `
+        outline: 2px solid red;
       `);
 
       // Alternative: completely remove the item
