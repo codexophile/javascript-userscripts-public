@@ -2,23 +2,7 @@
   'use strict';
   if ( window.top != window.self ) return; //don't run on frames or iframes
 
-  lazyLoadScrollPast( 'main article', articleEl => {
-
-    const linkEl = articleEl.querySelector( 'a[class*=Card_link__]' );
-    const href = linkEl?.href;
-    if ( !href ) {
-      markAsFailed( articleEl );
-    }
-    const uid = href.match( /\/posts\/.*?(.........$)/ )?.[ 1 ];
-    if ( !uid ) {
-      markAsFailed( articleEl );
-    };
-
-  } );
-
-  function markAsFailed ( el ) {
-    el.style.outline = 'solid red';
-  }
+  markAndFilter( 'main article', 'a[class*=Card_link__]', 'href', /\/posts\/.*?(.........$)/ );
 
   //* automatically opens the comment section when clicking on an open external button
   waitForEach( `[href*='/r/']`, ( OpenExternalBtn ) => {
