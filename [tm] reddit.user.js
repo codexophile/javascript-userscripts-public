@@ -1,6 +1,8 @@
 ( function () {
   'use strict';
 
+  markAndFilter( 'shreddit-feed > article', 'shreddit-post', 'id', /t3_(.+)$/ );
+
   waitFor( '.collapsible-content' ).then( async ( el ) => {
 
     // el.parentElement.style.left = '';
