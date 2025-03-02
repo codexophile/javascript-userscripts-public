@@ -411,6 +411,11 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
   lazyLoadScrollPast( itemSelector, ( item ) => {
     // Extract the unique ID from the element
     const uniqueId = getUid( item );
+    if ( !uniqueId ) {
+      console.log( 'Unique ID not found' );
+      return;
+    }
+    console.log( uniqueId );
 
     if ( uniqueId && !filterList.includes( uniqueId ) ) {
       // Add the ID to the filter list
@@ -460,9 +465,10 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
     const uidAttrVal = uidAttribute
       ? uidEl.getAttribute( uidAttribute )
       : uidEl.textContent;
-    return uidRegex
+    const uid = uidRegex
       ? uidAttrVal.match( uidRegex )?.[ 1 ]
       : uidAttrVal;
+    return uid;
   }
 
   // Create UI for filtered count if it doesn't exist
