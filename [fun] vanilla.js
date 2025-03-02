@@ -403,23 +403,9 @@ function timer ( interval = 1000, tick = null, done = null ) {
 function markAndFilter ( itemSelector, uidSelector ) {
   // Initialize filter list from storage
   let filterList = GM_getValue( 'filterList', [] );
-  let filteredCount = GM_getValue( 'filteredCount', 0 );
+  let filteredCountAllTime = GM_getValue( 'filteredCount', 0 );
 
-  // Create UI for filtered count if it doesn't exist
-  if ( !document.getElementById( 'filteredCountDiv' ) ) {
-    const countDiv = document.createElement( 'div' );
-    countDiv.id = 'filteredCountDiv';
-    countDiv.style.position = 'fixed';
-    countDiv.style.top = '10px';
-    countDiv.style.right = '10px';
-    countDiv.style.padding = '5px';
-    countDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
-    countDiv.style.color = 'white';
-    countDiv.style.borderRadius = '5px';
-    countDiv.style.zIndex = '9999';
-    countDiv.textContent = filteredCount;
-    document.body.appendChild( countDiv );
-  }
+  createFilteredCountDiv();
 
   // Set up scroll detection to mark items that are scrolled past
   lazyLoadScrollPast( itemSelector, ( item ) => {
@@ -450,11 +436,11 @@ function markAndFilter ( itemSelector, uidSelector ) {
 
     if ( uniqueId && filterList.includes( uniqueId ) ) {
       // Increase the filtered count
-      filteredCount++;
-      GM_setValue( 'filteredCount', filteredCount );
+      filteredCountAllTime++;
+      GM_setValue( 'filteredCount', filteredCountAllTime );
 
       // Update the counter display
-      document.getElementById( 'filteredCountDiv' ).textContent = filteredCount;
+      document.getElementById( 'filteredCountDiv' ).textContent = filteredCountAllTime;
 
       // Get information for the replacement div
       const title = item.querySelector( 'h2, h3, a' )?.textContent || 'Filtered Item';
@@ -473,6 +459,25 @@ function markAndFilter ( itemSelector, uidSelector ) {
       console.log( `Filtered item: ${ uniqueId }` );
     }
   } );
+
+  // Create UI for filtered count if it doesn't exist
+  function createFilteredCountDiv () {
+    if ( document.getElementById( 'filteredCountDiv' ) ) return;
+
+    const countDiv = document.createElement( 'div' );
+    countDiv.id = 'filteredCountDiv';
+    countDiv.style.position = 'fixed';
+    countDiv.style.top = '10px';
+    countDiv.style.right = '10px';
+    countDiv.style.padding = '5px';
+    countDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    countDiv.style.color = 'white';
+    countDiv.style.borderRadius = '5px';
+    countDiv.style.zIndex = '9999';
+    countDiv.textContent = filteredCountAllTime;
+    document.body.appendChild( countDiv );
+
+  }
 
   // Return methods for manual control
   return {
