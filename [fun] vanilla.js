@@ -420,7 +420,7 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
       // Save to storage
       GM_setValue( 'filterList', filterList );
     }
-  }, window, 'both' );
+  } );
 
   // Filter items as they appear in the page
   waitForEach( itemSelector, ( item ) => {
