@@ -1,16 +1,18 @@
 ( async function () {
   'use strict';
 
-  //* moving video control panel
-  ( async function () {
-    'use strict';
-    const videoControlPanel = await waitFor( '#video-controlPanel' );
-    style( videoControlPanel, `
+  markAndFilter( 'main div:has(>[href^="/p/"])', 'a', 'href', /\/p\/(.+?)\// )
+
+    //* moving video control panel
+    ( async function () {
+      'use strict';
+      const videoControlPanel = await waitFor( '#video-controlPanel' );
+      style( videoControlPanel, `
                 left: unset;
                 right: 100px;
                 top: 50vh;
             `);
-  } )();
+    } )();
 
   //* Expand button
   const collapsibleObj = await Collapsible();
