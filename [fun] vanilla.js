@@ -400,7 +400,7 @@ function timer ( interval = 1000, tick = null, done = null ) {
 
 // MARK: Mutation Observer (Functions that use)
 
-function markAndFilter ( itemSelector, uidSelector ) {
+function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex ) {
   // Initialize filter list from storage
   let filterList = GM_getValue( 'filterList', [] );
   let filteredCountAllTime = GM_getValue( 'filteredCount', 0 );
@@ -410,10 +410,7 @@ function markAndFilter ( itemSelector, uidSelector ) {
   // Set up scroll detection to mark items that are scrolled past
   lazyLoadScrollPast( itemSelector, ( item ) => {
     // Extract the unique ID from the element
-    const uniqueId = item.querySelector( uidSelector )?.getAttribute( 'id' ) ||
-      item.getAttribute( 'id' ) ||
-      item.getAttribute( 'data-id' ) ||
-      item.getAttribute( 'permalink' )?.match( /\/comments\/(.+?)\// )?.[ 1 ];
+    const uniqueId = getUid( item );
 
     if ( uniqueId && !filterList.includes( uniqueId ) ) {
       // Add the ID to the filter list
@@ -422,17 +419,13 @@ function markAndFilter ( itemSelector, uidSelector ) {
       filterList = [ ...new Set( filterList ) ];
       // Save to storage
       GM_setValue( 'filterList', filterList );
-      console.log( `Added item to filter list: ${ uniqueId }` );
     }
   }, window, 'both' );
 
   // Filter items as they appear in the page
   waitForEach( itemSelector, ( item ) => {
     // Extract the unique ID using the same method as above
-    const uniqueId = item.querySelector( uidSelector )?.getAttribute( 'id' ) ||
-      item.getAttribute( 'id' ) ||
-      item.getAttribute( 'data-id' ) ||
-      item.getAttribute( 'permalink' )?.match( /\/comments\/(.+?)\// )?.[ 1 ];
+    const uniqueId = getUid( item );
 
     if ( uniqueId && filterList.includes( uniqueId ) ) {
       // Increase the filtered count
@@ -456,9 +449,18 @@ function markAndFilter ( itemSelector, uidSelector ) {
       // Alternative: completely remove the item
       // item.remove();
 
-      console.log( `Filtered item: ${ uniqueId }` );
     }
   } );
+
+  function getUid ( itemEl ) {
+    const uidEl = itemEl.querySelector( uidSelector );
+    const uidAttrVal = uidAttribute
+      ? uidEl.getAttribute( uidAttribute )
+      : uidEl.textContent;
+    return uidRegex
+      ? uidAttrVal.match( uidRegex )?.[ 1 ]
+      : uidAttrVal;
+  }
 
   // Create UI for filtered count if it doesn't exist
   function createFilteredCountDiv () {
