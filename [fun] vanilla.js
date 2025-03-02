@@ -1661,6 +1661,12 @@ function generateElements ( html, parent, returnTrusted ) {
 
 }
 
+function replaceWith ( toBeReplacedEl, html ) {
+  const newEl = generateElements( html );
+  this.parentNode.replaceChild( newEl, toBeReplacedEl );
+  return newEl;
+}
+
 // MARK: Functions for global script
 //# Functions for global script
 
