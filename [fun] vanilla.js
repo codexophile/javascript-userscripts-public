@@ -670,6 +670,7 @@ function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
 
 }
 function lazyLoadScrollPast ( selector, load, scrollableEl = window, direction = 'up' ) {
+
   let items = [];
   let enteredViewport = new WeakSet();
   let lastScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
@@ -685,15 +686,9 @@ function lazyLoadScrollPast ( selector, load, scrollableEl = window, direction =
   } );
 
   // Observer for dynamically added elements
-  let observer = new MutationObserver( ( mutations ) => {
-    mutations.forEach( mutation => {
-      mutation.addedNodes.forEach( item => {
-        if ( item.nodeType === 1 && item.matches( selector ) ) {
-          items.push( item );
-          checkElements();
-        }
-      } );
-    } );
+  waitForEach( selector, item => {
+    items.push( item );
+    checkElements();
   } );
 
   observer.observe( document.body, { childList: true, subtree: true } );
