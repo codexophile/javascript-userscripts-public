@@ -4,10 +4,20 @@
   reEnableConsole();
   console.log( 'Userscript startup' );
 
+  waitForEach( '[data-test="session-complete-slide"]', () => {
+    clickContinue();
+  } );
+
+  waitForEach( '[data-test="session-duo"]', el => {
+    const messageElsArr = contains( 'div', 'You can do it', el.parentElement );
+    const messageElsArr2 = contains( 'div', "Let's review the exercises you missed!", el.parentElement );
+    if ( !messageElsArr.length && !messageElsArr2.length ) { return; }
+    clickContinue();
+  } );
+
   waitForEach( '[data-test^="blame blame-correct"]', () => {
     //* auto advance when the answer is correct
-    const btnEl = document.querySelector( `[data-test="player-next"]` );
-    if ( btnEl ) btnEl.click();
+    clickContinue();
   } );
 
   waitForEach( '[data-test="player-skip"]', skipBtnEl => {
@@ -15,6 +25,11 @@
       skipBtnEl.click();
     }
   } );
+
+  function clickContinue () {
+    const continueBtn = document.querySelector( '[data-test="player-next"]' );
+    if ( continueBtn ) continueBtn.click();
+  }
 
   document.addEventListener( 'keydown', doc_keyDown, false );
   document.addEventListener( 'keyup', doc_keyUp, false );
