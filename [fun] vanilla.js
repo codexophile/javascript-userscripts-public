@@ -424,6 +424,9 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
       filterList = [ ...new Set( filterList ) ];
       // Save to storage
       GM_setValue( 'filterList', filterList );
+      style( item, `
+        outline: 2px solid red;
+      `);
     }
   } );
 
@@ -690,8 +693,6 @@ function lazyLoadScrollPast ( selector, load, scrollableEl = window, direction =
     items.push( item );
     checkElements();
   } );
-
-  observer.observe( document.body, { childList: true, subtree: true } );
 
   // Check if element has passed through viewport based on direction
   function hasPassedViewport ( element ) {
