@@ -35,6 +35,12 @@
       blockAnchor( topAllLink, 'TopAll' );
     }
 
+    const uncollapseBtnEl = collapsible.addButton( '🌂', null, () => {
+      document.querySelectorAll( `shreddit-comment` ).forEach( el => {
+        el.style.display = 'block';
+      } );
+    } );
+
   } );
 
   waitForEach( 'shreddit-comment', commentEl => {
