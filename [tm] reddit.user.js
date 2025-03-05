@@ -1,7 +1,7 @@
 ( function () {
   'use strict';
 
-  markAndFilter( 'shreddit-feed > article', 'shreddit-post', 'id', /t3_(.+)$/ );
+  markAndFilter( 'shreddit-feed > article', 'shreddit-post', 'id', /t3_(.+)$/, 'https://sh.reddit.com' );
 
   waitFor( '.collapsible-content' ).then( async ( el ) => {
 
@@ -37,6 +37,12 @@
 
   } );
 
+  waitForEachCOM( 'shreddit-comment', commentEl => {
+    const collapseBtnEl = generateElements( '<button>🌂</button>', commentEl );
+    collapseBtnEl.addEventListener( 'click', () => {
+      toggle( commentEl );
+    } );
+  } );
 
   let observer = new MutationObserver( () => {
 
