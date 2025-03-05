@@ -37,7 +37,7 @@
 
   } );
 
-  waitForEachCOM( 'shreddit-comment', commentEl => {
+  waitForEach( 'shreddit-comment', commentEl => {
     const collapseBtnEl = generateElements( '<button>🌂</button>', commentEl );
     collapseBtnEl.addEventListener( 'click', () => {
       toggle( commentEl );

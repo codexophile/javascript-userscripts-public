@@ -543,7 +543,7 @@ const CentralObserverManager = ( function () {
 } )();
 
 // Modified version of waitFor using the consolidated observer
-function waitForCOM ( selector ) {
+function waitFor ( selector ) {
   return new Promise( ( resolve ) => {
     // Check if element already exists
     const existing = document.querySelector( selector );
@@ -561,7 +561,7 @@ function waitForCOM ( selector ) {
 }
 
 // Modified version of waitForEach using the consolidated observer
-function waitForEachCOM ( selector, callback, options = {} ) {
+function waitForEach ( selector, callback, options = {} ) {
   const { once = false } = options;
 
   // Register with observer manager
@@ -876,12 +876,7 @@ function waitForAll ( selector ) {
   } );
 
 }
-function waitFor ( selector ) {
-  // waitFor( '[role=main]' ).then( ( el ) => {} )
-  return new Promise( ( resolve ) => {
-    waitForAll( selector ).then( ( els ) => { resolve( els[ 0 ] ); } );
-  } );
-}
+
 function waitForNew ( selector ) {
 
   document.querySelectorAll( selector ).forEach( item => { item.classList.add( 'waitForNewDone' ); } );
@@ -892,39 +887,7 @@ function waitForNew ( selector ) {
   } );
 
 }
-function waitForEach ( selector, callback, options = {} ) {
 
-  const { timeout = 0, once = false } = options;
-  const processedEls = new Set();
-
-  function processElements () {
-    document.querySelectorAll( selector ).forEach( element => {
-      if ( !processedEls.has( element ) ) {
-        processedEls.add( element );
-        callback( element );
-      }
-    } );
-  }
-
-  // Initial processing
-  processElements();
-
-  // Set up the observer
-  const observer = new MutationObserver( processElements );
-  observer.observe( document.body, { childList: true, subtree: true } );
-
-  // Set up the timeout if specified
-  if ( timeout > 0 ) {
-    setTimeout( () => observer.disconnect(), timeout );
-  }
-
-  function reload () {
-    processedEls.clear();
-    processElements();
-  }
-
-  return { observer, reload };
-}
 
 function eagerLoad ( selector, load, scrollableEl = window ) {
 
