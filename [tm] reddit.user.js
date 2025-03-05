@@ -88,15 +88,6 @@
     //? Only applicable to the 'new' new reddit UI
     jQuery( `[gif]` ).removeAttr( 'gif' );
 
-    //* Reddit old links
-    let $links = jQuery( '[href^="/r/"]:not(.wwwToOldDone)' );
-    $links.each( function () {
-      let thisHref = this.href;
-      if ( !thisHref.includes( '/comments/' ) ) return; // 🛑 // Checks if it's a post link as opposed to a subreddit link
-      this.href = thisHref.replace( 'https://www.', 'https://old.' );
-      this.classList.add( 'wwwToOldDone' );
-    } );
-
     // if( !document.querySelector( `#oldHome` ) ) {
     // console.log( 'test' )
     // }
