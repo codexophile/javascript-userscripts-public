@@ -398,7 +398,328 @@ function timer ( interval = 1000, tick = null, done = null ) {
   return { startTimer, pauseTimer, resumeTimer, updateTimer };
 }
 
-// MARK: Mutation Observer (Functions that use)
+//  MARK: Central mutation observer
+
+// Central MutationObserver manager
+const CentralObserverManager = ( function () {
+  // Private properties
+  let mainObserver = null;
+  const callbacks = new Map(); // Maps selectors to arrays of callback functions
+  const processedElements = new Map(); // Maps selectors to Sets of processed elements
+
+  // Process mutations for all registered callbacks
+  function processMutations ( mutations ) {
+    // Check for added nodes
+    mutations.forEach( mutation => {
+      if ( mutation.type === 'childList' ) {
+        // Process added nodes
+        mutation.addedNodes.forEach( node => {
+          if ( node.nodeType !== Node.ELEMENT_NODE ) return;
+
+          // Check this node against all registered selectors
+          callbacks.forEach( ( callbackArray, selector ) => {
+            // Check if the node itself matches
+            if ( node.matches( selector ) ) {
+              executeCallbacks( node, selector, callbackArray );
+            }
+
+            // Check if any of its children match
+            if ( node.querySelector( selector ) ) {
+              node.querySelectorAll( selector ).forEach( element => {
+                executeCallbacks( element, selector, callbackArray );
+              } );
+            }
+          } );
+        } );
+
+        // Handle removed nodes (if needed)
+        mutation.removedNodes.forEach( node => {
+          if ( node.nodeType !== Node.ELEMENT_NODE ) return;
+          // Implementation for tracking removed nodes if needed
+        } );
+      }
+    } );
+
+    // Also check for all newly added elements that might match existing selectors
+    // (this ensures we don't miss elements added through innerHTML or other means)
+    callbacks.forEach( ( callbackArray, selector ) => {
+      document.querySelectorAll( selector ).forEach( element => {
+        executeCallbacks( element, selector, callbackArray );
+      } );
+    } );
+  }
+
+  // Execute callbacks for a matched element
+  function executeCallbacks ( element, selector, callbackArray ) {
+    // Get or create the Set of processed elements for this selector
+    let processed = processedElements.get( selector );
+    if ( !processed ) {
+      processed = new Set();
+      processedElements.set( selector, processed );
+    }
+
+    // Skip if already processed
+    if ( processed.has( element ) ) return;
+
+    // Mark as processed and execute callbacks
+    processed.add( element );
+    callbackArray.forEach( callback => callback( element ) );
+  }
+
+  // Initialize the main observer
+  function initializeObserver () {
+    if ( mainObserver ) return; // Already initialized
+
+    mainObserver = new MutationObserver( processMutations );
+    mainObserver.observe( document.body, {
+      childList: true,
+      subtree: true
+    } );
+
+    // Process existing elements on page
+    callbacks.forEach( ( callbackArray, selector ) => {
+      document.querySelectorAll( selector ).forEach( element => {
+        executeCallbacks( element, selector, callbackArray );
+      } );
+    } );
+  }
+
+  return {
+    // Register a callback for a specific selector
+    observe: function ( selector, callback, processExisting = true ) {
+      // Create or retrieve callback array for this selector
+      if ( !callbacks.has( selector ) ) {
+        callbacks.set( selector, [] );
+        processedElements.set( selector, new Set() );
+      }
+
+      callbacks.get( selector ).push( callback );
+
+      // Initialize observer if not already done
+      initializeObserver();
+
+      // Process existing elements if requested
+      if ( processExisting ) {
+        document.querySelectorAll( selector ).forEach( element => {
+          executeCallbacks( element, selector, callbacks.get( selector ) );
+        } );
+      }
+
+      // Return a function to remove this specific callback
+      return function unobserve () {
+        const callbackArray = callbacks.get( selector );
+        if ( callbackArray ) {
+          const index = callbackArray.indexOf( callback );
+          if ( index !== -1 ) {
+            callbackArray.splice( index, 1 );
+          }
+
+          // Remove the selector entry if no callbacks remain
+          if ( callbackArray.length === 0 ) {
+            callbacks.delete( selector );
+            processedElements.delete( selector );
+          }
+        }
+      };
+    },
+
+    // Reset tracking for a specific selector
+    resetSelector: function ( selector ) {
+      if ( processedElements.has( selector ) ) {
+        processedElements.get( selector ).clear();
+      }
+    },
+
+    // Disconnect and clean up everything
+    disconnect: function () {
+      if ( mainObserver ) {
+        mainObserver.disconnect();
+        mainObserver = null;
+      }
+      callbacks.clear();
+      processedElements.clear();
+    }
+  };
+} )();
+
+// Modified version of waitFor using the consolidated observer
+function waitForCOM ( selector ) {
+  return new Promise( ( resolve ) => {
+    // Check if element already exists
+    const existing = document.querySelector( selector );
+    if ( existing ) {
+      resolve( existing );
+      return;
+    }
+
+    // Set up observer to wait for element
+    const unobserve = CentralObserverManager.observe( selector, ( element ) => {
+      unobserve(); // Remove the observer once found
+      resolve( element );
+    }, false ); // Don't process existing elements (we already checked)
+  } );
+}
+
+// Modified version of waitForEach using the consolidated observer
+function waitForEachCOM ( selector, callback, options = {} ) {
+  const { once = false } = options;
+
+  // Register with observer manager
+  const unobserve = CentralObserverManager.observe( selector, callback );
+
+  // If once is true, unobserve after processing existing elements
+  if ( once ) {
+    setTimeout( unobserve, 0 );
+  }
+
+  return {
+    unobserve,
+    reload: () => {
+      CentralObserverManager.resetSelector( selector );
+    }
+  };
+}
+
+// Example implementation of markAndFilter using the consolidated observer
+function markAndFilterCOM ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex ) {
+  // Initialize filter list from storage
+  let filterList = GM_getValue( 'filterList', [] );
+  let filteredCountAllTime = GM_getValue( 'filteredCount', 0 );
+
+  createFilteredCountDiv();
+
+  // Set up scroll detection using throttled scroll handler
+  const scrollHandler = throttle( ( event ) => {
+    document.querySelectorAll( itemSelector ).forEach( item => {
+      if ( isScrolledPast( item ) ) {
+        // Extract the unique ID from the element
+        const uniqueId = getUid( item );
+        if ( !uniqueId ) return;
+
+        if ( !filterList.includes( uniqueId ) ) {
+          // Add the ID to the filter list
+          filterList.push( uniqueId );
+          // Ensure unique values
+          filterList = [ ...new Set( filterList ) ];
+          // Save to storage
+          GM_setValue( 'filterList', filterList );
+        }
+      }
+    } );
+  }, 200 );
+
+  window.addEventListener( 'scroll', scrollHandler );
+
+  // Filter items as they appear in the page
+  waitForEach( itemSelector, ( item ) => {
+    // Extract the unique ID using the same method as above
+    const uniqueId = getUid( item );
+
+    if ( uniqueId && filterList.includes( uniqueId ) ) {
+      // Increase the filtered count
+      filteredCountAllTime++;
+      GM_setValue( 'filteredCount', filteredCountAllTime );
+
+      // Update the counter display
+      document.getElementById( 'filteredCountDiv' ).textContent = filteredCountAllTime;
+
+      // Get information for the replacement div
+      const title = item.querySelector( 'h2, h3, a' )?.textContent || 'Link';
+      const permalink = item.getAttribute( 'permalink' ) ||
+        item.querySelector( 'a' )?.getAttribute( 'href' ) || '#';
+
+      // Replace with filtered message
+      const filterNoticeEl = replaceWith( item, `
+        <div>
+          <hr>
+          <div>Filtered</div>
+          <a target="_blank" href="${ permalink }">${ title }</a>
+        </div>
+      `);
+      style( filterNoticeEl, `
+        outline: 2px solid red;
+      `);
+    }
+  } );
+
+  function getUid ( itemEl ) {
+    const uidEl = itemEl.querySelector( uidSelector );
+    if ( !uidEl ) return null;
+
+    const uidAttrVal = uidAttribute
+      ? uidEl.getAttribute( uidAttribute )
+      : uidEl.textContent;
+
+    if ( !uidAttrVal ) return null;
+
+    const uid = uidRegex
+      ? uidAttrVal.match( uidRegex )?.[ 1 ]
+      : uidAttrVal;
+
+    return uid;
+  }
+
+  function isScrolledPast ( element ) {
+    const rect = element.getBoundingClientRect();
+    return rect.bottom < 0; // Element has scrolled off the top of the viewport
+  }
+
+  // Helper throttle function
+  function throttle ( func, limit ) {
+    let inThrottle;
+    return function () {
+      const args = arguments;
+      const context = this;
+      if ( !inThrottle ) {
+        func.apply( context, args );
+        inThrottle = true;
+        setTimeout( () => inThrottle = false, limit );
+      }
+    };
+  }
+
+  // Create UI for filtered count if it doesn't exist
+  function createFilteredCountDiv () {
+    if ( document.getElementById( 'filteredCountDiv' ) ) return;
+
+    const countDiv = document.createElement( 'div' );
+    countDiv.id = 'filteredCountDiv';
+    countDiv.style.position = 'fixed';
+    countDiv.style.top = '10px';
+    countDiv.style.right = '10px';
+    countDiv.style.padding = '5px';
+    countDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    countDiv.style.color = 'white';
+    countDiv.style.borderRadius = '5px';
+    countDiv.style.zIndex = '9999';
+    countDiv.textContent = filteredCountAllTime;
+    document.body.appendChild( countDiv );
+  }
+
+  // Return methods for manual control
+  return {
+    addToFilter: ( uniqueId ) => {
+      if ( !filterList.includes( uniqueId ) ) {
+        filterList.push( uniqueId );
+        GM_setValue( 'filterList', filterList );
+      }
+    },
+    removeFromFilter: ( uniqueId ) => {
+      filterList = filterList.filter( id => id !== uniqueId );
+      GM_setValue( 'filterList', filterList );
+    },
+    clearFilters: () => {
+      GM_setValue( 'filterList', [] );
+      GM_setValue( 'filteredCount', 0 );
+      document.getElementById( 'filteredCountDiv' ).textContent = '0';
+    },
+    cleanup: () => {
+      window.removeEventListener( 'scroll', scrollHandler );
+    }
+  };
+}
+
+// MARK: Mutation Observer 
 
 function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex ) {
   // Initialize filter list from storage
