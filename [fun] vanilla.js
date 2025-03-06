@@ -1050,6 +1050,57 @@ function lazyLoad ( load, ...items ) {
 
 // MARK: Rest
 
+function scrollElementToCursor ( element, event = null, options = {} ) {
+  // Default options
+  const settings = {
+    behavior: options.behavior || 'smooth',
+    offsetY: options.offsetY || 0
+  };
+
+  // Store the last known mouse position
+  if ( !window._lastKnownMousePos ) {
+    window._lastKnownMousePos = { x: 0, y: 0 };
+
+    // Set up a global mouse move listener to track cursor position
+    document.addEventListener( 'mousemove', ( e ) => {
+      window._lastKnownMousePos.x = e.clientX;
+      window._lastKnownMousePos.y = e.clientY;
+    } );
+  }
+
+  // Get current mouse position
+  const mousePos = event ?
+    { x: event.clientX, y: event.clientY } :
+    window._lastKnownMousePos;
+
+  if ( !element ) {
+    console.error( 'scrollElementToCursor: No element provided' );
+    return;
+  }
+
+  // Get element's position information
+  const elementRect = element.getBoundingClientRect();
+
+  // Calculate new scroll position
+  // Current scroll position + element's top position + half element height - cursor Y position
+  const elementCenter = elementRect.height / 2;
+  const scrollY = window.scrollY + elementRect.top + elementCenter - mousePos.y + settings.offsetY;
+
+  // Perform the scroll
+  window.scrollTo( {
+    top: scrollY,
+    behavior: settings.behavior
+  } );
+
+  return {
+    element,
+    scrollPosition: scrollY,
+    mousePosition: { ...mousePos },
+    elementHeight: elementRect.height,
+    elementCenter: elementCenter
+  };
+}
+
 function getAccentColorFromFavicon () {
   return new Promise( ( resolve ) => {
     // Find the favicon
