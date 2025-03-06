@@ -45,6 +45,12 @@
 
   waitForEach( 'shreddit-comment', commentEl => {
     const collapseBtnEl = generateElements( '<button>🌂</button>', commentEl );
+    style( collapseBtnEl, `
+      position: absolute;
+      top: 0;
+      left: -30px;
+      margin: 5px;
+    `);
     collapseBtnEl.addEventListener( 'click', () => {
       toggle( commentEl );
     } );
