@@ -1871,19 +1871,57 @@ function contains ( selector, text, parent = document ) {
   return elsContaining;
 }
 
-function next ( el, selector ) {
-  const nextEl = el.nextElementSibling;
-  if ( !selector || ( nextEl && nextEl.matches( selector ) ) ) {
-    return nextEl;
+/**
+ * Returns the first element that matches the selector from the following siblings
+ * @param {Element} element - The reference element
+ * @param {string} [selector] - Optional CSS selector to match siblings against
+ * @returns {Element|null} The first matching sibling element or null if none found
+ */
+function next ( element, selector ) {
+  // Get the next sibling
+  let sibling = element.nextElementSibling;
+
+  // If no selector is provided, return the first sibling
+  if ( !selector ) {
+    return sibling;
   }
+
+  // Loop through siblings until we find a match or run out of siblings
+  while ( sibling ) {
+    if ( sibling.matches( selector ) ) {
+      return sibling;
+    }
+    sibling = sibling.nextElementSibling;
+  }
+
+  // Return null if no matches were found
   return null;
 }
 
-function prev ( el, selector ) {
-  const prevEl = el.previousElementSibling;
-  if ( !selector || ( prevEl && prevEl.matches( selector ) ) ) {
-    return prevEl;
+/**
+ * Returns the first element that matches the selector from the preceding siblings
+ * @param {Element} element - The reference element
+ * @param {string} [selector] - Optional CSS selector to match siblings against
+ * @returns {Element|null} The first matching sibling element or null if none found
+ */
+function prev ( element, selector ) {
+  // Get the previous sibling
+  let sibling = element.previousElementSibling;
+
+  // If no selector is provided, return the first sibling
+  if ( !selector ) {
+    return sibling;
   }
+
+  // Loop through siblings until we find a match or run out of siblings
+  while ( sibling ) {
+    if ( sibling.matches( selector ) ) {
+      return sibling;
+    }
+    sibling = sibling.previousElementSibling;
+  }
+
+  // Return null if no matches were found
   return null;
 }
 
