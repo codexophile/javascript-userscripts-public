@@ -44,16 +44,31 @@
   } );
 
   waitForEach( 'shreddit-comment', commentEl => {
-    const collapseBtnEl = generateElements( '<button>🌂</button>', commentEl );
-    style( collapseBtnEl, `
+
+    const buttonsContEl = generateElements( '<div></div>', commentEl );
+    buttonsContEl.classList.add( 'up-down-container' );
+    style( buttonsContEl, `
       position: absolute;
       top: 0;
       left: -30px;
       margin: 5px;
     `);
-    collapseBtnEl.addEventListener( 'click', () => {
-      toggle( commentEl );
+
+    const upBtnEl = generateElements( '<button>⬆️</button>', buttonsContEl );
+    const downBtnEl = generateElements( '<button>⬇️</button>', buttonsContEl );
+    downBtnEl.addEventListener( 'click', () => {
+      const nextCommentEl = next( commentEl, 'shreddit-comment' );
+      const nextBtnContEls = nextCommentEl.querySelectorAll( '.up-down-container' );
+      const nextBtnContEl = nextBtnContEls[ nextBtnContEls.length - 1 ];
+      scrollElementToCursor( nextBtnContEl );
     } );
+    upBtnEl.addEventListener( 'click', () => {
+      const prevCommentEl = prev( commentEl, 'shreddit-comment' );
+      const prevBtnContEls = prevCommentEl.querySelectorAll( '.up-down-container' );
+      const prevBtnContEl = prevBtnContEls[ prevBtnContEls.length - 1 ];
+      scrollElementToCursor( prevBtnContEl );
+    } );
+
   } );
 
   let observer = new MutationObserver( () => {
