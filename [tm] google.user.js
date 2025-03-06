@@ -33,10 +33,6 @@
     window.open( url );
   }
 
-  waitForEach( `[href^="https://www.reddit"]`, ( linkEl ) => {
-    linkEl.href = linkEl.href.replace( 'https://www.reddit', 'https://old.reddit' );
-  } );
-
   waitForEach( `[href^="https://stackoverflow.com/questions/"]`, async ( linkEl ) => {
     const mainContainerEl = linkEl.parentElement;
     const parentEl = generateElements( `<div></div>`, mainContainerEl );
