@@ -5,9 +5,13 @@
   //* Beep
   beep();
   function beep () {
-    if ( !document.hidden ) {
-      GM_setClipboard( `global-document-ready-${ document.title }` );
-    }
+    const blackListUrls = [
+      'https://www.google.com/url?q=',
+      'https://mail.google.com'
+    ];
+    if ( blackListUrls.some( url => location.href.includes( url ) ) ) return; // 🛑
+    if ( document.hidden ) return;
+    GM_setClipboard( `global-document-ready-${ document.title }` );
   }
 
   //* toolbar and toolbar buttons
