@@ -50,7 +50,9 @@
       const flagEl = generateElements( `<span id=country-flag></span>` );
       titleEl.prepend( flagEl );
       // flagEl.textContent = flagEmojiChar;
-
+      const flagImgUrl = getCountryFlagImage( countryOfOrigin, 'flat', '32' );
+      const flagImgEl = generateElements( `<img src="${ flagImgUrl }" alt="${ flagEmojiChar }">` );
+      flagEl.append( flagImgEl );
 
       flagEl.style.marginRight = '0.5em';
       titleEl.style.justifyContent = 'unset';
