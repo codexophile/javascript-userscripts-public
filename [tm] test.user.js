@@ -4,7 +4,10 @@
 ( async function () {
   'use strict';
 
-  const temp = await GMXmlHttpRequest( 'https://gaydam.net/?v=ksJUz14nY', null, true );
-  GM_setClipboard( temp );
+  // Request a file handle
+  const handle = await window.showSaveFilePicker();
+  const writable = await handle.createWritable();
+  await writable.write( 'Hello, world!' );
+  await writable.close();
 
 } )();
