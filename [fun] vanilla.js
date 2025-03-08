@@ -814,7 +814,6 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
       console.log( 'Unique ID not found' );
       return;
     }
-    console.log( uniqueId );
 
     if ( uniqueId && !filterList.includes( uniqueId ) ) {
       // Add the ID to the filter list
@@ -823,9 +822,7 @@ function markAndFilter ( itemSelector, uidSelector = 'a', uidAttribute, uidRegex
       filterList = [ ...new Set( filterList ) ];
       // Save to storage
       GM_setValue( 'filterList', filterList );
-      style( item, `
-        outline: 2px solid red;
-      `);
+      dimElement( item );
     }
   } );
 
