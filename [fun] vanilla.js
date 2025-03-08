@@ -308,6 +308,84 @@ function forHumans ( seconds ) {
 
 // MARK: - Style related
 
+/**
+ * Dims the content of the provided element by adding a semi-transparent overlay
+ * @param {HTMLElement} element - The DOM element to dim
+ * @param {Object} options - Optional configuration
+ * @param {number} options.opacity - Opacity level (0 to 1, default: 0.5)
+ * @param {string} options.color - Color of the dim overlay (default: 'black')
+ * @param {boolean} options.animate - Whether to animate the dimming (default: false)
+ * @param {number} options.duration - Animation duration in ms (default: 300)
+ * @return {Function} A function that removes the dimming effect when called
+ */
+function dimElement ( element, options = {} ) {
+  // Default options
+  const config = {
+    opacity: options.opacity !== undefined ? options.opacity : 0.8,
+    color: options.color || 'black',
+    animate: options.animate || false,
+    duration: options.duration || 300
+  };
+
+  // Store original position if not already positioned
+  const originalPosition = window.getComputedStyle( element ).position;
+  if ( originalPosition === 'static' ) {
+    element.style.position = 'relative';
+  }
+
+  // Create overlay element
+  const overlay = document.createElement( 'div' );
+
+  // Set overlay styles
+  const overlayStyles = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: config.color,
+    opacity: config.animate ? 0 : config.opacity,
+    transition: config.animate ? `opacity ${ config.duration }ms ease` : 'none',
+    pointerEvents: 'none',
+    zIndex: 1
+  };
+
+  // Apply styles to overlay
+  Object.assign( overlay.style, overlayStyles );
+
+  // Add class for potential styling/selection
+  overlay.classList.add( 'element-dim-overlay' );
+
+  // Append overlay to element
+  element.appendChild( overlay );
+
+  // Trigger animation if enabled
+  if ( config.animate ) {
+    // Force a reflow to ensure the transition works
+    overlay.offsetHeight;
+    overlay.style.opacity = config.opacity;
+  }
+
+  // Return function to remove the dimming effect
+  return function undim () {
+    if ( config.animate ) {
+      overlay.style.opacity = 0;
+
+      setTimeout( () => {
+        element.removeChild( overlay );
+        if ( originalPosition === 'static' ) {
+          element.style.position = originalPosition;
+        }
+      }, config.duration );
+    } else {
+      element.removeChild( overlay );
+      if ( originalPosition === 'static' ) {
+        element.style.position = originalPosition;
+      }
+    }
+  };
+}
+
 function getStyleOrComputedStyle ( element, property ) {
   return element.style[ property ] ? element.style[ property ] : getComputedStyle( element )[ property ];
 }
