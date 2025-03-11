@@ -39,15 +39,17 @@
   function initializeFetchingAndDisplayingCountryFlags () {
     window.addEventListener( 'yt-navigate-finish', async () => {
 
+
       const titleEl = await waitFor( `#title.style-scope.ytd-watch-metadata` );
       if ( !titleEl ) return;
+      titleEl.querySelector( `#country-flag` )?.remove();
+
       const videoId = getVideoId();
       const channelId = await getChannelId( videoId, API_KEY );
       const countryOfOrigin = await getChannelCountryOfOrigin( channelId, API_KEY );
       const countryFullName = getCountryName( countryOfOrigin );
       const flagEmojiChar = countryCodeToFlag( countryOfOrigin );
 
-      titleEl.querySelector( `#country-flag` )?.remove();
       const flagEl = generateElements( `<span id=country-flag></span>` );
       titleEl.prepend( flagEl );
       flagEl.title = countryFullName;
