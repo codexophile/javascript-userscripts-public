@@ -5,6 +5,18 @@
   const collapsibleEl = await Collapsible();
   collapsibleEl.addButton( '👁️', null, filter );
 
+  document.addEventListener( 'keydown', async ( event ) => {
+    if ( !event.altKey ) return; // 🛑
+    switch ( event.key ) {
+      case "d": // next
+        event.preventDefault();
+        let nextUnreadItem = document.querySelector( `.messageListItem--isNew` );
+        nextUnreadItem.scrollIntoView();
+        nextUnreadItem.click();
+        break;
+    }
+  }, false );
+
   function filter () {
 
     // Get all message list items
