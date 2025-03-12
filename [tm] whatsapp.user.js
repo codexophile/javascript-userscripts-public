@@ -121,7 +121,7 @@
         const yCoord = Math.round( y );
         const targetXCoord = xCoord - 50;
         const targetYCoord = yCoord + 80;
-        GM_setClipboard( `mouse-move::${ targetXCoord },${ targetYCoord }::` );
+        GM_setClipboard( `mouse-click::${ targetXCoord },${ targetYCoord }::` );
         break;
 
     }
