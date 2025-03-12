@@ -2050,6 +2050,43 @@ function unwrap ( el ) {
   el.replaceWith( ...el.childNodes );
 }
 
+/**
+ * Find all ancestor elements of the given element up to (but not including) a specified element or selector
+ * 
+ * @param {Element} element - The starting element to find parents from
+ * @param {string|Element} until - Selector string or Element to stop at (not included in result)
+ * @param {string} [filter] - Optional selector to filter the result set
+ * @return {Element[]} Array of ancestor elements in order from closest to farthest
+ */
+function parentsUntil ( element, until, filter ) {
+  // Validate element parameter
+  if ( !( element instanceof Element ) ) {
+    throw new Error( 'First parameter must be a DOM Element' );
+  }
+
+  const result = [];
+  let current = element.parentElement;
+
+  // If until is a selector string, prepare to match against it
+  const isUntilSelector = typeof until === 'string';
+
+  // Function to check if we've reached the "until" element/selector
+  const isUntilElement = isUntilSelector
+    ? el => el && el.matches( until )
+    : el => el === until;
+
+  // Walk up the DOM until we find the "until" element or reach the document
+  while ( current && !isUntilElement( current ) ) {
+    // If a filter is provided, only add elements that match it
+    if ( !filter || current.matches( filter ) ) {
+      result.push( current );
+    }
+    current = current.parentElement;
+  }
+
+  return result;
+}
+
 function parents ( el, selector ) {
   const parents = [];
   while ( ( el = el.parentNode ) && el !== document ) {
