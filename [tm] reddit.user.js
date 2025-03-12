@@ -56,17 +56,17 @@
 
     const upBtnEl = generateElements( '<button>⬆️</button>', buttonsContEl );
     const downBtnEl = generateElements( '<button>⬇️</button>', buttonsContEl );
-    downBtnEl.addEventListener( 'click', () => {
+    downBtnEl.addEventListener( 'click', ( event ) => {
       const nextCommentEl = next( commentEl, 'shreddit-comment' );
       const nextBtnContEls = nextCommentEl.querySelectorAll( '.up-down-container' );
       const nextBtnContEl = nextBtnContEls[ nextBtnContEls.length - 1 ];
-      scrollElementToCursor( nextBtnContEl );
+      scrollElementToCursor( nextBtnContEl, event );
     } );
-    upBtnEl.addEventListener( 'click', () => {
+    upBtnEl.addEventListener( 'click', ( event ) => {
       const prevCommentEl = prev( commentEl, 'shreddit-comment' );
       const prevBtnContEls = prevCommentEl.querySelectorAll( '.up-down-container' );
       const prevBtnContEl = prevBtnContEls[ prevBtnContEls.length - 1 ];
-      scrollElementToCursor( prevBtnContEl );
+      scrollElementToCursor( prevBtnContEl, event );
     } );
 
   } );
