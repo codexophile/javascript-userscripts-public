@@ -107,6 +107,25 @@
 
   //* keyboard shortcut for translation
   document.addEventListener( 'keydown', async function ( event ) {
+
+    if ( !event.altKey ) return; // 🛑
+
+    switch ( event.key ) {
+
+      case "d": // next
+        event.preventDefault();
+        let nextUnreadItem = document.querySelectorAll( `[aria-label*="unread message"]` )[ 1 ];
+        nextUnreadItem.scrollIntoView( { block: 'center' } );
+        const { x, y } = nextUnreadItem.getBoundingClientRect();
+        const xCoord = Math.round( x );
+        const yCoord = Math.round( y );
+        const targetXCoord = xCoord - 50;
+        const targetYCoord = yCoord + 80;
+        GM_setClipboard( `mouse-move::${ targetXCoord },${ targetYCoord }::` );
+        break;
+
+    }
+
     if ( !( event.altKey && event.key === 'r' ) ) return;
     event.preventDefault();
 
