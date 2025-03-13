@@ -1125,6 +1125,19 @@ function lazyLoad ( load, ...items ) {
 
 // MARK: Rest
 
+function getSecret ( valueKey = 'apiKey' ) {
+
+  let secretValue = GM_getValue( valueKey, '' );
+  if ( secretValue ) return secretValue;
+
+  secretValue = prompt( `Please enter your ${ valueKey } value:` );
+  if ( !secretValue ) return;
+
+  GM_setValue( valueKey, secretValue );
+  return secretValue;
+
+}
+
 function scrollElementToCursor ( element, event = null, options = {} ) {
   // Default options
   const settings = {
