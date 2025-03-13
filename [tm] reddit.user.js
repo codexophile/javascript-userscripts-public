@@ -24,7 +24,7 @@
 
       const secondaryToolbarEl = generateElements( '<div></div>', postEl );
       style( secondaryToolbarEl, `margin: 10px;` );
-      const percentageDispEl = createPercentageDispEl( upvoteRatio, secondaryToolbarEl );
+      createPercentageDispEl( upvoteRatio, secondaryToolbarEl );
       const upvotesDispEl = createVotesDispEl( 'up', upvotes, secondaryToolbarEl );
       const downvotesDispEl = createVotesDispEl( 'down', downvotes, secondaryToolbarEl );
       postEl.querySelector( 'a[data-ks-id]' ).remove();
@@ -32,66 +32,65 @@
 
     } );
 
+    function createSecondaryToolbarElement ( text, childEl, parentEl ) {
+      const secondaryToolbarEl = generateElements( `<button>${ text }</button>`, parentEl );
+      style( secondaryToolbarEl, `
+        margin: 10px;
+        padding: 5px;
+        line-height: unset;
+      ` );
+      if ( childEl ) secondaryToolbarEl.appendChild( childEl );
+      return secondaryToolbarEl;
+    }
+
     function createPercentageDispEl ( ratioValue, parentEl ) {
       const percentage = Math.round( ratioValue * 100 );
-      const percentageDispEl = generateElements( `<button>${ percentage } 💹</button>`, parentEl );
+      const percentageDispEl = createSecondaryToolbarElement( `${ percentage }% 💹`, null, parentEl );
+      // const percentageDispEl = generateElements( `<button>${ percentage } 💹</button>`, parentEl );
       return percentageDispEl;
     }
 
     function createOpDispEl ( username, parentEl ) {
-      const opDispEl = generateElements( `<button>🧑🏻‍🦱 </button>`, parentEl );
-      const opLinkEl = generateElements( `<a>${ username }</a>`, opDispEl );
+      const opLinkEl = generateElements( `<a>${ username }</a>` );
+      const opDispEl = createSecondaryToolbarElement( '🧑🏻‍🦱 ', opLinkEl, parentEl );
       opLinkEl.href = `https://www.reddit.com/user/${ username }`;
       opLinkEl.target = '_blank';
       return opDispEl;
     }
 
     function createVotesDispEl ( direction, value, parent ) {
-
       if ( direction === 'up' ) {
-        const dispEl = generateElements( `<button>☝🏻 ${ value }</button>`, parent );
-        dispEl.style.color = 'green';
+        const dispEl = createSecondaryToolbarElement( `☝🏻 ${ value }`, null, parent );
         return dispEl;
       }
       else if ( direction === 'down' ) {
-        const dispEl = generateElements( `<button>👇🏻 ${ value }</button>`, parent );
-        dispEl.style.color = 'red';
+        const dispEl = createSecondaryToolbarElement( `👇🏻 ${ value }`, null, parent );
         return dispEl;
       }
       else {
         return null;
       }
-
-      const dispEl = generateElements( `<button>☝🏻 ${ upvotes }</button>` );
-      dispEl.style.color = 'green';
-      return dispEl;
     }
 
     function calculateUpvotes ( score, upvoteRatio ) {
+
       // Handle edge cases
       if ( upvoteRatio === 0 ) return score; // 0% upvoted, all downvotes
       if ( upvoteRatio === 1 ) return score; // 100% upvoted, all upvotes
+      if ( upvoteRatio === 0.5 ) return score; // 50% upvoted, equal upvotes and downvotes
 
-      if ( upvoteRatio === 0.5 ) {
-        return score; // 50% upvoted, equal upvotes and downvotes
-      }
-
-      const upPercentage = upvoteRatio * 100;
-      const upvotes = Math.round( score * ( upPercentage / 100 ) );
+      const upvotes = Math.round( score * upvoteRatio / ( 2 * upvoteRatio - 1 ) );
       return upvotes;
     }
 
     function calculateDownvotes ( score, upvoteRatio ) {
+
       // Handle edge cases
       if ( upvoteRatio === 0 ) return 0; // Should never happen in practice
       if ( upvoteRatio === 1 ) return 0; // 100% upvoted, no downvotes
+      if ( upvoteRatio === 0.5 ) return Math.abs( score ); // Score should be 0 in this case, but taking abs for safety
 
-      if ( upvoteRatio === 0.5 ) {
-        return Math.abs( score ); // Score should be 0 in this case, but taking abs for safety
-      }
-
-      const downPercentage = ( 1 - upvoteRatio ) * 100;
-      const downvotes = Math.round( score * ( downPercentage / 100 ) );
+      const downvotes = Math.round( score * ( 1 - upvoteRatio ) / ( 2 * upvoteRatio - 1 ) );
       return downvotes;
 
     }
