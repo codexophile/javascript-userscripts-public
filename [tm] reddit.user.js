@@ -6,18 +6,107 @@
   ( function () {
     'use strict';
 
-
-
-
     const CLIENT_ID = getSecret( 'redditClientId' );
     const CLIENT_SECRET = getSecret( 'redditClientSecret' );
     const USER_AGENT = 'MainScript/1.0 (by /u/codexophile)';
 
     waitForEach( 'shreddit-post', async ( postEl ) => {
       const postId = getPostId( postEl );
-      console.log( postId );
+      const token = await getAccessToken();
+      const postData = await getPostData( postId, token );
+      console.log( postData );
       const testDivEl = generateElements( '<div>Test</div>', postEl );
     } );
+
+    function calculateDownvotes ( score, upvoteRatio ) {
+      if ( upvoteRatio === 0.5 ) {
+        return score; // Equal upvotes and downvotes
+      }
+
+      const totalVotes = Math.round( score / ( 2 * upvoteRatio - 1 ) );
+      return totalVotes - score;
+    }
+
+    function getPostData ( postId, token ) {
+      return new Promise( ( resolve, reject ) => {
+        GM_xmlhttpRequest( {
+          method: 'GET',
+          url: `https://oauth.reddit.com/api/info?id=t3_${ postId }`,
+          headers: {
+            'Authorization': `Bearer ${ token }`,
+            'User-Agent': USER_AGENT
+          },
+          onload: function ( response ) {
+            try {
+              const data = JSON.parse( response.responseText );
+              if ( data.data && data.data.children && data.data.children.length > 0 ) {
+                resolve( data.data.children[ 0 ].data );
+              } else {
+                reject( new Error( 'Post data not found' ) );
+              }
+            } catch ( error ) {
+              reject( error );
+            }
+          },
+          onerror: function ( error ) {
+            reject( error );
+          }
+        } );
+      } );
+    }
+
+    function getAccessToken () {
+      return new Promise( ( resolve, reject ) => {
+        // Check if we have a cached token and it's not expired
+        const tokenData = GM_getValue( 'redditTokenData', null );
+        const currentTime = Date.now();
+
+        if ( tokenData && tokenData.expiresAt > currentTime ) {
+          console.log( 'Using cached token' );
+          resolve( tokenData.accessToken );
+          return;
+        }
+
+        // No valid cached token, request a new one
+        const auth = btoa( `${ CLIENT_ID }:${ CLIENT_SECRET }` );
+
+        GM_xmlhttpRequest( {
+          method: 'POST',
+          url: 'https://www.reddit.com/api/v1/access_token',
+          headers: {
+            'Authorization': `Basic ${ auth }`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': USER_AGENT
+          },
+          data: 'grant_type=client_credentials',
+          onload: function ( response ) {
+            try {
+              const data = JSON.parse( response.responseText );
+              if ( data.access_token ) {
+                // Cache the token with expiration time (subtract 60 seconds for safety)
+                const expiresIn = ( data.expires_in || 3600 ) - 60;
+                const expiresAt = currentTime + ( expiresIn * 1000 );
+
+                GM_setValue( 'redditTokenData', {
+                  accessToken: data.access_token,
+                  expiresAt: expiresAt
+                } );
+
+                console.log( 'New token cached until:', new Date( expiresAt ).toLocaleString() );
+                resolve( data.access_token );
+              } else {
+                reject( new Error( 'No access token received' ) );
+              }
+            } catch ( error ) {
+              reject( error );
+            }
+          },
+          onerror: function ( error ) {
+            reject( error );
+          }
+        } );
+      } );
+    }
 
     function getPostId ( postEl ) {
       const matches = location.href.match( /\/comments\/(.+?)\// );
