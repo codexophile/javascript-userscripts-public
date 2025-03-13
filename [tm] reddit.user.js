@@ -14,9 +14,44 @@
       const postId = getPostId( postEl );
       const token = await getAccessToken();
       const postData = await getPostData( postId, token );
-      console.log( postData );
-      const testDivEl = generateElements( '<div>Test</div>', postEl );
+
+      const score = postData.score;
+      const upvoteRatio = postData.upvote_ratio;
+      const upvotes = postData.ups;
+      const downvotes = calculateDownvotes( score, upvoteRatio );
+      const author = postData.author;
+
+      const secondaryToolbarEl = generateElements( '<div></div>', postEl );
+      style( secondaryToolbarEl, `
+        margin: 3px;
+      `);
+      const upvotesDispEl = createVotesDispEl( 'up', upvotes, secondaryToolbarEl );
+      const downvotesDispEl = createVotesDispEl( 'down', downvotes, secondaryToolbarEl );
+
     } );
+
+
+
+    function createVotesDispEl ( direction, value, parent ) {
+
+      if ( direction === 'up' ) {
+        const dispEl = generateElements( `<button>☝🏻 ${ value }</button>`, parent );
+        dispEl.style.color = 'green';
+        return dispEl;
+      }
+      else if ( direction === 'down' ) {
+        const dispEl = generateElements( `<button>👇🏻 ${ value }</button>`, parent );
+        dispEl.style.color = 'red';
+        return dispEl;
+      }
+      else {
+        return null;
+      }
+
+      const dispEl = generateElements( `<button>☝🏻 ${ upvotes }</button>` );
+      dispEl.style.color = 'green';
+      return dispEl;
+    }
 
     function calculateDownvotes ( score, upvoteRatio ) {
       if ( upvoteRatio === 0.5 ) {
