@@ -11,26 +11,40 @@
     const USER_AGENT = 'MainScript/1.0 (by /u/codexophile)';
 
     waitForEach( 'shreddit-post', async ( postEl ) => {
+
       const postId = getPostId( postEl );
       const token = await getAccessToken();
       const postData = await getPostData( postId, token );
 
       const score = postData.score;
       const upvoteRatio = postData.upvote_ratio;
-      const upvotes = postData.ups;
+      const upvotes = calculateUpvotes( score, upvoteRatio );
       const downvotes = calculateDownvotes( score, upvoteRatio );
       const author = postData.author;
 
       const secondaryToolbarEl = generateElements( '<div></div>', postEl );
-      style( secondaryToolbarEl, `
-        margin: 3px;
-      `);
+      style( secondaryToolbarEl, `margin: 10px;` );
+      const percentageDispEl = createPercentageDispEl( upvoteRatio, secondaryToolbarEl );
       const upvotesDispEl = createVotesDispEl( 'up', upvotes, secondaryToolbarEl );
       const downvotesDispEl = createVotesDispEl( 'down', downvotes, secondaryToolbarEl );
+      postEl.querySelector( 'a[data-ks-id]' ).remove();
+      const opDispEl = createOpDispEl( author, secondaryToolbarEl );
 
     } );
 
+    function createPercentageDispEl ( ratioValue, parentEl ) {
+      const percentage = Math.round( ratioValue * 100 );
+      const percentageDispEl = generateElements( `<button>${ percentage } 💹</button>`, parentEl );
+      return percentageDispEl;
+    }
 
+    function createOpDispEl ( username, parentEl ) {
+      const opDispEl = generateElements( `<button>🧑🏻‍🦱 </button>`, parentEl );
+      const opLinkEl = generateElements( `<a>${ username }</a>`, opDispEl );
+      opLinkEl.href = `https://www.reddit.com/user/${ username }`;
+      opLinkEl.target = '_blank';
+      return opDispEl;
+    }
 
     function createVotesDispEl ( direction, value, parent ) {
 
@@ -53,13 +67,33 @@
       return dispEl;
     }
 
-    function calculateDownvotes ( score, upvoteRatio ) {
+    function calculateUpvotes ( score, upvoteRatio ) {
+      // Handle edge cases
+      if ( upvoteRatio === 0 ) return score; // 0% upvoted, all downvotes
+      if ( upvoteRatio === 1 ) return score; // 100% upvoted, all upvotes
+
       if ( upvoteRatio === 0.5 ) {
-        return score; // Equal upvotes and downvotes
+        return score; // 50% upvoted, equal upvotes and downvotes
       }
 
-      const totalVotes = Math.round( score / ( 2 * upvoteRatio - 1 ) );
-      return totalVotes - score;
+      const upPercentage = upvoteRatio * 100;
+      const upvotes = Math.round( score * ( upPercentage / 100 ) );
+      return upvotes;
+    }
+
+    function calculateDownvotes ( score, upvoteRatio ) {
+      // Handle edge cases
+      if ( upvoteRatio === 0 ) return 0; // Should never happen in practice
+      if ( upvoteRatio === 1 ) return 0; // 100% upvoted, no downvotes
+
+      if ( upvoteRatio === 0.5 ) {
+        return Math.abs( score ); // Score should be 0 in this case, but taking abs for safety
+      }
+
+      const downPercentage = ( 1 - upvoteRatio ) * 100;
+      const downvotes = Math.round( score * ( downPercentage / 100 ) );
+      return downvotes;
+
     }
 
     function getPostData ( postId, token ) {
