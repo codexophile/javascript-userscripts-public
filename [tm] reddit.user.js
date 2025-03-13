@@ -1,8 +1,14 @@
 ( function () {
   'use strict';
+  if ( window.top != window.self ) return; //don't run on frames or iframes
 
+  const CLIENT_ID = getSecret( 'redditClientId' );
+  const CLIENT_SECRET = getSecret( 'redditClientSecret' );
+
+  //* Filtering
   markAndFilter( 'shreddit-feed > article', 'shreddit-post', 'id', /t3_(.+)$/, 'https://sh.reddit.com' );
 
+  //* Collapsible
   waitFor( '.collapsible-content' ).then( async ( el ) => {
 
     // el.parentElement.style.left = '';
@@ -43,6 +49,7 @@
 
   } );
 
+  //* Upvote/Downvote buttons
   waitForEach( 'shreddit-comment', commentEl => {
 
     const buttonsContEl = generateElements( '<div></div>', commentEl );
