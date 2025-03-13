@@ -2,8 +2,32 @@
   'use strict';
   if ( window.top != window.self ) return; //don't run on frames or iframes
 
-  const CLIENT_ID = getSecret( 'redditClientId' );
-  const CLIENT_SECRET = getSecret( 'redditClientSecret' );
+  //* API
+  ( function () {
+    'use strict';
+
+
+
+
+    const CLIENT_ID = getSecret( 'redditClientId' );
+    const CLIENT_SECRET = getSecret( 'redditClientSecret' );
+    const USER_AGENT = 'MainScript/1.0 (by /u/codexophile)';
+
+    waitForEach( 'shreddit-post', async ( postEl ) => {
+      const postId = getPostId( postEl );
+      console.log( postId );
+      const testDivEl = generateElements( '<div>Test</div>', postEl );
+    } );
+
+    function getPostId ( postEl ) {
+      const matches = location.href.match( /\/comments\/(.+?)\// );
+      if ( matches ) {
+        return matches[ 1 ];
+      }
+      return postEl.id.slice( 3 );
+    }
+
+  } )();
 
   //* Filtering
   markAndFilter( 'shreddit-feed > article', 'shreddit-post', 'id', /t3_(.+)$/, 'https://sh.reddit.com' );
