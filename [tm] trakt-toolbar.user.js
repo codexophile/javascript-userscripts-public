@@ -91,12 +91,26 @@
   }
 
   query = query.replaceAll( ' ', '+' );
+  const ppxQuery = encodeURI( `
+    I just watched ${ movieShowTitle }, and I want to fully understand it. Please provide me with a detailed breakdown, including:
+    A summary of the plot with key events, making sure to highlight any important details that might be easy to miss.
+    An analysis of hidden themes, allegories, and deeper meanings.
+    Explanations of any symbolism, foreshadowing, or subtle references.
+    A character analysis, including motivations, arcs, and hidden complexities.
+    Any connections to real-world events, literature, mythology, or philosophical ideas.
+    A discussion of the director's style, choices, and possible intentions.
+    Any fan theories or debates that add depth to the movie’s interpretation.
+    Other interesting details, like Easter eggs, hidden clues, or references to other works.
+  `);
 
   createToolbarItem( // wikipedia
     `https://www.google.com/search?btnI=1&q=${ query }%20site:wikipedia.org`,
     'https://cdn-icons-png.flaticon.com/512/49/49360.png', 'Wikipedia'
   );
-
+  createToolbarItem( // AI - perplexity
+    `https://www.perplexity.ai/search?q=${ ppxQuery }&copilot=false&s=d`,
+    'https://www.perplexity.ai/favicon.ico', 'ppx'
+  );
   createToolbarItem( // plot
     `https://www.google.com/search?q=${ query }%20plot`,
     'https://cdn-icons-png.flaticon.com/512/3336/3336640.png', 'Plot'
