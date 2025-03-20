@@ -112,30 +112,52 @@
 
     switch ( event.key ) {
 
+      case 'r': // reply
+        event.preventDefault();
+
+        const activeEl = document.activeElement;
+        const chatItemQuery = '.message-out, .message-in';
+        const isAChatItem = activeEl.matches( chatItemQuery );
+        const aChildIsAChatItem = activeEl.querySelector( chatItemQuery );
+        if ( !isAChatItem || !aChildIsAChatItem ) return;
+        whatsappAHKClick( activeEl, true );
+
+        break;
+
       case "d": // next
         event.preventDefault();
         let nextUnreadItem = document.querySelectorAll( `[aria-label*="unread message"]` )[ 1 ];
         nextUnreadItem.scrollIntoView( { block: 'center' } );
-        const { x, y } = nextUnreadItem.getBoundingClientRect();
-        const xCoord = Math.round( x );
-        const yCoord = Math.round( y );
-        const targetXCoord = xCoord - 50;
-        const targetYCoord = yCoord + 80;
-        const string = `mouse-click::${ targetXCoord },${ targetYCoord }::`;
-        GM_setClipboard( string );
+        whatsappAHKClick( nextUnreadItem, false );
         break;
 
     }
 
-    if ( !( event.altKey && event.key === 'r' ) ) return;
-    event.preventDefault();
+    // if ( !( event.altKey && event.key === 'r' ) ) return;
+    // event.preventDefault();
 
-    const inputBoxEl = document.querySelector( 'footer .lexical-rich-text-input' );
-    const inputText = inputBoxEl.textContent;
-    const translationObj = await getTranslation( inputText, 'es' );
-    console.log( translationObj );
-    alert( translationObj.translatedText );
+    // const inputBoxEl = document.querySelector( 'footer .lexical-rich-text-input' );
+    // const inputText = inputBoxEl.textContent;
+    // const translationObj = await getTranslation( inputText, 'es' );
+    // console.log( translationObj );
+    // alert( translationObj.translatedText );
   } );
+
+  function whatsappAHKClick ( element, twice = false ) {
+    const { x, y } = element.getBoundingClientRect();
+    const xCoord = Math.round( x );
+    const yCoord = Math.round( y );
+    const targetXCoord = xCoord - 50;
+    const targetYCoord = yCoord + 80;
+    let copyString = '';
+    if ( twice ) {
+      copyString = `double-click::${ targetXCoord },${ targetYCoord }::`;
+    }
+    else {
+      copyString = `mouse-click::${ targetXCoord },${ targetYCoord }::`;
+    }
+    GM_setClipboard( copyString );
+  }
 
   //* Auto exiting when inactive
   return;
