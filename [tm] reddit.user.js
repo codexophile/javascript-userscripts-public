@@ -23,7 +23,6 @@
       const author = postData.author;
 
       const secondaryToolbarEl = generateElements( '<div></div>', postEl );
-      style( secondaryToolbarEl, `margin: 10px;` );
       createPercentageDispEl( upvoteRatio, secondaryToolbarEl );
       const upvotesDispEl = createVotesDispEl( 'up', upvotes, secondaryToolbarEl );
       const downvotesDispEl = createVotesDispEl( 'down', downvotes, secondaryToolbarEl );
