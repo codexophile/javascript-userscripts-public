@@ -73,6 +73,9 @@
             `);
       $linksContainer.append( `<a href='${ imgSrc }' target=_blank> 🔗 </a>` );
       $( `<button>⬇️</button>` ).appendTo( $linksContainer ).on( 'click', () => clickHandler( this ) );
+      $( `<button>📄</button>` ).appendTo( $linksContainer ).on( 'click', () => {
+        copyImageToClipboard( imgSrc );
+      } );
 
     } );
 
@@ -123,6 +126,48 @@
     if ( location.href.includes( '/p/' ) )
       href = location.href;
     return href.match( /\/p\/(.+?)(\/|$)/ )[ 1 ];
+  }
+
+  function copyImageToClipboard ( imageUrl ) {
+    return new Promise( ( resolve, reject ) => {
+      // Create a new image element
+      const img = new Image();
+
+      // Set up error handling
+      img.onerror = () => {
+        console.error( 'Failed to load image from URL:', imageUrl );
+        resolve( false );
+      };
+
+      // When the image loads
+      img.onload = () => {
+        // Create a canvas element
+        const canvas = document.createElement( 'canvas' );
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        // Draw the image on the canvas
+        const ctx = canvas.getContext( '2d' );
+        ctx.drawImage( img, 0, 0 );
+
+        try {
+          // Convert canvas to data URL
+          const dataUrl = canvas.toDataURL( 'image/png' );
+
+          // Use GM_setClipboard to copy the image to clipboard as data URL
+          GM_setClipboard( dataUrl, 'image' );
+          console.log( 'Image copied to clipboard successfully' );
+          resolve( true );
+        } catch ( error ) {
+          console.error( 'Failed to copy image to clipboard:', error );
+          resolve( false );
+        }
+      };
+
+      // Set the source of the image
+      img.crossOrigin = 'anonymous'; // Attempt to handle CORS issues
+      img.src = imageUrl;
+    } );
   }
 
 } )();
