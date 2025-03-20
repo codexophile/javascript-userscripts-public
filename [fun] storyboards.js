@@ -36,6 +36,9 @@ function setSlotSize ( sbParent, newWidth ) {
 async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
 
   const collapsible = await Collapsible();
+  collapsible.collapsibleContent.querySelectorAll( '.storyboardControl' ).forEach(
+    item => item.remove()
+  );
 
   if ( video ) {
 
