@@ -3,6 +3,19 @@
 
   // markAndFilter( 'main div:has(>[href^="/p/"])', 'a', 'href', /\/p\/(.+?)\// )
 
+  //* Shortcuts
+  document.addEventListener( 'keydown', async ( event ) => {
+    if ( !event.altKey ) return; // 🛑
+    switch ( event.key ) {
+      case "d": // next
+        event.preventDefault();
+        let nextUnreadItem = document.querySelector( 'span[data-visualcompletion="ignore"]' );
+        nextUnreadItem.scrollIntoView();
+        nextUnreadItem.click();
+        break;
+    }
+  }, false );
+
   //* moving video control panel
   ( async function () {
     'use strict';
