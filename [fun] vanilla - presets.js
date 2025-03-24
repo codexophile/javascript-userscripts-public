@@ -753,6 +753,7 @@ class ModalBox {
       headerTextColor: options.headerTextColor || '#ffffff',
       closeButtonColor: options.closeButtonColor || '#ffffff',
       animation: options.animation !== undefined ? options.animation : true,
+      destroyOnClose: options.destroyOnClose !== undefined ? options.destroyOnClose : false,
       closeOnEscape: options.closeOnEscape !== undefined ? options.closeOnEscape : true,
       closeOnOutsideClick: options.closeOnOutsideClick !== undefined ? options.closeOnOutsideClick : true,
     };
@@ -857,7 +858,12 @@ class ModalBox {
   }
 
   setupEventListeners () {
-    this.closeButton.addEventListener( 'click', () => this.destroy() );
+    this.closeButton.addEventListener( 'click', () => {
+      if ( this.options.destroyOnClose )
+        this.destroy();
+      else
+        this.hide();
+    } );
 
     if ( this.options.closeOnOutsideClick ) {
       this.modal.addEventListener( 'click', ( e ) => {
