@@ -114,11 +114,12 @@ function generateUniqueString ( length ) {
 }
 
 function downloadText ( filename, text ) {
-  const dlLink = document.createElement( 'a' );
+  const dlLink = generateElements( `<a>down</a>`, document.body );
   const uriContent = `data:text/plain;charset=utf-8,${ encodeURIComponent( text ) }`;
   dlLink.href = uriContent;
   dlLink.setAttribute( 'download', filename );
   dlLink.click();
+  dlLink.remove();
 }
 
 function capitalizeFirstLetter ( string ) {
@@ -1124,6 +1125,70 @@ function lazyLoad ( load, ...items ) {
 }
 
 // MARK: Rest
+
+function downloadImgWithTextFunctionality ( {
+  siteName,
+  imageElSelector,
+  getDescription,
+  locationHrefCondition
+} ) {
+  waitForEach( imageElSelector, ( imgEl ) => {
+
+    // if ( !location.href.includes( locationHrefCondition ) )
+    //   return;
+
+    const imgWrapperEl = imgEl.parentElement;
+    if ( imgWrapperEl.querySelector( '#dlBtn' ) ) return; // 🛑
+
+    GM_setClipboard( `global-document-ready-${ document.title }` );
+
+    const dlBtnEl = generateElements( `<button id=dlBtn>D</button>`, imgWrapperEl );
+    style( dlBtnEl, `
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 1;
+            background-color: black;
+            color: white;
+            border-radius: 5px;
+            border: 5px;
+        `);
+
+    dlBtnEl.addEventListener( 'click', () => {
+
+      const tempImg = GM_addElement( 'img', { src: imgEl.src, crossorigin: "anonymous" } );
+      tempImg.addEventListener( 'load', async () => {
+
+        let blob = await fetch( imgEl.src ).then( r => r.blob() );
+        let uri = await new Promise( resolve => {
+          let reader = new FileReader();
+          reader.onload = () => resolve( reader.result );
+          reader.readAsDataURL( blob );
+        } );
+
+
+        // await waitFor( '#imagefx-seed-input' );
+
+        const uniqueFileName = generateUniqueString( 20 );
+        const descriptionText = getDescription( imgEl );
+        const finalFileName = `${ siteName } - ${ uniqueFileName }`;
+
+        if ( !descriptionText ) {
+          alert( 'error' );
+          return;
+        }
+
+        downloadText( finalFileName, descriptionText );
+
+        const link = generateElements( `<a></a>`, document.body );
+        link.setAttribute( 'download', `${ finalFileName }.png` );
+        link.setAttribute( 'href', uri );
+        link.click();
+
+      } );
+    } );
+  } );
+}
 
 function getSecret ( valueKey = 'apiKey' ) {
 
