@@ -3,7 +3,7 @@
   if ( window.top != window.self ) return; //don't run on frames or iframes
 
   const modalObj = new ModalBox();
-  const modalContentEl = generateElements( `<div></div>` );
+  const modalContentEl = generateElements( `<div id=modal-content></div>` );
   const queryForNewImgsEls = '.image-container > [alt^="Generated Image"]';
   let continuousGenerating = false;
   const generationLimit = 20;
@@ -26,10 +26,8 @@
   } );
 
   addButton( '🔁', null, async () => {
-    continuousGenerating = !continuousGenerating;
-    if ( continuousGenerating ) {
-      regenerate();
-    }
+    continuousGenerating = true;
+    regenerate();
     generatedCount = 0;
   } );
 
@@ -41,9 +39,6 @@
     const clonedImgEl = imgEl.cloneNode( true );
     style( clonedImgEl, `max-width: 200px; max-height: 200px;` );
     modalContentEl.appendChild( clonedImgEl );
-    if ( !continuousGenerating ) return;
-    generatedCount++;
-    regenerate();
   } );
 
   downloadImgWithTextFunctionality( {
@@ -56,8 +51,12 @@
     },
   } );
 
-  waitForEach( '[mattooltip="Good response"]', ( el ) => {
-    if ( continuousGenerating ) return;
+  waitForEach( '#modal-content > img, [mattooltip="Safety Ratings"]', () => {
+    if ( continuousGenerating ) {
+      generatedCount++;
+      regenerate();
+      return;
+    };
     GM_setClipboard( `global-document-ready-${ document.title }` );
     GM_notification( {
       title: 'AiStudio',
@@ -68,6 +67,7 @@
   } );
 
   function regenerate () {
+    document.title = `Generated: ${ generatedCount }/${ generationLimit }`;
     if ( continuousGenerating && generatedCount >= generationLimit ) {
       continuousGenerating = false;
       beep( 250, 250, 0.1 );
