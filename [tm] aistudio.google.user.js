@@ -4,6 +4,9 @@
 
   const modalObj = new ModalBox();
   const modalContentEl = generateElements( `<div></div>` );
+  const queryForNewImgsEls = '.image-container > [alt^="Generated Image"]';
+  const continuousGenerating = false;
+
   modalObj.setContent( modalContentEl );
 
   const { addButton } = await Collapsible();
@@ -15,13 +18,21 @@
     continueBtn.click();
   } );
 
-  addButton( '🖼️', null, async () => {
+  addButton( '🔁', null, async () => { } );
+
+  addButton( '🖼️', null, () => {
     modalObj.show();
+  } );
+
+  waitForEach( queryForNewImgsEls, ( imgEl ) => {
+    modalContentEl.appendChild( imgEl.cloneNode( true ) );
+    if ( !continuousGenerating ) return;
+
   } );
 
   downloadImgWithTextFunctionality( {
     siteName: 'AiStudio',
-    imageElSelector: '[alt^="Generated Image"]',
+    imageElSelector: queryForNewImgsEls,
     getDescription ( imgEl ) {
       const grandParentEl = imgEl.closest( 'ms-chat-turn' );
       const descriptionEl = prev( grandParentEl ).querySelector( '.user-prompt-container' );
