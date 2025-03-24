@@ -6,8 +6,15 @@
   const modalContentEl = generateElements( `<div></div>` );
   const queryForNewImgsEls = '.image-container > [alt^="Generated Image"]';
   let continuousGenerating = false;
+  const generationLimit = 20;
+  let generatedCount = 0;
 
   modalObj.setContent( modalContentEl );
+  const cleanHistoryBtnEl = generateElements( `<button>Clear History</button>` );
+  modalContentEl.appendChild( cleanHistoryBtnEl );
+  cleanHistoryBtnEl.addEventListener( 'click', () => {
+    modalContentEl.querySelectorAll( `img` ).forEach( item => { item.remove(); } );
+  } );
 
   const { addButton } = await Collapsible();
 
@@ -23,6 +30,7 @@
     if ( continuousGenerating ) {
       regenerate();
     }
+    generatedCount = 0;
   } );
 
   addButton( '🖼️', null, () => {
@@ -34,6 +42,7 @@
     style( clonedImgEl, `max-width: 200px; max-height: 200px;` );
     modalContentEl.appendChild( clonedImgEl );
     if ( !continuousGenerating ) return;
+    generatedCount++;
     regenerate();
   } );
 
@@ -59,6 +68,11 @@
   } );
 
   function regenerate () {
+    if ( continuousGenerating && generatedCount >= generationLimit ) {
+      continuousGenerating = false;
+      beep( 250, 250, 0.1 );
+      return;
+    }
     const rerunBtnEls = document.querySelectorAll( '[name="rerun-button"]' );
     const lastRerunBtnEl = rerunBtnEls[ rerunBtnEls.length - 1 ];
     lastRerunBtnEl.click();
