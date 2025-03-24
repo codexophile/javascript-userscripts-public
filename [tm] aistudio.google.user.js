@@ -5,7 +5,7 @@
   const modalObj = new ModalBox();
   const modalContentEl = generateElements( `<div></div>` );
   const queryForNewImgsEls = '.image-container > [alt^="Generated Image"]';
-  const continuousGenerating = false;
+  let continuousGenerating = false;
 
   modalObj.setContent( modalContentEl );
 
@@ -18,16 +18,23 @@
     continueBtn.click();
   } );
 
-  addButton( '🔁', null, async () => { } );
+  addButton( '🔁', null, async () => {
+    continuousGenerating = !continuousGenerating;
+    if ( continuousGenerating ) {
+      regenerate();
+    }
+  } );
 
   addButton( '🖼️', null, () => {
     modalObj.show();
   } );
 
   waitForEach( queryForNewImgsEls, ( imgEl ) => {
-    modalContentEl.appendChild( imgEl.cloneNode( true ) );
+    const clonedImgEl = imgEl.cloneNode( true );
+    style( clonedImgEl, `max-width: 200px; max-height: 200px;` );
+    modalContentEl.appendChild( clonedImgEl );
     if ( !continuousGenerating ) return;
-
+    regenerate();
   } );
 
   downloadImgWithTextFunctionality( {
@@ -41,7 +48,7 @@
   } );
 
   waitForEach( '[mattooltip="Good response"]', ( el ) => {
-    // if ( !document.hidden ) return;
+    if ( continuousGenerating ) return;
     GM_setClipboard( `global-document-ready-${ document.title }` );
     GM_notification( {
       title: 'AiStudio',
@@ -49,13 +56,16 @@
       text: 'Ready',
       timeout: 1000
     } );
-
   } );
 
-  hotkeys( 'alt+r', ( event, handler ) => {
+  function regenerate () {
     const rerunBtnEls = document.querySelectorAll( '[name="rerun-button"]' );
     const lastRerunBtnEl = rerunBtnEls[ rerunBtnEls.length - 1 ];
     lastRerunBtnEl.click();
+  }
+
+  hotkeys( 'alt+r', ( event, handler ) => {
+    regenerate();
   } );
 
   hotkeys( 'alt+e', ( event, handler ) => {
