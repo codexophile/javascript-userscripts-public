@@ -13,22 +13,33 @@
   const cleanHistoryBtnEl = generateElements( `<button>Clear History</button>` );
   modalContentEl.appendChild( cleanHistoryBtnEl );
   cleanHistoryBtnEl.addEventListener( 'click', () => {
-    modalContentEl.querySelectorAll( `img` ).forEach( item => { item.remove(); } );
+    clearImgHistory();
   } );
 
   const { addButton } = await Collapsible();
 
   addButton( '🧹', null, async () => {
+
     const clearChatBtnEl = document.querySelector( `button[aria-label="Clear chat"]` );
     clearChatBtnEl.click();
     const continueBtn = await waitFor( 'mat-dialog-actions > [color="primary"]' );
     continueBtn.click();
+
+    clearImgHistory();
+
   } );
 
   addButton( '🔁', null, async () => {
+
+    if ( continuousGenerating ) {
+      continuousGenerating = false;
+      return;
+    }
+
     continuousGenerating = true;
     regenerate();
     generatedCount = 0;
+
   } );
 
   addButton( '🖼️', null, () => {
@@ -65,6 +76,10 @@
       timeout: 1000
     } );
   } );
+
+  function clearImgHistory () {
+    modalContentEl.querySelectorAll( `img` ).forEach( item => { item.remove(); } );
+  }
 
   function regenerate () {
     document.title = `Generated: ${ generatedCount }/${ generationLimit }`;
