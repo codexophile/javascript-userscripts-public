@@ -37,8 +37,9 @@
     }
 
     continuousGenerating = true;
-    regenerate();
     generatedCount = 0;
+    regenerate();
+    modalObj.show();
 
   } );
 
