@@ -66,9 +66,8 @@
     siteName: 'AiStudio',
     imageElSelector: `${ queryForNewImgsEls }, ${ queryForImgElsInHistory }`,
     getDescription ( imgEl ) {
-      const grandParentEl = imgEl.closest( 'ms-chat-turn' );
-      const descriptionEl = prev( grandParentEl ).querySelector( '.user-prompt-container' );
-      return descriptionEl.textContent;
+      const promptEl = document.querySelector( '.text-chunk' );
+      return promptEl ? promptEl.innerText : '';
     },
   } );
 
@@ -87,7 +86,7 @@
   } );
 
   function clearImgHistory () {
-    modalContentEl.querySelectorAll( `img` ).forEach( item => { item.remove(); } );
+    modalContentEl.querySelectorAll( `div` ).forEach( item => { item.remove(); } );
   }
 
   function regenerate () {
