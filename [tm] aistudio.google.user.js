@@ -5,6 +5,7 @@
   const modalObj = new ModalBox();
   const modalContentEl = generateElements( `<div id=modal-content></div>` );
   const queryForNewImgsEls = '.image-container > [alt^="Generated Image"]';
+  const queryForImgElsInHistory = '#modal-content img';
   let continuousGenerating = false;
   const generationLimit = 20;
   let generatedCount = 0;
@@ -50,12 +51,20 @@
   waitForEach( queryForNewImgsEls, ( imgEl ) => {
     const clonedImgEl = imgEl.cloneNode( true );
     style( clonedImgEl, `max-width: 200px; max-height: 200px;` );
-    modalContentEl.appendChild( clonedImgEl );
+    const wrapperEl = generateElements( `<div></div>` );
+    style( wrapperEl, `
+      display: inline-block;
+      position: relative;
+      margin: 5px;
+    `);
+    wrapperEl.appendChild( clonedImgEl );
+    modalContentEl.appendChild( wrapperEl );
+    generatedCount++;
   } );
 
   downloadImgWithTextFunctionality( {
     siteName: 'AiStudio',
-    imageElSelector: queryForNewImgsEls,
+    imageElSelector: `${ queryForNewImgsEls }, ${ queryForImgElsInHistory }`,
     getDescription ( imgEl ) {
       const grandParentEl = imgEl.closest( 'ms-chat-turn' );
       const descriptionEl = prev( grandParentEl ).querySelector( '.user-prompt-container' );
@@ -63,9 +72,8 @@
     },
   } );
 
-  waitForEach( '#modal-content > img, [mattooltip="Safety Ratings"]', () => {
+  waitForEach( `${ queryForImgElsInHistory }, [mattooltip="Safety Ratings"]`, () => {
     if ( continuousGenerating ) {
-      generatedCount++;
       regenerate();
       return;
     };
