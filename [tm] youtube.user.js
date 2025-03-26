@@ -1,7 +1,7 @@
 ( async function () {
   'use strict';
 
-  markAndFilter( 'ytd-rich-item-renderer', 'a[href^="/watch?v="]', 'href', /\?v=(...........)/ );
+  // markAndFilter( 'ytd-rich-item-renderer', 'a[href^="/watch?v="]', 'href', /\?v=(...........)/ );
 
   waitFor( `#video-controlPanel` ).then( ( el ) => {
     el.style.top = '0px';
