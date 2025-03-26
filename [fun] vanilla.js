@@ -1964,6 +1964,15 @@ function iframeRef ( frameRef ) {
 
 // MARK: Dom manipulations
 
+function removeListenersByCloning ( element ) {
+  if ( !element || !( element instanceof Element ) ) {
+    throw new Error( 'Please provide a valid DOM element' );
+  }
+  const clone = element.cloneNode( true );
+  element.parentNode.replaceChild( clone, element );
+  return clone;
+}
+
 function empty ( element ) {
   element.childNodes.forEach( node => {
     node.remove();
