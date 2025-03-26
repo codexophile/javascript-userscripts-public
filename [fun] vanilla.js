@@ -1130,7 +1130,8 @@ function downloadImgWithTextFunctionality ( {
   siteName,
   imageElSelector,
   getDescription,
-  locationHrefCondition
+  locationHrefCondition,
+  autofocus = false
 } ) {
   waitForEach( imageElSelector, ( imgEl ) => {
 
@@ -1140,7 +1141,8 @@ function downloadImgWithTextFunctionality ( {
     const imgWrapperEl = imgEl.parentElement;
     if ( imgWrapperEl.querySelector( '#dlBtn' ) ) return; // 🛑
 
-    GM_setClipboard( `global-document-ready-${ document.title }` );
+    if ( autofocus )
+      GM_setClipboard( `global-document-ready-${ document.title }` );
 
     const dlBtnEl = generateElements( `<button id=dlBtn>D</button>`, imgWrapperEl );
     style( dlBtnEl, `
