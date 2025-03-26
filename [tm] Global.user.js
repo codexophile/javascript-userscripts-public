@@ -61,6 +61,7 @@
   const ytdlpBtn = collapsible.addButton( 'ytdlp', null, () => {
     GM_setClipboard( `initiate-ytdlp:url:${ location.href }::` );
   } );
+  ytdlpBtn.id = 'yt-dlp-Btn';
 
   const rssLinks = document.querySelectorAll( 'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]' );
   if ( rssLinks.length ) {
