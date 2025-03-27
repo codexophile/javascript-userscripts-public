@@ -1124,7 +1124,7 @@ function lazyLoad ( load, ...items ) {
 
 }
 
-// MARK: Rest
+//  MARK: Page functionalities
 
 function downloadImgWithTextFunctionality ( {
   siteName,
@@ -1191,6 +1191,16 @@ function downloadImgWithTextFunctionality ( {
     } );
   } );
 }
+
+function deepLoad ( {
+  parentEl, targetEl, lazyLoad = true
+} ) {
+
+
+}
+
+// MARK: Rest
+
 
 function getSecret ( valueKey = 'apiKey' ) {
 
