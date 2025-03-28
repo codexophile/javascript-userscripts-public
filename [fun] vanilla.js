@@ -1125,6 +1125,14 @@ function lazyLoad ( load, ...items ) {
 
 //  MARK: Page functionalities
 
+function setupYtDlpBtn ( url, title ) {
+  let ytDlpBtnEl = await waitFor( '#yt-dlp-Btn' );
+  ytDlpBtnEl = removeListenersByCloning( ytDlpBtnEl );
+  ytDlpBtnEl.addEventListener( 'click', () => {
+    GM_setClipboard( `initiate-ytdlp:url:${ url }::title:${ title }::` );
+  } );
+}
+
 function downloadImgWithTextFunctionality ( {
   siteName,
   imageElSelector,
