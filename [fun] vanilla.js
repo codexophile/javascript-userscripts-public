@@ -1003,7 +1003,6 @@ function lazyLoadWithObserver ( selector, load, scrollableEl = window ) {
 
   // for all the elements that exist at page load
   document.querySelectorAll( selector ).forEach( item => { items.push( item ); } );
-  console.log( selector );
   // for the elements that appear after page load
   let observer = new MutationObserver( ( mutations ) => {
     mutations.forEach( mutation => {
@@ -1193,9 +1192,15 @@ function downloadImgWithTextFunctionality ( {
 }
 
 function deepLoad ( {
-  parentEl, targetEl, lazyLoad = true
+  sourceSelector,
+  // ...sourceEls,
+  targetEl,
+  lazyLoad = true
 } ) {
 
+  if ( sourceSelector ) {
+    // sourceEls;
+  }
 
 }
 
@@ -2318,6 +2323,24 @@ function calculateWidthAndExpand ( collapsibleContent ) {
 }
 
 // MARK: Site specific functions
+
+function getStreamwishQuery () {
+  const doodHosts = [ 'peytonepre' ];
+  const doodHostsQuery =
+    doodHosts
+      .map( host => `[href*="${ host }"]` )
+      .join( ',' );
+  return doodHostsQuery;
+}
+
+function getDoodHostsQuery () {
+  const doodHosts = [ 'vidply', 'dood', 'do7go', 'd000d', 'ds2video', 'do0od' ];
+  const doodHostsQuery =
+    doodHosts
+      .map( host => `[href*="${ host }"]` )
+      .join( ',' );
+  return doodHostsQuery;
+}
 
 async function getVoeStoryboardImg ( voeUrl ) {
   const levelOneHtml = await GMXmlHttpRequest( voeUrl, null, true );
