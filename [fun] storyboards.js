@@ -36,11 +36,12 @@ function setSlotSize ( sbParent, newWidth ) {
 async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
 
   const collapsible = await Collapsible();
-  collapsible.collapsibleContent.querySelectorAll( '.storyboardControl' ).forEach(
-    item => item.remove()
-  );
 
   if ( video ) {
+
+    collapsible.collapsibleContent.querySelectorAll( '.storyboardControl' ).forEach(
+      item => item.remove()
+    );
 
     collapsible.addButton( '🔙', null, async () => {
       const targetEl = [ ...sbParent.querySelectorAll( '.wentPast' ) ].pop();
