@@ -71,6 +71,7 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
 
     if ( video.readyState > 0 ) jumpToSlot();
     video.addEventListener( 'loadeddata', jumpToSlot );
+    video.addEventListener( 'loadeddata', addTimeStrings );
 
     video.addEventListener( 'timeupdate', () => {
       const duration = video.duration;
@@ -88,6 +89,23 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
         }
       } );
     } );
+
+    function addTimeStrings () {
+      repeat( trueNoOfSlots, ( index ) => {
+        const timeString = document.createElement( 'div' );
+        timeString.classList.add( 'timeString' );
+        timeString.textContent = `${ Math.round( ( index * video.duration ) / trueNoOfSlots ) }`;
+        style( timeString, `
+            color: white;
+            background-color: black;
+            width: fit-content;
+            position: relative;
+            top: -15%;
+            left: 5px;
+        `);
+        sbParent.querySelectorAll( '.storyboardItem' )[ index ].append( timeString );
+      } );
+    }
 
   }
   else {
@@ -156,13 +174,6 @@ async function storyboard ( {
           left: '0px',
         } );
       }
-
-      const timeStringEl = generateElements( `<div>test</div>`, slot );
-      style( timeStringEl, `
-        position: relative;
-        color: black;
-        top: -50px;
-      `);
 
       slot.addEventListener( 'click', ev => {
         const samplingFreq =
