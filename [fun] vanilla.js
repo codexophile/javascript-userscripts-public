@@ -1125,10 +1125,12 @@ function lazyLoad ( load, ...items ) {
 
 //  MARK: Page functionalities
 
-function setupYtDlpBtn ( url, title ) {
+async function setupYtDlpBtn ( url, title, urlSelector ) {
   let ytDlpBtnEl = await waitFor( '#yt-dlp-Btn' );
   ytDlpBtnEl = removeListenersByCloning( ytDlpBtnEl );
   ytDlpBtnEl.addEventListener( 'click', () => {
+    if ( urlSelector )
+      url = document.querySelector( urlSelector ).href;
     GM_setClipboard( `initiate-ytdlp:url:${ url }::title:${ title }::` );
   } );
 }
@@ -2158,8 +2160,12 @@ function wrap ( wrapperHtml, ...els ) {
   return wrappingElement;
 }
 
-function unwrap ( el ) {
+function unwrapItself ( el ) {
   el.replaceWith( ...el.childNodes );
+}
+
+function unwrapOuter ( el, levels = 1 ) {
+  unwrapItself( el.parentElement );
 }
 
 /**
