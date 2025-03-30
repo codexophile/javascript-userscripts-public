@@ -1,6 +1,15 @@
 ( function () {
   'use strict';
 
+  disableConsoleClear();
+
+  //* overlay
+  ( async function () {
+    'use strict';
+    const overlayEl = await waitFor( '.navbar-brand' );
+    overlayEl.parentElement.parentElement.remove();
+  } )();
+
   //* video title
   const newTitleEl = generateElements( `<div>${ document.title }</div>` );
   console.log( newTitleEl );
@@ -14,7 +23,7 @@
     videoContainer.style.height = '75vh';
 
   //* fixing scroll
-  document.body.style.overflow = 'scroll';
+  document.body.style.overflow = 'scroll !important';
 
   //* auto play
   const posterEl = document.querySelector( `.plyr__poster` );
