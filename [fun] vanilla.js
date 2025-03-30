@@ -1863,6 +1863,21 @@ function blink ( element, interval, numberOfTimes ) {
   } );
 }
 
+function setHash ( newHash ) {
+
+  // Get current hash without the '#'
+  const currentHash = window.location.hash.slice( 1 );
+
+  // Only update if the new hash is different from current
+  if ( currentHash !== newHash ) {
+    window.history.replaceState( null, null, '#' + newHash );
+  }
+}
+
+function toggleHash ( newHash ) {
+  window.history.replaceState( null, null, '#' + newHash );
+}
+
 function fauxHistoryPushState ( url, timeout = 3000 ) {
 
   const backgroundTab = GM_openInTab( url, true );
