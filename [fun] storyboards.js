@@ -77,7 +77,7 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
       const duration = video.duration;
       const currentSlotNo = Math.round( ( video.currentTime * trueNoOfSlots ) / duration );
       const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' );
-      window.location.hash = `#slot=${ currentSlotNo }`;
+      setHash( `slot=${ currentSlotNo }` );
 
       storyboardItems.forEach( ( item, index ) => {
         if ( index <= currentSlotNo ) {
@@ -91,19 +91,19 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
     } );
 
     function addTimeStrings () {
+      const slotEls = sbParent.querySelectorAll( '.storyboardItem' );
       repeat( trueNoOfSlots, ( index ) => {
-        const timeString = document.createElement( 'div' );
-        timeString.classList.add( 'timeString' );
-        timeString.textContent = `${ Math.round( ( index * video.duration ) / trueNoOfSlots ) }`;
-        style( timeString, `
+        const timeStringEl = generateElements( `<div></div>`, slotEls[ index ] );
+        timeStringEl.classList.add( 'timeString' );
+        timeStringEl.textContent = `${ Math.round( ( index * video.duration ) / trueNoOfSlots ) }`;
+        style( timeStringEl, `
             color: white;
             background-color: black;
             width: fit-content;
             position: relative;
             top: -15%;
-            left: 5px;
+            left: 5%;
         `);
-        sbParent.querySelectorAll( '.storyboardItem' )[ index ].append( timeString );
       } );
     }
 
