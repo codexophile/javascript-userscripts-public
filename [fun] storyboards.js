@@ -76,6 +76,7 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
       const duration = video.duration;
       const currentSlotNo = Math.round( ( video.currentTime * trueNoOfSlots ) / duration );
       const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' );
+      window.location.hash = `#slot=${ currentSlotNo }`;
 
       storyboardItems.forEach( ( item, index ) => {
         if ( index <= currentSlotNo ) {
