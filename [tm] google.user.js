@@ -10,19 +10,19 @@
 
   if ( location.href.includes( '/sorry/' ) ) {
 
-    const $parent = $( '[style="font-size:13px;"]' );
+    const parentEl = document.querySelector( '[style*="font-size:13px;"]' );
     const params = new URLSearchParams( location.search );
     const targetUrl = params.get( 'continue' );
     const paramsForYT = new URLSearchParams( targetUrl );
     const youtubeID = paramsForYT.get( 'https://www.youtube.com/watch?v' );
 
-    $parent.append( '<hr>' );
-    $parent.append( `
-            <div>
-                <span> Target: </span>
-                <a href=${ targetUrl }> ${ targetUrl } </a>
-            </div>
-        ` );
+    parentEl.append( generateElements( '<hr>' ) );
+    parentEl.append( generateElements( `
+      <div>
+          <span> Target: </span>
+          <a href=${ targetUrl }> ${ targetUrl } </a>
+      </div>
+    `) );
 
     return;
 
