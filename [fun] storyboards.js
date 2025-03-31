@@ -73,7 +73,10 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
     video.addEventListener( 'loadeddata', jumpToSlot );
     video.addEventListener( 'loadeddata', addTimeStrings );
 
-    video.addEventListener( 'timeupdate', () => {
+    video.removeEventListener( 'timeupdate', handleTimeUpdate );
+    video.addEventListener( 'timeupdate', handleTimeUpdate );
+    function handleTimeUpdate () {
+
       const duration = video.duration;
       const currentSlotNo = Math.round( ( video.currentTime * trueNoOfSlots ) / duration );
       const storyboardItems = sbParent.querySelectorAll( '.storyboardItem' );
@@ -88,7 +91,8 @@ async function sbControls ( video, trueNoOfSlots, sbParent, imgUrls ) {
           item.style.border = '3px solid white';
         }
       } );
-    } );
+
+    }
 
     function addTimeStrings () {
       const slotEls = sbParent.querySelectorAll( '.storyboardItem' );
