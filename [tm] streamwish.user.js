@@ -1,20 +1,8 @@
 ( async function () {
   'use strict';
 
-  ( async function () {
-    'use strict';
-
-    let ytDlpBtnEl = await waitFor( '#yt-dlp-btn' );
-    ytDlpBtnEl = removeListenersByCloning( ytDlpBtnEl );
-    ytDlpBtnEl.addEventListener( 'click', () => {
-      const videoUrl = document.querySelector( `#titleM3u8Link` )?.href;
-      if ( !videoUrl ) alert( 'No video URL found' );
-      const videoTitle = document.title.replace( ' • [Browser:Private-profile]', '' );
-      GM_setClipboard( `initiate-ytdlp:url:${ videoUrl }::title:${ videoTitle }::` );
-    } );
-
-  } )();
-
+  const videoTitle = document.title.replace( ' • [Browser:Private-profile]', '' );
+  setupYtDlpBtn( null, videoTitle, '#titleM3u8Link' );
 
   ( async function () {
     'use strict';
