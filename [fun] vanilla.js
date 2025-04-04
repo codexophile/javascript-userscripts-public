@@ -1133,6 +1133,9 @@ async function setupYtDlpBtn ( url, title, urlSelector ) {
       url = document.querySelector( urlSelector ).href;
     GM_setClipboard( `initiate-ytdlp:url:${ url }::title:${ title }::` );
   } );
+  style( ytDlpBtnEl, `
+    outline: solid red 2px;
+  `);
 }
 
 function downloadImgWithTextFunctionality ( {
@@ -1864,10 +1867,8 @@ function blink ( element, interval, numberOfTimes ) {
 }
 
 function setHash ( newHash ) {
-
   // Get current hash without the '#'
   const currentHash = window.location.hash.slice( 1 );
-
   // Only update if the new hash is different from current
   if ( currentHash !== newHash ) {
     window.history.replaceState( null, null, '#' + newHash );
