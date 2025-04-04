@@ -3,6 +3,7 @@
 
   const USER_TIMEZONE_MAP = {
 
+    'Hirusha Liyanage': 'America/New_York',
     'Kevin Andrés': 'America/Guayaquil',
     'Patricio Sanhueza': 'America/Santiago',
 
