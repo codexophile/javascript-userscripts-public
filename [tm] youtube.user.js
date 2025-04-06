@@ -25,7 +25,6 @@
 
     //? regex -> https://www.youtube.com/watch
     if ( locationHref.match( /https:\/\/www\.youtube\.com\/watch/ ) ) {
-      // if ( !locationHref.match( /https:\/\/www\.youtube\.com\/(watch\?v=...........)?$/ ) ) {
 
       const videoID = locationHref.match( /[\?&]v=(...........)/ )[ 1 ];
 
@@ -36,7 +35,6 @@
       if ( location.href !== newUrl ) {
         history.pushState( { state: 1 }, "new state", newUrl );
       }
-      // stopAndChangeUrl( `https://www.youtube.com/watch?v=${ videoID }` )
     }
 
   }
