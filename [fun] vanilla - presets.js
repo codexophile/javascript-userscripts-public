@@ -1,125 +1,127 @@
-async function Collapsible ( togglerText = 'Toggle', options = {} ) {
-  await waitFor( 'body' );
+async function Collapsible(togglerText = "Toggle", options = {}) {
+  await waitFor("body");
 
   //* Methods for adding elements and handling popups
-  function addButton ( text, popupEl = null, onclick ) {
-    const button = generateElements( `<button></button>` );
-    button.className = 'collapsible-button button-like';
+  function addButton(text, popupEl = null, onclick) {
+    const button = generateElements(`<button></button>`);
+    button.className = "collapsible-button button-like";
     button.textContent = text;
-    collapsibleContent.appendChild( button );
+    collapsibleContent.appendChild(button);
 
-    if ( onclick ) {
-      button.addEventListener( 'click', onclick );
+    if (onclick) {
+      button.addEventListener("click", onclick);
     }
 
-    if ( popupEl ) {
-      button.addEventListener( 'click', ( e ) => {
+    if (popupEl) {
+      button.addEventListener("click", (e) => {
         e.stopPropagation();
-        popupEl.classList.toggle( 'visible' );
-      } );
+        popupEl.classList.toggle("visible");
+      });
 
-      document.addEventListener( 'click', ( e ) => {
-        if ( !button.contains( e.target ) ) {
-          popupEl.classList.remove( 'visible' );
+      document.addEventListener("click", (e) => {
+        if (!button.contains(e.target)) {
+          popupEl.classList.remove("visible");
         }
-      } );
+      });
     }
 
     return button;
   }
 
-  function addPopup () {
-    const popup = document.createElement( 'div' );
-    popup.className = 'popup';
-    collapsibleContent.appendChild( popup );
+  function addPopup() {
+    const popup = document.createElement("div");
+    popup.className = "popup";
+    collapsibleContent.appendChild(popup);
     return popup;
   }
 
-  function addElement ( element ) {
-    collapsibleContent.appendChild( element );
+  function addElement(element) {
+    collapsibleContent.appendChild(element);
     return element;
   }
 
   let collapsibleContent;
 
   //* check if it's already on the page
-  const alreadyOnPage = document.querySelector( `.collapsible-container` );
-  if ( alreadyOnPage ) {
+  const alreadyOnPage = document.querySelector(`.collapsible-container`);
+  if (alreadyOnPage) {
     const collapsibleStructure = alreadyOnPage;
-    const collapsibleToggler = alreadyOnPage.querySelector( '.collapsible-toggler' );
-    collapsibleContent = alreadyOnPage.querySelector( '.collapsible-content' );
+    const collapsibleToggler = alreadyOnPage.querySelector(
+      ".collapsible-toggler"
+    );
+    collapsibleContent = alreadyOnPage.querySelector(".collapsible-content");
     return {
       collapsibleStructure,
       collapsibleToggler,
       collapsibleContent,
       addButton,
       addElement,
-      addPopup
+      addPopup,
     };
   }
 
   const {
-    bottom = '0px',
-    left = '0px',
-    backgroundColor = '#1e1e1e', // Darker background
-    hoverColor = '#2c2c2c', // Darker hover
-    textColor = '#e0e0e0', // Light gray text
-    contentBgColor = '#2d2d2d', // Dark gray content background
-    fontSize = '14px',
-    borderRadius = '5px',
-    boxShadow = '0 2px 5px rgba(0,0,0,0.95)', // Darker shadow
-    transition = 'all 0.3s ease-out',
-    width = '300px',
-    height = '200px',
-    collapsedWidth = '30px',
-    popupHeight = '150px',
-    buttonSize = '30px'
+    bottom = "0px",
+    left = "0px",
+    backgroundColor = "#1e1e1e", // Darker background
+    hoverColor = "#2c2c2c", // Darker hover
+    textColor = "#e0e0e0", // Light gray text
+    contentBgColor = "#2d2d2d", // Dark gray content background
+    fontSize = "14px",
+    borderRadius = "5px",
+    boxShadow = "0 2px 5px rgba(0,0,0,0.95)", // Darker shadow
+    transition = "all 0.3s ease-out",
+    width = "300px",
+    height = "200px",
+    collapsedWidth = "30px",
+    popupHeight = "150px",
+    buttonSize = "30px",
   } = options;
 
   const css = `
         .collapsible-container {
             font-family: Arial, sans-serif;
             position: fixed;
-            bottom: ${ bottom };
-            left: ${ left };
+            bottom: ${bottom};
+            left: ${left};
             display: flex;
-            border-radius: ${ borderRadius };
-            box-shadow: ${ boxShadow };
-            transition: ${ transition };
-            width: ${ collapsedWidth };
+            border-radius: ${borderRadius};
+            box-shadow: ${boxShadow};
+            transition: ${transition};
+            width: ${collapsedWidth};
             z-index: 10000;
             resize: both;
             border: 1px solid #404040; // Added border for better definition
         }
         .collapsible-container.expanded {
-            width: ${ width };
+            width: ${width};
         }
         .collapsible-toggler {
             writing-mode: vertical-rl;
             text-orientation: mixed;
             transform: rotate(180deg);
-            background-color: ${ backgroundColor };
-            color: ${ textColor };
+            background-color: ${backgroundColor};
+            color: ${textColor};
             cursor: move;
             padding: 15px 5px;
             border: none;
             outline: none;
-            font-size: ${ fontSize };
+            font-size: ${fontSize};
             transition: background-color 0.2s;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-width: ${ collapsedWidth };
+            min-width: ${collapsedWidth};
             user-select: none;
         }
         .collapsible-toggler:hover {
-            background-color: ${ hoverColor };
+            background-color: ${hoverColor};
         }
         .collapsible-content {
             flex-grow: 1;
             overflow: auto;
-            transition: ${ transition };
-            background-color: ${ contentBgColor };
+            transition: ${transition};
+            background-color: ${contentBgColor};
             display: flex;
             flex-direction: row;
             flex-wrap: wrap;
@@ -135,10 +137,10 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
             margin: 3px;
         }
         .collapsible-content > .button-like {
-            background-color: ${ backgroundColor };
-            color: ${ textColor };
-            width: ${ buttonSize };
-            height: ${ buttonSize };
+            background-color: ${backgroundColor};
+            color: ${textColor};
+            width: ${buttonSize};
+            height: ${buttonSize};
             border: none;
             cursor: pointer;
             border-radius: 3px;
@@ -149,16 +151,16 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
           width: inherit;
         }
         .collapsible-button:hover {
-            background-color: ${ hoverColor };
+            background-color: ${hoverColor};
         }
         .collapsible-container .popup {
             display: none;
             position: absolute;
             left: 0px;
             min-width: 150px;
-            height: ${ popupHeight };
-            top: -${ popupHeight };
-            background-color: ${ backgroundColor };
+            height: ${popupHeight};
+            top: -${popupHeight};
+            background-color: ${backgroundColor};
             border: 1px solid #404040;
             border-radius: 4px;
             padding: 10px;
@@ -166,7 +168,7 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
             z-index: 1001;
             overflow: auto;
             text-wrap: nowrap;
-            color: ${ textColor };
+            color: ${textColor};
         }
         .collapsible-container .popup.visible {
             display: block;
@@ -187,7 +189,7 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
             height: 8px;
         }
         .collapsible-content::-webkit-scrollbar-track {
-            background: ${ backgroundColor };
+            background: ${backgroundColor};
         }
         .collapsible-content::-webkit-scrollbar-thumb {
             background: #505050;
@@ -198,38 +200,45 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
         }
     `;
 
-  const style = document.createElement( 'style' );
+  const style = document.createElement("style");
   style.textContent = css;
-  document.head.appendChild( style );
+  document.head.appendChild(style);
 
-  const collapsibleStructure = generateElements( `
+  const collapsibleStructure = generateElements(
+    `
     <div>
-      <button class="collapsible-toggler">${ togglerText }</button>
+      <button class="collapsible-toggler">${togglerText}</button>
       <div class="collapsible-content"></div>
       <div class="resize-handle"></div>
     </div>
-  `, document.body );
-  collapsibleStructure.className = 'collapsible-container';
+  `,
+    document.body
+  );
+  collapsibleStructure.className = "collapsible-container";
 
-  collapsibleContent = collapsibleStructure.querySelector( '.collapsible-content' );
-  const collapsibleToggler = collapsibleStructure.querySelector( '.collapsible-toggler' );
-  const resizeHandle = collapsibleStructure.querySelector( '.resize-handle' );
+  collapsibleContent = collapsibleStructure.querySelector(
+    ".collapsible-content"
+  );
+  const collapsibleToggler = collapsibleStructure.querySelector(
+    ".collapsible-toggler"
+  );
+  const resizeHandle = collapsibleStructure.querySelector(".resize-handle");
 
   let isExpanded = false;
   let expandedWidth = width;
 
-  collapsibleToggler.addEventListener( 'click', function ( e ) {
+  collapsibleToggler.addEventListener("click", function (e) {
     e.stopPropagation();
     isExpanded = !isExpanded;
-    if ( isExpanded ) {
+    if (isExpanded) {
       collapsibleStructure.style.width = expandedWidth;
-      collapsibleStructure.classList.add( 'expanded' );
+      collapsibleStructure.classList.add("expanded");
     } else {
       expandedWidth = collapsibleStructure.style.width;
       collapsibleStructure.style.width = collapsedWidth;
-      collapsibleStructure.classList.remove( 'expanded' );
+      collapsibleStructure.classList.remove("expanded");
     }
-  } );
+  });
 
   // Draggable and resizable functionality
   let isDragging = false;
@@ -241,53 +250,55 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
   let xOffset = 0;
   let yOffset = 0;
 
-  collapsibleToggler.addEventListener( 'mousedown', dragStart );
-  resizeHandle.addEventListener( 'mousedown', resizeStart );
-  document.addEventListener( 'mousemove', drag );
-  document.addEventListener( 'mouseup', dragEnd );
+  collapsibleToggler.addEventListener("mousedown", dragStart);
+  resizeHandle.addEventListener("mousedown", resizeStart);
+  document.addEventListener("mousemove", drag);
+  document.addEventListener("mouseup", dragEnd);
 
-  function dragStart ( e ) {
+  function dragStart(e) {
     initialX = e.clientX - xOffset;
     initialY = e.clientY - yOffset;
     isDragging = true;
   }
 
-  function resizeStart ( e ) {
+  function resizeStart(e) {
     e.stopPropagation();
     isResizing = true;
   }
 
-  function drag ( e ) {
-    if ( isDragging ) {
+  function drag(e) {
+    if (isDragging) {
       e.preventDefault();
       currentX = e.clientX - initialX;
       currentY = e.clientY - initialY;
       xOffset = currentX;
       yOffset = currentY;
-      setTranslate( currentX, currentY, collapsibleStructure );
+      setTranslate(currentX, currentY, collapsibleStructure);
     }
 
-    if ( isResizing ) {
+    if (isResizing) {
       e.preventDefault();
-      const newWidth = e.clientX - collapsibleStructure.getBoundingClientRect().left;
-      const newHeight = e.clientY - collapsibleStructure.getBoundingClientRect().top;
-      collapsibleStructure.style.width = `${ newWidth }px`;
-      collapsibleStructure.style.height = `${ newHeight }px`;
-      if ( isExpanded ) {
-        expandedWidth = `${ newWidth }px`;
+      const newWidth =
+        e.clientX - collapsibleStructure.getBoundingClientRect().left;
+      const newHeight =
+        e.clientY - collapsibleStructure.getBoundingClientRect().top;
+      collapsibleStructure.style.width = `${newWidth}px`;
+      collapsibleStructure.style.height = `${newHeight}px`;
+      if (isExpanded) {
+        expandedWidth = `${newWidth}px`;
       }
     }
   }
 
-  function dragEnd ( e ) {
+  function dragEnd(e) {
     initialX = currentX;
     initialY = currentY;
     isDragging = false;
     isResizing = false;
   }
 
-  function setTranslate ( xPos, yPos, el ) {
-    el.style.transform = `translate3d(${ xPos }px, ${ yPos }px, 0)`;
+  function setTranslate(xPos, yPos, el) {
+    el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
   }
 
   return {
@@ -296,91 +307,91 @@ async function Collapsible ( togglerText = 'Toggle', options = {} ) {
     collapsibleContent,
     addButton,
     addElement,
-    addPopup
+    addPopup,
   };
 }
 
-function dialog ( title = '', contentElement, maxHeight = '300px' ) {
+function dialog(title = "", contentElement, maxHeight = "300px") {
   // Create the GUI container
-  const guiContainer = document.createElement( 'div' );
-  guiContainer.style.position = 'fixed';
-  guiContainer.style.top = '100px';
-  guiContainer.style.right = '50px';
-  guiContainer.style.width = '300px';
-  guiContainer.style.border = '1px solid #ccc';
-  guiContainer.style.backgroundColor = '#f0f0f0';
-  guiContainer.style.zIndex = '9999';
-  guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
+  const guiContainer = document.createElement("div");
+  guiContainer.style.position = "fixed";
+  guiContainer.style.top = "100px";
+  guiContainer.style.right = "50px";
+  guiContainer.style.width = "300px";
+  guiContainer.style.border = "1px solid #ccc";
+  guiContainer.style.backgroundColor = "#f0f0f0";
+  guiContainer.style.zIndex = "9999";
+  guiContainer.style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.1)";
 
   // Create the header
-  const header = document.createElement( 'div' );
-  header.style.backgroundColor = '#e0e0e0';
+  const header = document.createElement("div");
+  header.style.backgroundColor = "#e0e0e0";
   // header.style.padding = '10px';
-  header.style.cursor = 'move';
-  header.style.display = 'flex';
-  header.style.justifyContent = 'space-between';
-  header.style.alignItems = 'center';
+  header.style.cursor = "move";
+  header.style.display = "flex";
+  header.style.justifyContent = "space-between";
+  header.style.alignItems = "center";
   header.innerText = title;
 
   // Create the collapse button
-  const collapseBtn = document.createElement( 'button' );
-  collapseBtn.id = 'expand-btn';
-  collapseBtn.innerHTML = '+';
-  collapseBtn.style.marginLeft = 'auto';
-  collapseBtn.style.marginRight = '5px';
+  const collapseBtn = document.createElement("button");
+  collapseBtn.id = "expand-btn";
+  collapseBtn.innerHTML = "+";
+  collapseBtn.style.marginLeft = "auto";
+  collapseBtn.style.marginRight = "5px";
   collapseBtn.onclick = () => {
-    if ( body.style.display === 'none' ) {
-      body.style.display = 'block';
-      collapseBtn.innerHTML = '-';
+    if (body.style.display === "none") {
+      body.style.display = "block";
+      collapseBtn.innerHTML = "-";
     } else {
-      body.style.display = 'none';
-      collapseBtn.innerHTML = '+';
+      body.style.display = "none";
+      collapseBtn.innerHTML = "+";
     }
   };
 
   // Create the close button
-  const closeBtn = document.createElement( 'button' );
-  closeBtn.innerHTML = 'x';
+  const closeBtn = document.createElement("button");
+  closeBtn.innerHTML = "x";
   closeBtn.onclick = () => {
     guiContainer.remove();
   };
 
   // Append buttons to the header
-  header.appendChild( collapseBtn );
-  header.appendChild( closeBtn );
+  header.appendChild(collapseBtn);
+  header.appendChild(closeBtn);
 
   // Create the body
-  const body = document.createElement( 'div' );
-  body.style.display = 'none';
-  body.style.padding = '10px';
-  body.style.backgroundColor = '#fff';
+  const body = document.createElement("div");
+  body.style.display = "none";
+  body.style.padding = "10px";
+  body.style.backgroundColor = "#fff";
   body.style.maxHeight = maxHeight;
-  body.style.overflow = 'auto';
+  body.style.overflow = "auto";
   // adding the content element given by the function parameter
-  body.append( contentElement );
+  body.append(contentElement);
 
   // Append header and body to the container
-  guiContainer.appendChild( header );
-  guiContainer.appendChild( body );
+  guiContainer.appendChild(header);
+  guiContainer.appendChild(body);
 
   // Append the container to the document body
-  document.body.appendChild( guiContainer );
+  document.body.appendChild(guiContainer);
 
   // Make the GUI draggable
   let isDragging = false;
   let offsetX = 0;
   let offsetY = 0;
 
-  header.onmousedown = ( e ) => {
+  header.onmousedown = (e) => {
     isDragging = true;
     offsetX = e.clientX - guiContainer.getBoundingClientRect().left;
     offsetY = e.clientY - guiContainer.getBoundingClientRect().top;
   };
 
-  document.onmousemove = ( e ) => {
-    if ( isDragging ) {
-      guiContainer.style.left = `${ e.clientX - offsetX }px`;
-      guiContainer.style.top = `${ e.clientY - offsetY }px`;
+  document.onmousemove = (e) => {
+    if (isDragging) {
+      guiContainer.style.left = `${e.clientX - offsetX}px`;
+      guiContainer.style.top = `${e.clientY - offsetY}px`;
     }
   };
 
@@ -389,12 +400,10 @@ function dialog ( title = '', contentElement, maxHeight = '300px' ) {
   };
 
   return guiContainer;
-
 }
 
-function addTooltip ( tooltipParent, tooltipContent ) {
-
-  addStyle( /*css*/`
+function addTooltip(tooltipParent, tooltipContent) {
+  addStyle(/*css*/ `
         .tooltipParent {
             position: relative;
             display: inline-block;
@@ -435,21 +444,22 @@ function addTooltip ( tooltipParent, tooltipContent ) {
         }
     `);
 
-  tooltipParent.classList.add( 'tooltipParent' );
-  const toolTip = generateElements( '<span class=tooltip></span>', null, true );
-  tooltipParent.after( toolTip );
-  const wrapper = wrap( '<div class=wrapper></div>', tooltipParent, toolTip );
-  style( wrapper, `
+  tooltipParent.classList.add("tooltipParent");
+  const toolTip = generateElements("<span class=tooltip></span>", null, true);
+  tooltipParent.after(toolTip);
+  const wrapper = wrap("<div class=wrapper></div>", tooltipParent, toolTip);
+  style(
+    wrapper,
+    `
         position: relative;
         width:    fit-content;
-    `);
-  toolTip.append( tooltipContent );
-
+    `
+  );
+  toolTip.append(tooltipContent);
 }
 
-function slideshowGallery () {
-
-  GM_addStyle( `
+function slideshowGallery() {
+  GM_addStyle(`
 
         #slideShowGallery { display: ; }
 
@@ -554,9 +564,9 @@ function slideshowGallery () {
         #slideShowGallery :is(.active, .demo:hover) {
             opacity: 1;
         }
-    ` );
+    `);
 
-  const sgContent = generateElements( /*html*/ `
+  const sgContent = generateElements(/*html*/ `
             <div id=slideShowGallery>
                 <h2 style="text-align:center">Slideshow Gallery</h2>
                 <div class="container">
@@ -570,73 +580,82 @@ function slideshowGallery () {
                 </div>
             </div>
             `);
-  document.body.append( sgContent );
+  document.body.append(sgContent);
 
-  const fullImgContainer = document.querySelector( `#fullImgCont` );
-  const row = document.querySelector( `.row` );
-  for ( const item in arguments ) {
-    fullImgContainer.append( generateElements( /*html*/`
+  const fullImgContainer = document.querySelector(`#fullImgCont`);
+  const row = document.querySelector(`.row`);
+  for (const item in arguments) {
+    fullImgContainer.append(
+      generateElements(/*html*/ `
             <div class=mySlides>
-                <div class=numbertext>${ +item + 1 } / ${ arguments.length }</div>
-                <img src=${ arguments[ item ] } style='width:100%'>
+                <div class=numbertext>${+item + 1} / ${arguments.length}</div>
+                <img src=${arguments[item]} style='width:100%'>
             </div>
-        `) );
-    row.append( generateElements( /*html*/`
+        `)
+    );
+    row.append(
+      generateElements(/*html*/ `
             <div class=column>
-                <img class='demo cursor' src=${ arguments[ item ] } style='width:100%'>
+                <img class='demo cursor' src=${arguments[item]} style='width:100%'>
             </div>
-            `) );
+            `)
+    );
   }
 
-  document.querySelector( `.prev` ).addEventListener( 'click', () => { plusSlides( -1 ); } );
-  document.querySelector( `.next` ).addEventListener( 'click', () => { plusSlides( 1 ); } );
-  document.querySelectorAll( `.demo` ).forEach( item => {
-    item.addEventListener( 'click', ( event ) => {
+  document.querySelector(`.prev`).addEventListener("click", () => {
+    plusSlides(-1);
+  });
+  document.querySelector(`.next`).addEventListener("click", () => {
+    plusSlides(1);
+  });
+  document.querySelectorAll(`.demo`).forEach((item) => {
+    item.addEventListener("click", (event) => {
       const element = event.target.parentNode;
-      const index = Array.from( element.parentNode.children ).indexOf( element ) + 1;
-      currentSlide( index );
-    } );
-  } );
-
+      const index =
+        Array.from(element.parentNode.children).indexOf(element) + 1;
+      currentSlide(index);
+    });
+  });
 
   let slideIndex = 1;
-  showSlides( slideIndex );
+  showSlides(slideIndex);
 
-  function plusSlides ( n ) {
-    showSlides( slideIndex += n );
+  function plusSlides(n) {
+    showSlides((slideIndex += n));
   }
 
-  function currentSlide ( n ) {
-    showSlides( slideIndex = n );
+  function currentSlide(n) {
+    showSlides((slideIndex = n));
   }
 
-  function showSlides ( n ) {
+  function showSlides(n) {
     let i;
-    let slides = document.getElementsByClassName( "mySlides" );
-    let dots = document.getElementsByClassName( "demo" );
-    let captionText = document.getElementById( "caption" );
-    if ( n > slides.length ) { slideIndex = 1; }
-    if ( n < 1 ) { slideIndex = slides.length; }
-    for ( i = 0; i < slides.length; i++ ) {
-      slides[ i ].style.display = "none";
+    let slides = document.getElementsByClassName("mySlides");
+    let dots = document.getElementsByClassName("demo");
+    let captionText = document.getElementById("caption");
+    if (n > slides.length) {
+      slideIndex = 1;
     }
-    for ( i = 0; i < dots.length; i++ ) {
-      dots[ i ].className = dots[ i ].className.replace( " active", "" );
+    if (n < 1) {
+      slideIndex = slides.length;
     }
-    slides[ slideIndex - 1 ].style.display = "block";
-    dots[ slideIndex - 1 ].className += " active";
-    captionText.innerHTML = dots[ slideIndex - 1 ].alt;
+    for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+    }
+    for (i = 0; i < dots.length; i++) {
+      dots[i].className = dots[i].className.replace(" active", "");
+    }
+    slides[slideIndex - 1].style.display = "block";
+    dots[slideIndex - 1].className += " active";
+    captionText.innerHTML = dots[slideIndex - 1].alt;
   }
 
   return sgContent;
-
 }
 
 class modalBox {
-
-  constructor () {
-
-    GM_addStyle( `
+  constructor() {
+    GM_addStyle(`
 
             #vanilla-presets-modal {
                 display: none; /* Hidden by default */
@@ -696,9 +715,9 @@ class modalBox {
 
             #modal-body {padding: 2px 16px;}
 
-        ` );
+        `);
 
-    this.modal = generateElements( `
+    this.modal = generateElements(`
             <div id=vanilla-presets-modal class=modal>
                 <div id=modal-content>
                     <div id=modal-header>
@@ -708,54 +727,59 @@ class modalBox {
                     <div id=modal-body></div>
                 </div>
             </div>
-            ` );
+            `);
 
-    document.body.append( this.modal );
-    this.header = this.modal.querySelector( '#header-content' );
-    this.body = this.modal.querySelector( '#modal-body' );
-    const dismiss = this.modal.querySelector( '#dismiss' );
-    dismiss.addEventListener( 'click', () => { this.destroy(); } );
-
+    document.body.append(this.modal);
+    this.header = this.modal.querySelector("#header-content");
+    this.body = this.modal.querySelector("#modal-body");
+    const dismiss = this.modal.querySelector("#dismiss");
+    dismiss.addEventListener("click", () => {
+      this.destroy();
+    });
   }
 
-  display () {
-    this.modal.style.display = 'block';
+  display() {
+    this.modal.style.display = "block";
   }
-  headerAddContent ( content ) {
-    this.header.append( content );
+  headerAddContent(content) {
+    this.header.append(content);
   }
-  bodyAddContent ( content ) {
-    this.body.append( content );
+  bodyAddContent(content) {
+    this.body.append(content);
   }
-  hide () {
-    this.modal.style.display = 'none';
+  hide() {
+    this.modal.style.display = "none";
   }
-  flushHeader () {
-    this.modal.querySelector( '#header-content' ).replaceChildren();
+  flushHeader() {
+    this.modal.querySelector("#header-content").replaceChildren();
   }
-  flushBody () {
-    this.modal.querySelector( '#modal-body' ).replaceChildren();
+  flushBody() {
+    this.modal.querySelector("#modal-body").replaceChildren();
   }
-  destroy () {
+  destroy() {
     this.flushHeader();
     this.flushBody();
     this.hide();
   }
-
 }
 
 class ModalBox {
-  constructor ( options = {} ) {
+  constructor(options = {}) {
     this.options = {
-      width: options.width || '95%',
-      backgroundColor: options.backgroundColor || '#ffffff',
-      headerColor: options.headerColor || '#5cb85c',
-      headerTextColor: options.headerTextColor || '#ffffff',
-      closeButtonColor: options.closeButtonColor || '#ffffff',
+      width: options.width || "95%",
+      backgroundColor: options.backgroundColor || "#ffffff",
+      headerColor: options.headerColor || "#5cb85c",
+      headerTextColor: options.headerTextColor || "#ffffff",
+      closeButtonColor: options.closeButtonColor || "#ffffff",
       animation: options.animation !== undefined ? options.animation : true,
-      destroyOnClose: options.destroyOnClose !== undefined ? options.destroyOnClose : false,
-      closeOnEscape: options.closeOnEscape !== undefined ? options.closeOnEscape : true,
-      closeOnOutsideClick: options.closeOnOutsideClick !== undefined ? options.closeOnOutsideClick : true,
+      destroyOnClose:
+        options.destroyOnClose !== undefined ? options.destroyOnClose : false,
+      closeOnEscape:
+        options.closeOnEscape !== undefined ? options.closeOnEscape : true,
+      closeOnOutsideClick:
+        options.closeOnOutsideClick !== undefined
+          ? options.closeOnOutsideClick
+          : true,
     };
 
     this.createStyles();
@@ -763,7 +787,7 @@ class ModalBox {
     this.setupEventListeners();
   }
 
-  createStyles () {
+  createStyles() {
     const styles = `
             .vanilla-modal {
                 display: none;
@@ -785,11 +809,11 @@ class ModalBox {
 
             .vanilla-modal-content {
                 position: relative;
-                background-color: ${ this.options.backgroundColor };
+                background-color: ${this.options.backgroundColor};
                 margin: 50px auto;
                 padding: 0;
                 border-radius: 8px;
-                width: ${ this.options.width };
+                width: ${this.options.width};
                 box-shadow: 0 4px 20px rgba(0,0,0,0.2);
                 transform: translateY(-50px);
                 transition: transform 0.3s ease;
@@ -804,8 +828,8 @@ class ModalBox {
                 justify-content: space-between;
                 align-items: center;
                 padding: 15px 20px;
-                background-color: ${ this.options.headerColor };
-                color: ${ this.options.headerTextColor };
+                background-color: ${this.options.headerColor};
+                color: ${this.options.headerTextColor};
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
             }
@@ -817,7 +841,7 @@ class ModalBox {
             }
 
             .vanilla-modal-close {
-                color: ${ this.options.closeButtonColor };
+                color: ${this.options.closeButtonColor};
                 font-size: 28px;
                 font-weight: bold;
                 cursor: pointer;
@@ -835,12 +859,11 @@ class ModalBox {
             }
         `;
 
-    GM_addStyle( styles );
+    GM_addStyle(styles);
   }
 
-  createModal () {
-
-    this.modal = generateElements( `
+  createModal() {
+    this.modal = generateElements(`
             <div class="vanilla-modal-content">
                 <div class="vanilla-modal-header">
                     <h2 class="vanilla-modal-title"></h2>
@@ -849,76 +872,74 @@ class ModalBox {
                 <div class="vanilla-modal-body"></div>
             </div>
             `);
-    this.modal.className = 'vanilla-modal';
-    document.body.appendChild( this.modal );
+    this.modal.className = "vanilla-modal";
+    document.body.appendChild(this.modal);
 
-    this.titleElement = this.modal.querySelector( '.vanilla-modal-title' );
-    this.bodyElement = this.modal.querySelector( '.vanilla-modal-body' );
-    this.closeButton = this.modal.querySelector( '.vanilla-modal-close' );
+    this.titleElement = this.modal.querySelector(".vanilla-modal-title");
+    this.bodyElement = this.modal.querySelector(".vanilla-modal-body");
+    this.closeButton = this.modal.querySelector(".vanilla-modal-close");
   }
 
-  setupEventListeners () {
-    this.closeButton.addEventListener( 'click', () => {
-      if ( this.options.destroyOnClose )
-        this.destroy();
-      else
-        this.hide();
-    } );
+  setupEventListeners() {
+    this.closeButton.addEventListener("click", () => {
+      if (this.options.destroyOnClose) this.destroy();
+      else this.hide();
+    });
 
-    if ( this.options.closeOnOutsideClick ) {
-      this.modal.addEventListener( 'click', ( e ) => {
-        if ( e.target === this.modal ) this.hide();
-      } );
+    if (this.options.closeOnOutsideClick) {
+      this.modal.addEventListener("click", (e) => {
+        if (e.target === this.modal) this.hide();
+      });
     }
 
-    if ( this.options.closeOnEscape ) {
-      document.addEventListener( 'keydown', ( e ) => {
-        if ( e.key === 'Escape' && this.isVisible() ) this.hide();
-      } );
+    if (this.options.closeOnEscape) {
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && this.isVisible()) this.hide();
+      });
     }
   }
 
-  setTitle ( title ) {
-    if ( typeof title === 'string' ) {
+  setTitle(title) {
+    if (typeof title === "string") {
       this.titleElement.textContent = title;
     }
     // else {
-    else if ( content instanceof Node ) {
-      this.titleElement.appendChild( title );
+    else if (content instanceof Node) {
+      this.titleElement.appendChild(title);
     }
   }
 
-  setContent ( content ) {
-    if ( typeof content === 'string' ) {
+  setContent(content) {
+    if (typeof content === "string") {
       this.bodyElement.innerHTML = content;
-    } else if ( content instanceof Node ) {
+    } else if (content instanceof Node) {
       const uniqueString = generateUniqueString();
-      let policy = trustedTypes.createPolicy( uniqueString, {
-        createHTML: ( input ) => input
-      } );
-      this.bodyElement.innerHTML = policy.createHTML( '' );
+      let policy = trustedTypes.createPolicy(uniqueString, {
+        createHTML: (input) => input,
+      });
+      this.bodyElement.innerHTML = policy.createHTML("");
 
-      this.bodyElement.appendChild( content );
+      this.bodyElement.appendChild(content);
     }
   }
 
-  show () {
-    this.modal.style.display = 'block';
-    setTimeout( () => this.modal.classList.add( 'show' ), 10 );
+  show() {
+    this.modal.style.display = "block";
+    setTimeout(() => this.modal.classList.add("show"), 10);
   }
 
-  hide () {
-    this.modal.classList.remove( 'show' );
-    setTimeout( () => {
-      this.modal.style.display = 'none';
-    }, 300 );
+  hide() {
+    this.modal.classList.remove("show");
+    setTimeout(() => {
+      this.modal.style.display = "none";
+    }, 300);
   }
 
-  isVisible () {
-    return this.modal.style.display === 'block';
+  isVisible() {
+    return this.modal.style.display === "block";
   }
 
-  destroy () {
-    document.body.removeChild( this.modal );
+  destroy() {
+    document.body.removeChild(this.modal);
   }
-};
+}
