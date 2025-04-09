@@ -519,4 +519,109 @@
   // Uncomment the following line to automatically initialize PageLogger when the script runs.
   // Otherwise, you need to call PageLogger.init() manually in your userscript.
   PageLogger.init();
+
+  //* Example usage
+  function exampleUsage() {
+    // Wait for PageLogger to be ready if it initializes asynchronously or later
+    function waitForPageLogger(callback) {
+      const checkInterval = setInterval(() => {
+        // Access via unsafeWindow if needed, otherwise just PageLogger
+        const logger =
+          typeof unsafeWindow !== "undefined"
+            ? unsafeWindow.PageLogger
+            : window.PageLogger;
+        if (logger && logger.init) {
+          // Check if init exists (basic check)
+          clearInterval(checkInterval);
+          callback(logger);
+        }
+      }, 100); // Check every 100ms
+      // Timeout safeguard
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        const logger =
+          typeof unsafeWindow !== "undefined"
+            ? unsafeWindow.PageLogger
+            : window.PageLogger;
+        if (!logger || !logger.init) {
+          console.error("PageLogger did not become available in time.");
+        }
+      }, 5000); // Wait max 5 seconds
+    }
+
+    waitForPageLogger((PageLogger) => {
+      // Initialize PageLogger (if not auto-initialized in the library)
+      // You can override defaults here
+      PageLogger.init({
+        position: "bottom-left",
+        maxMessages: 75,
+        // defaultVisible: false
+      });
+
+      // Now you can use PageLogger instead of console
+      PageLogger.log("PageLogger is ready!");
+      PageLogger.info(
+        "This is an informational message.",
+        "Multiple arguments work.",
+        123
+      );
+      PageLogger.warn("This is a warning.");
+      PageLogger.error(
+        "This is an error message.",
+        new Error("Something went wrong")
+      );
+
+      const myObject = {
+        name: "Test Object",
+        value: 42,
+        nested: { id: "A", data: [1, 2, 3] },
+      };
+      PageLogger.debug("Debugging an object:", myObject);
+
+      PageLogger.log("Testing null and undefined:", null, undefined);
+      PageLogger.log(
+        "Testing boolean and function:",
+        true,
+        function testFunc() {}
+      );
+      PageLogger.log(
+        "Testing BigInt:",
+        1234567890123456789012345678901234567890n
+      );
+
+      // Example of changing config after init
+      setTimeout(() => {
+        PageLogger.setConfig("position", "top-right");
+        PageLogger.log("Moved logger to top-right");
+      }, 3000);
+
+      // Example clear
+      // setTimeout(() => {
+      //     PageLogger.clear();
+      // }, 5000);
+
+      // Example toggle visibility
+      setTimeout(() => {
+        PageLogger.toggle(); // Hide
+      }, 6000);
+      setTimeout(() => {
+        PageLogger.toggle(); // Show
+      }, 8000);
+
+      // Example pause/resume
+      setTimeout(() => {
+        PageLogger.togglePause(); // Pause
+        PageLogger.log("This message won't appear"); // Won't show
+      }, 9000);
+      setTimeout(() => {
+        PageLogger.togglePause(); // Resume
+        PageLogger.log("Logging resumed, this should appear."); // Will show
+      }, 11000);
+
+      // Example destroy (if you need to clean up completely)
+      // setTimeout(() => {
+      //    PageLogger.destroy();
+      // }, 15000);
+    });
+  }
 })(window);
