@@ -1,137 +1,142 @@
-( function () {
-  'use strict';
+(function () {
+  "use strict";
 
   const USER_TIMEZONE_MAP = {
+    "Hirusha Liyanage": "America/New_York",
+    "Kevin Andrés": "America/Guayaquil",
+    "Patricio Sanhueza": "America/Santiago",
 
-    'Hirusha Liyanage': 'America/New_York',
-    'Kevin Andrés': 'America/Guayaquil',
-    'Patricio Sanhueza': 'America/Santiago',
+    "Ravi Tissera": "Europe/Paris",
+    "Chathun Hashan Komasaru": "Europe/London",
+    "Dinuka Fernando": "Europe/London",
+    Mineth: "Europe/Rome",
+    "Nicole Alan": "Europe/Athens",
 
-    'Ravi Tissera': 'Europe/Paris',
-    'Chathun Hashan Komasaru': 'Europe/London',
-    'Dinuka Fernando': 'Europe/London',
-    'Mineth': 'Europe/Rome',
-    'Nicole Alan': 'Europe/Athens',
+    "Ijas Mohomed": "Asia/Dubai",
+    "Vidyuth Rajan": "Asia/Muscat",
+    "Gelo Santos": "Asia/Dubai",
 
-    'Ijas Mohomed': 'Asia/Dubai',
-    'Vidyuth Rajan': 'Asia/Muscat',
-    'Gelo Santos': 'Asia/Dubai',
+    Pasi: "Australia/Perth",
+    Rajitha: "Australia/Melbourne",
+    Dilaksha: "Australia/Melbourne",
+    "Vinura Thirimanna": "Australia/Melbourne",
 
-    'Pasi': 'Australia/Perth',
-    'Rajitha': 'Australia/Melbourne',
-    'Dilaksha': 'Australia/Melbourne',
-    'Vinura Thirimanna': 'Australia/Melbourne',
-
-    'Hans Ignacio': 'Asia/Manila',
-
+    "Hans Ignacio": "Asia/Manila",
   };
 
-  function getUserName () {
-    const profileNameParentEl = document.querySelector( '[title="Profile details"]+[role=button]' );
-    if ( !profileNameParentEl ) return;
+  function getUserName() {
+    const profileNameParentEl = document.querySelector(
+      '[title="Profile details"]+[role=button]'
+    );
+    if (!profileNameParentEl) return;
 
-    const profileNameEl = profileNameParentEl.querySelector( '[dir="auto"]' );
-    if ( !profileNameEl ) return;
+    const profileNameEl = profileNameParentEl.querySelector('[dir="auto"]');
+    if (!profileNameEl) return;
 
     return profileNameEl.textContent;
   }
 
-  function updateUserTime () {
-
-    const profileNameParentEl = document.querySelector( '[title="Profile details"]+[role=button]' );
-    if ( !profileNameParentEl ) return;
+  function updateUserTime() {
+    const profileNameParentEl = document.querySelector(
+      '[title="Profile details"]+[role=button]'
+    );
+    if (!profileNameParentEl) return;
 
     const userName = getUserName();
-    if ( !userName ) return;
+    if (!userName) return;
 
-    const userTimezone = USER_TIMEZONE_MAP[ userName ];
-    if ( !userTimezone ) return;
+    const userTimezone = USER_TIMEZONE_MAP[userName];
+    if (!userTimezone) return;
 
     try {
-      const userTime = getTimezoneDateTime( userTimezone ).fullDateTime;
+      const userTime = getTimezoneDateTime(userTimezone).fullDateTime;
 
-      let userTimeEl = document.getElementById( 'user-time' );
-      if ( !userTimeEl ) {
-        userTimeEl = document.createElement( 'div' );
-        userTimeEl.id = 'user-time';
-        profileNameParentEl.appendChild( userTimeEl );
+      let userTimeEl = document.getElementById("user-time");
+      if (!userTimeEl) {
+        userTimeEl = document.createElement("div");
+        userTimeEl.id = "user-time";
+        profileNameParentEl.appendChild(userTimeEl);
       }
 
-      userTimeEl.textContent = `${ userTimezone } - ${ userTime }`;
-    } catch ( error ) {
-      console.error( `Failed to update time for ${ userName }:`, error );
+      userTimeEl.textContent = `${userTimezone} - ${userTime}`;
+    } catch (error) {
+      console.error(`Failed to update time for ${userName}:`, error);
     }
   }
 
   // Use requestAnimationFrame for more efficient periodic updates
-  function startUserTimeUpdates () {
+  function startUserTimeUpdates() {
     let lastUpdateTime = 0;
 
-    function checkAndUpdateTime ( currentTime ) {
+    function checkAndUpdateTime(currentTime) {
       // Update every second (1000 ms)
-      if ( currentTime - lastUpdateTime >= 1000 ) {
+      if (currentTime - lastUpdateTime >= 1000) {
         updateUserTime();
         lastUpdateTime = currentTime;
       }
 
-      requestAnimationFrame( checkAndUpdateTime );
+      requestAnimationFrame(checkAndUpdateTime);
     }
 
-    requestAnimationFrame( checkAndUpdateTime );
+    requestAnimationFrame(checkAndUpdateTime);
   }
 
   // Start the updates
   startUserTimeUpdates();
 
   //* Local time for message items
-  waitForEach( '[data-pre-plain-text] [aria-hidden]', ( timestampEl ) => {
+  waitForEach("[data-pre-plain-text] [aria-hidden]", (timestampEl) => {
     try {
-
       const userName = getUserName();
-      if ( !userName ) return;
+      if (!userName) return;
 
-      const userTimezone = USER_TIMEZONE_MAP[ userName ];
-      if ( !userTimezone ) return;
+      const userTimezone = USER_TIMEZONE_MAP[userName];
+      if (!userTimezone) return;
 
-      const grandParentEl = grandParent( timestampEl, 4 );
-      const timestampDisplayEl = grandParentEl.querySelector( '[dir=auto]:not(.copyable-text)' );
+      const grandParentEl = grandParent(timestampEl, 4);
+      const timestampDisplayEl = grandParentEl.querySelector(
+        "[dir=auto]:not(.copyable-text)"
+      );
 
       const originalTimestamp = timestampDisplayEl.textContent;
-      const newTimestamp = convertTimeToTimezone( originalTimestamp, 'Asia/Colombo', userTimezone );
+      const newTimestamp = convertTimeToTimezone(
+        originalTimestamp,
+        "Asia/Colombo",
+        userTimezone
+      );
 
-      timestampDisplayEl.textContent = `${ timestampDisplayEl.textContent } • ${ newTimestamp }`;
-      timestampDisplayEl.parentElement.parentElement.style.marginTop = 'unset';
-    } catch ( error ) {
-      console.log( error );
+      timestampDisplayEl.textContent = `${timestampDisplayEl.textContent} • ${newTimestamp}`;
+      timestampDisplayEl.parentElement.parentElement.style.marginTop = "unset";
+    } catch (error) {
+      console.log(error);
     }
-  } );
+  });
 
-  //* keyboard shortcut for translation
-  document.addEventListener( 'keydown', async function ( event ) {
+  //* keyboard shortcuts
+  document.addEventListener("keydown", async function (event) {
+    if (!event.altKey) return; // 🛑
 
-    if ( !event.altKey ) return; // 🛑
-
-    switch ( event.key ) {
-
-      case 'r': // reply
+    switch (event.key) {
+      case "r": // reply
         event.preventDefault();
 
         const activeEl = document.activeElement;
-        const chatItemQuery = '.message-out, .message-in';
-        const isAChatItem = activeEl.matches( chatItemQuery );
-        const aChildIsAChatItem = activeEl.querySelector( chatItemQuery );
-        if ( !isAChatItem || !aChildIsAChatItem ) return;
-        whatsappAHKClick( activeEl, true );
+        const chatItemQuery = ".message-out, .message-in";
+        const isAChatItem = activeEl.matches(chatItemQuery);
+        const aChildIsAChatItem = activeEl.querySelector(chatItemQuery);
+        if (!isAChatItem || !aChildIsAChatItem) return;
+        whatsappAHKClick(activeEl, true);
 
         break;
 
       case "d": // next
         event.preventDefault();
-        let nextUnreadItem = document.querySelectorAll( `[aria-label*="unread message"]` )[ 1 ];
-        nextUnreadItem.scrollIntoView( { block: 'center' } );
-        whatsappAHKClick( nextUnreadItem, false );
+        let nextUnreadItem = document.querySelectorAll(
+          `[aria-label*="unread message"]`
+        )[1];
+        nextUnreadItem.scrollIntoView({ block: "center" });
+        whatsappAHKClick(nextUnreadItem, false);
         break;
-
     }
 
     // if ( !( event.altKey && event.key === 'r' ) ) return;
@@ -142,22 +147,22 @@
     // const translationObj = await getTranslation( inputText, 'es' );
     // console.log( translationObj );
     // alert( translationObj.translatedText );
-  } );
+  });
 
-  function whatsappAHKClick ( element, twice = false ) {
+  function whatsappAHKClick(element, twice = false) {
     const { x, y } = element.getBoundingClientRect();
-    const xCoord = Math.round( x );
-    const yCoord = Math.round( y );
+    const xCoord = Math.round(x);
+    const yCoord = Math.round(y);
     const targetXCoord = xCoord - 50;
     const targetYCoord = yCoord + 80;
-    let copyString = '';
-    if ( twice ) {
-      copyString = `double-click::${ targetXCoord },${ targetYCoord }::`;
+    GM_setClipboard("activate::WhatsApp:");
+    let copyString = "";
+    if (twice) {
+      copyString = `double-click::${targetXCoord},${targetYCoord}::`;
+    } else {
+      copyString = `mouse-click::${targetXCoord},${targetYCoord}::`;
     }
-    else {
-      copyString = `mouse-click::${ targetXCoord },${ targetYCoord }::`;
-    }
-    GM_setClipboard( copyString );
+    GM_setClipboard(copyString);
   }
 
   //* Auto exiting when inactive
@@ -166,13 +171,13 @@
   let amountOfMinutes = 5;
   var time;
 
-  function logout () {
-    location.href = 'about:blank';
+  function logout() {
+    location.href = "about:blank";
   }
 
-  function resetTimer () {
-    clearTimeout( time );
-    time = setTimeout( logout, amountOfMinutes * 60 * 1000 );
+  function resetTimer() {
+    clearTimeout(time);
+    time = setTimeout(logout, amountOfMinutes * 60 * 1000);
   }
 
   document.onload = resetTimer;
@@ -181,11 +186,9 @@
   document.ontouchstart = resetTimer;
   document.onclick = resetTimer; // touchpad clicks
   document.onkeydown = resetTimer; // onkeypress is deprecated
-  document.addEventListener( 'scroll', resetTimer, true ); // improved; see comments
+  document.addEventListener("scroll", resetTimer, true); // improved; see comments
 
-  document.addEventListener( 'keydown', function ( event ) {
-
-
+  document.addEventListener("keydown", function (event) {
     // switch ( event.code ) {
 
     //     case 'Space':
@@ -208,20 +211,16 @@
 
     // }
 
-    if ( !event.altKey ) return; // 🛑
+    if (!event.altKey) return; // 🛑
 
-    switch ( event.key ) {
-
+    switch (event.key) {
       case "d": // next
         event.preventDefault();
-        console.log( 'xxxx' );
-        $( '[aria-label*="unread message"]' ).first().click();
+        console.log("xxxx");
+        $('[aria-label*="unread message"]').first().click();
         break;
     }
+  });
 
-
-  } );
-
-  window.onblur = function () { };
-
-} )();
+  window.onblur = function () {};
+})();
