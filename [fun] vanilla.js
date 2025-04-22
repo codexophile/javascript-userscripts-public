@@ -1188,21 +1188,16 @@ function lazyLoad(load, ...items) {
 //  MARK: Page functionalities
 
 async function setupYtDlpBtn(url, title, urlSelector) {
-  const urlSegment = `url:${url}::`;
   const titleSegment = title ? `title:${title}::` : "";
 
   let ytDlpBtnEl = await waitFor("#yt-dlp-Btn");
   ytDlpBtnEl = removeListenersByCloning(ytDlpBtnEl);
   ytDlpBtnEl.addEventListener("click", () => {
     if (urlSelector) url = document.querySelector(urlSelector).href;
+    const urlSegment = `url:${url}::`;
     GM_setClipboard(`initiate-ytdlp:${urlSegment}${titleSegment}`);
   });
-  style(
-    ytDlpBtnEl,
-    `
-    outline: solid red 2px;
-  `
-  );
+  style(ytDlpBtnEl, `outline: solid red 2px;`);
 }
 
 function downloadImgWithTextFunctionality({
@@ -1286,6 +1281,22 @@ function deepLoad({
 }
 
 // MARK: Rest
+
+function addFaviconToLink(linkEl, faviconUrl = null, position = "before") {
+  if (!faviconUrl) {
+    const googleUserContHref = `https://s2.googleusercontent.com/s2/favicons?`;
+    const domain = linkEl.href.match(/\/\/(.*)\..*\//);
+    const completeDomain = `https://${domain[0].replaceAll("//", "")}`;
+    faviconUrl = `${googleUserContHref}domain_url=${completeDomain}`;
+  }
+  const faviconImgEl = generateElements(`<img src=${faviconUrl}>`);
+  style(faviconImgEl, `margin: 0 3px;`);
+  if (position === "before") {
+    linkEl.prepend(faviconImgEl);
+  } else {
+    linkEl.append(faviconImgEl);
+  }
+}
 
 function getSecret(valueKey = "apiKey") {
   let secretValue = GM_getValue(valueKey, "");
