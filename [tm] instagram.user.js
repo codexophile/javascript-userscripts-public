@@ -3,6 +3,19 @@
 
   // markAndFilter( 'main div:has(>[href^="/p/"])', 'a', 'href', /\/p\/(.+?)\// )
 
+  //* new yt-dlp button
+  const { addButton } = await Collapsible();
+  addButton("tiktok", null, () => {
+    const visiblePostEl = getVisibleElements("article")[0];
+    if (!visiblePostEl) return;
+    style(visiblePostEl, `outline: solid red;`);
+    const postLink = visiblePostEl.querySelector('[href*="/p/"').href;
+
+    const urlSegment = `url:${postLink}::`;
+    const destinationSegment = `dest:w:\\#later\\tiktok::`;
+    GM_setClipboard(`initiate-ytdlp:${urlSegment}${destinationSegment}`);
+  });
+
   //* Shortcuts
   document.addEventListener(
     "keydown",
@@ -29,10 +42,10 @@
     style(
       videoControlPanel,
       `
-                left: unset;
-                right: 100px;
-                top: 50vh;
-            `
+        left: unset;
+        right: 500px;
+        top: 50vh;
+      `
     );
   })();
 
