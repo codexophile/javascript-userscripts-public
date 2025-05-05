@@ -5,12 +5,19 @@
   const shoppingSites = ["https://www.temu.com", "https://www.aliexpress.com"];
 
   waitForEach("main:not([class])>div", async (bookmarkEl) => {
+    await waitFor("a[class*=permalink]");
     const link = bookmarkEl.querySelector("a[class*=permalink]").href;
     const isShoppingSite = shoppingSites.some((site) => link.includes(site));
     const aboutSectionEl = bookmarkEl.querySelector("div[class*=about]");
     if (!isShoppingSite) return;
-
     if (link.includes("temu.com")) {
+      handleTemu();
+    }
+    if (link.includes("aliexpress.com")) {
+      handleAliExpress();
+    }
+
+    async function handleTemu() {
       const html = await GMXmlHttpRequest(link, null, true);
 
       const discountedPriceMatches = html.match(/Only LKR (.+?) with extra/);
@@ -25,10 +32,7 @@
         return;
       }
 
-      const originalPriceMatches = html.match(
-        /"minOnSalePriceStr": "LKR (.+?)"/
-      );
-      console.log(originalPriceMatches);
+      const originalPriceMatches = html.match(/"minOnSalePriceStr": ?"?(.+?)"/);
       const originalPrice = originalPriceMatches
         ? originalPriceMatches[1]
         : null;
@@ -42,5 +46,6 @@
 
       generateElements(`<div>Price not found</div>`, aboutSectionEl);
     }
+    function handleAliExpress() {}
   });
 })();
