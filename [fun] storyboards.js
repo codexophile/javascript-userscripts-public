@@ -108,9 +108,9 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
       repeat(trueNoOfSlots, (index) => {
         const timeStringEl = generateElements(`<div></div>`, slotEls[index]);
         timeStringEl.classList.add("timeString");
-        timeStringEl.textContent = `${Math.round(
-          (index * video.duration) / trueNoOfSlots
-        )}`;
+        const timeString = Math.round((index * video.duration) / trueNoOfSlots);
+        const timeStringReadeable = forHumans(timeString);
+        timeStringEl.textContent = timeStringReadeable;
         style(
           timeStringEl,
           `
