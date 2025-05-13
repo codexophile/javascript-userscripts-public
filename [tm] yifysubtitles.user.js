@@ -1,44 +1,72 @@
-( function () {
-    'use strict';
+(async function () {
+  "use strict";
 
-    if ( !location.href.includes( 'movie-imdb' ) ) return;
+  (async function () {
+    "use strict";
+    const { addButton } = await Collapsible();
+    addButton("toggle", null, () => {
+      toggleNonEnglishSubs();
+    });
+  })();
 
-    //* filtering non english items
-    document.querySelectorAll( `.sub-lang` ).forEach( item => {
-        if ( item.textContent === 'English' ) return;
-        item.parentElement.parentElement.style.display = 'none';
-    } );
+  if (!location.href.includes("movie-imdb")) return;
 
-    //* sort table rows by span value
-    sortTableRowsBySpanValue();
+  //* filtering non english items
+  hideNonEnglishSubs();
 
-    // Function to sort table rows by span value in descending order
-    function sortTableRowsBySpanValue () {
-        // Get the table body
-        const tbody = document.querySelector( 'tbody' );
+  //* sort table rows by span value
+  sortTableRowsBySpanValue();
 
-        // Get all tr elements
-        const rows = Array.from( tbody.getElementsByTagName( 'tr' ) );
+  // Function to sort table rows by span value in descending order
+  function sortTableRowsBySpanValue() {
+    // Get the table body
+    const tbody = document.querySelector("tbody");
 
-        // Sort the rows
-        const sortedRows = rows.sort( ( a, b ) => {
-            // Get span values from each row
-            const spanA = a.querySelector( 'span.label-success' );
-            const spanB = b.querySelector( 'span.label-success' );
+    // Get all tr elements
+    const rows = Array.from(tbody.getElementsByTagName("tr"));
 
-            // Extract numeric values, default to 0 if span doesn't exist
-            const valueA = spanA ? parseFloat( spanA.textContent ) : 0;
-            const valueB = spanB ? parseFloat( spanB.textContent ) : 0;
+    // Sort the rows
+    const sortedRows = rows.sort((a, b) => {
+      // Get span values from each row
+      const spanA = a.querySelector("span.label-success");
+      const spanB = b.querySelector("span.label-success");
 
-            // Sort in descending order
-            return valueB - valueA;
-        } );
+      // Extract numeric values, default to 0 if span doesn't exist
+      const valueA = spanA ? parseFloat(spanA.textContent) : 0;
+      const valueB = spanB ? parseFloat(spanB.textContent) : 0;
 
-        // Remove existing rows
-        rows.forEach( row => tbody.removeChild( row ) );
+      // Sort in descending order
+      return valueB - valueA;
+    });
 
-        // Append sorted rows
-        sortedRows.forEach( row => tbody.appendChild( row ) );
+    // Remove existing rows
+    rows.forEach((row) => tbody.removeChild(row));
+
+    // Append sorted rows
+    sortedRows.forEach((row) => tbody.appendChild(row));
+  }
+
+  function hideNonEnglishSubs() {
+    document.querySelectorAll(`.sub-lang`).forEach((item) => {
+      if (item.textContent === "English") return;
+      item.parentElement.parentElement.style.display = "none";
+    });
+  }
+  function showAllSubs() {
+    document.querySelectorAll(`.sub-lang`).forEach((item) => {
+      item.parentElement.parentElement.style.display = "table-row";
+    });
+  }
+  function toggleNonEnglishSubs() {
+    const isHidden = [...document.querySelectorAll(`.sub-lang`)].some(
+      (item) => {
+        return item.parentElement.parentElement.style.display === "none";
+      }
+    );
+    if (isHidden) {
+      showAllSubs();
+    } else {
+      hideNonEnglishSubs();
     }
-
-} )();
+  }
+})();
