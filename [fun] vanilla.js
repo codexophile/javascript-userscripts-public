@@ -127,7 +127,7 @@ function downloadText(filename, text) {
   dlLink.href = uriContent;
   dlLink.setAttribute("download", filename);
   dlLink.click();
-  dlLink.remove();
+  // dlLink.remove();
 }
 
 function capitalizeFirstLetter(string) {
@@ -1271,16 +1271,180 @@ function downloadImgWithTextFunctionality({
 
 function deepLoad({
   sourceSelector,
-  // ...sourceEls,
-  targetEl,
+  targetEl = null,
   lazyLoad = true,
+  deepLinkSelector = "a",
 }) {
-  if (sourceSelector) {
-    // sourceEls;
-  }
+  lazyLoadWithObserver(sourceSelector, async (sourceEl) => {
+    const deepHref = sourceEl.querySelector(deepLinkSelector)?.href;
+    if (!deepHref) return; // 🛑
+    const doc = await fetchDoc(deepHref);
+    console.log(doc);
+  });
 }
 
 // MARK: Rest
+
+function convertPlayerConfigStringToObject(configString) {
+  try {
+    // 1. Isolate the object literal part of the string.
+    // We find the first '=' and take everything after it.
+    const objectLiteralStartIndex = configString.indexOf("=");
+    if (objectLiteralStartIndex === -1) {
+      throw new Error("String does not appear to be an assignment.");
+    }
+
+    let objectLiteralString = configString
+      .substring(objectLiteralStartIndex + 1)
+      .trim();
+
+    // Remove a potential trailing semicolon
+    if (objectLiteralString.endsWith(";")) {
+      objectLiteralString = objectLiteralString.slice(0, -1);
+    }
+
+    // 2. Use the Function constructor to "evaluate" the object literal string.
+    // This will execute the JSON.parse() calls and the boolean comparisons.
+    // The 'JSON' object needs to be available in the scope where this function runs.
+    // (It is a standard built-in object in JavaScript environments).
+    const func = new Function(`return ${objectLiteralString};`);
+    const resultObject = func();
+
+    return resultObject;
+  } catch (error) {
+    console.error("Failed to convert string to object:", error);
+    // Depending on your needs, you might want to throw the error,
+    // return null, or return a specific error object.
+    return null;
+  }
+}
+
+/**
+ * Enum for visibility modes.
+ * @readonly
+ * @enum {string}
+ */
+const VisibilityMode = {
+  /** Return elements that are at least partially visible */
+  PARTIAL: "partial",
+  /** Return only elements that are fully visible */
+  FULL: "full",
+  /** If none are fully visible, return the most visible one (area %); otherwise return fully visible */
+  MAX_PERCENTAGE: "maxPercentage",
+};
+
+/**
+ * Finds elements within the current viewport based on the specified mode.
+ *
+ * @param {string} selector - A CSS selector string to identify the elements to check.
+ * @param {VisibilityMode} [mode=VisibilityMode.PARTIAL] - The visibility mode to use. Defaults to PARTIAL.
+ * @returns {Element[]} An array of elements matching the criteria.
+ */
+function getVisibleElements(selector, mode = VisibilityMode.MAX_PERCENTAGE) {
+  const elements = document.querySelectorAll(selector);
+  if (!elements.length) {
+    return []; // No elements match the selector
+  }
+
+  const viewportHeight =
+    window.innerHeight || document.documentElement.clientHeight;
+  const viewportWidth =
+    window.innerWidth || document.documentElement.clientWidth;
+
+  const partiallyVisible = [];
+  const fullyVisible = [];
+  let elementWithMaxPercentage = null;
+  let maxPercentage = -1; // Use -1 to ensure any visibility is greater
+
+  elements.forEach((element) => {
+    const rect = element.getBoundingClientRect();
+
+    // Basic check: Ignore elements with no dimensions or hidden via display:none
+    // Note: This doesn't catch visibility:hidden or opacity:0
+    if (rect.width === 0 || rect.height === 0) {
+      return;
+    }
+
+    // --- Visibility Calculations ---
+
+    // 1. Calculate Intersection Area (for percentage)
+    const intersectTop = Math.max(rect.top, 0);
+    const intersectBottom = Math.min(rect.bottom, viewportHeight);
+    const intersectLeft = Math.max(rect.left, 0);
+    const intersectRight = Math.min(rect.right, viewportWidth);
+
+    const intersectWidth = intersectRight - intersectLeft;
+    const intersectHeight = intersectBottom - intersectTop;
+
+    const intersectionArea =
+      intersectWidth > 0 && intersectHeight > 0
+        ? intersectWidth * intersectHeight
+        : 0;
+
+    // 2. Check for Partial Visibility (any overlap)
+    // An element is partially visible if its intersection area is greater than 0
+    const isPartiallyVisible = intersectionArea > 0;
+    // Alternative check (sometimes slightly faster if percentage isn't needed otherwise):
+    // const isPartiallyVisible =
+    //   rect.bottom > 0 &&
+    //   rect.top < viewportHeight &&
+    //   rect.right > 0 &&
+    //   rect.left < viewportWidth;
+
+    // 3. Check for Full Visibility
+    const isFullyVisible =
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= viewportHeight &&
+      rect.right <= viewportWidth;
+
+    // --- Store Results Based on Calculations ---
+
+    if (isPartiallyVisible) {
+      partiallyVisible.push(element); // Collect all partially visible
+
+      if (isFullyVisible) {
+        fullyVisible.push(element); // Collect all fully visible
+      }
+
+      // Calculate percentage ONLY if needed for maxPercentage mode or potentially for sorting later
+      if (mode === VisibilityMode.MAX_PERCENTAGE || intersectionArea > 0) {
+        // Calculate if needed or valid
+        const elementArea = rect.width * rect.height;
+        // Avoid division by zero for safety, though we checked width/height earlier
+        const currentPercentage =
+          elementArea > 0 ? (intersectionArea / elementArea) * 100 : 0;
+
+        if (currentPercentage > maxPercentage) {
+          maxPercentage = currentPercentage;
+          elementWithMaxPercentage = element;
+        }
+      }
+    }
+  }); // End forEach element
+
+  // --- Return Results Based on Mode ---
+
+  switch (mode) {
+    case VisibilityMode.FULL:
+      return fullyVisible;
+
+    case VisibilityMode.MAX_PERCENTAGE:
+      // If any elements are fully visible, return them per the requirement clarification.
+      // Otherwise, return the single element with the maximum percentage of visibility.
+      if (fullyVisible.length > 0) {
+        return fullyVisible;
+      } else if (elementWithMaxPercentage) {
+        return [elementWithMaxPercentage]; // Return as an array
+      } else {
+        return []; // No elements were even partially visible
+      }
+
+    case VisibilityMode.PARTIAL: // Default case
+    default:
+      return partiallyVisible;
+  }
+}
 
 function addFaviconToLink(linkEl, faviconUrl = null, position = "before") {
   if (!faviconUrl) {
@@ -1573,7 +1737,7 @@ function getTextNodes(el) {
 }
 
 async function load(url, selector, parent) {
-  const html = await GMXmlHttpRequest(url, null, true);
+  const html = await fetchDoc(url, null, true);
   const doc = generateDoc(html);
   const selected = doc.querySelectorAll(selector);
   if (parent) {
@@ -1582,7 +1746,7 @@ async function load(url, selector, parent) {
   return selected;
 }
 
-function GMXmlHttpRequest(url, headers = "", returnHtml) {
+function fetchDoc(url, headers = "", returnHtml) {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET",
@@ -1633,7 +1797,21 @@ async function GMXmlHttpReqResponse(url) {
   });
   return await promise;
 }
-
+function sanitizeLocationHref() {
+  const url = new URL(location.href);
+  const cleanUrl = url.origin + url.pathname + url.hash;
+  window.history.pushState(null, null, cleanUrl);
+}
+function sanitizeLinksTraditional(urlString) {
+  try {
+    const url = new URL(urlString);
+    const cleanUrl = url.origin + url.pathname + url.hash;
+    return cleanUrl;
+  } catch (error) {
+    console.error("Invalid URL provided:", error);
+    return urlString;
+  }
+}
 function sanitizeTrackingLinks(
   selector,
   mainTrackerRegex,
@@ -2455,10 +2633,18 @@ function getDoodHostsQuery() {
   return doodHostsQuery;
 }
 
+async function getDoodStoryboardSrc(url) {
+  const doodDoc = await GMXmlHttpRequest(url);
+  const metaEl = doodDoc.querySelector('meta[name="og:image"]');
+  const imgId = metaEl.content.match(/snaps\/(.+?)\./)[1];
+  const storyboardUrl = `https://img.doodcdn.io/slides/${imgId}.jpg`;
+  return storyboardUrl;
+}
+
 async function getVoeStoryboardImg(voeUrl) {
-  const levelOneHtml = await GMXmlHttpRequest(voeUrl, null, true);
+  const levelOneHtml = await fetchDoc(voeUrl, null, true);
   const levelTwoUrl = levelOneHtml.match(/window\.location\.href = '(.+?)'/)[1];
-  const levelTwoDoc = await GMXmlHttpRequest(levelTwoUrl);
+  const levelTwoDoc = await fetchDoc(levelTwoUrl);
   const posterImgUrl = levelTwoDoc.querySelector('[name="og:image"]').content;
   const storyboardUrl = posterImgUrl.replace(
     /_storyboard_L\d+/,
@@ -2468,7 +2654,7 @@ async function getVoeStoryboardImg(voeUrl) {
 }
 
 async function bftStoryboardFromUrl(bftvUrl, sbGrandParent) {
-  const bftvDoc = await GMXmlHttpRequest(bftvUrl);
+  const bftvDoc = await fetchDoc(bftvUrl);
   const bftvScript = bftvDoc.querySelector(
     'script[type="application/ld+json"]'
   );
