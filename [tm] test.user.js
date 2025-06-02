@@ -1,13 +1,9 @@
 // http://www.blankwebsite.com
 // https://example.com
 
-( async function () {
-  'use strict';
+(async function () {
+  "use strict";
 
-  // Request a file handle
-  const handle = await window.showSaveFilePicker();
-  const writable = await handle.createWritable();
-  await writable.write( 'Hello, world!' );
-  await writable.close();
-
-} )();
+  const doc = await fetchDoc("https://luluvdoo.com/e/pbp5ya4evxv3", null, true);
+  GM_setClipboard(doc);
+})();

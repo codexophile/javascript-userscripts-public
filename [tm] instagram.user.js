@@ -79,7 +79,11 @@
     const queryForIGPosts =
       'img[crossorigin="anonymous"][style="object-fit: cover;"]:not(.imgProcessed)';
     const queryForIGAllImagesItems = "#igAllImages > * > img";
-    const $imagesOpened = $(`${queryForIGAllImagesItems}, ${queryForIGPosts}`);
+    const queryForOpenedImgs = "article li img:not(.imgProcessed)";
+
+    const $imagesOpened = $(
+      `${queryForIGAllImagesItems}, ${queryForIGPosts}, ${queryForOpenedImgs}`
+    );
     $imagesOpened.each(function () {
       this.classList.add("imgProcessed");
       const $this = $(this);

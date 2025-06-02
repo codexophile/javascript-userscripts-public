@@ -5,6 +5,10 @@ let button720p = jQuery(`<button> 720p     </button>`).on(
   "click",
   appendToSearchQuery
 );
+let button1080p = jQuery(`<button>1080p</button>`).on(
+  "click",
+  appendToSearchQuery
+);
 let buttonComplete = jQuery(`<button> Complete </button>`).on(
   "click",
   appendToSearchQuery
@@ -13,7 +17,12 @@ let buttons01e01 = jQuery(`<button> s01e01   </button>`).on(
   "click",
   appendToSearchQuery
 );
-parentEl.append(button720p[0], buttonComplete[0], buttons01e01[0]);
+parentEl.append(
+  button720p[0],
+  button1080p[0],
+  buttonComplete[0],
+  buttons01e01[0]
+);
 
 if (location.href.match(/s\d+?e\d+?/)) {
   const btnPrevEpisode = generateElements(`<button>⏮️</button>`, parentEl);

@@ -1,82 +1,81 @@
-( async function () {
-    'use strict';
+(async function () {
+  "use strict";
 
-    let observer = new MutationObserver( () => {
+  let observer = new MutationObserver(() => {
+    //* Right click to copy
+    const items = document.querySelectorAll(`article li,p:not(.processedItem)`);
+    items.forEach((item) => {
+      item.classList.add("processedItem");
+      item.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        GM_setClipboard(
+          event.target.textContent.replaceAll(
+            /(Prompt|Prologue|First Chapter): /g,
+            ""
+          )
+        );
+      });
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 
-        //* Right click to copy
-        const items = document.querySelectorAll( `article li,p:not(.processedItem)` );
-        items.forEach( item => {
-            item.classList.add( 'processedItem' );
-            item.addEventListener( 'contextmenu', ( event ) => {
-                event.preventDefault();
-                GM_setClipboard( event.target.textContent.replaceAll( /(Prompt|Prologue|First Chapter): /g, '' ) );
-            } );
-        } );
+  //* search queries
 
-    } );
-    observer.observe( document.body, { childList: true, subtree: true } );
+  const match = location.href.match(/\/\?query=(.+)(#|&|$)/);
+  if (match) {
+    await waitFor("nav");
+    alert();
+    const queryString = decodeURIComponent(match[1]);
 
+    const $neededChat = $(
+      `.relative.grow.overflow-hidden.whitespace-nowrap:contains('Book Chapter Summaries')`
+    );
+    $neededChat.click();
 
-    //* search queries
+    await waitFor("article");
+    await asyncTimeout(1000);
 
-    const match = location.href.match( /\/\?query=(.+)(#|&|$)/ );
-    if ( match ) {
+    const promptTextarea = document.querySelector(`#prompt-textarea`);
+    promptTextarea.value = queryString;
 
-        await waitFor( 'nav' );
-        alert();
-        const queryString = decodeURIComponent( match[ 1 ] );
+    document.title = "[Expecting] ChatGPT";
+    await asyncTimeout(1000);
 
-        const $neededChat = $( `.relative.grow.overflow-hidden.whitespace-nowrap:contains('Book Chapter Summaries')` );
-        $neededChat.click();
+    document.title = "ChatGPT";
+    document.querySelector(`[data-testid="send-button"]`).click();
 
-        await waitFor( 'article' );
-        await asyncTimeout( 1000 );
+    // const soundBtnEl = await waitForNew( 'article div.flex.items-center > span:first-child > button' )
+    // soundBtnEl.click()
+  }
 
-        const promptTextarea = document.querySelector( `#prompt-textarea` );
-        promptTextarea.value = queryString;
+  //* Setting volume of audio els
 
-        document.title = '[Expecting] ChatGPT';
-        await asyncTimeout( 1000 );
+  const audioEl = await waitFor("audio");
+  audioEl.volume = 0.4;
 
-        document.title = 'ChatGPT';
-        document.querySelector( `[data-testid="send-button"]` ).click();
+  //* Rest
 
-        // const soundBtnEl = await waitForNew( 'article div.flex.items-center > span:first-child > button' )
-        // soundBtnEl.click()
+  const el = await waitFor("#collapsibleContent");
 
+  let currentTurnEl;
+  let query =
+    '[data-testid^="conversation-turn-"]:has([class*="group/conversation-turn"]:not(.agent-turn))';
+  generateToolbarButton("⬆️", el, null, getNextTurn);
+  generateToolbarButton("⬇️", el, null, getNextTurn);
+
+  function getNextTurn(event) {
+    if (!currentTurnEl) {
+      currentTurnEl = [...document.querySelectorAll(query)].at(-1);
     }
 
-    //* Setting volume of audio els
+    switch (event.target.textContent) {
+      case "⬆️":
+        break;
+      case "⬇️":
+        break;
 
-    const audioEl = await waitFor( 'audio' );
-    audioEl.volume = 0.4;
-
-    //* Rest
-
-    const el = await waitFor( '#collapsibleContent' );
-
-    let currentTurnEl;
-    let query = '[data-testid^="conversation-turn-"]:has([class*="group/conversation-turn"]:not(.agent-turn))';
-    generateToolbarButton( '⬆️', el, null, getNextTurn );
-    generateToolbarButton( '⬇️', el, null, getNextTurn );
-
-    function getNextTurn ( event ) {
-
-        if ( !currentTurnEl ) {
-            currentTurnEl = [ ...document.querySelectorAll( query ) ].at( -1 );
-        }
-
-        switch ( event.target.textContent ) {
-            case '⬆️':
-                break;
-            case '⬇️':
-                break;
-
-            default:
-                break;
-        }
+      default:
+        break;
     }
-
-
-
-} )();
+  }
+})();

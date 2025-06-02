@@ -1,95 +1,118 @@
-( async function () {
-  'use strict';
+(async function () {
+  "use strict";
 
-  $( 'a[title]' ).attr( 'title', '' );
+  $("a[title]").attr("title", "");
 
-  if ( location.href.includes( '/videos/' ) ) {
-
-
-    const fpplay = await waitFor( 'a.fp-play' );
+  if (location.href.includes("/videos/")) {
+    const fpplay = await waitFor("a.fp-play");
     fpplay.click();
-    const videoElement = await waitFor( 'video' );
-    videoElement.addEventListener( 'loadedmetadata', async ( event ) => {
-
+    const videoElement = await waitFor("video");
+    videoElement.addEventListener("loadedmetadata", async (event) => {
       event.target.pause();
-      if ( !!document.querySelector( `#slotsDiv` )?.children.length )
-        return;
-      const storyboard = await prepareStoryboard( $storyBoard[ 0 ], document, null, videoElement, 'flex' );
+      if (!!document.querySelector(`#slotsDiv`)?.children.length) return;
+      const storyboard = await prepareStoryboard(
+        $storyBoard[0],
+        document,
+        null,
+        videoElement,
+        "flex"
+      );
       storyboard.scrollIntoView();
 
       loadRelatedVideos();
+    });
 
-    } );
-
-    let $storyBoard = $( `<div></div>` );
-    $( '.block-video' ).after( $storyBoard );
+    let $storyBoard = $(`<div></div>`);
+    $(".block-video").after($storyBoard);
 
     //* Related videos
 
-    function loadRelatedVideos () {
-
-      document.querySelectorAll( `.list-videos .item` ).forEach( async item => {
-
-        const itemLink = item.querySelector( 'a' ).href;
-        const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item );
-        const tempDoc = await GMXmlHttpRequest( itemLink );
+    function loadRelatedVideos() {
+      document.querySelectorAll(`.list-videos .item`).forEach(async (item) => {
+        const itemLink = item.querySelector("a").href;
+        const $relatedItemSbParent = $(`<div id=relItemSbP></div>`).insertAfter(
+          item
+        );
+        const tempDoc = await fetchDoc(itemLink);
         try {
-          prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable', item );
-
-        } catch ( error ) {
-          console.log( error );
+          prepareStoryboard(
+            $relatedItemSbParent[0],
+            tempDoc,
+            itemLink,
+            null,
+            "toggleable",
+            item
+          );
+        } catch (error) {
+          console.log(error);
         }
-      } );
+      });
     }
-
-
+  } else {
+    document.querySelectorAll(`.list-videos .item`).forEach(async (item) => {
+      const itemLink = item.querySelector("a").href;
+      const $relatedItemSbParent = $(`<div id=relItemSbP></div>`).insertAfter(
+        item
+      );
+      const tempDoc = await fetchDoc(itemLink);
+      prepareStoryboard(
+        $relatedItemSbParent[0],
+        tempDoc,
+        itemLink,
+        null,
+        "toggleable",
+        item
+      );
+    });
   }
-  else {
 
-    document.querySelectorAll( `.list-videos .item` ).forEach( async item => {
-
-      const itemLink = item.querySelector( 'a' ).href;
-      const $relatedItemSbParent = $( `<div id=relItemSbP></div>` ).insertAfter( item );
-      const tempDoc = await GMXmlHttpRequest( itemLink );
-      prepareStoryboard( $relatedItemSbParent[ 0 ], tempDoc, itemLink, null, 'toggleable', item );
-
-    } );
-
-  }
-
-  function prepareStoryboard ( storyboardParent, scriptSource, linkToVid, vidOnPage, sbFunction, thisEl ) {
-
+  function prepareStoryboard(
+    storyboardParent,
+    scriptSource,
+    linkToVid,
+    vidOnPage,
+    sbFunction,
+    thisEl
+  ) {
     let scriptEl;
-    if ( scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 2 ] )
-      scriptEl = scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 2 ];
+    if (scriptSource.querySelectorAll('script[type="text/javascript"]')[2])
+      scriptEl = scriptSource.querySelectorAll(
+        'script[type="text/javascript"]'
+      )[2];
     else
-      scriptEl = scriptSource.querySelectorAll( 'script[type="text/javascript"]' )[ 1 ];
+      scriptEl = scriptSource.querySelectorAll(
+        'script[type="text/javascript"]'
+      )[1];
     // GM_setClipboard( scriptEl.innerHTML )
 
-    let samplingFq = scriptEl.innerHTML.match( /timeline_screens_interval: '(\d+)'/ )[ 1 ];
+    let samplingFq = scriptEl.innerHTML.match(
+      /timeline_screens_interval: '(\d+)'/
+    )[1];
 
-    const nOfSlotMatch = scriptEl.innerHTML.match( /timeline_screens_count: '(\d+)'/ );
+    const nOfSlotMatch = scriptEl.innerHTML.match(
+      /timeline_screens_count: '(\d+)'/
+    );
     let trueNoOfSlots;
-    if ( nOfSlotMatch )
-      trueNoOfSlots = nOfSlotMatch[ 1 ];
-    else if ( vidOnPage )
-      trueNoOfSlots = vidOnPage.duration / samplingFq;
+    if (nOfSlotMatch) trueNoOfSlots = nOfSlotMatch[1];
+    else if (vidOnPage) trueNoOfSlots = vidOnPage.duration / samplingFq;
     else {
-      const durationString = thisEl.querySelector( '.duration' ).textContent;
-      const duration = toSeconds( durationString );
+      const durationString = thisEl.querySelector(".duration").textContent;
+      const duration = toSeconds(durationString);
       trueNoOfSlots = duration / samplingFq;
     }
-    const urlTemplate = scriptEl.innerHTML.match( /timeline_screens_url: '(.+?)'/ )[ 1 ];
+    const urlTemplate = scriptEl.innerHTML.match(
+      /timeline_screens_url: '(.+?)'/
+    )[1];
 
     let imgUrls = [];
-    repeat( +trueNoOfSlots, j => {
-      const thisUrl = urlTemplate.replace( '{time}', +j + 1 );
-      imgUrls.push( thisUrl );
-    } );
+    repeat(+trueNoOfSlots, (j) => {
+      const thisUrl = urlTemplate.replace("{time}", +j + 1);
+      imgUrls.push(thisUrl);
+    });
 
-    if ( sbFunction === 'flex' ) {
+    if (sbFunction === "flex") {
       // if ( !videoElement.duration ) return null
-      return storyboard( {
+      return storyboard({
         storyboardParent,
         horizontal: 1,
         vertical: 1,
@@ -97,11 +120,11 @@
         vidOnPage,
         samplingFq,
         trueNoOfSlots,
-        imgUrls
-      } );
+        imgUrls,
+      });
     }
-    if ( sbFunction === 'toggleable' )
-      return storyboardToggleable( {
+    if (sbFunction === "toggleable")
+      return storyboardToggleable({
         storyboardParent,
         horizontal: 1,
         vertical: 1,
@@ -109,11 +132,7 @@
         vidOnPage,
         samplingFq,
         trueNoOfSlots,
-        imgUrls
-      }
-      );
-
+        imgUrls,
+      });
   }
-
-
-} )();
+})();

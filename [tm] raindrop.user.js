@@ -18,7 +18,7 @@
     }
 
     async function handleTemu() {
-      const html = await GMXmlHttpRequest(link, null, true);
+      const html = await fetchDoc(link, null, true);
 
       const discountedPriceMatches = html.match(/Only LKR (.+?) with extra/);
       const discountedPrice = discountedPriceMatches

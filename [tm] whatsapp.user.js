@@ -3,6 +3,7 @@
 
   const USER_TIMEZONE_MAP = {
     "Hirusha Liyanage": "America/New_York",
+    "Chamith Weerasingha": "America/Toronto",
     "Kevin Andrés": "America/Guayaquil",
     "Patricio Sanhueza": "America/Santiago",
 
@@ -155,13 +156,15 @@
     const yCoord = Math.round(y);
     const targetXCoord = xCoord - 50;
     const targetYCoord = yCoord + 80;
-    GM_setClipboard("activate::WhatsApp:");
-    let copyString = "";
-    if (twice) {
-      copyString = `double-click::${targetXCoord},${targetYCoord}::`;
-    } else {
-      copyString = `mouse-click::${targetXCoord},${targetYCoord}::`;
-    }
+
+    const ahkCode = `
+      Click( ${targetXCoord}, ${targetYCoord} )
+    `;
+    const copyString = `
+      ::code-executor::
+      ${ahkCode}
+      ::
+    `;
     GM_setClipboard(copyString);
   }
 

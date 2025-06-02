@@ -1271,6 +1271,7 @@ function downloadImgWithTextFunctionality({
 
 function deepLoad({
   sourceSelector,
+  loadFunction,
   targetEl = null,
   lazyLoad = true,
   deepLinkSelector = "a",
@@ -1279,7 +1280,8 @@ function deepLoad({
     const deepHref = sourceEl.querySelector(deepLinkSelector)?.href;
     if (!deepHref) return; // 🛑
     const doc = await fetchDoc(deepHref);
-    console.log(doc);
+    if (!doc) return; // 🛑
+    loadFunction(sourceEl, doc);
   });
 }
 
