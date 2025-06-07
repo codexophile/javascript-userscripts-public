@@ -1765,8 +1765,8 @@ function fetchDoc(url, headers = "", returnHtml) {
         const tempDoc = generateDoc(resText, true);
         resolve(tempDoc);
       },
-      onerror: () => reject("onerror"),
-      ontimeout: () => reject("ontimeout"),
+      onerror: (obj) => reject(obj.error),
+      ontimeout: (obj) => reject(obj),
     });
   });
 }
@@ -2630,13 +2630,24 @@ function getStreamwishQuery() {
 }
 
 function getDoodHostsQuery() {
-  const doodHosts = ["vidply", "dood", "do7go", "d000d", "ds2video", "do0od"];
+  const doodHosts = [
+    "vidply",
+    "dood",
+    "do7go",
+    "d000d",
+    "ds2video",
+    "do0od",
+    "dooood",
+    "ds2play",
+    "d000d",
+    "d000d",
+  ];
   const doodHostsQuery = doodHosts.map((host) => `[href*="${host}"]`).join(",");
   return doodHostsQuery;
 }
 
 async function getDoodStoryboardSrc(url) {
-  const doodDoc = await GMXmlHttpRequest(url);
+  const doodDoc = await fetchDoc(url);
   const metaEl = doodDoc.querySelector('meta[name="og:image"]');
   const imgId = metaEl.content.match(/snaps\/(.+?)\./)[1];
   const storyboardUrl = `https://img.doodcdn.io/slides/${imgId}.jpg`;
