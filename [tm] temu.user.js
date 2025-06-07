@@ -1,6 +1,36 @@
-(function () {
+(async function () {
   "use strict";
   if (window.top != window.self) return; //don't run on frames or iframes
+
+  //* Wishlist page
+  if (location.href.includes("/wishlist.html")) {
+    let totalPrice = 0;
+
+    const locatorEls = document.querySelectorAll(
+      `[data-tooltip-title="Find similar"]`
+    );
+    locatorEls.forEach((locatorEl) => {
+      const productEl = grandParent(locatorEl, 2);
+      const priceEl = productEl.querySelector("[aria-label*=LKR]");
+      const price = priceEl
+        .getAttribute("aria-label")
+        .replace("LKR", "")
+        .replace(" ", "")
+        .replace(",", "")
+        .trim();
+      totalPrice += parseFloat(price);
+    });
+
+    const totalPricePresentable = totalPrice.toLocaleString("en-US", {
+      style: "currency",
+      currency: "LKR",
+    });
+    const { addElement } = await Collapsible();
+    const totalPriceEl = generateElements(
+      `<div>Rs. ${totalPricePresentable}</div>`
+    );
+    addElement(totalPriceEl);
+  }
 
   const cleanUrl = cleanTemuUrl(location.href);
   if (cleanUrl !== location.href) {
