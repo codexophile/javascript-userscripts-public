@@ -850,6 +850,42 @@ function markAndFilterCOM(
   };
 }
 
+function makeMarkable(
+  mainSelector,
+  uidElSelector = "a",
+  uidAttr = "href",
+  callBack = null
+) {
+  waitForEach(mainSelector, (element) => {
+    const markBtnEl = generateElements(`<button>Mark</button>`, element);
+    style(element, `position: relative`);
+    style(
+      markBtnEl,
+      `
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 1000;
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px;
+      cursor: pointer;
+    `
+    );
+    markBtnEl.addEventListener("click", () => {
+      const uidEl = element.querySelector(uidElSelector);
+      const uniqueId = uidEl ? uidEl.getAttribute(uidAttr) : null;
+      if (!uniqueId) {
+        console.log("No unique ID found for marking");
+        return;
+      }
+      GM_setValue(`marked-${uniqueId}`, true);
+      element.style.display = hide ? "none" : "block";
+    });
+  });
+}
+
 // MARK: Mutation Observer
 
 function markAndFilter(
