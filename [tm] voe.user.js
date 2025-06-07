@@ -3,6 +3,12 @@
 
   disableConsoleClear();
 
+  //* ads
+  const iframeEls = document.querySelectorAll("iframe");
+  iframeEls.forEach((iframeEl) => {
+    iframeEl.remove();
+  });
+
   //* body overflow
   document.body.querySelector("style").remove();
   document.body.style.overflow = "scroll !important";
