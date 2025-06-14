@@ -850,15 +850,30 @@ function markAndFilterCOM(
   };
 }
 
-function makeMarkable(
+// convert this function so it accepts an object with options
+function makeMarkable({
   mainSelector,
   uidElSelector = "a",
+  hrefElSelector = "a",
+  parentSelector = null,
   uidAttr = "href",
-  callBack = null
-) {
-  waitForEach(mainSelector, (element) => {
-    const markBtnEl = generateElements(`<button>Mark</button>`, element);
-    style(element, `position: relative`);
+  filter = null,
+  filterParent = null,
+}) {
+  waitForEach(mainSelector, (mainElement) => {
+    // check if the element's uid is already in storage
+    const uidEl = mainElement.querySelector(uidElSelector);
+    const uniqueId = uidEl ? uidEl.getAttribute(uidAttr) : null;
+    const parentEl = mainElement.closest(parentSelector);
+
+    if (uniqueId && GM_getValue(`marked-${uniqueId}`)) {
+      if (filter) filter(mainElement);
+      else {
+        replaceMarkedElement(mainElement);
+      }
+    }
+    const markBtnEl = generateElements(`<button>Mark</button>`, mainElement);
+    style(mainElement, `position: relative`);
     style(
       markBtnEl,
       `
@@ -874,16 +889,47 @@ function makeMarkable(
     `
     );
     markBtnEl.addEventListener("click", () => {
-      const uidEl = element.querySelector(uidElSelector);
+      const uidEl = mainElement.querySelector(uidElSelector);
       const uniqueId = uidEl ? uidEl.getAttribute(uidAttr) : null;
       if (!uniqueId) {
         console.log("No unique ID found for marking");
         return;
       }
       GM_setValue(`marked-${uniqueId}`, true);
-      element.style.display = hide ? "none" : "block";
+      if (filter) filter(mainElement);
+      else {
+        replaceMarkedElement(mainElement);
+      }
     });
+
+    if (parentSelector) {
+      const mainEls = parentEl.querySelectorAll(mainSelector);
+      const remainingMainEls = mainEls.length;
+      if (remainingMainEls === 0) {
+        parentEl.style.display = "none";
+      } else {
+        parentEl.style.display = "block";
+      }
+    }
   });
+
+  function replaceMarkedElement(element) {
+    const href =
+      element.querySelector(hrefElSelector)?.getAttribute("href") || "#";
+    const newEl = generateElements(
+      `<a href="${href}">${element.textContent}</a>`
+    );
+    style(
+      newEl,
+      `
+      margin: 5px;
+      padding: 5px;
+      border: 1px solid yellow;
+      `
+    );
+    element.replaceWith(newEl);
+    return newEl;
+  }
 }
 
 // MARK: Mutation Observer
@@ -2677,15 +2723,33 @@ function getDoodHostsQuery() {
     "ds2play",
     "d000d",
     "d000d",
+    "doply",
+    "vide0",
+    "dooodster",
   ];
   const doodHostsQuery = doodHosts.map((host) => `[href*="${host}"]`).join(",");
   return doodHostsQuery;
 }
 
-async function getDoodStoryboardSrc(url) {
+async function getDoodStoryboardSrc(url, linkEl = null) {
+  const outdatedHostNames = ["ds2play.com"];
+
+  const urlObj = new URL(url);
+  if (outdatedHostNames.includes(urlObj.hostname)) {
+    // If the URL is from an outdated host, we need to update it to the new doodcdn.io format
+    url = url.replace("ds2play.com", "vide0.net");
+    if (linkEl) {
+      linkEl.href = url; // Update the link element's href if provided
+    }
+  }
+
   const doodDoc = await fetchDoc(url);
   const metaEl = doodDoc.querySelector('meta[name="og:image"]');
-  const imgId = metaEl.content.match(/snaps\/(.+?)\./)[1];
+  const matches = metaEl.content.match(/snaps\/(.+?)\./);
+  if (!matches || matches.length < 2) {
+    throw new Error("Could not find storyboard image ID in meta content");
+  }
+  const imgId = matches[1];
   const storyboardUrl = `https://img.doodcdn.io/slides/${imgId}.jpg`;
   return storyboardUrl;
 }
