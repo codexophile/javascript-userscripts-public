@@ -1,5 +1,5 @@
 (function () {
-  "use strict";
+  ("use strict");
   if (window.top != window.self) return; //don't run on frames or iframes
 
   const queryForProductItems = '[data-tracking="product-card"]';
@@ -51,5 +51,33 @@
       margin: 10px;
       background-color: #fff;`
     );
+
+    //* tippy.js configurations
+
+    // 1. Add Tippy.js default styles
+    GM_addStyle(`
+    .tippy-box[data-theme~='light-border'] {
+        border: 1px solid #dadada;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+`);
+
+    // 2. Find the trigger and its content element
+    const triggerElement = productItemEl;
+    const contentElement = imageContEl;
+
+    if (triggerElement && contentElement) {
+      // 3. Initialize Tippy
+      tippy(triggerElement, {
+        content: contentElement, // Pass the DOM element directly
+        allowHTML: true, // Necessary to render the HTML
+        interactive: true, // Allows you to hover over the tippy itself
+        placement: "bottom-start", // Preferred placement, will adjust automatically
+        theme: "light-border", // Use a pre-defined or custom theme
+        animation: "fade", // A little flair
+        trigger: "mouseenter", // Show on hover
+        // hideOnClick: false,  // Keep it open even if you click inside
+      });
+    }
   }, ...productItemEls);
 })();
