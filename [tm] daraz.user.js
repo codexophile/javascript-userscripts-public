@@ -3,7 +3,6 @@
   if (window.top != window.self) return; //don't run on frames or iframes
 
   const queryForProductItems = '[data-tracking="product-card"]';
-
   const productItemEls = document.querySelectorAll(queryForProductItems);
 
   // 1. Add Tippy.js default styles
