@@ -11,6 +11,7 @@
     .tippy-box[data-theme~='light-border'] {
         border: 1px solid #dadada;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        max-width: unset !important;
     }
   `);
 
@@ -46,7 +47,7 @@
       `
       display: flex;
       flex-wrap: wrap;
-      max-width: 1000px;`
+      width: 500px;`
     );
 
     imgContainerEl.querySelectorAll("img").forEach((imgEl) => {
@@ -65,8 +66,6 @@
       `
       border: 1px solid #ccc;
       border-radius: 8px;
-      padding: 10px;
-      margin: 10px;
       background-color: #fff;`
     );
 
@@ -123,47 +122,37 @@
   }
 
   //*
-  return;
   const cleanUrl = cleanTemuUrl(location.href);
   if (cleanUrl !== location.href) {
     window.history.pushState(null, "", cleanUrl);
   }
 
   function cleanTemuUrl(urlStr) {
-    try {
-      const url = new URL(urlStr);
-      const origin = url.origin;
-      const pathname = url.pathname;
+    const url = new URL(urlStr);
+    const origin = url.origin;
+    const pathname = url.pathname;
 
-      const goodsIdParam = url.searchParams.get("goods_id");
-
-      if (goodsIdParam) {
-        const cleanUrl = `${origin}${pathname}?goods_id=${goodsIdParam}`;
-        return cleanUrl;
-      }
-
-      const pathMatch = pathname.match(/-g-(\d+)\.html$/);
-
-      if (pathMatch && pathMatch[1]) {
-        const idFromPath = pathMatch[1];
-        const cleanUrl = `https://www.temu.com/goods.html?goods_id=${idFromPath}`;
-        return cleanUrl;
-      }
-
-      const parentOrderSN = url.searchParams.get("parent_order_sn");
-      if (parentOrderSN) {
-        const cleanUrl = `${origin}${pathname}?parent_order_sn=${parentOrderSN}`;
-        return cleanUrl;
-      }
-
-      console.warn(
-        "Warning: Could not extract a known Temu product ID pattern from:",
-        urlStr
-      );
-      return `${origin}${pathname}`;
-    } catch (error) {
-      console.error("Invalid URL provided:", urlStr, error);
-      return urlStr;
+    const goodsId = getGoodsId(urlStr);
+    if (goodsId) {
+      //https://www.temu.com/goods.html?goods_id=601100973787393
+      const cleanUrl = `https://www.temu.com/goods.html?goods_id=${goodsId}`;
+      return cleanUrl;
     }
+
+    return null;
+  }
+
+  function getGoodsId(urlStr) {
+    const url = new URL(urlStr);
+    const goodsIdFromSearchparams = url.searchParams.get("goods_id");
+    if (goodsIdFromSearchparams) {
+      return goodsIdFromSearchparams;
+    }
+    const matches = url.pathname.match(/-g-(\d+)\.html$/);
+    if (matches && matches[1]) {
+      const goodsIdFromPathname = matches[1];
+      return goodsIdFromPathname;
+    }
+    return null;
   }
 })();
