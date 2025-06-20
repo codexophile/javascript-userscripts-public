@@ -121,6 +121,12 @@
     addElement(totalPriceEl);
   }
 
+  //* clean goods links
+  waitForEach(`[href*="-g-"]`, (goodsLinkEl) => {
+    const cleanUrl = cleanTemuUrl(goodsLinkEl.href);
+    goodsLinkEl.href = cleanUrl;
+  });
+
   //*
   const cleanUrl = cleanTemuUrl(location.href);
   if (cleanUrl !== location.href) {
