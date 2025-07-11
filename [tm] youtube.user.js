@@ -54,7 +54,8 @@
     "use strict";
 
     const checkboxEl = generateElements(`<input type=checkbox></input>`);
-    const { addElement } = Collapsible();
+    checkboxEl.id = "auto-pause-checkbox";
+    const { addElement } = await Collapsible();
     addElement(checkboxEl);
 
     // Helper function to check conditions

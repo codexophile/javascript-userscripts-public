@@ -2,6 +2,15 @@
   "use strict";
   if (window.top != window.self) return; //don't run on frames or iframes
 
+  //* focus search input
+  const searchInputEl = document.querySelector(`#searchInput`);
+  document.addEventListener("keyup", (event) => {
+    if (event.key === "/") {
+      window.scrollTo(0, 0);
+      searchInputEl.focus();
+    }
+  });
+
   //* product previews
   const queryForProductItems = "[data-tooltip*=goodContainer]";
   const productItemEls = document.querySelectorAll(queryForProductItems);
