@@ -1,404 +1,620 @@
 (function () {
   'use strict';
 
-  const IMAGES_PER_QUERY = 12;
-  const NTH_TO_LAST_IMAGE = 3;
-  const HEIGHT_PCT = 0.8;
-  const WIDTH_PCT = 0.49;
-  const VID_VOLUME = 0.02;
-  var MODE = 'profile';
-  const win = window;
-  var userId = win.userId;
-  var notLoaded = true;
-  const tempDiv = document.createElement('div');
+  // --- CONFIGURATION ---
+  const config = {
+    // Number of items to fetch in each API request.
+    MEDIA_PER_QUERY: 12,
+    // Load the next page when the Nth-to-last item is visible.
+    INFINITE_SCROLL_TRIGGER_OFFSET: 3,
+    // Media display dimensions as a percentage of viewport size.
+    VIEWPORT_HEIGHT_PERCENTAGE: 0.8,
+    VIEWPORT_WIDTH_PERCENTAGE: 0.49,
+    // Default volume for videos (0.0 to 1.0).
+    VIDEO_VOLUME: 0.02,
+  };
 
-  if (win.trustedTypes && win.trustedTypes.createPolicy) {
-    win.trustedTypes.createPolicy('default', {
-      createHTML: str => str,
-    });
+  // --- STATE ---
+  let state = {
+    // The current page type ('profile', 'home', 'tagged', etc.).
+    pageMode: 'profile',
+    // The Instagram user ID for profile/tagged pages.
+    targetUserId: null,
+    // Tracks if the media wall has been activated.
+    isWallActive: false,
+    // Prevents multiple concurrent fetches for infinite scroll.
+    isLoadingNextPage: false,
+    // Stores the pagination cursor for the next API call.
+    nextPageCursor: null,
+    // A reference to the main container for the media wall.
+    mediaWallContainer: null,
+  };
+
+  // --- UTILS ---
+
+  /**
+   * A temporary element used for parsing HTML strings into DOM nodes.
+   */
+  const domParserContainer = document.createElement('div');
+
+  /**
+   * Injects a Trusted Types policy to allow innerHTML usage safely.
+   * This is necessary for some modern browser security features.
+   */
+  function setupTrustedTypes() {
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+      window.trustedTypes.createPolicy('default', {
+        createHTML: str => str,
+      });
+    }
   }
 
+  /**
+   * Retrieves the CSRF token required for API requests.
+   * The most reliable source is the 'csrftoken' cookie.
+   * @returns {string|null} The CSRF token or null if not found.
+   */
   function getCsrfToken() {
-    // The most reliable way to get the CSRF token is from the cookies
     const cookieMatch = document.cookie.match(/csrftoken=([^;]+)/);
     if (cookieMatch && cookieMatch[1]) {
       return cookieMatch[1];
     }
-    // Fallback to the old method just in case
-    return win._sharedData?.config?.csrf_token;
+    // Fallback for older Instagram versions, less reliable.
+    return window._sharedData?.config?.csrf_token || null;
   }
 
-  function pickMode() {
-    console.log('picking mode');
-    if (
-      document.location.href.match(/https:\/\/(www\.)?instagram.com\/?(\?|$|#)/)
-    ) {
-      MODE = 'home';
-      getQueryHash();
-    } else if (document.location.href.match(/\/tagged\//)) {
-      MODE = 'tagged';
-      getUserId();
-    } else if (document.location.href.match(/\/explore\//)) {
-      MODE = 'explore';
-      console.log('"Explore" loading not implemented yet!');
-    } else if (
-      document.location.href.match(/https:\/\/(www\.)?instagram.com\/p\//)
-    ) {
-      MODE = 'post';
-    } else {
-      MODE = 'profile';
-      getUserId();
-    }
-    console.log('MODE', MODE);
-  }
+  // --- API & DATA FETCHING ---
 
-  function getUserId() {
-    userId = userId || document.body.innerHTML.match(/profilePage_(\d+)/)?.[1];
-    userId =
-      userId ||
-      document.body.innerHTML.match(/<a author_id="(\d+)" class="heKAw"/)?.[1];
+  /**
+   * Asynchronously finds the target user's ID using various methods.
+   * It checks in order: page HTML, IndexedDB, and finally a direct API call.
+   * @returns {Promise<string|null>} A promise that resolves with the user ID or null.
+   */
+  async function findTargetUserId() {
+    // 1. Try to find it directly in the page's HTML source.
+    let userId = document.body.innerHTML.match(/profilePage_(\d+)/)?.[1];
     if (userId) {
-      console.log('userId', userId);
-      getQueryHash();
-    } else {
-      let req = indexedDB.open('redux');
-      req.onsuccess = function (evt) {
-        console.log('req evt', evt);
-        let db = req.result;
-        let req2 = db
-          .transaction('paths')
-          ?.objectStore('paths')
-          ?.get('users.usernameToId');
-        req2.onsuccess = function (evt) {
-          console.log('db evt', evt);
-          let result = req2?.result;
-          let userName = document.location.href.match(
-            /https:\/\/(?:www\.)?instagram.com\/([^\/]{3,})/
-          )?.[1];
-          console.log('userName', userName);
-          userId = result?.[userName];
-          if (userId) {
-            getQueryHash();
-          } else {
-            requestUserId();
-            console.log("Couldn't find user ID from DB, requesting it.");
-          }
-        };
-        req.onerror = requestUserId; // Fallback if indexedDB fails
-      };
-      req.onerror = requestUserId; // Fallback if indexedDB fails
+      console.log('Found User ID in page HTML:', userId);
+      return userId;
     }
+
+    // 2. Try to get it from the browser's IndexedDB (fast and reliable if present).
+    try {
+      const db = await new Promise((resolve, reject) => {
+        const request = indexedDB.open('redux');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      const store = db.transaction('paths').objectStore('paths');
+      const result = await new Promise((resolve, reject) => {
+        const request = store.get('users.usernameToId');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      const username = window.location.pathname.split('/')[1];
+      userId = result?.[username];
+      if (userId) {
+        console.log('Found User ID in IndexedDB:', userId);
+        return userId;
+      }
+    } catch (error) {
+      console.warn('Could not retrieve User ID from IndexedDB.', error);
+    }
+
+    // 3. As a last resort, fetch it using the ?__a=1 endpoint.
+    try {
+      const response = await fetch(
+        `${window.location.href.replace(/\/$/, '')}?__a=1`
+      );
+      const data = await response.json();
+      userId = data?.graphql?.user?.id;
+      if (userId) {
+        console.log('Found User ID via API request:', userId);
+        return userId;
+      }
+    } catch (error) {
+      console.error('Failed to fetch User ID from API.', error);
+    }
+
+    console.error('All methods to find User ID failed.');
+    return null;
   }
 
-  function requestUserId() {
-    let loc = document.location.href;
-    if (loc.match(/https:\/\/(?:www\.)?instagram.com\/([^\/]{3,})\/?$/)) {
-      loc += '?__a=1';
-      fetch(loc)
-        .then(resp => resp.json())
-        .then(json => {
-          console.log('userId json', json);
-          userId = json?.graphql?.user?.id;
-          if (userId) {
-            getQueryHash();
-          } else {
-            console.log("Couldn't find user ID!");
-          }
-        });
-    } else {
-      console.log("URL doesn't match a profile page");
-    }
-  }
-
-  function getQueryHash() {
-    console.log('getQueryHash');
-    // This function is complex and tries multiple ways to get API parameters.
-    // We will simplify the final call to loadImages.
-    if (notLoaded) {
-      loadImages(); // We don't need to find query_id for the V1 API
-    }
-  }
-
-  function loadImages(
-    query_id = 0,
-    query_hash = 0,
-    doc_id = 0,
-    app_id = 936619743392459,
-    asbd_id = 129477,
-    after = null
-  ) {
-    notLoaded = false;
-    console.log('MODE', MODE);
-    app_id = app_id || 936619743392459;
-    asbd_id = asbd_id || 129477;
+  /**
+   * Constructs the appropriate API URL and fetch options based on the page mode.
+   * @returns {{url: string, options: object}|null} The request details or null for unsupported modes.
+   */
+  function buildApiRequest() {
     const csrfToken = getCsrfToken();
     if (!csrfToken) {
-      console.error('Could not find CSRF token. Aborting.');
+      console.error('Could not find CSRF token. Aborting API request.');
+      return null;
+    }
+
+    const app_id = '936619743392459'; // Standard web app ID
+    const asbd_id = '129477'; // Standard ASBD ID
+
+    let url;
+    const options = {
+      credentials: 'include',
+      referrerPolicy: 'no-referrer',
+      headers: {
+        'X-IG-App-ID': app_id,
+        'X-ASBD-ID': asbd_id,
+        'X-CSRFToken': csrfToken,
+      },
+    };
+
+    switch (state.pageMode) {
+      case 'profile':
+        url = `https://i.instagram.com/api/v1/feed/user/${state.targetUserId}/?count=${config.MEDIA_PER_QUERY}`;
+        if (state.nextPageCursor) url += `&max_id=${state.nextPageCursor}`;
+        break;
+
+      case 'tagged':
+        url = `https://i.instagram.com/api/v1/usertags/${state.targetUserId}/feed/?count=${config.MEDIA_PER_QUERY}`;
+        if (state.nextPageCursor) url += `&max_id=${state.nextPageCursor}`;
+        break;
+
+      case 'home':
+        url = 'https://i.instagram.com/api/v1/feed/timeline/';
+        const formData = new URLSearchParams();
+        // These parameters seem to be required for the timeline endpoint.
+        formData.set('is_async_ads_rti', '0');
+        formData.set('is_async_ads_double_request', '0');
+        formData.set('rti_delivery_backend', '0');
+        formData.set('is_async_ads_in_headload_enabled', '0');
+        formData.set('device_id', window._sharedData?.device_id);
+        if (state.nextPageCursor) formData.set('max_id', state.nextPageCursor);
+        options.method = 'POST';
+        options.body = formData;
+        break;
+
+      default:
+        console.warn(
+          `Page mode "${state.pageMode}" is not supported for media loading.`
+        );
+        return null;
+    }
+
+    return { url, options };
+  }
+
+  /**
+   * Fetches a page of media from the Instagram API.
+   */
+  async function fetchMedia() {
+    if (state.isLoadingNextPage) return;
+    state.isLoadingNextPage = true;
+
+    const request = buildApiRequest();
+    if (!request) {
+      state.isLoadingNextPage = false;
       return;
     }
 
-    let imageListQueryUrl;
-    let init = {
-      responseType: 'json',
-      credentials: 'include',
-      referrerPolicy: 'no-referrer',
+    console.log(
+      `Fetching media for mode: ${state.pageMode}, cursor: ${
+        state.nextPageCursor || 'initial'
+      }`
+    );
+
+    try {
+      const response = await fetch(request.url, request.options);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `Request failed with status ${response.status}`
+        );
+      }
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      // Extract the media list and the next page cursor from the response.
+      const mediaList =
+        data.items ||
+        data.feed_items?.map(item => item.media_or_ad).filter(Boolean);
+      state.nextPageCursor = data.next_max_id;
+
+      if (!mediaList || mediaList.length === 0) {
+        console.log('No more media found or empty response.');
+        state.nextPageCursor = null; // Stop further requests.
+        return;
+      }
+
+      renderMediaItems(mediaList);
+      setupInfiniteScroll();
+    } catch (error) {
+      console.error('Instagram full-size media script error:', error);
+      alert('Failed to load Instagram media. Check the console for details.');
+    } finally {
+      state.isLoadingNextPage = false;
+    }
+  }
+
+  // --- DOM & RENDERING ---
+
+  /**
+   * Creates the main media wall container and injects it into the page.
+   * This is only called once when the wall is first activated.
+   */
+  function createMediaWallDom() {
+    // Hide the original page content and prevent it from scrolling.
+    document.body.style.overflow = 'hidden';
+
+    domParserContainer.innerHTML = `
+      <div id="media-wall-overlay">
+        <div id="media-wall-content"></div>
+      </div>`;
+    state.mediaWallContainer = domParserContainer.firstElementChild;
+    const contentContainer = state.mediaWallContainer.querySelector(
+      '#media-wall-content'
+    );
+
+    // Add a close button
+    const closeButton = document.createElement('button');
+    closeButton.id = 'media-wall-close-button';
+    closeButton.textContent = '×';
+    closeButton.title = 'Close Media Wall (or press Esc)';
+    closeButton.onclick = () => {
+      state.mediaWallContainer.remove();
+      document.body.style.overflow = 'auto';
+      state.isWallActive = false;
     };
+    state.mediaWallContainer.appendChild(closeButton);
 
-    if (MODE == 'profile') {
-      if (!userId) {
-        console.log("Couldn't find user ID!", userId);
-        return;
+    document.body.appendChild(state.mediaWallContainer);
+
+    // Allow closing with the Escape key
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && state.isWallActive) {
+        closeButton.click();
       }
-      imageListQueryUrl = `https://i.instagram.com/api/v1/feed/user/${userId}/?count=12`;
-      if (after) {
-        imageListQueryUrl += `&max_id=${after}`;
+    });
+
+    return contentContainer;
+  }
+
+  /**
+   * Injects all necessary CSS for the media wall and trigger buttons.
+   */
+  function injectGlobalStyles() {
+    const vh = config.VIEWPORT_HEIGHT_PERCENTAGE * 100;
+    const vw = config.VIEWPORT_WIDTH_PERCENTAGE * 100;
+
+    const styles = `
+      /* --- Trigger Button Styles --- */
+      #media-wall-trigger-button-profile {
+        cursor: pointer;
       }
-      init.headers = {
-        'X-IG-App-ID': app_id,
-        'X-ASBD-ID': asbd_id,
-        'X-CSRFToken': csrfToken,
-      };
-    } else if (MODE == 'tagged') {
-      if (!userId) {
-        console.log("Couldn't find user ID!", userId);
-        return;
+      #media-wall-trigger-button-home {
+        cursor: pointer;
+        border-bottom: 1px solid #363636;
+        padding-bottom: 10px;
       }
-      imageListQueryUrl = `https://i.instagram.com/api/v1/usertags/${userId}/feed/?count=${IMAGES_PER_QUERY}`;
-      if (after) {
-        imageListQueryUrl += `&max_id=${after}`;
+      #media-wall-trigger-button-home > div {
+        text-align: center;
+        padding: 20px;
+        font-size: 16px;
+        font-weight: bold;
+        color: #ccc;
       }
-      init.headers = {
-        'X-IG-App-ID': app_id,
-        'X-ASBD-ID': asbd_id,
-        'X-CSRFToken': csrfToken,
-      };
-    } else if (MODE == 'home') {
-      imageListQueryUrl = 'https://i.instagram.com/api/v1/feed/timeline/';
-      let fd = new URLSearchParams();
-      fd.set('is_async_ads_rti', 0);
-      fd.set('is_async_ads_double_request', 0);
-      fd.set('rti_delivery_backend', 0);
-      fd.set('is_async_ads_in_headload_enabled', 0);
-      fd.set('device_id', win._sharedData?.device_id);
-      if (after) {
-        fd.set('max_id', after);
+
+      /* --- Media Wall Overlay --- */
+      #media-wall-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(10, 10, 15, 0.98);
+        z-index: 9999;
+        overflow-y: scroll;
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
       }
-      init.body = fd;
-      init.method = 'POST';
-      init.headers = {
-        'X-IG-App-ID': app_id,
-        'X-ASBD-ID': asbd_id,
-        'X-CSRFToken': csrfToken,
-      };
+      #media-wall-content {
+        display: block;
+        text-align: center;
+        padding-top: 50px; /* Space for close button */
+      }
+      #media-wall-close-button {
+        position: fixed;
+        top: 10px;
+        right: 15px;
+        z-index: 10000;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        font-size: 24px;
+        line-height: 28px;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      #media-wall-close-button:hover {
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      /* --- Media Item Styles --- */
+      #media-wall-content img,
+      #media-wall-content video {
+        max-height: ${vh}vh;
+        max-width: ${vw}vw;
+        margin: 8px;
+        border-radius: 4px;
+        background-color: #111;
+        object-fit: contain;
+      }
+      #media-wall-content video {
+        border: 2px solid #008000;
+      }
+      #media-wall-content .media-container {
+        display: inline-block;
+        vertical-align: top;
+        margin: 5px;
+        text-align: left;
+      }
+      #media-wall-content .media-link {
+        display: block;
+        text-decoration: none;
+        margin-top: -5px;
+        padding: 2px 8px;
+        color: #ccc;
+        font-size: 12px;
+        font-family: sans-serif;
+      }
+      #media-wall-content .media-link:hover {
+        text-decoration: underline;
+      }
+    `;
+    const styleSheet = document.createElement('style');
+    styleSheet.type = 'text/css';
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
+  }
+
+  /**
+   * Finds the highest resolution image from a list of candidates.
+   * @param {object} media - The media item containing image versions.
+   * @returns {string} The URL of the best quality image.
+   */
+  function getBestImageUrl(media) {
+    const candidates = media?.image_versions2?.candidates;
+    if (!candidates || candidates.length === 0) return '';
+
+    return candidates.reduce((best, current) => {
+      return current.width * current.height > best.width * best.height
+        ? current
+        : best;
+    }).url;
+  }
+
+  /**
+   * Finds the highest resolution video from a list of versions.
+   * @param {object} media - The media item containing video versions.
+   * @returns {string} The URL of the best quality video.
+   */
+  function getBestVideoUrl(media) {
+    const versions = media?.video_versions;
+    if (!versions || versions.length === 0) return '';
+    return versions.reduce((best, current) => {
+      return current.width * current.height > best.width * best.height
+        ? current
+        : best;
+    }).url;
+  }
+
+  /**
+   * Processes a list of media items and appends them to the DOM.
+   * @param {Array<object>} mediaList - An array of media items from the API.
+   */
+  function renderMediaItems(mediaList) {
+    let contentContainer = document.getElementById('media-wall-content');
+    if (!contentContainer) {
+      contentContainer = createMediaWallDom();
+    }
+
+    for (const item of mediaList) {
+      if (!item?.code || item?.ad_id || item?.label === 'Sponsored') {
+        console.log('Skipping ad or non-media item:', item);
+        continue;
+      }
+
+      // A single post can contain a carousel of multiple images/videos.
+      const carouselItems = item.carousel_media || [item];
+
+      for (const [index, media] of carouselItems.entries()) {
+        const link = document.createElement('a');
+        link.href = `https://www.instagram.com/p/${item.code}/`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.title = `${item.user?.full_name || ''} (@${
+          item.user?.username
+        })\n${item.caption?.text || ''}`;
+        if (carouselItems.length > 1) {
+          link.title += ` [${index + 1}/${carouselItems.length}]`;
+        }
+
+        // Handle videos
+        if (media.video_versions) {
+          const container = document.createElement('div');
+          container.className = 'media-container';
+
+          const video = document.createElement('video');
+          video.src = getBestVideoUrl(media);
+          video.controls = true;
+          video.loop = true;
+          video.volume = config.VIDEO_VOLUME;
+          video.preload = 'metadata';
+
+          link.className = 'media-link';
+          link.textContent = `Post by @${item.user.username}`;
+
+          container.appendChild(video);
+          container.appendChild(link);
+          contentContainer.appendChild(container);
+        }
+        // Handle images
+        else if (media.image_versions2) {
+          const image = document.createElement('img');
+          image.src = getBestImageUrl(media);
+          link.appendChild(image);
+          contentContainer.appendChild(link);
+        }
+      }
+    }
+  }
+
+  // --- LOGIC & INITIALIZATION ---
+
+  /**
+   * Sets up an on-scroll listener to load the next page of media
+   * when the user scrolls near the bottom of the wall.
+   */
+  function setupInfiniteScroll() {
+    if (!state.nextPageCursor) {
+      console.log('End of feed. Disabling infinite scroll.');
+      state.mediaWallContainer.onscroll = null;
+      return;
+    }
+
+    const triggerElement =
+      document.querySelector(
+        `#media-wall-content > *:nth-last-of-type(${config.INFINITE_SCROLL_TRIGGER_OFFSET})`
+      ) || document.querySelector('#media-wall-content > *:last-of-type');
+
+    if (!triggerElement) return;
+
+    state.mediaWallContainer.onscroll = () => {
+      // Check if the trigger element is within the viewport
+      const rect = triggerElement.getBoundingClientRect();
+      if (rect.top < window.innerHeight + 200) {
+        // +200px buffer
+        state.mediaWallContainer.onscroll = null; // Prevent multiple triggers
+        fetchMedia();
+      }
+    };
+  }
+
+  /**
+   * The main function to activate the media wall.
+   * It determines the page type, finds the user ID if needed, and fetches the first batch of media.
+   */
+  async function initializeMediaWall() {
+    // Determine page type (mode)
+    const href = window.location.href;
+    if (href.match(/https:\/\/(www\.)?instagram\.com\/?(\?|$|#)/)) {
+      state.pageMode = 'home';
+    } else if (href.match(/\/tagged\//)) {
+      state.pageMode = 'tagged';
+    } else if (href.match(/\/explore\//)) {
+      state.pageMode = 'explore';
+    } else if (href.match(/https:\/\/(www\.)?instagram\.com\/p\//)) {
+      state.pageMode = 'post';
     } else {
-      return; // Don't run for unsupported modes
+      state.pageMode = 'profile';
     }
 
-    fetch(imageListQueryUrl, init)
-      .then(resp => {
-        console.log('json resp', resp);
-        if (!resp.ok) {
-          return resp.json().then(err => {
-            throw new Error(err.message || 'Request failed');
-          });
-        }
-        return resp.json();
-      })
-      .then(json => {
-        console.log('json', json);
+    console.log(`Detected page mode: ${state.pageMode}`);
 
-        let end_cursor, mediaList;
-        end_cursor = json.next_max_id;
-        mediaList =
-          json.items || json.feed_items?.map(n => n.media_or_ad).filter(n => n);
-
-        if (!mediaList) {
-          console.error('Could not find media list in API response.', json);
-          return;
-        }
-
-        console.log('end_cursor', end_cursor, 'media list', mediaList);
-
-        let bigContainer = document.querySelector('#igBigContainer');
-        if (!bigContainer) {
-          tempDiv.innerHTML = `<div id="igBigContainer" style="background-color: #112;width: 100%;height: 100%;z-index: 999;position: fixed;top: 0;left: 0;overflow: scroll;">
-                    <div id="igAllImages" style="display:block; text-align:center;"></div></div>`;
-          bigContainer = tempDiv.firstElementChild;
-          let newBody = document.createElement('body');
-          document.body = newBody;
-          document.body.appendChild(bigContainer);
-          XMLHttpRequest.prototype.send = evt => {}; // Stop further page loads
-
-          let imgStyle = document.createElement('style');
-          imgStyle.type = 'text/css';
-          setMaxSize(imgStyle);
-          document.body.appendChild(imgStyle);
-          window.addEventListener('resize', evt => setMaxSize(imgStyle));
-          styleIt();
-        }
-        let innerContainer = bigContainer.firstElementChild;
-
-        for (let media of mediaList) {
-          addMedia(media, innerContainer);
-        }
-
-        if (end_cursor) {
-          let triggerImage =
-            document.querySelector('#igAllImages > *:nth-last-of-type(3)') ||
-            document.querySelector('#igAllImages > *:last-of-type');
-          bigContainer.onscroll = evt => {
-            if (!triggerImage) return;
-            let vh =
-              document.documentElement.clientHeight || window.innerHeight || 0;
-            if (triggerImage.getBoundingClientRect().top - 800 < vh) {
-              bigContainer.onscroll = null;
-              console.log('loading next set of images');
-              loadImages(
-                query_id,
-                query_hash,
-                doc_id,
-                app_id,
-                asbd_id,
-                end_cursor
-              );
-            }
-          };
-        }
-      })
-      .catch(error => {
-        console.error('Instagram full-size media script error:', error);
-      });
-  }
-
-  function getBestImage(media) {
-    if (!media || !media.image_versions2 || !media.image_versions2.candidates)
-      return '';
-    let bestUrl = '';
-    let bestSize = 0;
-    let list = media.image_versions2.candidates;
-    for (let m of list) {
-      let size = Math.max(m.width, m.height);
-      if (size > bestSize) {
-        bestSize = size;
-        bestUrl = m.url;
-      }
+    if (['explore', 'post'].includes(state.pageMode)) {
+      alert(
+        `The media wall script does not support "${state.pageMode}" pages yet.`
+      );
+      return;
     }
-    return bestUrl;
-  }
 
-  function addMedia(media, container) {
-    let shortcode = media?.code;
-    if (!shortcode) return; // Skip items without a code (e.g., suggested users)
-
-    let medias = media.carousel_media || [media];
-
-    for (let i = 0; i < medias.length; i++) {
-      let m = medias[i];
-      let a = document.createElement('a');
-      a.href = `https://www.instagram.com/p/${shortcode}/`;
-      a.target = '_blank'; // Open in new tab
-      let un = media.user?.username;
-      let caption = media.caption?.text;
-      a.title = `${media.user?.full_name || ''} (${un}) ${caption} [${i + 1}]`;
-
-      if (m.video_versions) {
-        tempDiv.innerHTML = `<div class="vidDiv"></div>`;
-        let vidDiv = tempDiv.firstElementChild;
-        let vid = document.createElement('video');
-        vid.src = m.video_versions.reduce((a, b) =>
-          a.width * a.height > b.width * b.height ? a : b
-        )?.url;
-        vid.controls = true;
-        vid.volume = VID_VOLUME;
-        vid.loop = true;
-        vid.preload = 'metadata';
-        a.textContent = 'Link';
-        vidDiv.appendChild(vid);
-        vidDiv.appendChild(a);
-        container.appendChild(vidDiv);
-      } else if (m.ad_id || media.label === 'Sponsored') {
-        console.log('Skipping ad', m);
+    // For profile or tagged pages, we need to find the user's ID first.
+    if (['profile', 'tagged'].includes(state.pageMode)) {
+      state.targetUserId = await findTargetUserId();
+      if (!state.targetUserId) {
+        alert(
+          'Could not determine the Instagram User ID for this page. The script cannot continue.'
+        );
         return;
-      } else if (m.image_versions2) {
-        a.innerHTML = `<img src="${getBestImage(m)}">`;
-        container.appendChild(a);
       }
+    }
+
+    // Mark the wall as active and fetch the first page.
+    if (!state.isWallActive) {
+      state.isWallActive = true;
+      state.nextPageCursor = null; // Reset cursor for a new wall
+      await fetchMedia();
     }
   }
 
-  function setMaxSize(userStyle) {
-    let vw = document.documentElement.clientWidth || window.innerWidth || 0;
-    let vh = document.documentElement.clientHeight || window.innerHeight || 0;
-    userStyle.innerHTML = `
-#igAllImages img, #igAllImages video {
-  max-height: ${vh * HEIGHT_PCT}px;
-  max-width: ${vw * WIDTH_PCT}px;
-  margin: 5px;
-}
-`;
-  }
+  /**
+   * Injects the trigger button(s) into the Instagram UI.
+   * It periodically checks for a suitable insertion point until one is found.
+   */
+  function insertTriggerButton() {
+    if (
+      document.getElementById('media-wall-trigger-button-profile') ||
+      document.getElementById('media-wall-trigger-button-home')
+    ) {
+      return; // Button already exists.
+    }
 
-  function styleIt() {
-    let userStyle = document.createElement('style');
-    userStyle.type = 'text/css';
-    userStyle.innerHTML = `
-#igAllImages video {
-  border: green solid 2px;
-}
-#igAllImages .vidDiv {
-  display: inline-block;
-  vertical-align: top;
-}
-#igAllImages .vidDiv a {
-  display: block;
-  text-decoration: none;
-  margin-top: -5px;
-  color: #ccc;
-}
-#loadallbutton {
-  cursor: pointer;
-}
-`;
-    document.body.appendChild(userStyle);
-    console.log('styled');
-  }
+    let insertionPoint = null;
+    let buttonHtml = '';
 
-  function startUp() {
-    (function insertButton() {
-      let loadButton = document.querySelector('#loadallbutton');
-      let insAt = null;
-      if (!loadButton && !document.location.href.includes('instagram.com/p/')) {
-        insAt = document.querySelector('div[role=tablist]');
-        if (insAt) {
-          tempDiv.innerHTML = profileButton;
-          loadButton = tempDiv.firstElementChild;
-          loadButton.onclick = pickMode;
-          insAt.appendChild(loadButton);
-        } else {
-          insAt =
-            document.querySelector('._aam1._aam2._aam5') ||
-            document.querySelector('._ab6o._ab6q') ||
-            document.querySelector('._aak6') ||
-            document.querySelector('.collapsible-content');
-          if (insAt) {
-            tempDiv.innerHTML = homeButton;
-            loadButton = tempDiv.firstElementChild;
-            loadButton.onclick = pickMode;
-            insAt.prepend(loadButton);
-          }
-        }
-      }
-      if (!insAt) {
-        window.setTimeout(insertButton, 100);
+    // --- Profile Page Button ---
+    // Targets the tab list for "Posts", "Reels", "Tagged".
+    const profileTabList = document.querySelector('div[role=tablist]');
+    if (profileTabList) {
+      insertionPoint = profileTabList;
+      buttonHtml = `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" id="media-wall-trigger-button-profile"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Media Wall</span></a>`;
+    }
+    // --- Home Feed Button ---
+    // Targets the container above the first post.
+    else {
+      insertionPoint = document.querySelector('.collapsible-content');
+      buttonHtml = `<article class="_ab6k _ab6l _ab6m" role="presentation" id="media-wall-trigger-button-home">
+                <div>Click to Load Full-Size Media Wall</div>
+            </article>`;
+    }
+
+    if (insertionPoint && buttonHtml) {
+      console.log('Injecting trigger button...');
+      domParserContainer.innerHTML = buttonHtml;
+      const triggerButton = domParserContainer.firstElementChild;
+      triggerButton.onclick = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        initializeMediaWall();
+      };
+
+      if (state.pageMode === 'home') {
+        insertionPoint.prepend(triggerButton);
       } else {
-        styleIt();
+        insertionPoint.appendChild(triggerButton);
       }
-    })();
+    } else {
+      // If no insertion point is found, try again shortly.
+      setTimeout(insertTriggerButton, 250);
+    }
   }
 
-  const profileButton = `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" id="loadallbutton"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Load Images</span></a>`;
-  const homeButton = `<article class="_ab6k _ab6l _ab6m" role="presentation" tabindex="-1" style="cursor: pointer; border-bottom: 1px solid #363636; padding-bottom: 10px;" id="loadallbutton">
-    <div style="text-align:center; padding: 20px; font-size: 16px; font-weight: bold; color: #fff;">Click to Load Full-Size Media Wall</div>
-</article>`;
-  startUp();
+  /**
+   * The main entry point for the script.
+   */
+  function initialize() {
+    console.log('Instagram Full-Size Media Scroll Wall script loaded.');
+    setupTrustedTypes();
+    injectGlobalStyles();
+    insertTriggerButton();
+  }
+
+  // Start the script once the page is sufficiently loaded.
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
 })();
