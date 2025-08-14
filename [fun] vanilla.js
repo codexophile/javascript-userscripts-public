@@ -1,8 +1,8 @@
 //  MARK: Advanced
 
 function reEnableConsole() {
-  const tempIframeEl = document.createElement("iframe");
-  tempIframeEl.style.display = "none";
+  const tempIframeEl = document.createElement('iframe');
+  tempIframeEl.style.display = 'none';
   document.body.appendChild(tempIframeEl);
   window.console = tempIframeEl.contentWindow.console;
   tempIframeEl.remove();
@@ -72,24 +72,24 @@ function pipeline(input, ...functions) {
 
 async function getTranslation(
   text,
-  outputLanguage = "en",
-  inputLanguage = "auto",
+  outputLanguage = 'en',
+  inputLanguage = 'auto',
   alts = 3
 ) {
   return new Promise((resolve, reject) => {
     GM.xmlHttpRequest({
-      method: "POST",
-      url: "http://127.0.0.1:5000/translate",
+      method: 'POST',
+      url: 'http://127.0.0.1:5000/translate',
       data: JSON.stringify({
         q: text,
         source: inputLanguage,
         target: outputLanguage,
-        format: "text",
+        format: 'text',
         alternatives: alts,
-        api_key: "",
+        api_key: '',
       }),
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       onload: function (response) {
         try {
@@ -107,9 +107,9 @@ async function getTranslation(
 }
 
 function generateUniqueString(length) {
-  let result = "";
+  let result = '';
   const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
   let counter = 0;
   while (counter < length) {
@@ -125,7 +125,7 @@ function downloadText(filename, text) {
     text
   )}`;
   dlLink.href = uriContent;
-  dlLink.setAttribute("download", filename);
+  dlLink.setAttribute('download', filename);
   dlLink.click();
   // dlLink.remove();
 }
@@ -139,15 +139,15 @@ function capitalizeFirstLetter(string) {
 function timeSince(date, shortForm = false) {
   // Handle null or undefined input
   if (!date) {
-    throw new Error("Date parameter is required");
+    throw new Error('Date parameter is required');
   }
 
   // Convert input to Date object if it's a string
-  const inputDate = typeof date === "string" ? new Date(date) : date;
+  const inputDate = typeof date === 'string' ? new Date(date) : date;
 
   // Check if the date is valid
   if (!(inputDate instanceof Date) || isNaN(inputDate.getTime())) {
-    throw new Error("Invalid date format");
+    throw new Error('Invalid date format');
   }
 
   // Get time difference in milliseconds
@@ -166,97 +166,97 @@ function timeSince(date, shortForm = false) {
 
   // Helper function to format parts
   const formatPart = (value, unit, shortUnit) => {
-    if (value === 0) return "";
+    if (value === 0) return '';
     if (shortForm) {
       return `${value}${shortUnit}`;
     }
-    return `${value} ${unit}${value !== 1 ? "s" : ""}`;
+    return `${value} ${unit}${value !== 1 ? 's' : ''}`;
   };
 
   // Handle "just now" / "right now" cases
   if (minutes === 0) {
-    return isPast ? "just now" : "right now";
+    return isPast ? 'just now' : 'right now';
   }
 
   // Build the time string
-  let result = "";
+  let result = '';
 
   if (days > 0) {
-    result += formatPart(days, "day", "d");
+    result += formatPart(days, 'day', 'd');
   }
 
   if (remainingHours > 0) {
-    result += result ? " " : "";
-    result += formatPart(remainingHours, "hour", "h");
+    result += result ? ' ' : '';
+    result += formatPart(remainingHours, 'hour', 'h');
   }
 
   if (remainingMinutes > 0 || (days === 0 && remainingHours === 0)) {
-    result += result ? " " : "";
-    result += formatPart(remainingMinutes, "minute", "m");
+    result += result ? ' ' : '';
+    result += formatPart(remainingMinutes, 'minute', 'm');
   }
 
-  return isPast ? result + " ago" : "in " + result;
+  return isPast ? result + ' ago' : 'in ' + result;
 }
 
 function convertTimeToTimezone(timeString, sourceTimezone, targetTimezone) {
   // Validate input
   if (!/^\d{2}:\d{2}$/.test(timeString)) {
-    throw new Error("Invalid time format. Use HH:mm (24-hour format)");
+    throw new Error('Invalid time format. Use HH:mm (24-hour format)');
   }
 
   // Parse the input time
-  const [hours, minutes] = timeString.split(":").map(Number);
+  const [hours, minutes] = timeString.split(':').map(Number);
 
   // Create a Date object in the source timezone
-  const sourceDate = new Date().toLocaleString("en-US", {
+  const sourceDate = new Date().toLocaleString('en-US', {
     timeZone: sourceTimezone,
   });
   const sourceDateObj = new Date(sourceDate);
   sourceDateObj.setHours(hours, minutes, 0, 0);
 
   // Convert to target timezone
-  const targetTime = sourceDateObj.toLocaleString("en-US", {
+  const targetTime = sourceDateObj.toLocaleString('en-US', {
     timeZone: targetTimezone,
-    hour: "2-digit",
-    minute: "2-digit",
+    hour: '2-digit',
+    minute: '2-digit',
     hour12: false,
   });
 
   // Extract and format time
-  const [targetTimeString] = targetTime.split(",").reverse();
+  const [targetTimeString] = targetTime.split(',').reverse();
   return targetTimeString.trim();
 }
 
 function getTimezoneDateTime(timeZone) {
   try {
     // Validate timezone input
-    if (!timeZone || typeof timeZone !== "string") {
-      throw new Error("Invalid timezone provided");
+    if (!timeZone || typeof timeZone !== 'string') {
+      throw new Error('Invalid timezone provided');
     }
 
     // Create a date object in the specified time zone
-    const fullDateTime = new Date().toLocaleString("en-US", {
+    const fullDateTime = new Date().toLocaleString('en-US', {
       timeZone: timeZone,
-      dateStyle: "full",
-      timeStyle: "long",
+      dateStyle: 'full',
+      timeStyle: 'long',
     });
 
     // Get the current time in the specified time zone
-    const time = new Date().toLocaleTimeString("en-US", {
+    const time = new Date().toLocaleTimeString('en-US', {
       timeZone: timeZone,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
       hour12: true,
     });
 
     // Get the current date in the specified time zone
-    const date = new Date().toLocaleDateString("en-US", {
+    const date = new Date().toLocaleDateString('en-US', {
       timeZone: timeZone,
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
 
     return {
@@ -273,7 +273,7 @@ function getTimezoneDateTime(timeZone) {
 }
 
 function toSeconds(timeString) {
-  const a = timeString.split(":").reverse();
+  const a = timeString.split(':').reverse();
   let seconds = 0;
 
   if (+a[2]) seconds += +a[2] * 60 * 60;
@@ -292,15 +292,15 @@ function toSecondsFromHMS(hours, minutes, seconds) {
 }
 
 function forHumans(seconds) {
-  if (seconds === 0) return "0s";
-  if (!Number.isInteger(seconds) || seconds < 0) return "Invalid input";
+  if (seconds === 0) return '0s';
+  if (!Number.isInteger(seconds) || seconds < 0) return 'Invalid input';
 
   const timeUnits = [
-    { value: 31536000, label: "year" },
-    { value: 86400, label: "day" },
-    { value: 3600, label: "h" },
-    { value: 60, label: "m" },
-    { value: 1, label: "s" },
+    { value: 31536000, label: 'year' },
+    { value: 86400, label: 'day' },
+    { value: 3600, label: 'h' },
+    { value: 60, label: 'm' },
+    { value: 1, label: 's' },
   ];
 
   let remainingSeconds = seconds;
@@ -312,18 +312,18 @@ function forHumans(seconds) {
       parts.push(
         `${count}${unit.label}${
           count > 1 &&
-          unit.label !== "h" &&
-          unit.label !== "m" &&
-          unit.label !== "s"
-            ? "s"
-            : ""
+          unit.label !== 'h' &&
+          unit.label !== 'm' &&
+          unit.label !== 's'
+            ? 's'
+            : ''
         }`
       );
       remainingSeconds %= unit.value;
     }
   }
 
-  return parts.join(" ");
+  return parts.join(' ');
 }
 
 // MARK: - Style related
@@ -342,31 +342,31 @@ function dimElement(element, options = {}) {
   // Default options
   const config = {
     opacity: options.opacity !== undefined ? options.opacity : 0.8,
-    color: options.color || "black",
+    color: options.color || 'black',
     animate: options.animate || false,
     duration: options.duration || 300,
   };
 
   // Store original position if not already positioned
   const originalPosition = window.getComputedStyle(element).position;
-  if (originalPosition === "static") {
-    element.style.position = "relative";
+  if (originalPosition === 'static') {
+    element.style.position = 'relative';
   }
 
   // Create overlay element
-  const overlay = document.createElement("div");
+  const overlay = document.createElement('div');
 
   // Set overlay styles
   const overlayStyles = {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
     backgroundColor: config.color,
     opacity: config.animate ? 0 : config.opacity,
-    transition: config.animate ? `opacity ${config.duration}ms ease` : "none",
-    pointerEvents: "none",
+    transition: config.animate ? `opacity ${config.duration}ms ease` : 'none',
+    pointerEvents: 'none',
     zIndex: 1,
   };
 
@@ -374,7 +374,7 @@ function dimElement(element, options = {}) {
   Object.assign(overlay.style, overlayStyles);
 
   // Add class for potential styling/selection
-  overlay.classList.add("element-dim-overlay");
+  overlay.classList.add('element-dim-overlay');
 
   // Append overlay to element
   element.appendChild(overlay);
@@ -393,13 +393,13 @@ function dimElement(element, options = {}) {
 
       setTimeout(() => {
         element.removeChild(overlay);
-        if (originalPosition === "static") {
+        if (originalPosition === 'static') {
           element.style.position = originalPosition;
         }
       }, config.duration);
     } else {
       element.removeChild(overlay);
-      if (originalPosition === "static") {
+      if (originalPosition === 'static') {
         element.style.position = originalPosition;
       }
     }
@@ -415,7 +415,7 @@ function getStyleOrComputedStyle(element, property) {
 function addStyle(css) {
   const allStyleEls = document.head.querySelectorAll(`style`);
   let alreadyExists;
-  allStyleEls.forEach((styleEl) => {
+  allStyleEls.forEach(styleEl => {
     if (styleEl.innerText === css) {
       alreadyExists = true;
     }
@@ -431,17 +431,17 @@ function addStyle(css) {
 
 function style(targetEl, css, debug) {
   css
-    .replaceAll(/\s{2,}/g, "") // gets rid of white spaces
-    .split(";")
-    .filter((line) => line) // gets rid of empty lines
-    .forEach((declaration) => {
+    .replaceAll(/\s{2,}/g, '') // gets rid of white spaces
+    .split(';')
+    .filter(line => line) // gets rid of empty lines
+    .forEach(declaration => {
       if (debug) console.log(declaration);
-      const [property, value] = declaration.split(":");
-      const propertySplit = property.split("-");
+      const [property, value] = declaration.split(':');
+      const propertySplit = property.split('-');
       const propertyLhs = propertySplit[0].toLowerCase();
       const propertyRhs = propertySplit[1]
         ? capitalizeFirstLetter(propertySplit[1])
-        : "";
+        : '';
       targetEl.style[`${propertyLhs}${propertyRhs}`] = value;
     });
 }
@@ -451,7 +451,7 @@ function positionRelativeToElement(
   staticEl,
   x = 0,
   y = 0,
-  positionProperty = "absolute"
+  positionProperty = 'absolute'
 ) {
   var rect = staticEl.getBoundingClientRect();
   style(
@@ -468,7 +468,7 @@ function positionRelativeToElement(
 // MARK: Time related
 
 function asyncTimeout(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function timer(interval = 1000, tick = null, done = null) {
@@ -494,14 +494,14 @@ function timer(interval = 1000, tick = null, done = null) {
     if (!isPaused) {
       clearInterval(timerInterval); // Stop the timer
       isPaused = true; // Set paused state
-      console.log("Timer paused");
+      console.log('Timer paused');
     }
   }
 
   function resumeTimer() {
     if (isPaused) {
       startTimer(timeLeft); // Resume with remaining time
-      console.log("Timer resumed");
+      console.log('Timer resumed');
     }
   }
 
@@ -525,10 +525,10 @@ const CentralObserverManager = (function () {
   // Process mutations for all registered callbacks
   function processMutations(mutations) {
     // Check for added nodes
-    mutations.forEach((mutation) => {
-      if (mutation.type === "childList") {
+    mutations.forEach(mutation => {
+      if (mutation.type === 'childList') {
         // Process added nodes
-        mutation.addedNodes.forEach((node) => {
+        mutation.addedNodes.forEach(node => {
           if (node.nodeType !== Node.ELEMENT_NODE) return;
 
           // Check this node against all registered selectors
@@ -540,7 +540,7 @@ const CentralObserverManager = (function () {
 
             // Check if any of its children match
             if (node.querySelector(selector)) {
-              node.querySelectorAll(selector).forEach((element) => {
+              node.querySelectorAll(selector).forEach(element => {
                 executeCallbacks(element, selector, callbackArray);
               });
             }
@@ -548,7 +548,7 @@ const CentralObserverManager = (function () {
         });
 
         // Handle removed nodes (if needed)
-        mutation.removedNodes.forEach((node) => {
+        mutation.removedNodes.forEach(node => {
           if (node.nodeType !== Node.ELEMENT_NODE) return;
           // Implementation for tracking removed nodes if needed
         });
@@ -558,7 +558,7 @@ const CentralObserverManager = (function () {
     // Also check for all newly added elements that might match existing selectors
     // (this ensures we don't miss elements added through innerHTML or other means)
     callbacks.forEach((callbackArray, selector) => {
-      document.querySelectorAll(selector).forEach((element) => {
+      document.querySelectorAll(selector).forEach(element => {
         executeCallbacks(element, selector, callbackArray);
       });
     });
@@ -578,7 +578,7 @@ const CentralObserverManager = (function () {
 
     // Mark as processed and execute callbacks
     processed.add(element);
-    callbackArray.forEach((callback) => callback(element));
+    callbackArray.forEach(callback => callback(element));
   }
 
   // Initialize the main observer
@@ -593,7 +593,7 @@ const CentralObserverManager = (function () {
 
     // Process existing elements on page
     callbacks.forEach((callbackArray, selector) => {
-      document.querySelectorAll(selector).forEach((element) => {
+      document.querySelectorAll(selector).forEach(element => {
         executeCallbacks(element, selector, callbackArray);
       });
     });
@@ -615,7 +615,7 @@ const CentralObserverManager = (function () {
 
       // Process existing elements if requested
       if (processExisting) {
-        document.querySelectorAll(selector).forEach((element) => {
+        document.querySelectorAll(selector).forEach(element => {
           executeCallbacks(element, selector, callbacks.get(selector));
         });
       }
@@ -659,7 +659,7 @@ const CentralObserverManager = (function () {
 
 // Modified version of waitFor using the consolidated observer
 function waitFor(selector) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Check if element already exists
     const existing = document.querySelector(selector);
     if (existing) {
@@ -670,7 +670,7 @@ function waitFor(selector) {
     // Set up observer to wait for element
     const unobserve = CentralObserverManager.observe(
       selector,
-      (element) => {
+      element => {
         unobserve(); // Remove the observer once found
         resolve(element);
       },
@@ -702,19 +702,19 @@ function waitForEach(selector, callback, options = {}) {
 // Example implementation of markAndFilter using the consolidated observer
 function markAndFilterCOM(
   itemSelector,
-  uidSelector = "a",
+  uidSelector = 'a',
   uidAttribute,
   uidRegex
 ) {
   // Initialize filter list from storage
-  let filterList = GM_getValue("filterList", []);
-  let filteredCountAllTime = GM_getValue("filteredCount", 0);
+  let filterList = GM_getValue('filterList', []);
+  let filteredCountAllTime = GM_getValue('filteredCount', 0);
 
   createFilteredCountDiv();
 
   // Set up scroll detection using throttled scroll handler
-  const scrollHandler = throttle((event) => {
-    document.querySelectorAll(itemSelector).forEach((item) => {
+  const scrollHandler = throttle(event => {
+    document.querySelectorAll(itemSelector).forEach(item => {
       if (isScrolledPast(item)) {
         // Extract the unique ID from the element
         const uniqueId = getUid(item);
@@ -726,34 +726,34 @@ function markAndFilterCOM(
           // Ensure unique values
           filterList = [...new Set(filterList)];
           // Save to storage
-          GM_setValue("filterList", filterList);
+          GM_setValue('filterList', filterList);
         }
       }
     });
   }, 200);
 
-  window.addEventListener("scroll", scrollHandler);
+  window.addEventListener('scroll', scrollHandler);
 
   // Filter items as they appear in the page
-  waitForEach(itemSelector, (item) => {
+  waitForEach(itemSelector, item => {
     // Extract the unique ID using the same method as above
     const uniqueId = getUid(item);
 
     if (uniqueId && filterList.includes(uniqueId)) {
       // Increase the filtered count
       filteredCountAllTime++;
-      GM_setValue("filteredCount", filteredCountAllTime);
+      GM_setValue('filteredCount', filteredCountAllTime);
 
       // Update the counter display
-      document.getElementById("filteredCountDiv").textContent =
+      document.getElementById('filteredCountDiv').textContent =
         filteredCountAllTime;
 
       // Get information for the replacement div
-      const title = item.querySelector("h2, h3, a")?.textContent || "Link";
+      const title = item.querySelector('h2, h3, a')?.textContent || 'Link';
       const permalink =
-        item.getAttribute("permalink") ||
-        item.querySelector("a")?.getAttribute("href") ||
-        "#";
+        item.getAttribute('permalink') ||
+        item.querySelector('a')?.getAttribute('href') ||
+        '#';
 
       // Replace with filtered message
       const filterNoticeEl = replaceWith(
@@ -811,41 +811,41 @@ function markAndFilterCOM(
 
   // Create UI for filtered count if it doesn't exist
   function createFilteredCountDiv() {
-    if (document.getElementById("filteredCountDiv")) return;
+    if (document.getElementById('filteredCountDiv')) return;
 
-    const countDiv = document.createElement("div");
-    countDiv.id = "filteredCountDiv";
-    countDiv.style.position = "fixed";
-    countDiv.style.top = "10px";
-    countDiv.style.right = "10px";
-    countDiv.style.padding = "5px";
-    countDiv.style.backgroundColor = "rgba(0,0,0,0.7)";
-    countDiv.style.color = "white";
-    countDiv.style.borderRadius = "5px";
-    countDiv.style.zIndex = "9999";
+    const countDiv = document.createElement('div');
+    countDiv.id = 'filteredCountDiv';
+    countDiv.style.position = 'fixed';
+    countDiv.style.top = '10px';
+    countDiv.style.right = '10px';
+    countDiv.style.padding = '5px';
+    countDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    countDiv.style.color = 'white';
+    countDiv.style.borderRadius = '5px';
+    countDiv.style.zIndex = '9999';
     countDiv.textContent = filteredCountAllTime;
     document.body.appendChild(countDiv);
   }
 
   // Return methods for manual control
   return {
-    addToFilter: (uniqueId) => {
+    addToFilter: uniqueId => {
       if (!filterList.includes(uniqueId)) {
         filterList.push(uniqueId);
-        GM_setValue("filterList", filterList);
+        GM_setValue('filterList', filterList);
       }
     },
-    removeFromFilter: (uniqueId) => {
-      filterList = filterList.filter((id) => id !== uniqueId);
-      GM_setValue("filterList", filterList);
+    removeFromFilter: uniqueId => {
+      filterList = filterList.filter(id => id !== uniqueId);
+      GM_setValue('filterList', filterList);
     },
     clearFilters: () => {
-      GM_setValue("filterList", []);
-      GM_setValue("filteredCount", 0);
-      document.getElementById("filteredCountDiv").textContent = "0";
+      GM_setValue('filterList', []);
+      GM_setValue('filteredCount', 0);
+      document.getElementById('filteredCountDiv').textContent = '0';
     },
     cleanup: () => {
-      window.removeEventListener("scroll", scrollHandler);
+      window.removeEventListener('scroll', scrollHandler);
     },
   };
 }
@@ -853,14 +853,14 @@ function markAndFilterCOM(
 // convert this function so it accepts an object with options
 function makeMarkable({
   mainSelector,
-  uidElSelector = "a",
-  hrefElSelector = "a",
+  uidElSelector = 'a',
+  hrefElSelector = 'a',
   parentSelector = null,
-  uidAttr = "href",
+  uidAttr = 'href',
   filter = null,
   filterParent = null,
 }) {
-  waitForEach(mainSelector, (mainElement) => {
+  waitForEach(mainSelector, mainElement => {
     // check if the element's uid is already in storage
     const uidEl = mainElement.querySelector(uidElSelector);
     const uniqueId = uidEl ? uidEl.getAttribute(uidAttr) : null;
@@ -888,11 +888,11 @@ function makeMarkable({
       cursor: pointer;
     `
     );
-    markBtnEl.addEventListener("click", () => {
+    markBtnEl.addEventListener('click', () => {
       const uidEl = mainElement.querySelector(uidElSelector);
       const uniqueId = uidEl ? uidEl.getAttribute(uidAttr) : null;
       if (!uniqueId) {
-        console.log("No unique ID found for marking");
+        console.log('No unique ID found for marking');
         return;
       }
       GM_setValue(`marked-${uniqueId}`, true);
@@ -906,16 +906,16 @@ function makeMarkable({
       const mainEls = parentEl.querySelectorAll(mainSelector);
       const remainingMainEls = mainEls.length;
       if (remainingMainEls === 0) {
-        parentEl.style.display = "none";
+        parentEl.style.display = 'none';
       } else {
-        parentEl.style.display = "block";
+        parentEl.style.display = 'block';
       }
     }
   });
 
   function replaceMarkedElement(element) {
     const href =
-      element.querySelector(hrefElSelector)?.getAttribute("href") || "#";
+      element.querySelector(hrefElSelector)?.getAttribute('href') || '#';
     const newEl = generateElements(
       `<a href="${href}">${element.textContent}</a>`
     );
@@ -936,22 +936,22 @@ function makeMarkable({
 
 function markAndFilter(
   itemSelector,
-  uidSelector = "a",
+  uidSelector = 'a',
   uidAttribute,
   uidRegex
 ) {
   // Initialize filter list from storage
-  let filterList = GM_getValue("filterList", []);
-  let filteredCountAllTime = GM_getValue("filteredCount", 0);
+  let filterList = GM_getValue('filterList', []);
+  let filteredCountAllTime = GM_getValue('filteredCount', 0);
 
   createFilteredCountDiv();
 
   // Set up scroll detection to mark items that are scrolled past
-  lazyLoadScrollPast(itemSelector, (item) => {
+  lazyLoadScrollPast(itemSelector, item => {
     // Extract the unique ID from the element
     const uniqueId = getUid(item);
     if (!uniqueId) {
-      console.log("Unique ID not found");
+      console.log('Unique ID not found');
       return;
     }
 
@@ -961,31 +961,31 @@ function markAndFilter(
       // Ensure unique values
       filterList = [...new Set(filterList)];
       // Save to storage
-      GM_setValue("filterList", filterList);
+      GM_setValue('filterList', filterList);
       dimElement(item);
     }
   });
 
   // Filter items as they appear in the page
-  waitForEach(itemSelector, (item) => {
+  waitForEach(itemSelector, item => {
     // Extract the unique ID using the same method as above
     const uniqueId = getUid(item);
 
     if (uniqueId && filterList.includes(uniqueId)) {
       // Increase the filtered count
       filteredCountAllTime++;
-      GM_setValue("filteredCount", filteredCountAllTime);
+      GM_setValue('filteredCount', filteredCountAllTime);
 
       // Update the counter display
-      document.getElementById("filteredCountDiv").textContent =
+      document.getElementById('filteredCountDiv').textContent =
         filteredCountAllTime;
 
       // Get information for the replacement div
-      const title = item.querySelector("h2, h3, a")?.textContent || "Link";
+      const title = item.querySelector('h2, h3, a')?.textContent || 'Link';
       const permalink =
-        item.getAttribute("permalink") ||
-        item.querySelector("a")?.getAttribute("href") ||
-        "#";
+        item.getAttribute('permalink') ||
+        item.querySelector('a')?.getAttribute('href') ||
+        '#';
 
       // Replace with filtered message
       const filterNoticeEl = replaceWith(
@@ -1021,52 +1021,52 @@ function markAndFilter(
 
   // Create UI for filtered count if it doesn't exist
   function createFilteredCountDiv() {
-    if (document.getElementById("filteredCountDiv")) return;
+    if (document.getElementById('filteredCountDiv')) return;
 
-    const countDiv = document.createElement("div");
-    countDiv.id = "filteredCountDiv";
-    countDiv.style.position = "fixed";
-    countDiv.style.top = "10px";
-    countDiv.style.right = "10px";
-    countDiv.style.padding = "5px";
-    countDiv.style.backgroundColor = "rgba(0,0,0,0.7)";
-    countDiv.style.color = "white";
-    countDiv.style.borderRadius = "5px";
-    countDiv.style.zIndex = "9999";
+    const countDiv = document.createElement('div');
+    countDiv.id = 'filteredCountDiv';
+    countDiv.style.position = 'fixed';
+    countDiv.style.top = '10px';
+    countDiv.style.right = '10px';
+    countDiv.style.padding = '5px';
+    countDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    countDiv.style.color = 'white';
+    countDiv.style.borderRadius = '5px';
+    countDiv.style.zIndex = '9999';
     countDiv.textContent = filteredCountAllTime;
     document.body.appendChild(countDiv);
   }
 
   // Return methods for manual control
   return {
-    addToFilter: (uniqueId) => {
+    addToFilter: uniqueId => {
       if (!filterList.includes(uniqueId)) {
         filterList.push(uniqueId);
-        GM_setValue("filterList", filterList);
+        GM_setValue('filterList', filterList);
       }
     },
-    removeFromFilter: (uniqueId) => {
-      filterList = filterList.filter((id) => id !== uniqueId);
-      GM_setValue("filterList", filterList);
+    removeFromFilter: uniqueId => {
+      filterList = filterList.filter(id => id !== uniqueId);
+      GM_setValue('filterList', filterList);
     },
     clearFilters: () => {
-      GM_setValue("filterList", []);
-      GM_setValue("filteredCount", 0);
-      document.getElementById("filteredCountDiv").textContent = "0";
+      GM_setValue('filterList', []);
+      GM_setValue('filteredCount', 0);
+      document.getElementById('filteredCountDiv').textContent = '0';
     },
   };
 }
 
 function waitNotExist(selector) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (!document.querySelector(selector)) {
-      return resolve("at start");
+      return resolve('at start');
     }
 
     const observer = new MutationObserver(() => {
       if (!document.querySelector(selector)) {
         observer.disconnect();
-        return resolve("observer");
+        return resolve('observer');
       }
     });
 
@@ -1076,7 +1076,7 @@ function waitNotExist(selector) {
 function waitForAll(selector) {
   // waitFor( '[role=main]' ).then( ( els ) => {} )
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (document.querySelector(selector)) {
       return resolve(document.querySelectorAll(selector));
     }
@@ -1093,11 +1093,11 @@ function waitForAll(selector) {
 }
 
 function waitForNew(selector) {
-  document.querySelectorAll(selector).forEach((item) => {
-    item.classList.add("waitForNewDone");
+  document.querySelectorAll(selector).forEach(item => {
+    item.classList.add('waitForNewDone');
   });
 
-  return new Promise(async (resolve) => {
+  return new Promise(async resolve => {
     const newEl = await waitFor(`${selector}:not(.waitForNewDone)`);
     resolve(newEl);
   });
@@ -1107,13 +1107,13 @@ function eagerLoad(selector, load, scrollableEl = window) {
   let items = [];
 
   // for all the elements that exist at page load
-  document.querySelectorAll(selector).forEach((item) => {
+  document.querySelectorAll(selector).forEach(item => {
     items.push(item);
   });
   // for the elements that appear after page load
-  let observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((item) => {
+  let observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(item => {
         if (item.nodeType === 1 && item.matches(selector)) items.push(item);
       });
     });
@@ -1121,8 +1121,8 @@ function eagerLoad(selector, load, scrollableEl = window) {
   observer.observe(document.body, { childList: true, subtree: true });
 
   eventTrigger();
-  scrollableEl.addEventListener("scroll", eventTrigger);
-  "DOMContentLoaded load resize".split(" ").forEach((event) => {
+  scrollableEl.addEventListener('scroll', eventTrigger);
+  'DOMContentLoaded load resize'.split(' ').forEach(event => {
     window.addEventListener(event, eventTrigger);
   });
 
@@ -1138,13 +1138,13 @@ function lazyLoadWithObserver(selector, load, scrollableEl = window) {
   let items = [];
 
   // for all the elements that exist at page load
-  document.querySelectorAll(selector).forEach((item) => {
+  document.querySelectorAll(selector).forEach(item => {
     items.push(item);
   });
   // for the elements that appear after page load
-  let observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((item) => {
+  let observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(item => {
         if (item.nodeType === 1 && item.matches(selector)) {
           items.push(item);
           lazy();
@@ -1155,8 +1155,8 @@ function lazyLoadWithObserver(selector, load, scrollableEl = window) {
   observer.observe(document.body, { childList: true, subtree: true });
 
   lazy();
-  scrollableEl.addEventListener("scroll", lazy);
-  "DOMContentLoaded load resize".split(" ").forEach((event) => {
+  scrollableEl.addEventListener('scroll', lazy);
+  'DOMContentLoaded load resize'.split(' ').forEach(event => {
     window.addEventListener(event, lazy);
   });
 
@@ -1172,7 +1172,7 @@ function lazyLoadScrollPast(
   selector,
   load,
   scrollableEl = window,
-  direction = "up"
+  direction = 'up'
 ) {
   let items = [];
   let enteredViewport = new WeakSet();
@@ -1180,17 +1180,17 @@ function lazyLoadScrollPast(
     window.pageYOffset || document.documentElement.scrollTop;
 
   // Validate direction parameter
-  if (!["up", "down", "both"].includes(direction)) {
+  if (!['up', 'down', 'both'].includes(direction)) {
     throw new Error("Direction must be 'up', 'down', or 'both'");
   }
 
   // Initialize with existing elements
-  document.querySelectorAll(selector).forEach((item) => {
+  document.querySelectorAll(selector).forEach(item => {
     items.push(item);
   });
 
   // Observer for dynamically added elements
-  waitForEach(selector, (item) => {
+  waitForEach(selector, item => {
     items.push(item);
     checkElements();
   });
@@ -1205,11 +1205,11 @@ function lazyLoadScrollPast(
     const isScrollingUp = currentScrollPosition < lastScrollPosition;
 
     switch (direction) {
-      case "down":
+      case 'down':
         return isScrollingUp && rect.bottom > windowHeight;
-      case "up":
+      case 'up':
         return !isScrollingUp && rect.top < 0;
-      case "both":
+      case 'both':
         return rect.bottom < 0 || rect.top > windowHeight;
       default:
         return false;
@@ -1244,8 +1244,8 @@ function lazyLoadScrollPast(
   }
 
   // Add event listeners
-  scrollableEl.addEventListener("scroll", checkElements);
-  "DOMContentLoaded load resize".split(" ").forEach((event) => {
+  scrollableEl.addEventListener('scroll', checkElements);
+  'DOMContentLoaded load resize'.split(' ').forEach(event => {
     window.addEventListener(event, checkElements);
   });
 
@@ -1254,7 +1254,7 @@ function lazyLoadScrollPast(
 }
 function lazyLoad(load, ...items) {
   lazy();
-  "DOMContentLoaded load resize scroll".split(" ").forEach((event) => {
+  'DOMContentLoaded load resize scroll'.split(' ').forEach(event => {
     window.addEventListener(event, lazy);
   });
 
@@ -1270,11 +1270,11 @@ function lazyLoad(load, ...items) {
 //  MARK: Page functionalities
 
 async function setupYtDlpBtn(url, title, urlSelector) {
-  const titleSegment = title ? `title:${title}::` : "";
+  const titleSegment = title ? `title:${title}::` : '';
 
-  let ytDlpBtnEl = await waitFor("#yt-dlp-Btn");
+  let ytDlpBtnEl = await waitFor('#yt-dlp-Btn');
   ytDlpBtnEl = removeListenersByCloning(ytDlpBtnEl);
-  ytDlpBtnEl.addEventListener("click", () => {
+  ytDlpBtnEl.addEventListener('click', () => {
     if (urlSelector) url = document.querySelector(urlSelector).href;
     const urlSegment = `url:${url}::`;
     GM_setClipboard(`initiate-ytdlp:${urlSegment}${titleSegment}`);
@@ -1289,12 +1289,12 @@ function downloadImgWithTextFunctionality({
   locationHrefCondition,
   autofocus = false,
 }) {
-  waitForEach(imageElSelector, (imgEl) => {
+  waitForEach(imageElSelector, imgEl => {
     // if ( !location.href.includes( locationHrefCondition ) )
     //   return;
 
     const imgWrapperEl = imgEl.parentElement;
-    if (imgWrapperEl.querySelector("#dlBtn")) return; // 🛑
+    if (imgWrapperEl.querySelector('#dlBtn')) return; // 🛑
 
     if (autofocus) GM_setClipboard(`global-document-ready-${document.title}`);
 
@@ -1316,14 +1316,14 @@ function downloadImgWithTextFunctionality({
         `
     );
 
-    dlBtnEl.addEventListener("click", () => {
-      const tempImg = GM_addElement("img", {
+    dlBtnEl.addEventListener('click', () => {
+      const tempImg = GM_addElement('img', {
         src: imgEl.src,
-        crossorigin: "anonymous",
+        crossorigin: 'anonymous',
       });
-      tempImg.addEventListener("load", async () => {
-        let blob = await fetch(imgEl.src).then((r) => r.blob());
-        let uri = await new Promise((resolve) => {
+      tempImg.addEventListener('load', async () => {
+        let blob = await fetch(imgEl.src).then(r => r.blob());
+        let uri = await new Promise(resolve => {
           let reader = new FileReader();
           reader.onload = () => resolve(reader.result);
           reader.readAsDataURL(blob);
@@ -1336,15 +1336,15 @@ function downloadImgWithTextFunctionality({
         const finalFileName = `${siteName} - ${uniqueFileName}`;
 
         if (!descriptionText) {
-          alert("error");
+          alert('error');
           return;
         }
 
         downloadText(finalFileName, descriptionText);
 
         const link = generateElements(`<a></a>`, document.body);
-        link.setAttribute("download", `${finalFileName}.png`);
-        link.setAttribute("href", uri);
+        link.setAttribute('download', `${finalFileName}.png`);
+        link.setAttribute('href', uri);
         link.click();
       });
     });
@@ -1356,9 +1356,9 @@ function deepLoad({
   loadFunction,
   targetEl = null,
   lazyLoad = true,
-  deepLinkSelector = "a",
+  deepLinkSelector = 'a',
 }) {
-  lazyLoadWithObserver(sourceSelector, async (sourceEl) => {
+  lazyLoadWithObserver(sourceSelector, async sourceEl => {
     const deepHref = sourceEl.querySelector(deepLinkSelector)?.href;
     if (!deepHref) return; // 🛑
     const doc = await fetchDoc(deepHref);
@@ -1373,9 +1373,9 @@ function convertPlayerConfigStringToObject(configString) {
   try {
     // 1. Isolate the object literal part of the string.
     // We find the first '=' and take everything after it.
-    const objectLiteralStartIndex = configString.indexOf("=");
+    const objectLiteralStartIndex = configString.indexOf('=');
     if (objectLiteralStartIndex === -1) {
-      throw new Error("String does not appear to be an assignment.");
+      throw new Error('String does not appear to be an assignment.');
     }
 
     let objectLiteralString = configString
@@ -1383,7 +1383,7 @@ function convertPlayerConfigStringToObject(configString) {
       .trim();
 
     // Remove a potential trailing semicolon
-    if (objectLiteralString.endsWith(";")) {
+    if (objectLiteralString.endsWith(';')) {
       objectLiteralString = objectLiteralString.slice(0, -1);
     }
 
@@ -1396,7 +1396,7 @@ function convertPlayerConfigStringToObject(configString) {
 
     return resultObject;
   } catch (error) {
-    console.error("Failed to convert string to object:", error);
+    console.error('Failed to convert string to object:', error);
     // Depending on your needs, you might want to throw the error,
     // return null, or return a specific error object.
     return null;
@@ -1410,11 +1410,11 @@ function convertPlayerConfigStringToObject(configString) {
  */
 const VisibilityMode = {
   /** Return elements that are at least partially visible */
-  PARTIAL: "partial",
+  PARTIAL: 'partial',
   /** Return only elements that are fully visible */
-  FULL: "full",
+  FULL: 'full',
   /** If none are fully visible, return the most visible one (area %); otherwise return fully visible */
-  MAX_PERCENTAGE: "maxPercentage",
+  MAX_PERCENTAGE: 'maxPercentage',
 };
 
 /**
@@ -1440,7 +1440,7 @@ function getVisibleElements(selector, mode = VisibilityMode.MAX_PERCENTAGE) {
   let elementWithMaxPercentage = null;
   let maxPercentage = -1; // Use -1 to ensure any visibility is greater
 
-  elements.forEach((element) => {
+  elements.forEach(element => {
     const rect = element.getBoundingClientRect();
 
     // Basic check: Ignore elements with no dimensions or hidden via display:none
@@ -1530,24 +1530,24 @@ function getVisibleElements(selector, mode = VisibilityMode.MAX_PERCENTAGE) {
   }
 }
 
-function addFaviconToLink(linkEl, faviconUrl = null, position = "before") {
+function addFaviconToLink(linkEl, faviconUrl = null, position = 'before') {
   if (!faviconUrl) {
     const googleUserContHref = `https://s2.googleusercontent.com/s2/favicons?`;
     const domain = linkEl.href.match(/\/\/(.*)\..*\//);
-    const completeDomain = `https://${domain[0].replaceAll("//", "")}`;
+    const completeDomain = `https://${domain[0].replaceAll('//', '')}`;
     faviconUrl = `${googleUserContHref}domain_url=${completeDomain}`;
   }
   const faviconImgEl = generateElements(`<img src=${faviconUrl}>`);
   style(faviconImgEl, `margin: 0 3px;`);
-  if (position === "before") {
+  if (position === 'before') {
     linkEl.prepend(faviconImgEl);
   } else {
     linkEl.append(faviconImgEl);
   }
 }
 
-function getSecret(valueKey = "apiKey") {
-  let secretValue = GM_getValue(valueKey, "");
+function getSecret(valueKey = 'apiKey') {
+  let secretValue = GM_getValue(valueKey, '');
   if (secretValue) return secretValue;
 
   secretValue = prompt(`Please enter your ${valueKey} value:`);
@@ -1560,7 +1560,7 @@ function getSecret(valueKey = "apiKey") {
 function scrollElementToCursor(element, event = null, options = {}) {
   // Default options
   const settings = {
-    behavior: options.behavior || "smooth",
+    behavior: options.behavior || 'smooth',
     offsetY: options.offsetY || 0,
   };
 
@@ -1569,7 +1569,7 @@ function scrollElementToCursor(element, event = null, options = {}) {
     window._lastKnownMousePos = { x: 0, y: 0 };
 
     // Set up a global mouse move listener to track cursor position
-    document.addEventListener("mousemove", (e) => {
+    document.addEventListener('mousemove', e => {
       window._lastKnownMousePos.x = e.clientX;
       window._lastKnownMousePos.y = e.clientY;
     });
@@ -1581,7 +1581,7 @@ function scrollElementToCursor(element, event = null, options = {}) {
     : window._lastKnownMousePos;
 
   if (!element) {
-    console.error("scrollElementToCursor: No element provided");
+    console.error('scrollElementToCursor: No element provided');
     return;
   }
 
@@ -1614,23 +1614,23 @@ function scrollElementToCursor(element, event = null, options = {}) {
 }
 
 function getAccentColorFromFavicon() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Find the favicon
     const faviconElement =
       document.querySelector("link[rel*='icon']") ||
-      document.createElement("link");
+      document.createElement('link');
 
-    const faviconUrl = faviconElement.href || "/favicon.ico";
+    const faviconUrl = faviconElement.href || '/favicon.ico';
 
     // Create an image element to load the favicon
     const img = new Image();
-    img.crossOrigin = "Anonymous"; // This allows us to work with images from other domains
+    img.crossOrigin = 'Anonymous'; // This allows us to work with images from other domains
     img.src = faviconUrl;
 
     img.onload = function () {
       // Create a canvas to draw the image
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0, img.width, img.height);
@@ -1672,22 +1672,22 @@ function getAccentColorFromFavicon() {
 
     img.onerror = function () {
       // If favicon couldn't be loaded, return a default color
-      resolve("#000000");
+      resolve('#000000');
     };
   });
 }
 
 function getAccentColor() {
   // Step 1: Extract colors from the page
-  const elements = document.getElementsByTagName("*");
+  const elements = document.getElementsByTagName('*');
   const colors = [];
 
   for (let element of elements) {
     const style = window.getComputedStyle(element);
-    const backgroundColor = style.getPropertyValue("background-color");
-    const color = style.getPropertyValue("color");
+    const backgroundColor = style.getPropertyValue('background-color');
+    const color = style.getPropertyValue('color');
 
-    if (backgroundColor && backgroundColor !== "rgba(0, 0, 0, 0)") {
+    if (backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)') {
       colors.push(backgroundColor);
     }
     if (color) {
@@ -1697,7 +1697,7 @@ function getAccentColor() {
 
   // Step 2: Analyze colors to find a suitable accent color
   const uniqueColors = [...new Set(colors)];
-  let accentColor = "#000000"; // Default to black
+  let accentColor = '#000000'; // Default to black
   let maxSaturation = 0;
 
   for (let color of uniqueColors) {
@@ -1749,26 +1749,26 @@ function rgbToHsl(r, g, b) {
 function copyImageToClipboard(img) {
   if (navigator.clipboard && navigator.clipboard.write) {
     // Modern method using Clipboard API
-    img.crossOrigin = "anonymous";
+    img.crossOrigin = 'anonymous';
     img.onload = function () {
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
-      canvas.getContext("2d").drawImage(img, 0, 0);
-      canvas.toBlob((blob) => {
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      canvas.toBlob(blob => {
         navigator.clipboard
-          .write([new ClipboardItem({ "image/png": blob })])
+          .write([new ClipboardItem({ 'image/png': blob })])
           .then(() => {
-            console.log("Image copied to clipboard successfully");
+            console.log('Image copied to clipboard successfully');
           })
-          .catch((err) => {
-            console.error("Error copying image to clipboard:", err);
+          .catch(err => {
+            console.error('Error copying image to clipboard:', err);
             fallbackCopyMethod(img);
           });
-      }, "image/png");
+      }, 'image/png');
     };
     img.onerror = function () {
-      console.error("Error loading image for clipboard");
+      console.error('Error loading image for clipboard');
       fallbackCopyMethod(img);
     };
     // Trigger a reload to ensure we have permission to read the image data
@@ -1780,14 +1780,14 @@ function copyImageToClipboard(img) {
 }
 
 function fallbackCopyMethod(img) {
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
   canvas.width = img.width;
   canvas.height = img.height;
-  canvas.getContext("2d").drawImage(img, 0, 0);
-  const dataURL = canvas.toDataURL("image/png");
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  const dataURL = canvas.toDataURL('image/png');
 
-  GM_setClipboard(dataURL, "text/html");
-  console.log("Image copied to clipboard using fallback method");
+  GM_setClipboard(dataURL, 'text/html');
+  console.log('Image copied to clipboard using fallback method');
 }
 
 function getFaviconUrl() {
@@ -1798,7 +1798,7 @@ function getFaviconUrl() {
     return links[0].href;
   } else {
     // Optionally return a default favicon if none is found
-    return "/favicon.ico";
+    return '/favicon.ico';
   }
 }
 
@@ -1809,12 +1809,12 @@ function isIterable(obj) {
   if (obj == null) {
     return false;
   }
-  return typeof obj[Symbol.iterator] === "function";
+  return typeof obj[Symbol.iterator] === 'function';
 }
 
 function getTextNodes(el) {
   let textNodes = [];
-  el.childNodes.forEach((node) => {
+  el.childNodes.forEach(node => {
     if (node.nodeType === Node.TEXT_NODE) textNodes.push(node);
   });
   return textNodes;
@@ -1830,25 +1830,25 @@ async function load(url, selector, parent) {
   return selected;
 }
 
-function fetchDoc(url, headers = "", returnHtml) {
+function fetchDoc(url, headers = '', returnHtml) {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
-      method: "GET",
+      method: 'GET',
       url: url,
       headers: headers,
-      responseType: "document",
-      onload: (response) => {
+      responseType: 'document',
+      onload: response => {
         const resText = response.responseText;
         if (!resText) {
-          reject("no response text");
+          reject('no response text');
           return false;
         }
         if (returnHtml) resolve(resText);
         const tempDoc = generateDoc(resText, true);
         resolve(tempDoc);
       },
-      onerror: (obj) => reject(obj.error),
-      ontimeout: (obj) => reject(obj),
+      onerror: obj => reject(obj.error),
+      ontimeout: obj => reject(obj),
     });
   });
 }
@@ -1856,11 +1856,11 @@ function GMXmlHttpRequestAsync(url) {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       url: url,
-      onload: (response) => {
+      onload: response => {
         resolve(response.response);
       },
-      onerror: () => reject("onerror"),
-      ontimeout: () => reject("ontimeout"),
+      onerror: () => reject('onerror'),
+      ontimeout: () => reject('ontimeout'),
     });
     // function errorFunction () { reject( 'error loading page' ) }
   });
@@ -1868,14 +1868,14 @@ function GMXmlHttpRequestAsync(url) {
 async function GMXmlHttpReqResponse(url) {
   const promise = new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
-      method: "GET",
+      method: 'GET',
       url: url,
-      responseType: "document",
+      responseType: 'document',
       onload: function (response) {
         resolve(response.responseText);
       },
       onerror: () => {
-        reject("error");
+        reject('error');
       },
     });
   });
@@ -1892,7 +1892,7 @@ function sanitizeLinksTraditional(urlString) {
     const cleanUrl = url.origin + url.pathname + url.hash;
     return cleanUrl;
   } catch (error) {
-    console.error("Invalid URL provided:", error);
+    console.error('Invalid URL provided:', error);
     return urlString;
   }
 }
@@ -1901,15 +1901,15 @@ function sanitizeTrackingLinks(
   mainTrackerRegex,
   secondaryTrackerRegex
 ) {
-  document.querySelectorAll(selector).forEach((link) => {
-    link.removeAttribute("data-saferedirecturl");
-    let newHref = link.href.replace(mainTrackerRegex, "");
+  document.querySelectorAll(selector).forEach(link => {
+    link.removeAttribute('data-saferedirecturl');
+    let newHref = link.href.replace(mainTrackerRegex, '');
     newHref = decodeURIComponent(newHref);
     if (!secondaryTrackerRegex) {
       link.href = newHref;
       return;
     }
-    newHref = newHref.replace(secondaryTrackerRegex, "");
+    newHref = newHref.replace(secondaryTrackerRegex, '');
     link.href = newHref;
   });
 }
@@ -1966,15 +1966,15 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
     /"playerStoryboardSpecRenderer":.+?"(https.+?)",/
   );
 
-  if (!fullStoryboardURL || fullStoryboardURL[1].includes("googleadservices")) {
+  if (!fullStoryboardURL || fullStoryboardURL[1].includes('googleadservices')) {
     // It can happen sometimes that the storyboard provided is of the ad, instead of the video itself.
     // But this seems to only happen on videos that don't have a storyboard available anyway.
-    const temp = "Storyboard not available for this video!";
+    const temp = 'Storyboard not available for this video!';
 
     return { temp, temp, temp };
   }
 
-  const urlSplit = fullStoryboardURL[1].split("|");
+  const urlSplit = fullStoryboardURL[1].split('|');
   let mode = urlSplit[3] ? 3 : 1;
   // YouTube provides 2 modes of storyboards: one with 25 frames per chunk
   // and another one with 60 frames per chunk.I've choose the former mode,
@@ -1984,12 +1984,12 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
     // There's also a third mode, videos that have only one mode and ongoing lives storyboards,
     // but I couldn't find any way to make them work.
     alert(
-      "Storyboard not available for this video yet! Try again some hours later."
+      'Storyboard not available for this video yet! Try again some hours later.'
     );
     return;
   }
 
-  const storyboardId = urlSplit[mode].replace(/.+#rs/, "&sigh=rs");
+  const storyboardId = urlSplit[mode].replace(/.+#rs/, '&sigh=rs');
   if (mode == 3) mode--;
 
   const videoLength = +resText.match(
@@ -2008,8 +2008,8 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
   const trueNoOfSlots = Math.round(videoLength / samplingFq);
   const noOfSbs = trueNoOfSlots / 25;
   let allUrls = [];
-  repeat(noOfSbs, (index) => {
-    const base = urlSplit[0].replace("L$L/$N", `L${mode}/M${index}`);
+  repeat(noOfSbs, index => {
+    const base = urlSplit[0].replace('L$L/$N', `L${mode}/M${index}`);
     // The storyboard URL uses the "L#/M#" parameter to
     // determine the type and part of the storyboard to load.
     // L1 is the storyboard chunk with 60 frames, and L2 is the one with 25 frames.
@@ -2031,7 +2031,7 @@ function makeElementDraggableAndResizable(element) {
   let yOffset = 0;
 
   // Create and append resize handle
-  const resizeHandle = document.createElement("div");
+  const resizeHandle = document.createElement('div');
   resizeHandle.style.cssText = `
         width: 10px;
         height: 10px;
@@ -2044,13 +2044,13 @@ function makeElementDraggableAndResizable(element) {
   element.appendChild(resizeHandle);
 
   // Make sure the element is positioned relatively or absolutely
-  if (getComputedStyle(element).position === "static") {
-    element.style.position = "relative";
+  if (getComputedStyle(element).position === 'static') {
+    element.style.position = 'relative';
   }
 
   // Add necessary styles
-  element.style.cursor = "move";
-  element.style.userSelect = "none";
+  element.style.cursor = 'move';
+  element.style.userSelect = 'none';
 
   // Drag functionality
   function dragStart(e) {
@@ -2058,7 +2058,7 @@ function makeElementDraggableAndResizable(element) {
 
     isDragging = true;
 
-    if (e.type === "touchstart") {
+    if (e.type === 'touchstart') {
       initialX = e.touches[0].clientX - xOffset;
       initialY = e.touches[0].clientY - yOffset;
     } else {
@@ -2078,7 +2078,7 @@ function makeElementDraggableAndResizable(element) {
     if (isDragging) {
       e.preventDefault();
 
-      if (e.type === "touchmove") {
+      if (e.type === 'touchmove') {
         currentX = e.touches[0].clientX - initialX;
         currentY = e.touches[0].clientY - initialY;
       } else {
@@ -2108,7 +2108,7 @@ function makeElementDraggableAndResizable(element) {
       const rect = element.getBoundingClientRect();
       let width, height;
 
-      if (e.type === "touchmove") {
+      if (e.type === 'touchmove') {
         width = e.touches[0].clientX - rect.left;
         height = e.touches[0].clientY - rect.top;
       } else {
@@ -2120,23 +2120,23 @@ function makeElementDraggableAndResizable(element) {
       width = Math.max(50, width);
       height = Math.max(50, height);
 
-      element.style.width = width + "px";
-      element.style.height = height + "px";
+      element.style.width = width + 'px';
+      element.style.height = height + 'px';
     }
   }
 
   // Add event listeners
-  element.addEventListener("mousedown", dragStart);
-  element.addEventListener("touchstart", dragStart);
-  document.addEventListener("mousemove", drag);
-  document.addEventListener("touchmove", drag);
-  document.addEventListener("mouseup", dragEnd);
-  document.addEventListener("touchend", dragEnd);
+  element.addEventListener('mousedown', dragStart);
+  element.addEventListener('touchstart', dragStart);
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('touchmove', drag);
+  document.addEventListener('mouseup', dragEnd);
+  document.addEventListener('touchend', dragEnd);
 
-  resizeHandle.addEventListener("mousedown", resizeStart);
-  resizeHandle.addEventListener("touchstart", resizeStart);
-  document.addEventListener("mousemove", resize);
-  document.addEventListener("touchmove", resize);
+  resizeHandle.addEventListener('mousedown', resizeStart);
+  resizeHandle.addEventListener('touchstart', resizeStart);
+  document.addEventListener('mousemove', resize);
+  document.addEventListener('touchmove', resize);
 }
 
 function makeDraggable(element) {
@@ -2144,7 +2144,7 @@ function makeDraggable(element) {
     pos2 = 0,
     pos3 = 0,
     pos4 = 0;
-  const header = document.getElementById("contPanelHeader");
+  const header = document.getElementById('contPanelHeader');
 
   if (header) {
     header.onmousedown = dragMouseDown;
@@ -2166,8 +2166,8 @@ function makeDraggable(element) {
     pos2 = pos4 - e.clientY;
     pos3 = e.clientX;
     pos4 = e.clientY;
-    element.style.top = element.offsetTop - pos2 + "px";
-    element.style.left = element.offsetLeft - pos1 + "px";
+    element.style.top = element.offsetTop - pos2 + 'px';
+    element.style.left = element.offsetLeft - pos1 + 'px';
   }
 
   function closeDragElement() {
@@ -2177,7 +2177,7 @@ function makeDraggable(element) {
 }
 
 function dragElement(targetEl, dragHandleEl) {
-  targetEl.style.position = "fixed";
+  targetEl.style.position = 'fixed';
   var pos1 = 0,
     pos2 = 0,
     pos3 = 0,
@@ -2206,8 +2206,8 @@ function dragElement(targetEl, dragHandleEl) {
     pos3 = e.clientX;
     pos4 = e.clientY;
     // set the element's new position:
-    targetEl.style.top = targetEl.offsetTop - pos2 + "px";
-    targetEl.style.left = targetEl.offsetLeft - pos1 + "px";
+    targetEl.style.top = targetEl.offsetTop - pos2 + 'px';
+    targetEl.style.left = targetEl.offsetLeft - pos1 + 'px';
   }
 
   function closeDragElement() {
@@ -2218,14 +2218,14 @@ function dragElement(targetEl, dragHandleEl) {
 }
 
 function blink(element, interval, numberOfTimes) {
-  return new Promise(async (resolve) => {
-    element.style.transform = "scale(1.3,1.3)";
+  return new Promise(async resolve => {
+    element.style.transform = 'scale(1.3,1.3)';
     await asyncTimeout(interval);
-    element.style.transform = "";
+    element.style.transform = '';
     await asyncTimeout(interval);
-    element.style.transform = "scale(1.3,1.3)";
+    element.style.transform = 'scale(1.3,1.3)';
     await asyncTimeout(interval);
-    element.style.transform = "";
+    element.style.transform = '';
     resolve;
   });
 }
@@ -2235,12 +2235,12 @@ function setHash(newHash) {
   const currentHash = window.location.hash.slice(1);
   // Only update if the new hash is different from current
   if (currentHash !== newHash) {
-    window.history.replaceState(null, null, "#" + newHash);
+    window.history.replaceState(null, null, '#' + newHash);
   }
 }
 
 function toggleHash(newHash) {
-  window.history.replaceState(null, null, "#" + newHash);
+  window.history.replaceState(null, null, '#' + newHash);
 }
 
 function fauxHistoryPushState(url, timeout = 3000) {
@@ -2252,13 +2252,13 @@ function fauxHistoryPushState(url, timeout = 3000) {
 
 function addHistoryEntry(newUrl) {
   const originalUrl = location.href;
-  history.pushState({ state: 1 }, "new state", newUrl);
-  history.pushState({ state: 1 }, "new state", originalUrl);
+  history.pushState({ state: 1 }, 'new state', newUrl);
+  history.pushState({ state: 1 }, 'new state', originalUrl);
 }
 
 function removeEmptytextEls(parent) {
-  const divsOrPs = parent.querySelectorAll("div, p");
-  divsOrPs.forEach((el) => {
+  const divsOrPs = parent.querySelectorAll('div, p');
+  divsOrPs.forEach(el => {
     if (!el.textContent.trim()) {
       el.remove();
     }
@@ -2277,18 +2277,18 @@ function Download({ url, filename }) {
 
   const download = (url, name) => {
     if (!url) {
-      throw new Error("Resource URL not provided! You need to provide one");
+      throw new Error('Resource URL not provided! You need to provide one');
     }
     setFetching(true);
     fetch(url)
-      .then((response) => response.blob())
-      .then((blob) => {
+      .then(response => response.blob())
+      .then(blob => {
         setFetching(false);
         const blobURL = URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = blobURL;
 
-        a.style = "display: none";
+        a.style = 'display: none';
 
         if (name && name.length) a.download = name;
         document.body.appendChild(a);
@@ -2311,7 +2311,7 @@ function Download({ url, filename }) {
 function isElementInViewport(el) {
   // Special bonus for those using jQuery
 
-  if (typeof jQuery === "function" && el instanceof jQuery) {
+  if (typeof jQuery === 'function' && el instanceof jQuery) {
     el = el[0];
   }
 
@@ -2325,12 +2325,12 @@ function isElementInViewport(el) {
   );
 }
 
-const downloadFile = (file) => {
-  const element = document.createElement("a");
-  element.setAttribute("href", "Download Btn");
-  element.setAttribute("download", file);
+const downloadFile = file => {
+  const element = document.createElement('a');
+  element.setAttribute('href', 'Download Btn');
+  element.setAttribute('download', file);
 
-  element.style.display = "none";
+  element.style.display = 'none';
 
   document.body.appendChild(element);
 
@@ -2367,7 +2367,7 @@ function iframeRef(frameRef) {
 
 function removeListenersByCloning(element) {
   if (!element || !(element instanceof Element)) {
-    throw new Error("Please provide a valid DOM element");
+    throw new Error('Please provide a valid DOM element');
   }
   const clone = element.cloneNode(true);
   element.parentNode.replaceChild(clone, element);
@@ -2375,7 +2375,7 @@ function removeListenersByCloning(element) {
 }
 
 function empty(element) {
-  element.childNodes.forEach((node) => {
+  element.childNodes.forEach(node => {
     node.remove();
   });
 }
@@ -2386,31 +2386,31 @@ function empty(element) {
 function convertElementType(element, newType) {
   // Input validation
   if (!(element instanceof HTMLElement)) {
-    throw new Error("First parameter must be an HTML element");
+    throw new Error('First parameter must be an HTML element');
   }
-  if (typeof newType !== "string" || !newType.trim()) {
-    throw new Error("Second parameter must be a valid element type string");
+  if (typeof newType !== 'string' || !newType.trim()) {
+    throw new Error('Second parameter must be a valid element type string');
   }
 
   // Create the new element
   const newElement = document.createElement(newType.toLowerCase());
 
   // Copy all attributes
-  Array.from(element.attributes).forEach((attr) => {
+  Array.from(element.attributes).forEach(attr => {
     newElement.setAttribute(attr.name, attr.value);
   });
 
   // Copy all child nodes
-  Array.from(element.childNodes).forEach((child) => {
+  Array.from(element.childNodes).forEach(child => {
     newElement.appendChild(child.cloneNode(true));
   });
 
   // Copy event listeners if using jQuery
   if (window.jQuery) {
-    const events = jQuery._data(element, "events");
+    const events = jQuery._data(element, 'events');
     if (events) {
       for (let type in events) {
-        events[type].forEach((event) => {
+        events[type].forEach(event => {
           jQuery(newElement).on(type, event.handler);
         });
       }
@@ -2430,7 +2430,7 @@ function elementsToArray(els) {
 }
 
 function contains(selector, text, parent = document) {
-  const elsContaining = [...parent.querySelectorAll(selector)].filter((el) =>
+  const elsContaining = [...parent.querySelectorAll(selector)].filter(el =>
     el.textContent.includes(text)
   );
   return elsContaining;
@@ -2495,21 +2495,21 @@ async function fadeOut(targetEl, duration) {
   targetEl.style.transition = `opacity ${duration / 1000}s`;
   targetEl.style.opacity = 0;
   await asyncTimeout(duration);
-  targetEl.style.display = "none";
+  targetEl.style.display = 'none';
 }
 
 async function fadeIn(targetEl, duration) {
   if (!duration) duration = 250;
   targetEl.style.transition = `opacity ${duration / 1000}s`;
   targetEl.style.opacity = 0;
-  targetEl.style.display = "";
+  targetEl.style.display = '';
   targetEl.style.opacity = 1;
 }
 
 function fadeToggle(targetEls, duration) {
   const elementsArray = elementsToArray(targetEls);
-  elementsArray.forEach((item) => {
-    if (item.style.display == "none") {
+  elementsArray.forEach(item => {
+    if (item.style.display == 'none') {
       fadeIn(item, duration);
     } else {
       fadeOut(item, duration);
@@ -2519,11 +2519,11 @@ function fadeToggle(targetEls, duration) {
 
 function toggle(els) {
   const elementsArray = elementsToArray(els);
-  elementsArray.forEach((el) => {
-    if (el.style.display == "none") {
-      el.style.display = "";
+  elementsArray.forEach(el => {
+    if (el.style.display == 'none') {
+      el.style.display = '';
     } else {
-      el.style.display = "none";
+      el.style.display = 'none';
     }
   });
 }
@@ -2555,19 +2555,19 @@ function unwrapOuter(el, levels = 1) {
 function parentsUntil(element, until, filter) {
   // Validate element parameter
   if (!(element instanceof Element)) {
-    throw new Error("First parameter must be a DOM Element");
+    throw new Error('First parameter must be a DOM Element');
   }
 
   const result = [];
   let current = element.parentElement;
 
   // If until is a selector string, prepare to match against it
-  const isUntilSelector = typeof until === "string";
+  const isUntilSelector = typeof until === 'string';
 
   // Function to check if we've reached the "until" element/selector
   const isUntilElement = isUntilSelector
-    ? (el) => el && el.matches(until)
-    : (el) => el === until;
+    ? el => el && el.matches(until)
+    : el => el === until;
 
   // Walk up the DOM until we find the "until" element or reach the document
   while (current && !isUntilElement(current)) {
@@ -2601,11 +2601,11 @@ function grandParent(child, iterations) {
 function generateDoc(html, returnTrusted) {
   let escapeHTMLPolicy;
 
-  escapeHTMLPolicy = trustedTypes.createPolicy("forceInner", {
-    createHTML: (to_escape) => to_escape,
+  escapeHTMLPolicy = trustedTypes.createPolicy('forceInner', {
+    createHTML: to_escape => to_escape,
   });
 
-  const template = document.createElement("template");
+  const template = document.createElement('template');
   document.body.prepend(template);
 
   template.innerHTML = escapeHTMLPolicy.createHTML(html.trim());
@@ -2645,11 +2645,11 @@ function generateToolbarButton(text, parent, popup, onclick) {
   parent.append(button);
   // calculateWidthAndExpand( collapsibleContent );
   if (popup) {
-    button.addEventListener("click", () => {
+    button.addEventListener('click', () => {
       togglePopup(popup);
     });
   }
-  if (onclick) button.addEventListener("click", onclick);
+  if (onclick) button.addEventListener('click', onclick);
   return button;
 }
 
@@ -2668,9 +2668,9 @@ function generateToolbarButton(text, parent, popup, onclick) {
 //     return toolbarPopup;
 // }
 function createToolbarPopup(collapsibleContent) {
-  const toolbarPopup = generateElements("<div></div>");
+  const toolbarPopup = generateElements('<div></div>');
 
-  toolbarPopup.classList.add("toolbarPopup");
+  toolbarPopup.classList.add('toolbarPopup');
 
   toolbarPopup.style = `
         font-size:  large;
@@ -2686,17 +2686,17 @@ function createToolbarPopup(collapsibleContent) {
 
 function togglePopup(popup) {
   toggle(popup);
-  const popupHeight = getComputedStyle(popup).height.replace(/px$/, "");
+  const popupHeight = getComputedStyle(popup).height.replace(/px$/, '');
   popup.style.top = `-${+popupHeight + 5}px`;
 }
 
 function calculateWidthAndExpand(collapsibleContent) {
   let totalWidth = 0;
   for (const child of collapsibleContent.children) {
-    let widthValue = +getStyleOrComputedStyle(child, "width").replace("px", "");
-    let marginValue = +getStyleOrComputedStyle(child, "margin").replace(
-      "px",
-      ""
+    let widthValue = +getStyleOrComputedStyle(child, 'width').replace('px', '');
+    let marginValue = +getStyleOrComputedStyle(child, 'margin').replace(
+      'px',
+      ''
     );
     totalWidth += (widthValue ? widthValue : 0) + marginValue * 2;
   }
@@ -2706,38 +2706,39 @@ function calculateWidthAndExpand(collapsibleContent) {
 // MARK: Site specific functions
 
 function getStreamwishQuery() {
-  const doodHosts = ["peytonepre"];
-  const doodHostsQuery = doodHosts.map((host) => `[href*="${host}"]`).join(",");
+  const doodHosts = ['peytonepre'];
+  const doodHostsQuery = doodHosts.map(host => `[href*="${host}"]`).join(',');
   return doodHostsQuery;
 }
 
 function getDoodHostsQuery() {
   const doodHosts = [
-    "vidply",
-    "dood",
-    "do7go",
-    "d000d",
-    "ds2video",
-    "do0od",
-    "dooood",
-    "ds2play",
-    "d000d",
-    "d000d",
-    "doply",
-    "vide0",
-    "dooodster",
+    'd-s',
+    'vidply',
+    'dood',
+    'do7go',
+    'd000d',
+    'ds2video',
+    'do0od',
+    'dooood',
+    'ds2play',
+    'd000d',
+    'd000d',
+    'doply',
+    'vide0',
+    'dooodster',
   ];
-  const doodHostsQuery = doodHosts.map((host) => `[href*="${host}"]`).join(",");
+  const doodHostsQuery = doodHosts.map(host => `[href*="${host}"]`).join(',');
   return doodHostsQuery;
 }
 
 async function getDoodStoryboardSrc(url, linkEl = null) {
-  const outdatedHostNames = ["ds2play.com"];
+  const outdatedHostNames = ['ds2play.com', 'doodstream.com'];
 
   const urlObj = new URL(url);
   if (outdatedHostNames.includes(urlObj.hostname)) {
     // If the URL is from an outdated host, we need to update it to the new doodcdn.io format
-    url = url.replace("ds2play.com", "vide0.net");
+    url = url.replace(urlObj.hostname, 'd-s.io');
     if (linkEl) {
       linkEl.href = url; // Update the link element's href if provided
     }
@@ -2745,12 +2746,13 @@ async function getDoodStoryboardSrc(url, linkEl = null) {
 
   const doodDoc = await fetchDoc(url);
   const metaEl = doodDoc.querySelector('meta[name="og:image"]');
-  const matches = metaEl.content.match(/snaps\/(.+?)\./);
+  console.log(metaEl.content);
+  const matches = metaEl.content.match(/(snaps|splash)\/(.+?)\./);
   if (!matches || matches.length < 2) {
-    throw new Error("Could not find storyboard image ID in meta content");
+    throw new Error('Could not find storyboard image ID in meta content');
   }
-  const imgId = matches[1];
-  const storyboardUrl = `https://img.doodcdn.io/slides/${imgId}.jpg`;
+  const imgId = matches[2];
+  const storyboardUrl = `https://postercdn.com/slides/${imgId}.jpg`;
   return storyboardUrl;
 }
 
@@ -2761,7 +2763,7 @@ async function getVoeStoryboardImg(voeUrl) {
   const posterImgUrl = levelTwoDoc.querySelector('[name="og:image"]').content;
   const storyboardUrl = posterImgUrl.replace(
     /_storyboard_L\d+/,
-    "_storyboard_L0"
+    '_storyboard_L0'
   );
   return storyboardUrl;
 }
@@ -2783,16 +2785,16 @@ async function bftStoryboardFromUrl(bftvUrl, sbGrandParent) {
   // thumbEl.style.maxHeight = '300px';
   // generateElements( `<div>${ durationString }</div>`, item );
 
-  const otherScript = contains("script", "initPlayer", bftvDoc)[0];
+  const otherScript = contains('script', 'initPlayer', bftvDoc)[0];
   const thumbBase = otherScript.textContent.match(/thumbBase: '(.+?)'/)[1];
   const thumbCount = otherScript.textContent.match(/thumbsCount: (\d+)/)[1];
   let imgUrls = [];
   for (let i = 1; i <= thumbCount; i++) {
-    const thisUrl = thumbBase.replace("{THUMB_ID}", i);
+    const thisUrl = thumbBase.replace('{THUMB_ID}', i);
     imgUrls.push(thisUrl);
   }
 
-  const storyboardParent = generateElements("<div></div>", sbGrandParent);
+  const storyboardParent = generateElements('<div></div>', sbGrandParent);
   return await storyboard({
     storyboardParent,
     horizontal: 1,
