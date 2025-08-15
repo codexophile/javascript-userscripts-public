@@ -199,6 +199,12 @@
     'Cast'
   );
   createToolbarItem(
+    // ext.to
+    `https://ext.to/browse/?q=${queryClean}&with_adult=1`,
+    'https://cdn-icons-png.flaticon.com/512/3097/3097023.png',
+    ''
+  );
+  createToolbarItem(
     // leet
     `https://1337x.to/search/${queryClean}/1/`,
     'https://www.wizcase.com/wp-content/uploads/2022/10/en-1337x-logo.jpg',
