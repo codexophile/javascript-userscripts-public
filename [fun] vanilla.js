@@ -2746,7 +2746,6 @@ async function getDoodStoryboardSrc(url, linkEl = null) {
 
   const doodDoc = await fetchDoc(url);
   const metaEl = doodDoc.querySelector('meta[name="og:image"]');
-  console.log(metaEl.content);
   const matches = metaEl.content.match(/(snaps|splash)\/(.+?)\./);
   if (!matches || matches.length < 2) {
     throw new Error('Could not find storyboard image ID in meta content');
