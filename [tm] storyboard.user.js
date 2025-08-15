@@ -1,13 +1,13 @@
 (async function () {
-  "use strict";
+  'use strict';
 
-  $("a[title]").attr("title", "");
+  $('a[title]').attr('title', '');
 
-  if (location.href.includes("/videos/")) {
-    const fpplay = await waitFor("a.fp-play");
+  if (location.href.includes('/videos/')) {
+    const fpplay = await waitFor('a.fp-play');
     fpplay.click();
-    const videoElement = await waitFor("video");
-    videoElement.addEventListener("loadedmetadata", async (event) => {
+    const videoElement = await waitFor('video');
+    videoElement.addEventListener('loadedmetadata', async event => {
       event.target.pause();
       if (!!document.querySelector(`#slotsDiv`)?.children.length) return;
       const storyboard = await prepareStoryboard(
@@ -15,7 +15,7 @@
         document,
         null,
         videoElement,
-        "flex"
+        'flex'
       );
       storyboard.scrollIntoView();
 
@@ -23,13 +23,13 @@
     });
 
     let $storyBoard = $(`<div></div>`);
-    $(".block-video").after($storyBoard);
+    $('.block-video').after($storyBoard);
 
     //* Related videos
 
     function loadRelatedVideos() {
-      document.querySelectorAll(`.list-videos .item`).forEach(async (item) => {
-        const itemLink = item.querySelector("a").href;
+      document.querySelectorAll(`.list-videos .item`).forEach(async item => {
+        const itemLink = item.querySelector('a').href;
         const $relatedItemSbParent = $(`<div id=relItemSbP></div>`).insertAfter(
           item
         );
@@ -40,7 +40,7 @@
             tempDoc,
             itemLink,
             null,
-            "toggleable",
+            'toggleable',
             item
           );
         } catch (error) {
@@ -49,8 +49,8 @@
       });
     }
   } else {
-    document.querySelectorAll(`.list-videos .item`).forEach(async (item) => {
-      const itemLink = item.querySelector("a").href;
+    document.querySelectorAll(`.list-videos .item`).forEach(async item => {
+      const itemLink = item.querySelector('a').href;
       const $relatedItemSbParent = $(`<div id=relItemSbP></div>`).insertAfter(
         item
       );
@@ -60,7 +60,7 @@
         tempDoc,
         itemLink,
         null,
-        "toggleable",
+        'toggleable',
         item
       );
     });
@@ -74,43 +74,42 @@
     sbFunction,
     thisEl
   ) {
-    let scriptEl;
-    if (scriptSource.querySelectorAll('script[type="text/javascript"]')[2])
-      scriptEl = scriptSource.querySelectorAll(
-        'script[type="text/javascript"]'
-      )[2];
-    else
-      scriptEl = scriptSource.querySelectorAll(
-        'script[type="text/javascript"]'
-      )[1];
-    // GM_setClipboard( scriptEl.innerHTML )
+    let correctScriptEl;
+    const allScriptEls = scriptSource.querySelectorAll(
+      'script[type="text/javascript"]'
+    );
+    allScriptEls.forEach(scriptEl => {
+      if (scriptEl.innerHTML.match(/timeline_screens_interval: '(\d+)'/)) {
+        correctScriptEl = scriptEl;
+      }
+    });
 
-    let samplingFq = scriptEl.innerHTML.match(
+    let samplingFq = correctScriptEl.innerHTML.match(
       /timeline_screens_interval: '(\d+)'/
     )[1];
 
-    const nOfSlotMatch = scriptEl.innerHTML.match(
+    const nOfSlotMatch = correctScriptEl.innerHTML.match(
       /timeline_screens_count: '(\d+)'/
     );
     let trueNoOfSlots;
     if (nOfSlotMatch) trueNoOfSlots = nOfSlotMatch[1];
     else if (vidOnPage) trueNoOfSlots = vidOnPage.duration / samplingFq;
     else {
-      const durationString = thisEl.querySelector(".duration").textContent;
+      const durationString = thisEl.querySelector('.duration').textContent;
       const duration = toSeconds(durationString);
       trueNoOfSlots = duration / samplingFq;
     }
-    const urlTemplate = scriptEl.innerHTML.match(
+    const urlTemplate = correctScriptEl.innerHTML.match(
       /timeline_screens_url: '(.+?)'/
     )[1];
 
     let imgUrls = [];
-    repeat(+trueNoOfSlots, (j) => {
-      const thisUrl = urlTemplate.replace("{time}", +j + 1);
+    repeat(+trueNoOfSlots, j => {
+      const thisUrl = urlTemplate.replace('{time}', +j + 1);
       imgUrls.push(thisUrl);
     });
 
-    if (sbFunction === "flex") {
+    if (sbFunction === 'flex') {
       // if ( !videoElement.duration ) return null
       return storyboard({
         storyboardParent,
@@ -123,7 +122,7 @@
         imgUrls,
       });
     }
-    if (sbFunction === "toggleable")
+    if (sbFunction === 'toggleable')
       return storyboardToggleable({
         storyboardParent,
         horizontal: 1,
