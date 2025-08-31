@@ -2,10 +2,10 @@
 // https://example.com
 
 (async function () {
-  "use strict";
+  'use strict';
 
   const doc = await fetchDoc(
-    "https://www.porndig.com/videos/222819/gay-threesome-video-in-the-office.html",
+    'https://asiangay.tv/2025/08/haitai-x-fresh-office-animals-the-humble-slave-of-the-office-animal-in-a-suit-2/',
     null,
     true
   );

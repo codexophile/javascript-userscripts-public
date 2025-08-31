@@ -4,8 +4,8 @@
   disableConsoleClear();
 
   //* ads
-  const iframeEls = document.querySelectorAll('iframe');
-  iframeEls.forEach(iframeEl => {
+  waitForEach('iframe', iframeEl => {
+    console.log('test');
     iframeEl.remove();
   });
 

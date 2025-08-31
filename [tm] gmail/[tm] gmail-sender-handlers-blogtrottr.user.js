@@ -6,26 +6,26 @@ function blogtrottrHandler() {
   const queryForTitleEl =
     'span[style="font-family:Helvetica,sans-serif;font-size:20px;font-weight:bold;line-height:16px"]';
   const titleElement = document.querySelector(queryForTitleEl);
-  titleElement.classList.add("fixedCSS");
+  titleElement.classList.add('fixedCSS');
   const feedTitle = titleElement.textContent;
-  console.log(`%c📶 ${feedTitle}`, "font-size: large; color: gold");
+  console.log(`%c📶 ${feedTitle}`, 'font-size: large; color: gold');
 
   let items = Array.from(document.querySelectorAll('[cellpadding="3"][class]'));
   const parent = items[0].parentNode;
   parent.style.flexWrap = `wrap`;
   parent.style.display = `flex`;
 
-  items.forEach(async (item) => {
-    item.removeAttribute("width");
+  items.forEach(async item => {
+    item.removeAttribute('width');
 
-    const innerDiv = item.querySelectorAll("tbody > tr > td > div")[1];
+    const innerDiv = item.querySelectorAll('tbody > tr > td > div')[1];
 
     if (!innerDiv) {
       return;
     }
 
-    const innerDivPs = innerDiv.querySelectorAll("p");
-    innerDivPs.forEach((paragraph) => {
+    const innerDivPs = innerDiv.querySelectorAll('p');
+    innerDivPs.forEach(paragraph => {
       paragraph.style = `
                         overflow          : hidden      !important;
                         text-overflow     : ellipsis    !important;
@@ -34,33 +34,33 @@ function blogtrottrHandler() {
                         -webkit-box-orient: vertical    !important;`;
     });
 
-    if (innerDiv.querySelectorAll("img").length > 5) {
+    if (innerDiv.querySelectorAll('img').length > 5) {
       //! sometimes there are false positives here
       innerDiv.style = `display: flex; flex-wrap: wrap;`;
-      item.style.maxWidth = "unset";
-      item.style.width = "100%";
-      innerDiv.querySelectorAll("img").forEach((image) => {
-        image.style.maxWidth = "300px";
+      item.style.maxWidth = 'unset';
+      item.style.width = '100%';
+      innerDiv.querySelectorAll('img').forEach(image => {
+        image.style.maxWidth = '300px';
       });
     }
 
-    const itemUrl = item.querySelector("a").href;
+    const itemUrl = item.querySelector('a').href;
     let tempDoc;
 
     function expandBlogtrottrItem() {
       // innerDiv.style = `display: flex; flex-wrap: wrap;`
-      item.style.maxWidth = "90vw";
-      item.style.width = "100%";
+      item.style.maxWidth = '90vw';
+      item.style.width = '100%';
     }
 
     async function addIframeHrefs(tempDoc) {
-      if (!tempDoc) tempDoc = await GMXmlHttpRequest(itemUrl);
-      const iframes = tempDoc.querySelectorAll("iframe");
-      iframes.forEach((iframe) => {
-        GM_addElement(innerDiv, "a", {
+      if (!tempDoc) tempDoc = await fetchDoc(itemUrl);
+      const iframes = tempDoc.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
+        GM_addElement(innerDiv, 'a', {
           textContent: iframe.src,
           href: iframe.src,
-          style: "display: block",
+          style: 'display: block',
         });
       });
       try {
@@ -71,26 +71,26 @@ function blogtrottrHandler() {
     }
 
     async function addPeekButtons(itemInnerDiv, item) {
-      const doodDomains = ["d000d", "ds2play", "d0000d", "dood", "do0od"];
+      const doodDomains = ['d000d', 'ds2play', 'd0000d', 'dood', 'do0od'];
       const doodSelector = doodDomains
-        .map((domain) => `a[href*="${domain}"]`)
-        .join(",");
+        .map(domain => `a[href*="${domain}"]`)
+        .join(',');
       const doodLinksEls = itemInnerDiv.querySelectorAll(doodSelector);
       const doodResult = await addDoodStoryboard(doodLinksEls, itemInnerDiv);
-      console.log("ssssss", doodResult);
+      console.log('ssssss', doodResult);
       if (doodResult) return;
 
       const streamWishDomains = [
-        "ghbrisk",
-        "streamiwish",
-        "cdnstream",
-        "jodwish",
-        "74k",
-        "iplayerhls",
+        'ghbrisk',
+        'streamiwish',
+        'cdnstream',
+        'jodwish',
+        '74k',
+        'iplayerhls',
       ];
       const streamWishSelector = streamWishDomains
-        .map((domain) => `a[href*="${domain}"]`)
-        .join(",");
+        .map(domain => `a[href*="${domain}"]`)
+        .join(',');
       const streamWishLinksEls =
         itemInnerDiv.querySelectorAll(streamWishSelector);
       console.log(streamWishLinksEls);
@@ -98,10 +98,10 @@ function blogtrottrHandler() {
         streamWishLinksEls,
         itemInnerDiv
       );
-      console.log("streamWishResult", streamWishResult);
+      console.log('streamWishResult', streamWishResult);
       if (streamWishResult) return;
 
-      console.log("testXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+      console.log('testXXXXXXXXXXXXXXXXXXXXXXXXXXX');
       const streamtapeLinksEls = itemInnerDiv.querySelectorAll(
         'a[href*="streamtape"]'
       );
@@ -113,19 +113,19 @@ function blogtrottrHandler() {
 
       return;
 
-      const links = itemInnerDiv.querySelectorAll("a");
-      links.forEach(async (link) => {
-        if (item.querySelector("#slotsDiv")) return; // 🛑
+      const links = itemInnerDiv.querySelectorAll('a');
+      links.forEach(async link => {
+        if (item.querySelector('#slotsDiv')) return; // 🛑
 
         if (link.href.match(/(voe)/)) {
-          const doodButton = GM_addElement("button", { textContent: "Voe" });
-          doodButton.addEventListener("click", () => {
-            if (itemInnerDiv.querySelector("#voeImg")) return;
+          const doodButton = GM_addElement('button', { textContent: 'Voe' });
+          doodButton.addEventListener('click', () => {
+            if (itemInnerDiv.querySelector('#voeImg')) return;
             const videoId = link.href.match(/\..+\/(.+?)$/)[1];
             const imageUrl = `https://i.voe.sx/cache/${videoId}_storyboard_L0.jpg`;
             storyboardFlex(itemInnerDiv, 10, 10, imageUrl, link.href, true);
-            item.style.width = "100%";
-            item.style.maxWidth = "unset";
+            item.style.width = '100%';
+            item.style.maxWidth = 'unset';
             fauxHistoryPushState(link.href);
           });
           link.after(doodButton);
@@ -136,12 +136,12 @@ function blogtrottrHandler() {
     async function addStreamtapePreview(streamtapeLinksEls, itemInnerDiv) {
       if (!streamtapeLinksEls.length) return false;
       let result = true;
-      streamtapeLinksEls.forEach(async (streamtapeLinkEl) => {
+      streamtapeLinksEls.forEach(async streamtapeLinkEl => {
         let doc;
         try {
-          doc = await GMXmlHttpRequest(streamtapeLinkEl.href);
+          doc = await fetchDoc(streamtapeLinkEl.href);
         } catch (error) {
-          console.log("StreamWish error:", error);
+          console.log('StreamWish error:', error);
           result = result && false;
         }
         const previewImgUrl = doc.querySelector(
@@ -159,15 +159,15 @@ function blogtrottrHandler() {
     async function addStreamWishStoryboard(streamWishLinksEls, itemInnerDiv) {
       if (!streamWishLinksEls.length) return false;
       let result = true;
-      streamWishLinksEls.forEach(async (streamWishLinkEl) => {
+      streamWishLinksEls.forEach(async streamWishLinkEl => {
         let doc;
         try {
-          doc = await GMXmlHttpRequest(streamWishLinkEl.href);
+          doc = await fetchDoc(streamWishLinkEl.href);
         } catch (error) {
-          console.log("StreamWish error:", error);
+          console.log('StreamWish error:', error);
           result = result && false;
         }
-        const stem = doc.querySelector("#vplayer > img").src.match(/.+\//)[0];
+        const stem = doc.querySelector('#vplayer > img').src.match(/.+\//)[0];
         const path = streamWishLinkEl.href.match(/\/(............)$/)[1];
         const storyboardUrl = `${stem}${path}0000.jpg`;
         const storyboardParent = generateElements(
@@ -191,14 +191,14 @@ function blogtrottrHandler() {
     async function addDoodStoryboard(doodLinksEls, itemInnerDiv) {
       if (!doodLinksEls.length) return false;
       let result = true;
-      doodLinksEls.forEach(async (doodLinkEl) => {
-        let resText = "";
+      doodLinksEls.forEach(async doodLinkEl => {
+        let resText = '';
         try {
-          resText = await GMXmlHttpRequest(doodLinkEl.href, null, true);
+          resText = await fetchDoc(doodLinkEl.href, null, true);
         } catch (error) {
-          console.log("Dood error:", error);
+          console.log('Dood error:', error);
           result = result && false;
-          console.log("result", result);
+          console.log('result', result);
         }
         const matches = resText.match(/\/(splash|snaps)\/(.+?)\.jpg/);
         if (matches) {
@@ -216,10 +216,10 @@ function blogtrottrHandler() {
     }
 
     const feedTitleHandlers = {
-      "New Gay Porn Videos & Sex Tube Movies | SexTubeSpot.com": async () => {},
+      'New Gay Porn Videos & Sex Tube Movies | SexTubeSpot.com': async () => {},
 
-      "Latest gay porn videos on 4gay.com": async () => {
-        const tempDoc4gay = await GMXmlHttpRequest(itemUrl);
+      'Latest gay porn videos on 4gay.com': async () => {
+        const tempDoc4gay = await fetchDoc(itemUrl);
         const duration_ = tempDoc4gay.querySelector(
           'meta[property="video:duration"]'
         ).content;
@@ -230,40 +230,40 @@ function blogtrottrHandler() {
       },
 
       GVUV2: () => {
-        innerDiv.querySelectorAll("p:not(:has(a))").forEach((el) => {
+        innerDiv.querySelectorAll('p:not(:has(a))').forEach(el => {
           el.remove();
         });
         addPeekButtons(innerDiv, item);
       },
 
-      "BoyFriendTv.com - RSS video Feed": async () => {
+      'BoyFriendTv.com - RSS video Feed': async () => {
         bftStoryboardFromUrl(itemUrl, item);
         expandBlogtrottrItem();
       },
 
-      "Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...":
+      'Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...':
         async () => {
-          const tempDoc__ = await GMXmlHttpRequest(itemUrl);
+          const tempDoc__ = await fetchDoc(itemUrl);
           addIframeHrefs(tempDoc__);
         },
 
-      "VIDÉOS XXX GAY - Porno GAY Gratuit en Streaming": async () => {
+      'VIDÉOS XXX GAY - Porno GAY Gratuit en Streaming': async () => {
         const videoUrl = itemUrl;
-        const doc = await GMXmlHttpRequest(videoUrl);
+        const doc = await fetchDoc(videoUrl);
         const sbSrc = doc
           .querySelector('[property="twitter:image"]')
-          .content.replace("/default", "/nvsprite");
-        const script = doc.querySelector("script");
+          .content.replace('/default', '/nvsprite');
+        const script = doc.querySelector('script');
         const match = script.innerHTML.match(/"duration": "(\w\w(\d+)S)"/);
         let duration;
         if (match) duration = match[2];
-        else alert("error");
+        else alert('error');
 
         const allUrls = sbSrc;
         const trueNoOfSlots = 20;
         const samplingFq = duration / trueNoOfSlots;
 
-        const modalBody = generateElements("<div></div>", innerDiv);
+        const modalBody = generateElements('<div></div>', innerDiv);
         await storyboard(
           modalBody,
           20,
@@ -285,34 +285,34 @@ function blogtrottrHandler() {
         expandBlogtrottrItem();
       },
 
-      "ONLYFANS GAY SEX": addIframeHrefs,
+      'ONLYFANS GAY SEX': addIframeHrefs,
       OnlyBussy: addIframeHrefs,
       GayPornHot: addIframeHrefs,
       HutGay: addIframeHrefs,
-      "Super Tudo Gay – Porno Gay | Gay Amador | Sexo Gay": addIframeHrefs,
-      "Gay Porn Hub": addIframeHrefs,
+      'Super Tudo Gay – Porno Gay | Gay Amador | Sexo Gay': addIframeHrefs,
+      'Gay Porn Hub': addIframeHrefs,
       GayCock4U: addIframeHrefs,
-      "TURBOGVIDEOS.COM": addIframeHrefs,
-      "Gay – Faply": addIframeHrefs,
+      'TURBOGVIDEOS.COM': addIframeHrefs,
+      'Gay – Faply': addIframeHrefs,
       iGay69: addIframeHrefs,
 
-      "4horlover": async () => {
-        const tempDoc = await GMXmlHttpRequest(itemUrl);
-        const centerEl = tempDoc.querySelector("main center");
+      '4horlover': async () => {
+        const tempDoc = await fetchDoc(itemUrl);
+        const centerEl = tempDoc.querySelector('main center');
         innerDiv.append(centerEl);
-        centerEl.querySelectorAll("b, img").forEach((el) => {
+        centerEl.querySelectorAll('b, img').forEach(el => {
           unwrapItself(el.parentElement);
         });
         const outerWrapper = generateElements(
-          "<div id=outerWrapper></div>",
+          '<div id=outerWrapper></div>',
           null,
           true
         );
-        outerWrapper.style.display = "flex";
+        outerWrapper.style.display = 'flex';
         innerDiv.prepend(outerWrapper);
-        innerDiv.querySelectorAll("b + p + p").forEach((locator) => {
+        innerDiv.querySelectorAll('b + p + p').forEach(locator => {
           const wrapper = wrap(
-            "<div class=wrapper></div>",
+            '<div class=wrapper></div>',
             prev(prev(locator)),
             prev(locator),
             locator
@@ -321,55 +321,55 @@ function blogtrottrHandler() {
         });
       },
 
-      "Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay":
+      'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
         () => {
           item.querySelector('[href="https://meumundogay.net"]').remove();
           addIframeHrefs();
         },
 
-      "porno gay latinos": () => {
+      'porno gay latinos': () => {
         addIframeHrefs();
       },
-      "GayVids.tube": () => {
+      'GayVids.tube': () => {
         addIframeHrefs();
       },
 
-      "GayGuy.Top": () => {
+      'GayGuy.Top': () => {
         removeEmptytextEls(innerDiv);
         addIframeHrefs();
       },
-      "GayGuy.Top - Watch Gay Porn Videos Free": () => {
+      'GayGuy.Top - Watch Gay Porn Videos Free': () => {
         removeEmptytextEls(innerDiv);
         addIframeHrefs();
       },
 
       Gaystream: addIframeHrefs,
-      "Gaystream is brat": async () => {
-        const tempDocGstrm = await GMXmlHttpRequest(itemUrl);
-        const btnEls = tempDocGstrm.querySelectorAll(".tab.boner");
-        btnEls.forEach((item) => {
+      'Gaystream is brat': async () => {
+        const tempDocGstrm = await fetchDoc(itemUrl);
+        const btnEls = tempDocGstrm.querySelectorAll('.tab.boner');
+        btnEls.forEach(item => {
           const iframeLink = item
-            .getAttribute("onclick")
+            .getAttribute('onclick')
             .match(/\.src="(.+?)"/)[1];
           const iframeLinkEl = generateElements(
             `<a href=${iframeLink}>${iframeLink}</a>`,
             null,
             true
           );
-          iframeLinkEl.style.display = "block";
+          iframeLinkEl.style.display = 'block';
           innerDiv.prepend(iframeLinkEl);
         });
         const imgUrl = tempDocGstrm
-          .querySelector("#overlay")
+          .querySelector('#overlay')
           .style.backgroundImage.match(/"(.+?)"/)[1];
         const imgEl = generateElements(`<img src=${imgUrl}>`, null, true);
         innerDiv.prepend(imgEl);
       },
 
-      "FreePornVideosHDGay.com – Videos online free gay porn": async () => {
-        const tempDocD = await GMXmlHttpRequest(itemUrl);
-        tempDocD.querySelectorAll(".button_choice_server").forEach((item) => {
-          const linkHref = item.getAttribute("onclick").match(/'(.+?)'/)[1];
+      'FreePornVideosHDGay.com – Videos online free gay porn': async () => {
+        const tempDocD = await fetchDoc(itemUrl);
+        tempDocD.querySelectorAll('.button_choice_server').forEach(item => {
+          const linkHref = item.getAttribute('onclick').match(/'(.+?)'/)[1];
           generateElements(
             `<a href=${linkHref}>${linkHref}</a>`,
             innerDiv,
@@ -379,13 +379,13 @@ function blogtrottrHandler() {
         addPeekButtons(innerDiv, item);
       },
 
-      "New Videos": async () => {
-        if (item.querySelectorAll(".thumbContainer").length) {
-          toggle(item.querySelector(".thumbContainer"));
-          alert("check userscript code");
+      'New Videos': async () => {
+        if (item.querySelectorAll('.thumbContainer').length) {
+          toggle(item.querySelector('.thumbContainer'));
+          alert('check userscript code');
         }
 
-        const tempDoc = await GMXmlHttpRequest(itemUrl);
+        const tempDoc = await fetchDoc(itemUrl);
         const script_ = tempDoc.querySelectorAll(
           'script[type="text/javascript"]'
         )[1];
@@ -401,8 +401,8 @@ function blogtrottrHandler() {
         )[1];
 
         let imgUrls = [];
-        repeat(+screensCount, (j) => {
-          const thisUrl = imgUrlTemplate.replace("{time}", +j + 1);
+        repeat(+screensCount, j => {
+          const thisUrl = imgUrlTemplate.replace('{time}', +j + 1);
           imgUrls.push(thisUrl);
         });
 
@@ -414,17 +414,17 @@ function blogtrottrHandler() {
           samplingFq: samplingFq_,
           imgUrls,
         });
-        sb.style.width = "85vw";
+        sb.style.width = '85vw';
 
         expandBlogtrottrItem();
       },
-      "New Videos - GayHardFuck.com": async () => {
-        if (item.querySelectorAll(".thumbContainer").length) {
-          toggle(item.querySelector(".thumbContainer"));
-          alert("check userscript code");
+      'New Videos - GayHardFuck.com': async () => {
+        if (item.querySelectorAll('.thumbContainer').length) {
+          toggle(item.querySelector('.thumbContainer'));
+          alert('check userscript code');
         }
 
-        const tempDoc = await GMXmlHttpRequest(itemUrl);
+        const tempDoc = await fetchDoc(itemUrl);
         const script_ = tempDoc.querySelectorAll(
           'script[type="text/javascript"]'
         )[1];
@@ -440,8 +440,8 @@ function blogtrottrHandler() {
         )[1];
 
         let imgUrls = [];
-        repeat(+screensCount, (j) => {
-          const thisUrl = imgUrlTemplate.replace("{time}", +j + 1);
+        repeat(+screensCount, j => {
+          const thisUrl = imgUrlTemplate.replace('{time}', +j + 1);
           imgUrls.push(thisUrl);
         });
 
@@ -453,31 +453,31 @@ function blogtrottrHandler() {
           samplingFq: samplingFq_,
           imgUrls,
         });
-        sb.style.width = "85vw";
+        sb.style.width = '85vw';
 
         expandBlogtrottrItem();
       },
 
-      "NurGAY.to": async () => {
-        const newDiv = document.createElement("div");
-        newDiv.append(...innerDiv.querySelectorAll("a:has(img)"));
+      'NurGAY.to': async () => {
+        const newDiv = document.createElement('div');
+        newDiv.append(...innerDiv.querySelectorAll('a:has(img)'));
         innerDiv.replaceChildren();
         innerDiv.append(newDiv);
 
-        const tempDoc_ = await GMXmlHttpRequest(itemUrl);
+        const tempDoc_ = await fetchDoc(itemUrl);
         const actorsList = tempDoc_
-          .querySelector("#video-actors")
-          .textContent.replaceAll("\t", "")
-          .replace("Actors: ", "")
-          .replaceAll(" /", ",");
-        GM_addElement(innerDiv, "div", { textContent: actorsList });
+          .querySelector('#video-actors')
+          .textContent.replaceAll('\t', '')
+          .replace('Actors: ', '')
+          .replaceAll(' /', ',');
+        GM_addElement(innerDiv, 'div', { textContent: actorsList });
 
         const links = tempDoc_.querySelectorAll(
           'p > [data-wpel-link="external"]'
         );
-        const ExtLinksUl = generateElements("<ul></ul>", innerDiv);
-        links.forEach((link) => {
-          const linkHref = link.getAttribute("href");
+        const ExtLinksUl = generateElements('<ul></ul>', innerDiv);
+        links.forEach(link => {
+          const linkHref = link.getAttribute('href');
           const linkText = link.textContent;
           generateElements(
             `<li><a href=${linkHref}>${linkText}</a></li>`,
@@ -488,14 +488,14 @@ function blogtrottrHandler() {
         addPeekButtons(innerDiv);
       },
 
-      "Hacker News: Front Page": () => {
+      'Hacker News: Front Page': () => {
         GM_xmlhttpRequest({
-          method: "GET",
+          method: 'GET',
           url: `https://api.linkpreview.net/?q=${itemUrl}`,
           headers: {
-            "X-Linkpreview-Api-Key": "81dd9d9372dcef7c430a92b177e09dfa",
+            'X-Linkpreview-Api-Key': '81dd9d9372dcef7c430a92b177e09dfa',
           },
-          responseType: "document",
+          responseType: 'document',
           onload: function (response) {
             const resText = response.responseText;
             const imgSrc = resText.match(/"image":"(.+?)"/)[1];
@@ -506,14 +506,14 @@ function blogtrottrHandler() {
         innerDiv.prepend(item.querySelector('[href*="news.ycombinator.com"]'));
       },
 
-      "reddit.com: search results - sri lanka": () => {
-        if (item.querySelector("[href*=Cricket],[href*=cricket]"))
+      'reddit.com: search results - sri lanka': () => {
+        if (item.querySelector('[href*=Cricket],[href*=cricket]'))
           item.remove();
 
-        const innerDivAll = item.querySelectorAll("tbody > tr > td > div");
-        innerDivAll.forEach((div) => {
-          div.style.overflow = "auto";
-          div.style.maxHeight = "300px";
+        const innerDivAll = item.querySelectorAll('tbody > tr > td > div');
+        innerDivAll.forEach(div => {
+          div.style.overflow = 'auto';
+          div.style.maxHeight = '300px';
         });
       },
 
@@ -521,12 +521,12 @@ function blogtrottrHandler() {
     };
 
     // Execute the appropriate handler
-    (feedTitleHandlers[feedTitle] || feedTitleHandlers["default"])();
+    (feedTitleHandlers[feedTitle] || feedTitleHandlers['default'])();
 
     return;
     switch (feedTitle) {
-      case "Latest gay porn videos on 4gay.com":
-        const tempDoc4gay = await GMXmlHttpRequest(itemUrl);
+      case 'Latest gay porn videos on 4gay.com':
+        const tempDoc4gay = await fetchDoc(itemUrl);
         const duration_ = tempDoc4gay.querySelector(
           'meta[property="video:duration"]'
         ).content;
@@ -537,16 +537,16 @@ function blogtrottrHandler() {
         }
         break;
 
-      case "GVUV2":
+      case 'GVUV2':
         // select all p elements that does not have an a element
-        innerDiv.querySelectorAll("p:not(:has(a))").forEach((el) => {
+        innerDiv.querySelectorAll('p:not(:has(a))').forEach(el => {
           el.remove();
         });
         addPeekButtons(innerDiv, item);
         break;
 
-      case "BoyFriendTv.com - RSS video Feed":
-        const bftvDoc = await GMXmlHttpRequest(itemUrl);
+      case 'BoyFriendTv.com - RSS video Feed':
+        const bftvDoc = await fetchDoc(itemUrl);
         const bftvScript = bftvDoc.querySelector(
           'script[type="application/ld+json"]'
         );
@@ -564,17 +564,17 @@ function blogtrottrHandler() {
           'meta[property="og:image"]'
         ).content;
         const thumbEl = generateElements(`<img src=${thumbnailSrc}>`, item);
-        thumbEl.style.maxHeight = "300px";
+        thumbEl.style.maxHeight = '300px';
         generateElements(`<div>${durationString}</div>`, item);
 
-        const otherScript = contains("script", "initPlayer", bftvDoc)[0];
+        const otherScript = contains('script', 'initPlayer', bftvDoc)[0];
         const thumbBase =
           otherScript.textContent.match(/thumbBase: '(.+?)'/)[1];
         const thumbCount =
           otherScript.textContent.match(/thumbsCount: (\d+)/)[1];
         let imgUrls_ = [];
         for (let i = 1; i <= thumbCount; i++) {
-          const thisUrl = thumbBase.replace("{THUMB_ID}", i);
+          const thisUrl = thumbBase.replace('{THUMB_ID}', i);
           imgUrls_.push(thisUrl);
         }
 
@@ -592,29 +592,29 @@ function blogtrottrHandler() {
 
         break;
 
-      case "Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...":
-        const tempDoc__ = await GMXmlHttpRequest(itemUrl);
+      case 'Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...':
+        const tempDoc__ = await fetchDoc(itemUrl);
         addIframeHrefs(tempDoc__);
         break;
 
-      case "VIDÉOS XXX GAY - Porno GAY Gratuit en Streaming":
+      case 'VIDÉOS XXX GAY - Porno GAY Gratuit en Streaming':
         const videoUrl = itemUrl;
 
-        const doc = await GMXmlHttpRequest(videoUrl);
+        const doc = await fetchDoc(videoUrl);
         const sbSrc = doc
           .querySelector('[property="twitter:image"]')
-          .content.replace("/default", "/nvsprite");
-        const script = doc.querySelector("script");
+          .content.replace('/default', '/nvsprite');
+        const script = doc.querySelector('script');
         const match = script.innerHTML.match(/"duration": "(\w\w(\d+)S)"/);
         let duration;
         if (match) duration = match[2];
-        else alert("error");
+        else alert('error');
 
         const allUrls = sbSrc;
         const trueNoOfSlots = 20;
         const samplingFq = duration / trueNoOfSlots;
 
-        const modalBody = generateElements("<div></div>", innerDiv);
+        const modalBody = generateElements('<div></div>', innerDiv);
         await storyboard(
           modalBody,
           20,
@@ -637,35 +637,35 @@ function blogtrottrHandler() {
 
         break;
 
-      case "OnlyBussy":
-      case "GayPornHot":
-      case "HutGay":
-      case "Super Tudo Gay – Porno Gay | Gay Amador | Sexo Gay":
-      case "Gay Porn Hub":
-      case "GayCock4U":
-      case "TURBOGVIDEOS.COM":
-      case "Gay – Faply":
-      case "iGay69":
+      case 'OnlyBussy':
+      case 'GayPornHot':
+      case 'HutGay':
+      case 'Super Tudo Gay – Porno Gay | Gay Amador | Sexo Gay':
+      case 'Gay Porn Hub':
+      case 'GayCock4U':
+      case 'TURBOGVIDEOS.COM':
+      case 'Gay – Faply':
+      case 'iGay69':
         addIframeHrefs();
         break;
 
-      case "4horlover":
-        tempDoc = await GMXmlHttpRequest(itemUrl);
-        const centerEl = tempDoc.querySelector("main center");
+      case '4horlover':
+        tempDoc = await fetchDoc(itemUrl);
+        const centerEl = tempDoc.querySelector('main center');
         innerDiv.append(centerEl);
-        centerEl.querySelectorAll("b, img").forEach((el) => {
+        centerEl.querySelectorAll('b, img').forEach(el => {
           unwrap(el.parentElement);
         });
         const outerWrapper = generateElements(
-          "<div id=outerWrapper></div>",
+          '<div id=outerWrapper></div>',
           null,
           true
         );
-        outerWrapper.style.display = "flex";
+        outerWrapper.style.display = 'flex';
         innerDiv.prepend(outerWrapper);
-        innerDiv.querySelectorAll("b + p + p").forEach((locator) => {
+        innerDiv.querySelectorAll('b + p + p').forEach(locator => {
           const wrapper = wrap(
-            "<div class=wrapper></div>",
+            '<div class=wrapper></div>',
             prev(prev(locator)),
             prev(locator),
             locator
@@ -674,50 +674,50 @@ function blogtrottrHandler() {
         });
         break;
 
-      case "Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay":
+      case 'Meu Mundo Gay | Porno Gay | Incesto Gay | Vídeo Gay | Desenho Gay':
         item.querySelector('[href="https://meumundogay.net"]').remove();
         addIframeHrefs();
         break;
 
-      case "porno gay latinos":
+      case 'porno gay latinos':
 
-      case "GayVids.tube | GayVids, gaybb, porn gay hd, gay porn online, czech hunter, gayvids, freeonlinegayporn, gay porn, gay por...":
+      case 'GayVids.tube | GayVids, gaybb, porn gay hd, gay porn online, czech hunter, gayvids, freeonlinegayporn, gay porn, gay por...':
 
-      case "GayGuy.Top":
-      case "GayGuy.Top - Watch Gay Porn Videos Free":
+      case 'GayGuy.Top':
+      case 'GayGuy.Top - Watch Gay Porn Videos Free':
         removeEmptytextEls(innerDiv);
         addIframeHrefs();
         break;
 
-      case "Gaystream":
-      case "Gaystream is brat":
-        const tempDocGstrm = await GMXmlHttpRequest(itemUrl);
-        const btnEls = tempDocGstrm.querySelectorAll(".tab.boner");
-        btnEls.forEach((item) => {
+      case 'Gaystream':
+      case 'Gaystream is brat':
+        const tempDocGstrm = await fetchDoc(itemUrl);
+        const btnEls = tempDocGstrm.querySelectorAll('.tab.boner');
+        btnEls.forEach(item => {
           const iframeLink = item
-            .getAttribute("onclick")
+            .getAttribute('onclick')
             .match(/\.src="(.+?)"/)[1];
           const iframeLinkEl = generateElements(
             `<a href=${iframeLink}>${iframeLink}</a>`,
             null,
             true
           );
-          iframeLinkEl.style.display = "block";
+          iframeLinkEl.style.display = 'block';
           innerDiv.prepend(iframeLinkEl);
         });
         // alert( btnEls )
 
         const imgUrl = tempDocGstrm
-          .querySelector("#overlay")
+          .querySelector('#overlay')
           .style.backgroundImage.match(/"(.+?)"/)[1];
         const imgEl = generateElements(`<img src=${imgUrl}>`, null, true);
         innerDiv.prepend(imgEl);
         break;
 
-      case "FreePornVideosHDGay.com – Videos online free gay porn":
-        const tempDocD = await GMXmlHttpRequest(itemUrl);
-        tempDocD.querySelectorAll(".button_choice_server").forEach((item) => {
-          const linkHref = item.getAttribute("onclick").match(/'(.+?)'/)[1];
+      case 'FreePornVideosHDGay.com – Videos online free gay porn':
+        const tempDocD = await fetchDoc(itemUrl);
+        tempDocD.querySelectorAll('.button_choice_server').forEach(item => {
+          const linkHref = item.getAttribute('onclick').match(/'(.+?)'/)[1];
           generateElements(
             `<a href=${linkHref}>${linkHref}</a>`,
             innerDiv,
@@ -727,14 +727,14 @@ function blogtrottrHandler() {
         addPeekButtons(innerDiv, item);
         break;
 
-      case "New Videos":
-      case "New Videos - GayHardFuck.com":
-        if (item.querySelectorAll(".thumbContainer").length) {
-          toggle(item.querySelector(".thumbContainer"));
-          alert("check userscript code");
+      case 'New Videos':
+      case 'New Videos - GayHardFuck.com':
+        if (item.querySelectorAll('.thumbContainer').length) {
+          toggle(item.querySelector('.thumbContainer'));
+          alert('check userscript code');
         }
 
-        const tempDoc = await GMXmlHttpRequest(itemUrl);
+        const tempDoc = await fetchDoc(itemUrl);
         const script_ = tempDoc.querySelectorAll(
           'script[type="text/javascript"]'
         )[1];
@@ -751,8 +751,8 @@ function blogtrottrHandler() {
         // const trueNoOfSlots_ = script_.innerHTML.match( /timeline_screens_count: '(\d+)'/ )[ 1 ];
 
         let imgUrls = [];
-        repeat(+screensCount, (j) => {
-          const thisUrl = imgUrlTemplate.replace("{time}", +j + 1);
+        repeat(+screensCount, j => {
+          const thisUrl = imgUrlTemplate.replace('{time}', +j + 1);
           imgUrls.push(thisUrl);
         });
 
@@ -766,32 +766,32 @@ function blogtrottrHandler() {
           imgUrls,
         });
         // const sb = await storyboardHorizontal( item, 1, 1, itemUrl, null, samplingFq_, trueNoOfSlots_, ...imgUrls );
-        sb.style.width = "85vw";
+        sb.style.width = '85vw';
 
         expandBlogtrottrItem();
 
         break;
 
-      case "NurGAY.to":
-        const newDiv = document.createElement("div");
-        newDiv.append(...innerDiv.querySelectorAll("a:has(img)"));
+      case 'NurGAY.to':
+        const newDiv = document.createElement('div');
+        newDiv.append(...innerDiv.querySelectorAll('a:has(img)'));
         innerDiv.replaceChildren();
         innerDiv.append(newDiv);
 
-        const tempDoc_ = await GMXmlHttpRequest(itemUrl);
+        const tempDoc_ = await fetchDoc(itemUrl);
         const actorsList = tempDoc_
-          .querySelector("#video-actors")
-          .textContent.replaceAll("\t", "")
-          .replace("Actors: ", "")
-          .replaceAll(" /", ",");
-        GM_addElement(innerDiv, "div", { textContent: actorsList });
+          .querySelector('#video-actors')
+          .textContent.replaceAll('\t', '')
+          .replace('Actors: ', '')
+          .replaceAll(' /', ',');
+        GM_addElement(innerDiv, 'div', { textContent: actorsList });
 
         const links = tempDoc_.querySelectorAll(
           'p > [data-wpel-link="external"]'
         );
-        const ExtLinksUl = generateElements("<ul></ul>", innerDiv);
-        links.forEach((link) => {
-          const linkHref = link.getAttribute("href");
+        const ExtLinksUl = generateElements('<ul></ul>', innerDiv);
+        links.forEach(link => {
+          const linkHref = link.getAttribute('href');
           const linkText = link.textContent;
           generateElements(
             `<li><a href=${linkHref}>${linkText}</a></li>`,
@@ -804,14 +804,14 @@ function blogtrottrHandler() {
 
         break;
 
-      case "Hacker News: Front Page":
+      case 'Hacker News: Front Page':
         GM_xmlhttpRequest({
-          method: "GET",
+          method: 'GET',
           url: `https://api.linkpreview.net/?q=${itemUrl}`,
           headers: {
-            "X-Linkpreview-Api-Key": "81dd9d9372dcef7c430a92b177e09dfa",
+            'X-Linkpreview-Api-Key': '81dd9d9372dcef7c430a92b177e09dfa',
           },
-          responseType: "document",
+          responseType: 'document',
           onload: function (response) {
             const resText = response.responseText;
             const imgSrc = resText.match(/"image":"(.+?)"/)[1];
@@ -822,15 +822,15 @@ function blogtrottrHandler() {
         innerDiv.prepend(item.querySelector('[href*="news.ycombinator.com"]'));
       // no break here because reddit has some stuff in common
 
-      case "reddit.com: search results - sri lanka":
+      case 'reddit.com: search results - sri lanka':
         // console.log( innerDiv )
-        if (item.querySelector("[href*=Cricket],[href*=cricket]"))
+        if (item.querySelector('[href*=Cricket],[href*=cricket]'))
           item.remove();
 
-        const innerDivAll = item.querySelectorAll("tbody > tr > td > div");
-        innerDivAll.forEach((div) => {
-          div.style.overflow = "auto";
-          div.style.maxHeight = "300px";
+        const innerDivAll = item.querySelectorAll('tbody > tr > td > div');
+        innerDivAll.forEach(div => {
+          div.style.overflow = 'auto';
+          div.style.maxHeight = '300px';
         });
         break;
 
