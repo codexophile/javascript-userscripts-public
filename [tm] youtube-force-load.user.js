@@ -4,7 +4,10 @@
 
   // Clicks occurring inside any of these selectors should NOT be force-navigated;
   // allow YouTube's normal SPA handling instead.
-  const allowListSelectors = ['ytd-macro-markers-list-item-renderer'];
+  const allowListSelectors = [
+    'ytd-macro-markers-list-item-renderer',
+    'yt-attributed-string',
+  ];
 
   function handleLinkClick(event) {
     const originalTarget = event.target;
