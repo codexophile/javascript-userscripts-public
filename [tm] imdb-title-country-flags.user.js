@@ -6,6 +6,30 @@
 
   function displayCountryFlag() {
     const { countryName, countryCode } = getCountryOfOrigin();
+    if (!countryCode) return;
+
+    const locatorEl = document.querySelector(`[data-testid="hero__pageTitle"]`);
+    const newParent = generateElements(
+      `<ul id=new-parent></ul>`,
+      locatorEl.parentElement
+    );
+
+    const flagSrc = `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
+    const flagImg = document.createElement('img');
+    flagImg.src = flagSrc;
+    flagImg.alt = countryName;
+    flagImg.title = countryName;
+    flagImg.style.marginRight = '8px';
+    newParent.appendChild(flagImg);
+
+    generateElements(`<span> • </span>`, newParent);
+
+    const language = getLanguage();
+    if (language) {
+      const langSpan = document.createElement('span');
+      langSpan.textContent = language;
+      newParent.appendChild(langSpan);
+    }
   }
 
   function getCountryOfOrigin() {
@@ -18,5 +42,12 @@
     const countryCode = matches ? matches[1] : null;
 
     return { countryName, countryCode };
+  }
+
+  function getLanguage() {
+    const languageEl = document.querySelector(`[href*="primary_language"]`);
+    if (!languageEl) return;
+    const language = languageEl.innerText.trim();
+    return language;
   }
 })();
