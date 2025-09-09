@@ -7,6 +7,7 @@
   const allowListSelectors = [
     'ytd-macro-markers-list-item-renderer',
     'yt-attributed-string',
+    'button.cbShowOriginal.cbButton.cbDontHide',
   ];
 
   function handleLinkClick(event) {
