@@ -29,10 +29,10 @@
 
     generateElements(`<span> • </span>`, newParent);
 
-    const language = getLanguage();
-    if (language) {
+    const languages = getLanguages();
+    if (languages.length) {
       const langSpan = document.createElement('span');
-      langSpan.textContent = language;
+      langSpan.textContent = languages.join(', ');
       newParent.appendChild(langSpan);
     }
   }
@@ -50,10 +50,9 @@
       .filter(Boolean);
   }
 
-  function getLanguage() {
-    const languageEl = document.querySelector(`[href*="primary_language"]`);
-    if (!languageEl) return;
-    const language = languageEl.innerText.trim();
-    return language;
+  function getLanguages() {
+    const languageEls = document.querySelectorAll(`[href*="primary_language"]`);
+    if (!languageEls.length) return [];
+    return Array.from(languageEls).map(el => el.innerText.trim());
   }
 })();
