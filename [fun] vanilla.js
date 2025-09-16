@@ -2383,6 +2383,21 @@ function empty(element) {
 // MARK: JQ Alternatives
 //# JQ Alternatives
 
+function nextAll(element, selector, includeSelf = false) {
+  const siblings = [];
+  if (includeSelf) siblings.push(element);
+
+  let currentElement = element.nextElementSibling;
+  console.log(currentElement);
+  while (currentElement) {
+    if (!selector || currentElement.matches(selector)) {
+      siblings.push(currentElement);
+    }
+    currentElement = currentElement.nextElementSibling;
+  }
+  return siblings;
+}
+
 function convertElementType(element, newType) {
   // Input validation
   if (!(element instanceof HTMLElement)) {
