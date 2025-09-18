@@ -131,9 +131,10 @@
     const xCoord = Math.round(x);
     const yCoord = Math.round(y);
     const targetXCoord = xCoord - 50;
-    const targetYCoord = yCoord + 80;
+    const targetYCoord = yCoord + 400;
 
     const ahkCode = `
+      CoordMode( 'Mouse', 'Client')
       Click( ${targetXCoord}, ${targetYCoord} )
     `;
     const copyString = `
