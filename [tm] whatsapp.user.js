@@ -1,29 +1,5 @@
 (function () {
-  "use strict";
-
-  const USER_TIMEZONE_MAP = {
-    "Hirusha Liyanage": "America/New_York",
-    "Chamith Weerasingha": "America/Toronto",
-    "Kevin Andrés": "America/Guayaquil",
-    "Patricio Sanhueza": "America/Santiago",
-
-    "Ravi Tissera": "Europe/Paris",
-    "Chathun Hashan Komasaru": "Europe/London",
-    "Dinuka Fernando": "Europe/London",
-    Mineth: "Europe/Rome",
-    "Nicole Alan": "Europe/Athens",
-
-    "Ijas Mohomed": "Asia/Dubai",
-    "Vidyuth Rajan": "Asia/Muscat",
-    "Gelo Santos": "Asia/Dubai",
-
-    Pasi: "Australia/Perth",
-    Rajitha: "Australia/Melbourne",
-    Dilaksha: "Australia/Melbourne",
-    "Vinura Thirimanna": "Australia/Melbourne",
-
-    "Hans Ignacio": "Asia/Manila",
-  };
+  'use strict';
 
   function getUserName() {
     const profileNameParentEl = document.querySelector(
@@ -52,10 +28,10 @@
     try {
       const userTime = getTimezoneDateTime(userTimezone).fullDateTime;
 
-      let userTimeEl = document.getElementById("user-time");
+      let userTimeEl = document.getElementById('user-time');
       if (!userTimeEl) {
-        userTimeEl = document.createElement("div");
-        userTimeEl.id = "user-time";
+        userTimeEl = document.createElement('div');
+        userTimeEl.id = 'user-time';
         profileNameParentEl.appendChild(userTimeEl);
       }
 
@@ -86,7 +62,7 @@
   startUserTimeUpdates();
 
   //* Local time for message items
-  waitForEach("[data-pre-plain-text] [aria-hidden]", (timestampEl) => {
+  waitForEach('[data-pre-plain-text] [aria-hidden]', timestampEl => {
     try {
       const userName = getUserName();
       if (!userName) return;
@@ -96,33 +72,33 @@
 
       const grandParentEl = grandParent(timestampEl, 4);
       const timestampDisplayEl = grandParentEl.querySelector(
-        "[dir=auto]:not(.copyable-text)"
+        '[dir=auto]:not(.copyable-text)'
       );
 
       const originalTimestamp = timestampDisplayEl.textContent;
       const newTimestamp = convertTimeToTimezone(
         originalTimestamp,
-        "Asia/Colombo",
+        'Asia/Colombo',
         userTimezone
       );
 
       timestampDisplayEl.textContent = `${timestampDisplayEl.textContent} • ${newTimestamp}`;
-      timestampDisplayEl.parentElement.parentElement.style.marginTop = "unset";
+      timestampDisplayEl.parentElement.parentElement.style.marginTop = 'unset';
     } catch (error) {
       console.log(error);
     }
   });
 
   //* keyboard shortcuts
-  document.addEventListener("keydown", async function (event) {
+  document.addEventListener('keydown', async function (event) {
     if (!event.altKey) return; // 🛑
 
     switch (event.key) {
-      case "r": // reply
+      case 'r': // reply
         event.preventDefault();
 
         const activeEl = document.activeElement;
-        const chatItemQuery = ".message-out, .message-in";
+        const chatItemQuery = '.message-out, .message-in';
         const isAChatItem = activeEl.matches(chatItemQuery);
         const aChildIsAChatItem = activeEl.querySelector(chatItemQuery);
         if (!isAChatItem || !aChildIsAChatItem) return;
@@ -130,12 +106,12 @@
 
         break;
 
-      case "d": // next
+      case 'd': // next
         event.preventDefault();
         let nextUnreadItem = document.querySelectorAll(
           `[aria-label*="unread message"]`
         )[1];
-        nextUnreadItem.scrollIntoView({ block: "center" });
+        nextUnreadItem.scrollIntoView({ block: 'center' });
         whatsappAHKClick(nextUnreadItem, false);
         break;
     }
@@ -175,7 +151,7 @@
   var time;
 
   function logout() {
-    location.href = "about:blank";
+    location.href = 'about:blank';
   }
 
   function resetTimer() {
@@ -189,9 +165,9 @@
   document.ontouchstart = resetTimer;
   document.onclick = resetTimer; // touchpad clicks
   document.onkeydown = resetTimer; // onkeypress is deprecated
-  document.addEventListener("scroll", resetTimer, true); // improved; see comments
+  document.addEventListener('scroll', resetTimer, true); // improved; see comments
 
-  document.addEventListener("keydown", function (event) {
+  document.addEventListener('keydown', function (event) {
     // switch ( event.code ) {
 
     //     case 'Space':
@@ -217,9 +193,9 @@
     if (!event.altKey) return; // 🛑
 
     switch (event.key) {
-      case "d": // next
+      case 'd': // next
         event.preventDefault();
-        console.log("xxxx");
+        console.log('xxxx');
         $('[aria-label*="unread message"]').first().click();
         break;
     }
