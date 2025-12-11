@@ -7,11 +7,6 @@
   main();
 
   async function main() {
-    document
-      .querySelectorAll(`.videoPageControl,.storyboardControl`)
-      .forEach(item => {
-        item.remove();
-      });
     // calculateWidthAndExpand( collapsibleContent );
 
     if (location.href.includes('/watch?v=')) {

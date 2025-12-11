@@ -1,5 +1,5 @@
 (async function () {
-  "use strict";
+  'use strict';
 
   let activeVideo;
   const fastSpeed = 3;
@@ -18,9 +18,9 @@
     childList: true,
     subtree: true,
   });
-  document.addEventListener("scroll", debounce(main, 150));
-  document.addEventListener("keyup", keyboardEvent, false);
-  document.addEventListener("mousedown", addMouseEvents);
+  document.addEventListener('scroll', debounce(main, 150));
+  document.addEventListener('keyup', keyboardEvent, false);
+  document.addEventListener('mousedown', addMouseEvents);
 
   async function main() {
     activeVideo = getActiveVideo();
@@ -31,13 +31,13 @@
 
     if (activeVideo && !vidContPanel) {
       addToolbar();
-      const collapsibleCont = await waitFor("#collapsibleContent");
-      generateToolbarButton("📹", collapsibleCont, null, () => {
+      const collapsibleCont = await waitFor('#collapsibleContent');
+      generateToolbarButton('📹', collapsibleCont, null, () => {
         fadeToggle(document.querySelectorAll(`#video-controlPanel`), 2500);
       });
     }
-    if (!activeVideo && vidContPanel) vidContPanel.style.display = "none";
-    else if (vidContPanel) vidContPanel.style.display = "";
+    if (!activeVideo && vidContPanel) vidContPanel.style.display = 'none';
+    else if (vidContPanel) vidContPanel.style.display = '';
 
     if (activeVideo) {
       videoEventListeners(activeVideo);
@@ -52,146 +52,152 @@
     GM_addStyle(styles);
 
     document.body.append(controlPanel);
-    controlPanel.querySelectorAll(":not(.important)").forEach((item) => {
-      item.style.display = "none";
+    controlPanel.querySelectorAll(':not(.important)').forEach(item => {
+      item.style.display = 'none';
     });
 
-    const contPanelHeader = controlPanel.querySelector("#contPanelHeader");
+    const contPanelHeader = controlPanel.querySelector('#contPanelHeader');
     vidProgressEl = controlPanel.querySelector(`#progress`);
-    speedDispEl = controlPanel.querySelector("#speedDisp");
-    volDispEl = controlPanel.querySelector("#volDisp");
+    speedDispEl = controlPanel.querySelector('#speedDisp');
+    volDispEl = controlPanel.querySelector('#volDisp');
     slidVolFinEl = controlPanel.querySelector(`.slidVolFin`);
-    divHeightEl = controlPanel.querySelector(".divHeight");
+    divHeightEl = controlPanel.querySelector('.divHeight');
 
     // dragElement( controlPanel, controlPanel );
     makeDraggable(controlPanel);
-    contPanelHeader.addEventListener("mousedown", () => {
-      controlPanel.style.transition = "unset";
+    contPanelHeader.addEventListener('mousedown', () => {
+      controlPanel.style.transition = 'unset';
     });
-    contPanelHeader.addEventListener("mouseup", () => {
-      controlPanel.style.transition = "left 0.5s, top 0.5s, opacity 0.2s";
+    contPanelHeader.addEventListener('mouseup', () => {
+      controlPanel.style.transition = 'left 0.5s, top 0.5s, opacity 0.2s';
     });
 
-    controlPanel.querySelector(".butClose").addEventListener("click", () => {
+    controlPanel.querySelector('.butClose').addEventListener('click', () => {
       fadeOut(controlPanel, 250);
     });
-    controlPanel.querySelector(".head").addEventListener("click", () => {
-      toggle(controlPanel.querySelectorAll(":not(.important)"));
+    controlPanel.querySelector('.head').addEventListener('click', () => {
+      toggle(controlPanel.querySelectorAll(':not(.important)'));
     });
-    controlPanel.querySelector("#speedToggle").addEventListener("click", () => {
+    controlPanel.querySelector('#speedToggle').addEventListener('click', () => {
       speedToggle();
     });
-    controlPanel.querySelector("#buttonPlay").addEventListener("click", () => {
+    controlPanel.querySelector('#buttonPlay').addEventListener('click', () => {
       togglePlayPause();
     });
 
-    vidProgressEl.addEventListener("input", (e) => {
+    vidProgressEl.addEventListener('input', e => {
       activeVideo.currentTime = (e.target.value / 100) * activeVideo.duration;
     });
-    slidVolFinEl.addEventListener("input", (e) => {
+    slidVolFinEl.addEventListener('input', e => {
       activeVideo.volume = parseFloat(
         parseFloat(e.target.value)
       ); /* ; volumeDisplay.value = this.value */
     });
 
-    controlPanel.querySelector("#rewind-btn").addEventListener("click", () => {
+    controlPanel.querySelector('#rewind-btn').addEventListener('click', () => {
       activeVideo.currentTime = 0;
     });
     controlPanel
-      .querySelector(".timejumpLOne")
-      .addEventListener("click", () => {
+      .querySelector('.timejumpLOne')
+      .addEventListener('click', () => {
         activeVideo.currentTime -= timeIncrSmall;
       });
     controlPanel
-      .querySelector(".timejumpROne")
-      .addEventListener("click", () => {
+      .querySelector('.timejumpROne')
+      .addEventListener('click', () => {
         activeVideo.currentTime += timeIncrSmall;
       });
     controlPanel
-      .querySelector(".timejumpLTwo")
-      .addEventListener("click", () => {
+      .querySelector('.timejumpLTwo')
+      .addEventListener('click', () => {
         activeVideo.currentTime -= timeIncrLarge;
       });
     controlPanel
-      .querySelector(".timejumpRTwo")
-      .addEventListener("click", () => {
+      .querySelector('.timejumpRTwo')
+      .addEventListener('click', () => {
         activeVideo.currentTime += timeIncrLarge;
       });
     controlPanel
-      .querySelector("#checkbox-loop-vid")
-      .addEventListener("click", (event) => {
+      .querySelector('#checkbox-loop-vid')
+      .addEventListener('click', event => {
         activeVideo.loop = event.target.checked;
       });
 
     controlPanel
       .querySelector(`#muteButton`)
-      .addEventListener("click", function () {
+      .addEventListener('click', function () {
         activeVideo.muted = !activeVideo.muted;
       });
-    controlPanel.querySelector(`#frameStepL`).addEventListener("click", () => {
-      frameStep("left");
+    controlPanel.querySelector(`#frameStepL`).addEventListener('click', () => {
+      frameStep('left');
     });
-    controlPanel.querySelector(`#frameStepR`).addEventListener("click", () => {
-      frameStep("right");
+    controlPanel.querySelector(`#frameStepR`).addEventListener('click', () => {
+      frameStep('right');
     });
     controlPanel
-      .querySelector("#buttonResize")
-      .addEventListener("click", () => {
+      .querySelector('#buttonResize')
+      .addEventListener('click', () => {
         if (activeVideo.videoHeight)
           activeVideo.style.height = `${activeVideo.videoHeight}px`;
       });
     controlPanel
-      .querySelector("#buttonScroll")
-      .addEventListener("click", () => {
+      .querySelector('#buttonScroll')
+      .addEventListener('click', () => {
         activeVideo.scrollIntoView();
       });
-    controlPanel.querySelector("#buttonLog").addEventListener("click", () => {
+    controlPanel.querySelector('#buttonLog').addEventListener('click', () => {
       console.log(activeVideo);
     });
-    controlPanel
-      .querySelector("#copyPageUrl")
-      .addEventListener("click", (e) => {
-        e.preventDefault();
-        GM_setClipboard(location.href);
-        return false;
-      });
-    controlPanel.querySelector("#copyVidSrc").addEventListener("click", (e) => {
+    controlPanel.querySelector('#copyPageUrl').addEventListener('click', e => {
+      e.preventDefault();
+      GM_setClipboard(location.href);
+      return false;
+    });
+    controlPanel.querySelector('#copyVidSrc').addEventListener('click', e => {
       GM_setClipboard(activeVideo.currentSrc);
     });
-    controlPanel.querySelector(`#buttonSnap`).addEventListener("click", () => {
+    controlPanel.querySelector(`#buttonSnap`).addEventListener('click', () => {
       snap();
     });
-    controlPanel.querySelector(`#buttonGenSb`).addEventListener("click", () => {
+    controlPanel.querySelector(`#buttonGenSb`).addEventListener('click', () => {
       generateStoryboard();
     });
 
     controlPanel
       .querySelector(`#buttonRotateL`)
-      .addEventListener("click", () => {
+      .addEventListener('click', () => {
         rotate(-90);
       });
     controlPanel
       .querySelector(`#buttonRotateR`)
-      .addEventListener("click", () => {
+      .addEventListener('click', () => {
         rotate(90);
       });
+    controlPanel.querySelector(`#buttonPiP`).addEventListener('click', () => {
+      requestPictureInPicture();
+    });
+    controlPanel
+      .querySelector(`#buttonFullScreen`)
+      .addEventListener('click', () => {
+        activeVideo.requestFullscreen();
+      });
 
-    speedDispEl.addEventListener("change", (e) => {
+    speedDispEl.addEventListener('change', e => {
       activeVideo.playbackRate = e.target.value;
     });
-    volDispEl.addEventListener("change", (e) => {
+    volDispEl.addEventListener('change', e => {
       activeVideo.volume = e.target.value;
     });
 
     return controlPanel;
 
-    $("span.text").css("color", "unset !important");
+    $('span.text').css('color', 'unset !important');
 
-    $(`#progress`).on("mousedown", function () {
+    $(`#progress`).on('mousedown', function () {
       if (getActiveVideo().paused) return;
       togglePlayPause();
     });
-    $(`#progress`).on("mouseup", togglePlayPause);
+    $(`#progress`).on('mouseup', togglePlayPause);
 
     //?pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
 
@@ -207,37 +213,37 @@
   }
 
   function titler(text) {
-    if (document.getElementById("cbAutoSwitch")?.checked) document.title = text;
+    if (document.getElementById('cbAutoSwitch')?.checked) document.title = text;
   }
 
   function videoEventListeners(video) {
-    if (video.classList.contains("video-processed")) return; // 🛑
+    if (video.classList.contains('video-processed')) return; // 🛑
 
-    video.addEventListener("loadedmetadata", async () => {
+    video.addEventListener('loadedmetadata', async () => {
       const bitrate = await getBitrate(video);
       displayBitrate(bitrate);
     });
 
     if (video.readyState >= 1) {
       // HAVE_METADATA or higher
-      getBitrate(video).then((bitrate) => displayBitrate(bitrate));
+      getBitrate(video).then(bitrate => displayBitrate(bitrate));
     }
 
-    video.addEventListener("playing", () => {
-      titler("[media playing]");
+    video.addEventListener('playing', () => {
+      titler('[media playing]');
     });
-    video.addEventListener("pause", () => {
-      titler("[media  paused]");
+    video.addEventListener('pause', () => {
+      titler('[media  paused]');
     });
-    video.addEventListener("waiting", () => {
-      titler("[media waiting]");
+    video.addEventListener('waiting', () => {
+      titler('[media waiting]');
     });
-    video.addEventListener("stalled", () => {
-      titler("[media stalled]");
+    video.addEventListener('stalled', () => {
+      titler('[media stalled]');
     });
 
     let lastUpdate = 0;
-    video.addEventListener("timeupdate", (event) => {
+    video.addEventListener('timeupdate', event => {
       const now = Date.now();
       if (now - lastUpdate < 50) return; // Only update every 50ms
       lastUpdate = now;
@@ -252,12 +258,12 @@
       const videoArea = video.videoWidth * video.videoHeight;
       const spanVidHeight = document.querySelector(`.divHeight`);
       spanVidHeight.style.backgroundColor =
-        videoArea >= 1920 * 1080 ? "#ff8080" : "#2ecc71";
+        videoArea >= 1920 * 1080 ? '#ff8080' : '#2ecc71';
 
       updateFrameRate(video);
 
-      const spanRemainingTime = document.querySelector("#spanRemainingTime");
-      const spanCurrentTime = document.querySelector("#spanCurrentTime");
+      const spanRemainingTime = document.querySelector('#spanRemainingTime');
+      const spanCurrentTime = document.querySelector('#spanCurrentTime');
       const spanActualRemTime = document.querySelector(
         `#spanActualRemainingTime`
       );
@@ -282,15 +288,15 @@
       spanActualRemTime.textContent = readableActual;
     });
 
-    video.addEventListener("ratechange", (event) => {
+    video.addEventListener('ratechange', event => {
       speedDispEl.value = event.target.playbackRate;
     });
-    video.addEventListener("volumechange", (event) => {
+    video.addEventListener('volumechange', event => {
       volDispEl.value = event.target.volume;
       slidVolFinEl.value = event.target.volume;
     });
 
-    video.classList.add("video-processed");
+    video.classList.add('video-processed');
   }
 
   function rotate(inputAngle) {
@@ -301,20 +307,63 @@
     activeVideo.style.transform = `rotate(${newAngle}deg)`;
   }
 
+  function requestPictureInPicture() {
+    if (!activeVideo) {
+      console.warn('No active video found for Picture in Picture');
+      return;
+    }
+
+    // Check if Picture in Picture API is supported
+    if (!document.pictureInPictureEnabled) {
+      console.warn('Picture in Picture is not supported by this browser');
+      alert('Picture in Picture is not supported by this browser');
+      return;
+    }
+
+    // Check if video supports Picture in Picture
+    if (activeVideo.disablePictureInPicture) {
+      console.warn('Picture in Picture is disabled for this video');
+      alert('Picture in Picture is disabled for this video');
+      return;
+    }
+
+    // Toggle Picture in Picture
+    if (document.pictureInPictureElement) {
+      document
+        .exitPictureInPicture()
+        .then(() => {
+          console.log('Exited Picture in Picture');
+        })
+        .catch(error => {
+          console.error('Error exiting Picture in Picture:', error);
+        });
+    } else {
+      activeVideo
+        .requestPictureInPicture()
+        .then(() => {
+          console.log('Entered Picture in Picture');
+        })
+        .catch(error => {
+          console.error('Error entering Picture in Picture:', error);
+          alert('Failed to enter Picture in Picture mode');
+        });
+    }
+  }
+
   function snap() {
-    const canvas = generateElements("<canvas></canvas>", document.body);
+    const canvas = generateElements('<canvas></canvas>', document.body);
     canvas.width = activeVideo.videoWidth;
     canvas.height = activeVideo.videoHeight;
-    const canvasContext = canvas.getContext("2d");
+    const canvasContext = canvas.getContext('2d');
     canvasContext.drawImage(activeVideo, 0, 0);
     const imageUrl = canvas
-      .toDataURL("image/png")
-      .replace("image/png", "image/octet-stream");
+      .toDataURL('image/png')
+      .replace('image/png', 'image/octet-stream');
 
-    const link = generateElements("<a></a>", document.body);
+    const link = generateElements('<a></a>', document.body);
     const fileName = document.title ? document.title : location.href;
-    link.setAttribute("download", `${fileName}.png`);
-    link.setAttribute("href", imageUrl);
+    link.setAttribute('download', `${fileName}.png`);
+    link.setAttribute('href', imageUrl);
     link.click();
 
     canvas.remove();
@@ -341,43 +390,43 @@
 
   function keyboardEvent(e) {
     let activeElementType = document.activeElement.tagName.toLowerCase();
-    if (activeElementType === "input") return; // 🛑
+    if (activeElementType === 'input') return; // 🛑
 
     if (!activeVideo) {
       return; // 🛑
     }
 
-    if (e.key == "j") {
+    if (e.key == 'j') {
       activeVideo.currentTime = activeVideo.currentTime - timeIncrSmall;
     }
-    if (e.key == "l") {
+    if (e.key == 'l') {
       activeVideo.currentTime = activeVideo.currentTime + timeIncrSmall;
     }
-    if (e.key == "z") {
+    if (e.key == 'z') {
       speedToggle();
     }
-    if (e.key === "x") {
+    if (e.key === 'x') {
       activeVideo.playbackRate = activeVideo.playbackRate - 0.5;
     }
-    if (e.key === "c") {
+    if (e.key === 'c') {
       activeVideo.playbackRate = activeVideo.playbackRate + 0.5;
     }
-    if (e.key === "m") {
-      activeVideo.muted = !activeVideo.toggleAttribute("muted");
+    if (e.key === 'm') {
+      activeVideo.muted = !activeVideo.toggleAttribute('muted');
     }
-    if (e.code === "KeyB") {
+    if (e.code === 'KeyB') {
       activeVideo.volume -= 0.01;
     }
-    if (e.code === "KeyN") {
+    if (e.code === 'KeyN') {
       activeVideo.volume += 0.01;
     }
-    if (e.shiftKey && e.code === "KeyB") {
+    if (e.shiftKey && e.code === 'KeyB') {
       activeVideo.volume -= 0.001;
     }
-    if (e.shiftKey && e.code === "KeyN") {
+    if (e.shiftKey && e.code === 'KeyN') {
       activeVideo.volume += 0.001;
     }
-    if (e.shiftKey && e.code === "KeyM") {
+    if (e.shiftKey && e.code === 'KeyM') {
       activeVideo.muted = false;
       activeVideo.volume = 0.5;
     }
@@ -397,10 +446,10 @@
   }
 
   function getActiveVideo() {
-    let mediaEls = [...document.querySelectorAll("video, audio")];
-    const workingMedia = mediaEls.filter((el) => el.duration);
-    const playingMedia = mediaEls.filter((el) => !el.paused);
-    let visibleEls = playingMedia.filter((el) => isElementInViewport(el));
+    let mediaEls = [...document.querySelectorAll('video, audio')];
+    const workingMedia = mediaEls.filter(el => el.duration);
+    const playingMedia = mediaEls.filter(el => !el.paused);
+    let visibleEls = playingMedia.filter(el => isElementInViewport(el));
 
     const activeMedia = playingMedia.length
       ? playingMedia
@@ -414,8 +463,8 @@
 
   function frameStep(direction) {
     activeVideo.pause();
-    if (direction === "left") activeVideo.currentTime -= timeIncrTiny;
-    if (direction === "right") activeVideo.currentTime += timeIncrTiny;
+    if (direction === 'left') activeVideo.currentTime -= timeIncrTiny;
+    if (direction === 'right') activeVideo.currentTime += timeIncrTiny;
   }
 
   const videoInfoCache = new Map();
@@ -428,8 +477,8 @@
     }
 
     try {
-      const response = await fetch(videoEl.currentSrc, { method: "HEAD" });
-      const contentLength = response.headers.get("Content-Length");
+      const response = await fetch(videoEl.currentSrc, { method: 'HEAD' });
+      const contentLength = response.headers.get('Content-Length');
       if (contentLength && videoEl.duration && isFinite(videoEl.duration)) {
         const sizeInBytes = parseInt(contentLength, 10);
         const durationInSeconds = videoEl.duration;
@@ -447,7 +496,7 @@
   }
 
   function displayBitrate(bitrate) {
-    const spanBitrate = document.querySelector("#bitrate-display");
+    const spanBitrate = document.querySelector('#bitrate-display');
     if (spanBitrate) {
       if (bitrate) {
         let displayValue;
@@ -458,7 +507,7 @@
         }
         spanBitrate.textContent = displayValue;
       } else {
-        spanBitrate.textContent = "";
+        spanBitrate.textContent = '';
       }
     }
   }
@@ -496,7 +545,7 @@
     if (spanFrameRate) {
       spanFrameRate.textContent = frameRate;
       spanFrameRate.style.backgroundColor =
-        frameRate >= 60 ? "#ff8080" : "#2ecc71";
+        frameRate >= 60 ? '#ff8080' : '#2ecc71';
     }
   }
 })();

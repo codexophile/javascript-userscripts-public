@@ -40,6 +40,8 @@ const htmlStructure = `
       <button id="frameStepR" title="Frame step">⇢</button> 
       <button id="buttonSnap" title="Snap">📷</button>
       <button id="buttonGenSb">📸</button>
+      <button id="buttonPiP" title="Picture in Picture">📺</button>
+      <button id="buttonFullScreen" title="Full Screen">⛶</button>
       <button id="buttonRotateL">⭯</button>
       <button id="buttonRotateR">⭮</button>
     </div>
@@ -68,7 +70,7 @@ const styles = `
     opacity: 0.5;
   }
 
-  .controlPanel :is(span, button){
+  .controlPanel :is(span, button, a){
     user-select: none;
   }
 

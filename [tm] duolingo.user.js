@@ -1,21 +1,21 @@
 (function () {
-  "use strict";
+  'use strict';
 
   reEnableConsole();
-  console.log("Userscript startup");
+  console.log('Userscript startup');
 
   const skipBtnSelectors = [
     '[data-test="player-skip-continue"]',
     '[data-test="plus-no-thanks"]',
     '[data-test="practice-hub-ad-no-thanks-button"]',
   ];
-  const skipBtnSelector = skipBtnSelectors.join(", ");
+  const skipBtnSelector = skipBtnSelectors.join(', ');
 
   //* auto advancing
   (function () {
-    "use strict";
+    'use strict';
 
-    waitForEach(skipBtnSelector, (el) => {
+    waitForEach(skipBtnSelector, el => {
       el.click();
     });
 
@@ -23,10 +23,10 @@
       clickContinue();
     });
 
-    waitForEach('[data-test="session-duo"]', (el) => {
-      const messageElsArr = contains("div", "You can do it", el.parentElement);
+    waitForEach('[data-test="session-duo"]', el => {
+      const messageElsArr = contains('div', 'You can do it', el.parentElement);
       const messageElsArr2 = contains(
-        "div",
+        'div',
         "Let's review the exercises you missed!",
         el.parentElement
       );
@@ -41,7 +41,7 @@
       clickContinue();
     });
 
-    waitForEach('[data-test="player-skip"]', (skipBtnEl) => {
+    waitForEach('[data-test="player-skip"]', skipBtnEl => {
       if (skipBtnEl.textContent === "Can't speak now") {
         skipBtnEl.click();
       }
@@ -53,12 +53,12 @@
     }
   })();
 
-  document.addEventListener("keydown", doc_keyDown, false);
-  document.addEventListener("keyup", doc_keyUp, false);
+  document.addEventListener('keydown', doc_keyDown, false);
+  document.addEventListener('keyup', doc_keyUp, false);
   // had to use keyup variation because a certain key combination didn't work in the other
 
-  waitForEach('[spellcheck="false"]', (el) => {
-    el.setAttribute("spellcheck", "true");
+  waitForEach('[spellcheck="false"]', el => {
+    el.setAttribute('spellcheck', 'true');
   });
 
   function handleNumericKeyPresses(event) {
@@ -82,12 +82,12 @@
 
     // backspace, space and a-z keys focuses the text area and send the pressed key again in the text area
     if (
-      (e.code == "Backspace" ||
-        e.code == "Space" ||
+      (e.code == 'Backspace' ||
+        e.code == 'Space' ||
         (e.key.charCodeAt(0) >= 97 && e.key.charCodeAt(0) <= 122)) &&
-      document.getElementsByTagName("textarea")[0]
+      document.getElementsByTagName('textarea')[0]
     ) {
-      var textEl = document.getElementsByTagName("textarea")[0];
+      var textEl = document.getElementsByTagName('textarea')[0];
       textEl.focus();
       // textEl.value += e.key;
       // textEl.value = e.key;
@@ -96,38 +96,38 @@
     // console.log(e.code);
 
     // can't speak and can't hear buttons
-    if (e.ctrlKey && e.key == "q") {
-      const skipBtn = document.querySelector("[data-test=player-skip]");
-      if (!skipBtn && skipBtn.innerText === "SKIP") return; // 🛑
+    if (e.ctrlKey && e.key == 'q') {
+      const skipBtn = document.querySelector('[data-test=player-skip]');
+      if (!skipBtn && skipBtn.innerText === 'SKIP') return; // 🛑
       skipBtn.click();
     }
     // discuss button
-    var discusButton = document.querySelector("[data-test=discussion-button]");
-    if (e.code == "KeyD" && discusButton) discusButton.click();
+    var discusButton = document.querySelector('[data-test=discussion-button]');
+    if (e.code == 'KeyD' && discusButton) discusButton.click();
 
     // tab to set focus on the text area
-    if (e.code == "Tab") document.getElementsByTagName("textarea")[0].focus();
+    if (e.code == 'Tab') document.getElementsByTagName('textarea')[0].focus();
 
     // condition to check if a choice element exists
     let choiceParent;
     let choiceEls;
-    if (["j", "k", "l", ";"].includes(e.key)) {
+    if (['j', 'k', 'l', ';'].includes(e.key)) {
       choiceParent = document.querySelector(`[aria-label='choice']`);
       if (!choiceParent) return; // 🛑
       choiceEls = document.querySelector(`[aria-label='choice']`).children;
     }
 
     switch (e.key) {
-      case "j":
+      case 'j':
         choiceEls[0].click();
         break;
-      case "k":
+      case 'k':
         choiceEls[1].click();
         break;
-      case "l":
+      case 'l':
         choiceEls[2].click();
         break;
-      case ";":
+      case ';':
         choiceEls[3].click();
         break;
       default:
@@ -137,11 +137,11 @@
 
   function doc_keyUp(e) {
     // ctrl + space to speak
-    if (e.ctrlKey && e.code == "Space")
-      document.querySelectorAll("[dir=ltr] > button")[0].click();
+    if (e.ctrlKey && e.code == 'Space')
+      document.querySelectorAll('[dir=ltr] > button')[0].click();
 
     // ctrl + shift + space slow speak
-    if (e.shiftKey && e.ctrlKey && e.code == "Space")
-      document.querySelectorAll("[dir=ltr] > button")[1].click();
+    if (e.shiftKey && e.ctrlKey && e.code == 'Space')
+      document.querySelectorAll('[dir=ltr] > button')[1].click();
   }
 })();

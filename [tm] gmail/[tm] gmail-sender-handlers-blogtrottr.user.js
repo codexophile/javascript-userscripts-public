@@ -54,7 +54,7 @@ function blogtrottrHandler() {
     }
 
     async function addIframeHrefs(tempDoc) {
-      if (!tempDoc) tempDoc = await fetchDoc(itemUrl);
+      if (!tempDoc) tempDoc = await GMXmlHttpRequest(itemUrl);
       const iframes = tempDoc.querySelectorAll('iframe');
       iframes.forEach(iframe => {
         GM_addElement(innerDiv, 'a', {
@@ -139,7 +139,7 @@ function blogtrottrHandler() {
       streamtapeLinksEls.forEach(async streamtapeLinkEl => {
         let doc;
         try {
-          doc = await fetchDoc(streamtapeLinkEl.href);
+          doc = await GMXmlHttpRequest(streamtapeLinkEl.href);
         } catch (error) {
           console.log('StreamWish error:', error);
           result = result && false;
@@ -162,7 +162,7 @@ function blogtrottrHandler() {
       streamWishLinksEls.forEach(async streamWishLinkEl => {
         let doc;
         try {
-          doc = await fetchDoc(streamWishLinkEl.href);
+          doc = await GMXmlHttpRequest(streamWishLinkEl.href);
         } catch (error) {
           console.log('StreamWish error:', error);
           result = result && false;
@@ -194,7 +194,7 @@ function blogtrottrHandler() {
       doodLinksEls.forEach(async doodLinkEl => {
         let resText = '';
         try {
-          resText = await fetchDoc(doodLinkEl.href, null, true);
+          resText = await GMXmlHttpRequest(doodLinkEl.href, null, true);
         } catch (error) {
           console.log('Dood error:', error);
           result = result && false;
@@ -219,7 +219,7 @@ function blogtrottrHandler() {
       'New Gay Porn Videos & Sex Tube Movies | SexTubeSpot.com': async () => {},
 
       'Latest gay porn videos on 4gay.com': async () => {
-        const tempDoc4gay = await fetchDoc(itemUrl);
+        const tempDoc4gay = await GMXmlHttpRequest(itemUrl);
         const duration_ = tempDoc4gay.querySelector(
           'meta[property="video:duration"]'
         ).content;
@@ -243,13 +243,13 @@ function blogtrottrHandler() {
 
       'Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...':
         async () => {
-          const tempDoc__ = await fetchDoc(itemUrl);
+          const tempDoc__ = await GMXmlHttpRequest(itemUrl);
           addIframeHrefs(tempDoc__);
         },
 
       'VIDÉOS XXX GAY - Porno GAY Gratuit en Streaming': async () => {
         const videoUrl = itemUrl;
-        const doc = await fetchDoc(videoUrl);
+        const doc = await GMXmlHttpRequest(videoUrl);
         const sbSrc = doc
           .querySelector('[property="twitter:image"]')
           .content.replace('/default', '/nvsprite');
@@ -297,7 +297,7 @@ function blogtrottrHandler() {
       iGay69: addIframeHrefs,
 
       '4horlover': async () => {
-        const tempDoc = await fetchDoc(itemUrl);
+        const tempDoc = await GMXmlHttpRequest(itemUrl);
         const centerEl = tempDoc.querySelector('main center');
         innerDiv.append(centerEl);
         centerEl.querySelectorAll('b, img').forEach(el => {
@@ -345,7 +345,7 @@ function blogtrottrHandler() {
 
       Gaystream: addIframeHrefs,
       'Gaystream is brat': async () => {
-        const tempDocGstrm = await fetchDoc(itemUrl);
+        const tempDocGstrm = await GMXmlHttpRequest(itemUrl);
         const btnEls = tempDocGstrm.querySelectorAll('.tab.boner');
         btnEls.forEach(item => {
           const iframeLink = item
@@ -367,7 +367,7 @@ function blogtrottrHandler() {
       },
 
       'FreePornVideosHDGay.com – Videos online free gay porn': async () => {
-        const tempDocD = await fetchDoc(itemUrl);
+        const tempDocD = await GMXmlHttpRequest(itemUrl);
         tempDocD.querySelectorAll('.button_choice_server').forEach(item => {
           const linkHref = item.getAttribute('onclick').match(/'(.+?)'/)[1];
           generateElements(
@@ -385,7 +385,7 @@ function blogtrottrHandler() {
           alert('check userscript code');
         }
 
-        const tempDoc = await fetchDoc(itemUrl);
+        const tempDoc = await GMXmlHttpRequest(itemUrl);
         const script_ = tempDoc.querySelectorAll(
           'script[type="text/javascript"]'
         )[1];
@@ -424,7 +424,7 @@ function blogtrottrHandler() {
           alert('check userscript code');
         }
 
-        const tempDoc = await fetchDoc(itemUrl);
+        const tempDoc = await GMXmlHttpRequest(itemUrl);
         const script_ = tempDoc.querySelectorAll(
           'script[type="text/javascript"]'
         )[1];
@@ -464,7 +464,7 @@ function blogtrottrHandler() {
         innerDiv.replaceChildren();
         innerDiv.append(newDiv);
 
-        const tempDoc_ = await fetchDoc(itemUrl);
+        const tempDoc_ = await GMXmlHttpRequest(itemUrl);
         const actorsList = tempDoc_
           .querySelector('#video-actors')
           .textContent.replaceAll('\t', '')
@@ -517,6 +517,15 @@ function blogtrottrHandler() {
         });
       },
 
+      'Download all YIFY Movies Torrents - YTS': () => {
+        const title = encodeURI(
+          document.querySelector(`[href*="https://yts.mx/movies/"]`).textContent
+        );
+        const year = innerDiv.querySelector('div').textContent;
+        const url = `https://www.google.com/search?btnI=1&q=site:imdb.com+${title}+${year}`;
+        generateElements(`<a href=${url}>IMDB</a>`, innerDiv);
+      },
+
       default: () => {},
     };
 
@@ -526,7 +535,7 @@ function blogtrottrHandler() {
     return;
     switch (feedTitle) {
       case 'Latest gay porn videos on 4gay.com':
-        const tempDoc4gay = await fetchDoc(itemUrl);
+        const tempDoc4gay = await GMXmlHttpRequest(itemUrl);
         const duration_ = tempDoc4gay.querySelector(
           'meta[property="video:duration"]'
         ).content;
@@ -546,7 +555,7 @@ function blogtrottrHandler() {
         break;
 
       case 'BoyFriendTv.com - RSS video Feed':
-        const bftvDoc = await fetchDoc(itemUrl);
+        const bftvDoc = await GMXmlHttpRequest(itemUrl);
         const bftvScript = bftvDoc.querySelector(
           'script[type="application/ld+json"]'
         );
@@ -593,14 +602,14 @@ function blogtrottrHandler() {
         break;
 
       case 'Watch Full HD Gay Porn Videos Online Free | Watch Free HD Gay porn online free. Video streams and full movies. Daily new...':
-        const tempDoc__ = await fetchDoc(itemUrl);
+        const tempDoc__ = await GMXmlHttpRequest(itemUrl);
         addIframeHrefs(tempDoc__);
         break;
 
       case 'VIDÉOS XXX GAY - Porno GAY Gratuit en Streaming':
         const videoUrl = itemUrl;
 
-        const doc = await fetchDoc(videoUrl);
+        const doc = await GMXmlHttpRequest(videoUrl);
         const sbSrc = doc
           .querySelector('[property="twitter:image"]')
           .content.replace('/default', '/nvsprite');
@@ -650,7 +659,7 @@ function blogtrottrHandler() {
         break;
 
       case '4horlover':
-        tempDoc = await fetchDoc(itemUrl);
+        tempDoc = await GMXmlHttpRequest(itemUrl);
         const centerEl = tempDoc.querySelector('main center');
         innerDiv.append(centerEl);
         centerEl.querySelectorAll('b, img').forEach(el => {
@@ -691,7 +700,7 @@ function blogtrottrHandler() {
 
       case 'Gaystream':
       case 'Gaystream is brat':
-        const tempDocGstrm = await fetchDoc(itemUrl);
+        const tempDocGstrm = await GMXmlHttpRequest(itemUrl);
         const btnEls = tempDocGstrm.querySelectorAll('.tab.boner');
         btnEls.forEach(item => {
           const iframeLink = item
@@ -715,7 +724,7 @@ function blogtrottrHandler() {
         break;
 
       case 'FreePornVideosHDGay.com – Videos online free gay porn':
-        const tempDocD = await fetchDoc(itemUrl);
+        const tempDocD = await GMXmlHttpRequest(itemUrl);
         tempDocD.querySelectorAll('.button_choice_server').forEach(item => {
           const linkHref = item.getAttribute('onclick').match(/'(.+?)'/)[1];
           generateElements(
@@ -734,7 +743,7 @@ function blogtrottrHandler() {
           alert('check userscript code');
         }
 
-        const tempDoc = await fetchDoc(itemUrl);
+        const tempDoc = await GMXmlHttpRequest(itemUrl);
         const script_ = tempDoc.querySelectorAll(
           'script[type="text/javascript"]'
         )[1];
@@ -778,7 +787,7 @@ function blogtrottrHandler() {
         innerDiv.replaceChildren();
         innerDiv.append(newDiv);
 
-        const tempDoc_ = await fetchDoc(itemUrl);
+        const tempDoc_ = await GMXmlHttpRequest(itemUrl);
         const actorsList = tempDoc_
           .querySelector('#video-actors')
           .textContent.replaceAll('\t', '')

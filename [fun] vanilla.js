@@ -2728,6 +2728,7 @@ function getStreamwishQuery() {
 
 function getDoodHostsQuery() {
   const doodHosts = [
+    'dsvplay',
     'd-s',
     'vidply',
     'dood',
@@ -2748,12 +2749,12 @@ function getDoodHostsQuery() {
 }
 
 async function getDoodStoryboardSrc(url, linkEl = null) {
-  const outdatedHostNames = ['ds2play.com', 'doodstream.com'];
+  const outdatedHostNames = ['ds2play.com', 'doodstream.com', 'd-s.io'];
 
   const urlObj = new URL(url);
   if (outdatedHostNames.includes(urlObj.hostname)) {
     // If the URL is from an outdated host, we need to update it to the new doodcdn.io format
-    url = url.replace(urlObj.hostname, 'd-s.io');
+    url = url.replace(urlObj.hostname, 'dsvplay.com');
     if (linkEl) {
       linkEl.href = url; // Update the link element's href if provided
     }
@@ -2766,7 +2767,7 @@ async function getDoodStoryboardSrc(url, linkEl = null) {
     throw new Error('Could not find storyboard image ID in meta content');
   }
   const imgId = matches[2];
-  const storyboardUrl = `https://postercdn.com/slides/${imgId}.jpg`;
+  const storyboardUrl = `https://imagecdn.co/slides/${imgId}.jpg`;
   return storyboardUrl;
 }
 

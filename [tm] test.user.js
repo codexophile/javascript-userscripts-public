@@ -5,7 +5,7 @@
   'use strict';
 
   const doc = await fetchDoc(
-    'https://mydaddy.cc/video/cb6b4bc0dc8ccf45ca',
+    'https://dintezuvio.com/embed/094bwn1l1wrv',
     null,
     true
   );

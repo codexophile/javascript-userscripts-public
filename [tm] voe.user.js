@@ -4,25 +4,24 @@
   disableConsoleClear();
 
   //* ads
-  waitForEach('iframe', iframeEl => {
-    console.log('test');
-    iframeEl.remove();
-  });
+  // waitForEach('iframe', iframeEl => {
+  //   console.log('test');
+  //   iframeEl.remove();
+  // });
 
   //* body overflow
   document.body.querySelector('style').remove();
   document.body.style.overflow = 'scroll !important';
 
   //* overlay
-  (async function () {
-    'use strict';
-    const overlayEl = await waitFor('.navbar-brand');
-    overlayEl.parentElement.parentElement.remove();
-  })();
+  // (async function () {
+  //   'use strict';
+  //   const overlayEl = await waitFor('.navbar-brand');
+  //   overlayEl.parentElement.parentElement.remove();
+  // })();
 
   //* video title
   const newTitleEl = generateElements(`<div>${document.title}</div>`);
-  console.log(newTitleEl);
   document.body.prepend(newTitleEl);
 
   //* setting video height
@@ -46,16 +45,18 @@
     videoId = document.querySelector('input[name=fileCode]')?.value;
   else if (location.href.includes('/e/'))
     videoId = location.href.match(/\/e\/(.+?)(\/|$|#)/)[1];
-  else
+  else {
     videoId = document
-      .querySelector('.html-embed-code')
-      .value.match(/\/e\/(.+?)"/)[1];
+      .querySelector('.jw-preview')
+      .style.backgroundImage.match(/\/cache\/(.+?)_/)[1];
+  }
   const imageUrl = `https://i.voe.sx/cache/${videoId}_storyboard_L0.jpg`;
   const vidOnPage = document.querySelector('video');
   const $sbParent = $(`<div id=sbParent></div>`);
   if (location.href.includes('/e/')) $sbParent.appendTo(document.body);
-  else $sbParent.insertAfter('.stream');
+  else $sbParent.appendTo(document.body);
   const storyboardParent = $sbParent[0];
+  console.log(storyboardParent);
   storyboard({
     storyboardParent,
     horizontal: 10,

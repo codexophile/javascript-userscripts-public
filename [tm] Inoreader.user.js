@@ -50,7 +50,7 @@
           });
           document.dispatchEvent(kbEvent);
         }
-      }, 2000);
+      }, 1000);
     }
   );
 })();

@@ -22,7 +22,7 @@ function mailbrewHandler() {
     const itemTitle = item.querySelector(`a`).textContent;
 
     async function addIframeHrefsMailBrew() {
-      const tempDoc = await fetchDoc(itemHref);
+      const tempDoc = await GMXmlHttpRequest(itemHref);
       const iframes = tempDoc.querySelectorAll('iframe');
       iframes.forEach(iframe => {
         GM_addElement(item, 'a', {
@@ -32,7 +32,6 @@ function mailbrewHandler() {
         });
       });
       addPeekButtonsMailBrew();
-      return tempDoc;
     }
 
     function addPeekButtonsMailBrew() {
@@ -54,7 +53,7 @@ function mailbrewHandler() {
           link.after(doodButton);
         }
         if (link.href.match(/(streamiwish|cdnstream|jodwish|74k)/)) {
-          const doc = await fetchDoc(link.href);
+          const doc = await GMXmlHttpRequest(link.href);
           const stem = doc.querySelector('#vplayer > img').src.match(/.+\//)[0];
           const path = link.href.match(/\/(............)$/)[1];
           storyboard(
@@ -70,7 +69,9 @@ function mailbrewHandler() {
           expandBlogtrottrItem();
         }
         if (link.href.match(/d000d|ds2play|d0000d|dood|do0od/)) {
-          const imgSrc = getDoodStoryboardSrc(link.href);
+          const resText = await GMXmlHttpRequest(link.href, null, true);
+          const slidesId = resText.match(/\/(splash|snaps)\/(.+?)\.jpg/)[2];
+          const imgSrc = `https://img.doodcdn.co/slides/${slidesId}.jpg`;
           generateElements(
             `<a href=${link}><img id=doodImg src=${imgSrc}></a>`,
             item,
@@ -82,18 +83,12 @@ function mailbrewHandler() {
 
     switch (mbFeedTitle) {
       case '4horlover':
-        const doc = await fetchDoc(itemHref);
+        const doc = await GMXmlHttpRequest(itemHref);
         const entryContent = doc.querySelector('.entry-content');
         item.append(entryContent);
         break;
       case 'GVDBlog':
       case 'fxggxt.com':
-        const fxggxtDoc = await addIframeHrefsMailBrew();
-        const thumbUrl = fxggxtDoc.querySelector(
-          'meta[property="og:image"]'
-        ).content;
-        generateElements(`<img src="${thumbUrl}" alt="Thumbnail">`, item, true);
-        break;
       case 'CocyStream':
         addIframeHrefsMailBrew();
         break;
@@ -165,7 +160,7 @@ function mailbrewHandler() {
       case 'happy2hub':
         item.style.width = '100%';
         item.style.maxWidth = 'unset';
-        const tempDocH2h = await fetchDoc(itemHref);
+        const tempDocH2h = await GMXmlHttpRequest(itemHref);
         item.append(tempDocH2h.querySelector('[href*="paste.happy2hub"]'));
         tempDocH2h.querySelectorAll('p > a > img[decoding]').forEach(img => {
           img.style.width = '250px';

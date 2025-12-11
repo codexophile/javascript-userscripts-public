@@ -1,18 +1,27 @@
 (async function () {
   'use strict';
 
-  // markAndFilter( 'main div:has(>[href^="/p/"])', 'a', 'href', /\/p\/(.+?)\// )
+  // markAndFilter('main div:has(>[href^="/p/"])', 'a', 'href', /\/p\/(.+?)\//);
 
   //* new yt-dlp button
   const { addButton } = await Collapsible();
   addButton('tiktok', null, () => {
-    const visiblePostEl = getVisibleElements('article')[0];
-    if (!visiblePostEl) return;
-    style(visiblePostEl, `outline: solid red;`);
-    const postLink = visiblePostEl.querySelector('[href*="/p/"').href;
+    let postLink = '';
+
+    if (location.href === 'https://www.instagram.com/') {
+      const visiblePostEl = getVisibleElements('article')[0];
+      if (!visiblePostEl) return;
+      style(visiblePostEl, `outline: solid red;`);
+      postLink = visiblePostEl.querySelector('[href*="/p/"]').href;
+    } else if (
+      location.href.includes('/p/') ||
+      location.href.includes('/reel/')
+    ) {
+      postLink = location.href;
+    }
 
     const urlSegment = `url:${postLink}::`;
-    const destinationSegment = `dest:w:\\#later\\tiktok::`;
+    const destinationSegment = `dest:x:\\tiktok::`;
     const modeSegment = `mode:noprompt::`;
     GM_setClipboard(
       `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`

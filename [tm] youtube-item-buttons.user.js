@@ -9,7 +9,8 @@
     'ytd-rich-item-renderer',
     'ytd-playlist-video-renderer > #content',
     'a.ytp-videowall-still',
-    'yt-lockup-view-model .yt-lockup-view-model-wiz',
+    // 'yt-lockup-view-model .yt-lockup-view-model-wiz',
+    'yt-lockup-view-model .yt-lockup-view-model__content-image',
   ];
   const queryForThumbEls = thumbElSelectorsArr.join(', ');
 
@@ -72,7 +73,7 @@
       if (!matches) return null;
       return `https://www.youtube.com/@${matches[1]}`;
     }
-    const videoLinkEl = thumbEl.querySelector('a');
+    const videoLinkEl = thumbEl.parentElement.querySelector('a');
     if (!videoLinkEl) return null;
     const videoId = getVideoIdFromLink(videoLinkEl);
     const channelId = await getChannelId(videoId, API_KEY);
