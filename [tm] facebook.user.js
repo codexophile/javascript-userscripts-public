@@ -13,12 +13,13 @@ addButton('tiktok', null, () => {
 });
 
 //* auto scroll to important content
-urlChangeHandler();
-window.addEventListener('urlchange', urlChangeHandler);
-async function urlChangeHandler() {
-  const locator = await waitFor(`[href$="/about"]`);
-  locator.scrollIntoView();
-}
+// urlChangeHandler();
+// window.addEventListener('urlchange', urlChangeHandler);
+// async function urlChangeHandler() {
+//   console.log('xxxxxxxxxxx');
+//   const locator = await waitFor(`[href$="/about"]`);
+//   locator.scrollIntoView();
+// }
 
 waitForEach(`[aria-label="See Owner Profile"]`, locatorEl => {
   const targetEl = grandParent(locatorEl, 4);
