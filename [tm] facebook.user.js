@@ -12,6 +12,14 @@ addButton('tiktok', null, () => {
   );
 });
 
+//* follow button
+addButton('➕', null, () => {
+  const followBtn = document.querySelector(
+    'div[aria-label="Follow"][role="button"]'
+  );
+  if (followBtn) followBtn.click();
+});
+
 //* auto scroll to important content
 // urlChangeHandler();
 // window.addEventListener('urlchange', urlChangeHandler);
