@@ -1292,7 +1292,13 @@ function lazyLoad(load, ...items) {
 
 //  MARK: Page functionalities
 
-async function setupYtDlpBtn(url, title, urlSelector) {
+async function setupYtDlpBtn(
+  url,
+  title,
+  urlSelector,
+  destinationPath,
+  extraInfoFunc
+) {
   const titleSegment = title ? `title:${title}::` : '';
 
   let ytDlpBtnEl = await waitFor('#yt-dlp-Btn');
@@ -1300,7 +1306,18 @@ async function setupYtDlpBtn(url, title, urlSelector) {
   ytDlpBtnEl.addEventListener('click', () => {
     if (urlSelector) url = document.querySelector(urlSelector).href;
     const urlSegment = `url:${url}::`;
-    GM_setClipboard(`initiate-ytdlp:${urlSegment}${titleSegment}`);
+
+    const destinationSegment = destinationPath
+      ? `destination:${destinationPath}::`
+      : '';
+
+    const extraInfoSegment = extraInfoFunc
+      ? `extrainfo:${extraInfoFunc()}::`
+      : '';
+
+    GM_setClipboard(
+      `initiate-ytdlp:${urlSegment}${titleSegment}${destinationSegment}${extraInfoSegment}`
+    );
   });
   style(ytDlpBtnEl, `outline: solid red 2px;`);
 }
