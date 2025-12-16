@@ -938,7 +938,9 @@ function markAndFilter(
   itemSelector,
   uidSelector = 'a',
   uidAttribute,
-  uidRegex
+  uidRegex,
+  locationHrefRegex,
+  addOverlay = true
 ) {
   // Initialize filter list from storage
   let filterList = GM_getValue('filterList', []);
@@ -948,6 +950,16 @@ function markAndFilter(
 
   // Set up scroll detection to mark items that are scrolled past
   lazyLoadScrollPast(itemSelector, item => {
+    if (locationHrefRegex) {
+      const locationHref = window.location.href;
+      if (!locationHref.match(locationHrefRegex)) {
+        console.log(
+          'markAndFilter: locationHrefRegex does not match, exiting function.'
+        );
+        return;
+      }
+    }
+
     // Extract the unique ID from the element
     const uniqueId = getUid(item);
     if (!uniqueId) {
@@ -962,12 +974,23 @@ function markAndFilter(
       filterList = [...new Set(filterList)];
       // Save to storage
       GM_setValue('filterList', filterList);
-      dimElement(item);
+      if (addOverlay) dimElement(item);
     }
   });
 
   // Filter items as they appear in the page
   waitForEach(itemSelector, item => {
+    console.log(item);
+    if (locationHrefRegex) {
+      const locationHref = window.location.href;
+      if (!locationHref.match(locationHrefRegex)) {
+        console.log(
+          'markAndFilter: locationHrefRegex does not match, exiting function.'
+        );
+        return;
+      }
+    }
+
     // Extract the unique ID using the same method as above
     const uniqueId = getUid(item);
 
@@ -991,11 +1014,11 @@ function markAndFilter(
       const filterNoticeEl = replaceWith(
         item,
         `
-        <div>
+        <details>
           <hr>
-          <div>Filtered</div>
+          <details>Filtered</details>
           <a target="_blank" href="${permalink}">${title}</a>
-        </div>
+        </details>
       `
       );
       style(
