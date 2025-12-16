@@ -1,7 +1,15 @@
 (async function () {
   'use strict';
 
-  // markAndFilter('main div:has(>[href^="/p/"])', 'a', 'href', /\/p\/(.+?)\//);
+  markAndFilter(
+    'main .html-div > div:has([href*="/p/"])',
+    'a',
+    'href',
+    /\/p\/(.+?)\//,
+    // /\/explore\//
+    null,
+    false
+  );
 
   //* new yt-dlp button
   const { addButton } = await Collapsible();
@@ -143,7 +151,7 @@
       const uri = c.toDataURL();
 
       const link = $(`<a></a>`)[0];
-      let fileName = `${getUserId(image)} - ${getPostId(image)} - instagram`;
+      let fileName = `${getUserId(image)} - (instagram)${getPostId(image)}`;
       link.setAttribute('download', `${fileName}.png`);
       link.setAttribute('href', uri);
       link.click();
@@ -151,16 +159,23 @@
   };
 
   function getUserId(image) {
-    let $parent;
-    if (location.href === 'https://www.instagram.com/')
+    let $parent, userId;
+
+    if (location.href === 'https://www.instagram.com/') {
       $parent = $(image).closest('article');
-    if (location.href.includes('/p/')) $parent = $(`main`).first();
-    const userId = $parent
-      .find('[href^="/"]')
-      .first()
-      .attr('href')
-      .match(/\/(.+?)\//)[1];
-    console.log(userId);
+      const userId = $parent
+        .find('[href^="/"]')
+        .first()
+        .attr('href')
+        .match(/\/(.+?)\//)[1];
+    }
+
+    if (location.href.includes('/p/')) {
+      userId = document
+        .querySelector('header a')
+        .href.match(/https:\/\/www\.instagram\.com\/(.+?)\/$/)[1];
+    }
+
     return userId;
   }
 

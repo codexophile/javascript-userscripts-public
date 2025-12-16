@@ -1407,6 +1407,71 @@ function deepLoad({
   });
 }
 
+//  MARK: Video related
+
+function autoPip(videoEl) {
+  // Check if PIP is supported
+  if (!document.pictureInPictureEnabled) {
+    console.warn('Picture-in-Picture is not supported in this browser');
+    return;
+  }
+
+  let wasInViewport = isElementInViewport(videoEl);
+
+  // Throttled scroll handler to check viewport status
+  const checkViewportStatus = throttle(async () => {
+    const isCurrentlyInViewport = isElementInViewport(videoEl);
+
+    // Video left the viewport - enter PIP
+    if (wasInViewport && !isCurrentlyInViewport) {
+      try {
+        // Only request PIP if not already in PIP mode
+        if (document.pictureInPictureElement !== videoEl) {
+          await videoEl.requestPictureInPicture();
+        }
+      } catch (error) {
+        console.error('Failed to enter Picture-in-Picture mode:', error);
+      }
+    }
+
+    // Video returned to viewport - exit PIP
+    if (!wasInViewport && isCurrentlyInViewport) {
+      try {
+        // Only exit if this video is currently in PIP
+        if (document.pictureInPictureElement === videoEl) {
+          await document.exitPictureInPicture();
+        }
+      } catch (error) {
+        console.error('Failed to exit Picture-in-Picture mode:', error);
+      }
+    }
+
+    wasInViewport = isCurrentlyInViewport;
+  }, 200);
+
+  // Add scroll listener
+  window.addEventListener('scroll', checkViewportStatus);
+
+  // Also check on resize events
+  window.addEventListener('resize', checkViewportStatus);
+
+  // Initial check
+  checkViewportStatus();
+
+  // Return cleanup function
+  return function cleanup() {
+    window.removeEventListener('scroll', checkViewportStatus);
+    window.removeEventListener('resize', checkViewportStatus);
+
+    // Exit PIP if active
+    if (document.pictureInPictureElement === videoEl) {
+      document
+        .exitPictureInPicture()
+        .catch(err => console.error('Failed to exit PIP on cleanup:', err));
+    }
+  };
+}
+
 // MARK: Rest
 
 function convertPlayerConfigStringToObject(configString) {

@@ -4,10 +4,10 @@
   disableConsoleClear();
 
   //* ads
-  // waitForEach('iframe', iframeEl => {
-  //   console.log('test');
-  //   iframeEl.remove();
-  // });
+  waitForEach('iframe', iframeEl => {
+    console.log('test');
+    iframeEl.remove();
+  });
 
   //* body overflow
   document.body.querySelector('style').remove();

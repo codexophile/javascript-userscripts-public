@@ -8,6 +8,8 @@
     'First We Feast',
     'Have You Been Paying Attention?',
     'Jimmy Kimmel Live',
+    'Late Night with Seth Meyers',
+    'Vsauce',
   ];
   waitForEach(
     `.article_title_link[href*="https://www.youtube.com/shorts/"]`,

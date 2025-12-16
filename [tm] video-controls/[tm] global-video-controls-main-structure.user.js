@@ -70,7 +70,7 @@ const styles = `
     opacity: 0.5;
   }
 
-  .controlPanel :is(span, button, a){
+  .controlPanel, .controlPanel * {
     user-select: none;
   }
 
