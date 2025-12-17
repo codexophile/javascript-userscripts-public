@@ -171,9 +171,15 @@
     }
 
     if (location.href.includes('/p/')) {
-      userId = document
-        .querySelector('header a')
-        .href.match(/https:\/\/www\.instagram\.com\/(.+?)\/$/)[1];
+      const locatorId1 = document.querySelector(`header a`);
+      const locatorId2 = document.querySelector(`a span`);
+      if (locatorId1) {
+        userId = locatorId1.href.match(
+          /https:\/\/www\.instagram\.com\/(.+?)\/$/
+        )[1];
+      } else if (locatorId2) {
+        userId = locatorId2.textContent;
+      }
     }
 
     return userId;
