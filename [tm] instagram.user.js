@@ -8,7 +8,8 @@
     /\/p\/(.+?)\//,
     // /\/explore\//
     null,
-    false
+    false,
+    ``
   );
 
   //* new yt-dlp button
