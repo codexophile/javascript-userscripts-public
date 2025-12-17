@@ -940,7 +940,8 @@ function markAndFilter(
   uidAttribute,
   uidRegex,
   locationHrefRegex,
-  addOverlay = true
+  addOverlay = true,
+  filterNoticeHtml = null
 ) {
   // Initialize filter list from storage
   let filterList = GM_getValue('filterList', []);
@@ -1003,6 +1004,11 @@ function markAndFilter(
       document.getElementById('filteredCountDiv').textContent =
         filteredCountAllTime;
 
+      if (filterNoticeHtml === ``) {
+        item.style.display = 'none';
+        return;
+      }
+
       // Get information for the replacement div
       const title = item.querySelector('h2, h3, a')?.textContent || 'Link';
       const permalink =
@@ -1011,22 +1017,30 @@ function markAndFilter(
         '#';
 
       // Replace with filtered message
-      const filterNoticeEl = replaceWith(
-        item,
-        `
-        <details>
-          <hr>
-          <details>Filtered</details>
+      if (filterNoticeHtml) {
+        const customFilterNoticeEl = replaceWith(item, filterNoticeHtml);
+        const filterNoticeContent = `
           <a target="_blank" href="${permalink}">${title}</a>
-        </details>
+        `;
+        customFilterNoticeEl.appendChild(generateElements(filterNoticeContent));
+      } else {
+        const filterNoticeEl = replaceWith(
+          item,
+          `
+        <div>
+          <hr>
+          <div>Filtered</div>
+          <a target="_blank" href="${permalink}">${title}</a>
+        </div>
       `
-      );
-      style(
-        filterNoticeEl,
-        `
+        );
+        style(
+          filterNoticeEl,
+          `
         outline: 2px solid red;
       `
-      );
+        );
+      }
 
       // Alternative: completely remove the item
       // item.remove();
