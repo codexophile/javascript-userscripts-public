@@ -981,13 +981,9 @@ function markAndFilter(
 
   // Filter items as they appear in the page
   waitForEach(itemSelector, item => {
-    console.log(item);
     if (locationHrefRegex) {
       const locationHref = window.location.href;
       if (!locationHref.match(locationHrefRegex)) {
-        console.log(
-          'markAndFilter: locationHrefRegex does not match, exiting function.'
-        );
         return;
       }
     }
