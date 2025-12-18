@@ -2074,65 +2074,144 @@ function markElAsProcessed(el, markedEls, execute) {
 function generateAllYouTubeSbUrls(fullYTHtml) {
   //# Based on:
   // https://github.com/hjk789/Userscripts/tree/master/YouTube-Clickbait-Buster
-  // "Peek video content" button onClick function
+  // Enhanced with dynamic quality selection from iG8R/YouTube-Mouseover-Preview
 
-  const resText = fullYTHtml;
-  const fullStoryboardURL = resText.match(
-    /"playerStoryboardSpecRenderer":.+?"(https.+?)",/
-  );
-
-  if (!fullStoryboardURL || fullStoryboardURL[1].includes('googleadservices')) {
-    // It can happen sometimes that the storyboard provided is of the ad, instead of the video itself.
-    // But this seems to only happen on videos that don't have a storyboard available anyway.
-    const temp = 'Storyboard not available for this video!';
-
-    return { temp, temp, temp };
-  }
-
-  const urlSplit = fullStoryboardURL[1].split('|');
-  let mode = urlSplit[3] ? 3 : 1;
-  // YouTube provides 2 modes of storyboards: one with 25 frames per chunk
-  // and another one with 60 frames per chunk.I've choose the former mode,
-  // as in the second one the frames are too tiny to see anything.
-  // But in short videos with less than 30 seconds, only the latter is available.
-  if (!urlSplit[mode]) {
-    // There's also a third mode, videos that have only one mode and ongoing lives storyboards,
-    // but I couldn't find any way to make them work.
-    alert(
-      'Storyboard not available for this video yet! Try again some hours later.'
+  try {
+    const resText = fullYTHtml;
+    const fullStoryboardURL = resText.match(
+      /"playerStoryboardSpecRenderer":.+?"spec":"(.+?)"/
     );
-    return;
+
+    if (!fullStoryboardURL) {
+      console.warn('[YT-Storyboard] No storyboard spec found');
+      return { allUrls: [], trueNoOfSlots: 0, samplingFq: 0 };
+    }
+
+    const rawSpecStr = fullStoryboardURL[1];
+
+    // Check for ad storyboards
+    if (rawSpecStr.includes('googleadservices')) {
+      console.warn(
+        '[YT-Storyboard] Ad storyboard detected, not video storyboard'
+      );
+      return { allUrls: [], trueNoOfSlots: 0, samplingFq: 0 };
+    }
+
+    // Parse storyboard spec format: URL|Level0Data|Level1Data|Level2Data|...
+    const parts = rawSpecStr.split('|');
+    const urlBase = parts[0]; // The URL template
+
+    if (parts.length < 2) {
+      console.warn('[YT-Storyboard] Invalid storyboard format');
+      return { allUrls: [], trueNoOfSlots: 0, samplingFq: 0 };
+    }
+
+    // --- DYNAMIC QUALITY SELECTION: Find the highest resolution level ---
+    let bestData = null;
+    let bestRes = 0;
+    let bestIndex = 0;
+
+    // Iterate through all quality levels (parts[1] = Level 0, parts[2] = Level 1, etc.)
+    for (let i = 1; i < parts.length; i++) {
+      const levelStr = parts[i];
+      // Format: Width#Height#Count#Cols#Rows#IntervalMs#Name#Signature#...
+      const chunks = levelStr.split('#');
+
+      // Need at least: width, height, count, cols, rows, and signature
+      if (chunks.length < 5) continue;
+
+      const w = parseInt(chunks[0], 10);
+      const h = parseInt(chunks[1], 10);
+      const count = parseInt(chunks[2], 10);
+      const cols = parseInt(chunks[3], 10);
+      const rows = parseInt(chunks[4], 10);
+      const sig = chunks[chunks.length - 1]; // Signature is always last
+
+      if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) continue;
+
+      const res = w * h; // Calculate resolution
+
+      // Select the highest resolution available
+      if (res > bestRes) {
+        bestRes = res;
+        bestIndex = i - 1; // Level index for URL (parts[0] is URL, so subtract 1)
+        bestData = {
+          width: w,
+          height: h,
+          frameCount: count,
+          cols: cols,
+          rows: rows,
+          signature: sig,
+        };
+      }
+    }
+
+    if (!bestData) {
+      console.warn('[YT-Storyboard] No valid quality level found');
+      return { allUrls: [], trueNoOfSlots: 0, samplingFq: 0 };
+    }
+
+    console.log(
+      `[YT-Storyboard] Selected Level ${bestIndex}: ${bestData.width}x${bestData.height}px`
+    );
+
+    // Construct the URL with the best quality level
+    let baseUrl = urlBase.replace(/\\/g, '').replace('$L', bestIndex);
+
+    // Append signature parameter
+    if (baseUrl.indexOf('?') === -1) {
+      baseUrl += `?sigh=${bestData.signature}`;
+    } else {
+      baseUrl += `&sigh=${bestData.signature}`;
+    }
+
+    // Extract video length for sampling frequency calculation
+    const lengthMatch = resText.match(/"lengthSeconds":"(\d+)"/);
+    if (!lengthMatch) {
+      console.warn('[YT-Storyboard] Could not determine video length');
+      return { allUrls: [], trueNoOfSlots: 0, samplingFq: 0 };
+    }
+
+    const videoLength = parseInt(lengthMatch[1], 10);
+
+    // Calculate sampling frequency based on video length
+    const samplingFq =
+      videoLength <= 120
+        ? 1
+        : videoLength <= 300
+        ? 2
+        : videoLength < 900
+        ? 5
+        : 10;
+
+    const trueNoOfSlots = Math.round(videoLength / samplingFq);
+
+    // Calculate number of storyboard sheets needed
+    const framesPerSheet = bestData.cols * bestData.rows;
+    const numSheets = Math.ceil(bestData.frameCount / framesPerSheet);
+
+    // Generate all storyboard URLs
+    let allUrls = [];
+    for (let i = 0; i < numSheets; i++) {
+      const url = baseUrl.replace('$N', `M${i}`);
+      allUrls.push(url);
+    }
+
+    console.log(
+      `[YT-Storyboard] Generated ${allUrls.length} URLs for ${trueNoOfSlots} slots`
+    );
+
+    return {
+      allUrls,
+      trueNoOfSlots,
+      samplingFq,
+      quality: { width: bestData.width, height: bestData.height },
+      framesPerSheet,
+    };
+  } catch (error) {
+    console.error('[YT-Storyboard] Error parsing storyboard:', error);
+    return { allUrls: [], trueNoOfSlots: 0, samplingFq: 0 };
   }
-
-  const storyboardId = urlSplit[mode].replace(/.+#rs/, '&sigh=rs');
-  if (mode == 3) mode--;
-
-  const videoLength = +resText.match(
-    /"lengthSeconds":"(\d+)","ownerProfileUrl/
-  )[1];
-  const samplingFq =
-    videoLength <= 120
-      ? 1
-      : videoLength <= 300
-      ? 2
-      : videoLength < 900
-      ? 5
-      : 10;
-  // Depending on the video length, YouTube takes snapshots with different time spaces.
-
-  const trueNoOfSlots = Math.round(videoLength / samplingFq);
-  const noOfSbs = trueNoOfSlots / 25;
-  let allUrls = [];
-  repeat(noOfSbs, index => {
-    const base = urlSplit[0].replace('L$L/$N', `L${mode}/M${index}`);
-    // The storyboard URL uses the "L#/M#" parameter to
-    // determine the type and part of the storyboard to load.
-    // L1 is the storyboard chunk with 60 frames, and L2 is the one with 25 frames.
-    // M0 is the first chunk, M1 the second, and so on.
-    allUrls.push(base + storyboardId);
-  });
-
-  return { allUrls, trueNoOfSlots, samplingFq };
 }
 
 function makeElementDraggableAndResizable(element) {
