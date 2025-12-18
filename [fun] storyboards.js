@@ -149,6 +149,7 @@ async function storyboard({
   trueNoOfSlots,
   imgUrls = [],
   offset = 0,
+  slotWidth = 200,
 }) {
   const slotsDiv = document.createElement('div');
   storyboardParent.append(slotsDiv);
@@ -203,7 +204,7 @@ async function storyboard({
     });
   });
 
-  setSlotSize(storyboardParent, '200');
+  if (slotWidth) setSlotSize(storyboardParent, slotWidth);
   sbControls(vidOnPage, trueNoOfSlots, storyboardParent, imgUrls);
   return slotsDiv;
 }
