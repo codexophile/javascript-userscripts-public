@@ -109,8 +109,8 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
         const timeStringEl = generateElements(`<div></div>`, slotEls[index]);
         timeStringEl.classList.add('timeString');
         const timeString = Math.round((index * video.duration) / trueNoOfSlots);
-        const timeStringReadeable = forHumans(timeString);
-        timeStringEl.textContent = timeStringReadeable;
+        const timeStringReadable = forHumans(timeString);
+        timeStringEl.textContent = timeStringReadable;
         style(
           timeStringEl,
           `
