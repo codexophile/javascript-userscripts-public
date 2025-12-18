@@ -33,7 +33,7 @@
 
     //* YTS
     const titleId = titleMatch[1];
-    addExtLink('https://yts.mx/', 'browse-movies/' + titleId);
+    addExtLink('https://yts.lt/', 'browse-movies/' + titleId);
 
     //* Leet
     addExtLink('https://1337x.to/', `search/${title}+${year}/1/`);
