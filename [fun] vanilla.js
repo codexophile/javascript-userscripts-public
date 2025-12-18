@@ -2198,7 +2198,7 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
     }
 
     console.log(
-      `[YT-Storyboard] Generated ${allUrls.length} URLs for ${trueNoOfSlots} slots`
+      `[YT-Storyboard] Generated ${allUrls.length} URLs for ${trueNoOfSlots} slots (${bestData.cols}x${bestData.rows} grid)`
     );
 
     return {
@@ -2207,6 +2207,8 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
       samplingFq,
       quality: { width: bestData.width, height: bestData.height },
       framesPerSheet,
+      horizontal: bestData.cols,
+      vertical: bestData.rows,
     };
   } catch (error) {
     console.error('[YT-Storyboard] Error parsing storyboard:', error);
