@@ -205,7 +205,7 @@ async function storyboard({
   });
 
   if (slotWidth) setSlotSize(storyboardParent, slotWidth);
-  else if (sbParent.querySelector('canvas').width < 200)
+  else if (storyboardParent.querySelector('canvas').width < 200)
     setSlotSize(storyboardParent, 200);
   sbControls(vidOnPage, trueNoOfSlots, storyboardParent, imgUrls);
   return slotsDiv;
