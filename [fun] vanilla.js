@@ -199,6 +199,122 @@ function timeSince(date, shortForm = false) {
   return isPast ? result + ' ago' : 'in ' + result;
 }
 
+function formatRelativeDate(dateInput) {
+  // Handle null or undefined input
+  if (!dateInput) {
+    throw new Error('Date parameter is required');
+  }
+
+  // Convert input to Date object - handles various formats
+  let inputDate;
+  if (typeof dateInput === 'string') {
+    // Try parsing the string
+    inputDate = new Date(dateInput);
+  } else if (dateInput instanceof Date) {
+    inputDate = dateInput;
+  } else if (typeof dateInput === 'number') {
+    // Assume timestamp
+    inputDate = new Date(dateInput);
+  } else {
+    throw new Error('Invalid date format');
+  }
+
+  // Check if the date is valid
+  if (isNaN(inputDate.getTime())) {
+    throw new Error('Invalid date format');
+  }
+
+  const now = new Date();
+  const diffMs = now - inputDate;
+  const isPast = diffMs > 0;
+  const absDiffMs = Math.abs(diffMs);
+
+  // Convert to various time units
+  const seconds = Math.floor(absDiffMs / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30.44); // Average days per month
+  const years = Math.floor(days / 365.25); // Account for leap years
+
+  // Helper to check if two dates are on the same calendar day
+  const isSameDay = (date1, date2) => {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  };
+
+  // Helper to check if date is yesterday
+  const isYesterday = date => {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return isSameDay(date, yesterday);
+  };
+
+  // Helper to check if date is tomorrow
+  const isTomorrow = date => {
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return isSameDay(date, tomorrow);
+  };
+
+  // Handle special cases for past dates
+  if (isPast) {
+    if (isSameDay(inputDate, now)) {
+      if (hours < 1 && minutes < 1) return 'just now';
+      if (hours < 1) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+      return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    }
+
+    if (isYesterday(inputDate)) {
+      return 'yesterday';
+    }
+
+    if (days < 7) {
+      return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
+
+    if (weeks < 4) {
+      return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+    }
+
+    if (months < 12) {
+      return `${months} month${months !== 1 ? 's' : ''} ago`;
+    }
+
+    return `${years} year${years !== 1 ? 's' : ''} ago`;
+  }
+  // Handle future dates
+  else {
+    if (isSameDay(inputDate, now)) {
+      if (hours < 1 && minutes < 1) return 'right now';
+      if (hours < 1) return `in ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+      return `in ${hours} hour${hours !== 1 ? 's' : ''}`;
+    }
+
+    if (isTomorrow(inputDate)) {
+      return 'tomorrow';
+    }
+
+    if (days < 7) {
+      return `in ${days} day${days !== 1 ? 's' : ''}`;
+    }
+
+    if (weeks < 4) {
+      return `in ${weeks} week${weeks !== 1 ? 's' : ''}`;
+    }
+
+    if (months < 12) {
+      return `in ${months} month${months !== 1 ? 's' : ''}`;
+    }
+
+    return `in ${years} year${years !== 1 ? 's' : ''}`;
+  }
+}
+
 function convertTimeToTimezone(timeString, sourceTimezone, targetTimezone) {
   // Validate input
   if (!/^\d{2}:\d{2}$/.test(timeString)) {
