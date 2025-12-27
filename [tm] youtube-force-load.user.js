@@ -12,7 +12,7 @@
 
   function handleLinkClick(event) {
     const originalTarget = event.target;
-    console.log(originalTarget);
+    // console.log(originalTarget);
 
     // If the click originated within an allow‑listed container, let it proceed normally.
     for (const sel of allowListSelectors) {

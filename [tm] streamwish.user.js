@@ -16,7 +16,6 @@
     let storyboardUrl;
 
     const thumbEl = await waitFor('.jw-time-thumb[style*="background-image"]');
-    console.log('test');
     storyboardUrl = thumbEl.style.backgroundImage.match(/['"](.*)['"]/)[1];
 
     const $videoEl = $(`video[src]`);

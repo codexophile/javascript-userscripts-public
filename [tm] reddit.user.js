@@ -27,6 +27,9 @@
         );
         // selfTextEl.textContent = postData.selftext;
         selfTextEl.innerHTML = marked.parse(postData.selftext);
+        selfTextEl.querySelectorAll('a').forEach(aEl => {
+          aEl.target = '_blank';
+        });
         style(
           selfTextEl,
           `

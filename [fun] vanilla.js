@@ -5,7 +5,8 @@ function reEnableConsole() {
   tempIframeEl.style.display = 'none';
   document.body.appendChild(tempIframeEl);
   window.console = tempIframeEl.contentWindow.console;
-  tempIframeEl.remove();
+  //? removing the following line because it made this function completely stop working
+  // tempIframeEl.remove();
 }
 
 function disableConsoleClear() {
@@ -134,7 +135,7 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-//  MARK: Time Text functions
+//  MARK: Time/date Text functions
 
 function timeSince(date, shortForm = false) {
   // Handle null or undefined input

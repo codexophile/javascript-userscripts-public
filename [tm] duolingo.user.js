@@ -8,6 +8,7 @@
     '[data-test="player-skip-continue"]',
     '[data-test="plus-no-thanks"]',
     '[data-test="practice-hub-ad-no-thanks-button"]',
+    '[data-test="plus-no-thanks"]',
   ];
   const skipBtnSelector = skipBtnSelectors.join(', ');
 
@@ -30,7 +31,16 @@
         "Let's review the exercises you missed!",
         el.parentElement
       );
-      if (!messageElsArr.length && !messageElsArr2.length) {
+      const messageElsArr3 = contains(
+        'h2',
+        'Daily Quests update!',
+        el.parentElement
+      );
+      if (
+        !messageElsArr.length &&
+        !messageElsArr2.length &&
+        !messageElsArr3.length
+      ) {
         return;
       }
       clickContinue();
@@ -41,8 +51,34 @@
       clickContinue();
     });
 
+    //* skipping friend quest reminders
+    waitForEach('[data-test="player-next"]', () => {
+      const allBtnEls = document.querySelectorAll('button');
+      const maybeLaterBtnsArr = contains('button', 'Maybe later');
+      const isAFriendQuestReminder = contains('span', 'Friends Quest update!');
+      if (isAFriendQuestReminder.length && maybeLaterBtnsArr.length) {
+        maybeLaterBtnsArr[0].click();
+      }
+    });
+
+    //* skipping ads
+    waitForEach('[data-test="plus-close-x"]', skipBtnEl => {
+      skipBtnEl.click();
+    });
+
+    //* auto skipping
+    const noListeningLanguages = ['es'];
     waitForEach('[data-test="player-skip"]', skipBtnEl => {
       if (skipBtnEl.textContent === "Can't speak now") {
+        skipBtnEl.click();
+      }
+      const isAListeningExercise = skipBtnEl.textContent === "Can't listen now";
+      const language = document.querySelector(
+        `[data-test="challenge-translate-input"], [data-test*="challenge-tap-token"]:has([data-test="challenge-tap-token-text"])`
+      ).lang;
+      const isANoListeningLanguage = noListeningLanguages.includes(language);
+
+      if (isAListeningExercise && isANoListeningLanguage) {
         skipBtnEl.click();
       }
     });
@@ -52,6 +88,11 @@
       if (continueBtn) continueBtn.click();
     }
   })();
+
+  //* auto click "use keyboard"
+  waitForEach('[data-test="player-toggle-keyboard"]', buttonEl => {
+    if (buttonEl.innerText === 'USE KEYBOARD') buttonEl.click();
+  });
 
   document.addEventListener('keydown', doc_keyDown, false);
   document.addEventListener('keyup', doc_keyUp, false);

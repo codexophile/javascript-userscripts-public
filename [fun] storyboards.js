@@ -173,7 +173,8 @@ async function storyboard({
       slotsDiv.append(slot);
       slot.index = index;
       if (linkToVid) {
-        const link = wrap(`<a></a>`, slot.querySelector('canvas'));
+        console.log(slot, slot.querySelector('.storyboard-canvas'));
+        const link = wrap(`<a></a>`, slot.querySelector('.storyboard-canvas'));
         // @ts-ignore
         link.href = `${linkToVid}#slot=${index}`;
         // @ts-ignore
@@ -284,6 +285,7 @@ async function storyboardFlex(
         const y = Math.floor(i / horizontal);
 
         const canvas = document.createElement('canvas');
+        canvas.classList.add('storyboard-canvas');
         const ctx = canvas.getContext('2d');
         // Set canvas dimensions
         canvas.width = itemWidth;
@@ -320,14 +322,18 @@ async function storyboardFlex(
     };
 
     imgElement.onerror = () => {
+      const storyboardItem = document.createElement('div');
+      storyboardItem.classList.add(imgSrc.slice(-7), 'storyboardItem');
       console.log(`Storyboard image load error!: ${imgSrc}`);
       const errorEl = document.createElement('div');
+      errorEl.classList.add('storyboard-canvas');
       errorEl.textContent = 'Image load error';
       Object.assign(errorEl.style, {
         color: 'red',
         fontSize: '20px',
       });
-      resolve([errorEl]);
+      storyboardItem.append(errorEl);
+      resolve([storyboardItem]);
       imgElement.remove();
     };
   });
