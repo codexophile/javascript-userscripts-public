@@ -1,6 +1,44 @@
 (async function () {
   'use strict';
-  if (window.top != window.self) return; //don't run on frames or iframes
+
+  //* setting document.title to chat title
+  (function () {
+    'use strict';
+
+    const targetSelector = 'h1.mode-title';
+
+    // Function to sync the title
+    function syncTitle() {
+      const element = document.querySelector(targetSelector);
+
+      // Only proceed if the element exists
+      if (element) {
+        const newTitle = element.textContent.trim() + ' - AiStudio';
+
+        // Update only if the title is actually different to avoid loops
+        if (newTitle && document.title !== newTitle) {
+          document.title = newTitle;
+        }
+      }
+    }
+
+    // 1. Run immediately in case the element is already there
+    syncTitle();
+
+    // 2. Create an observer to watch for DOM changes (navigation, text edits)
+    const observer = new MutationObserver(() => {
+      syncTitle();
+    });
+
+    // 3. Start observing the body for added nodes or text changes
+    observer.observe(document.body, {
+      childList: true, // Watch for elements being added/removed
+      subtree: true, // Watch everywhere inside the body
+      characterData: true, // Watch for text changing inside elements
+    });
+  })();
+
+  //* url query template processing
 
   const modalObj = new ModalBox();
   const modalContentEl = generateElements(`<div id=modal-content></div>`);
