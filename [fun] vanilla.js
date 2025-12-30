@@ -71,6 +71,35 @@ function pipeline(input, ...functions) {
 
 // MARK: Text functions
 
+function markdownToPlainText(markdownText) {
+  // 1. Check if marked is loaded
+  if (typeof marked === 'undefined') {
+    alert(
+      '⚠️ Warning: marked.js is not loaded. Calculations may be inaccurate. Please add this to your userscript header:\n// @require https://cdn.jsdelivr.net/npm/marked/marked.min.js'
+    );
+    // Fallback: return the original text so the script doesn't crash,
+    // though the count will include markdown symbols.
+    return markdownText || '';
+  }
+
+  if (!markdownText) return '';
+
+  try {
+    // 2. Convert Markdown -> HTML
+    const htmlContent = marked.parse(markdownText);
+
+    // 3. Create a detached DOM element to handle the HTML
+    const tempDiv = generateElements(`<div>${htmlContent}</div>`);
+
+    // 4. Extract textContent (ignores HTML tags)
+    // .textContent is usually faster and safer than .innerText for detached elements
+    return tempDiv.textContent || '';
+  } catch (error) {
+    console.error('Error parsing markdown:', error);
+    return markdownText;
+  }
+}
+
 async function getTranslation(
   text,
   outputLanguage = 'en',
