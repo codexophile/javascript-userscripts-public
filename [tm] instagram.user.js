@@ -70,29 +70,48 @@
     );
   })();
 
-  let observer = new MutationObserver(() => {
+  waitFor('main > div').then(feedEl => {
+    console.log(feedEl);
+    style(
+      feedEl,
+      `
+        width: -webkit-fill-available;
+        max-width: unset;
+      `
+    );
+  });
+  waitForEach(`li [alt*="'s profile picture"]`, locatorEl => {
     //* Suggested accounts on profile pages
-    const $profilesLocators = $(`[style="width: 170px;"]`);
-    if ($profilesLocators.length) {
-      const $grandParent = $(grandParent($profilesLocators[0], 6));
-      if ($grandParent.parent().find('#profilesWrapper').length) return; // 🛑
-
-      const $profilesWrapper = $(`<div id=profilesWrapper></div>`).insertAfter(
-        $grandParent.prev()
+    const grandParentEl = grandParent(locatorEl, 12);
+    let newContainerEl = document.querySelector('#new-profiles-cont');
+    if (!newContainerEl) {
+      newContainerEl = generateElements(`<div id=new-profiles-cont></div>`);
+      style(
+        newContainerEl,
+        `
+      display:        flex;
+      flex-wrap:   wrap;
+    `
       );
-
-      $profilesLocators.each(function () {
-        const linkToProfile = this.querySelector('a').href;
-        const profilePicSrc = this.querySelector('img').src;
-        $profilesWrapper.append(`
-                    <a href=${linkToProfile} style='display: inline-block; width: 33%'>
-                        <img src=${profilePicSrc}>
-                        <div>Link</div>
-                    </a>
-                `);
-      });
+      grandParentEl.before(newContainerEl);
     }
+    const profilePicSrc = locatorEl.src;
+    const profileLink = locatorEl.closest('a').href;
+    const profileName = grandParent(locatorEl, 3).querySelector(
+      'div > span > span'
+    ).textContent;
+    const newLinkEl = generateElements(
+      `
+        <a href='${profileLink}' target=_blank>
+          <img id=profile-pic src='${profilePicSrc}' style='object-fit:contain;border-radius:50%;'>
+          <div id=profile-name>${profileName}</div>
+        </a>
+      `
+    );
+    newContainerEl.append(newLinkEl);
+  });
 
+  let observer = new MutationObserver(() => {
     //* click all 'see translation' button
     $(`[role=button]:contains('See translation')`).click();
 
