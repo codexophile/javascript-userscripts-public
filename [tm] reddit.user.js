@@ -1,5 +1,5 @@
 (function () {
-  'use strict';
+  ('use strict');
   if (window.top != window.self) return; //don't run on frames or iframes
 
   //* API
@@ -22,7 +22,7 @@
         !location.href.includes('/comments/')
       ) {
         const selfTextEl = generateElements(
-          `<div class="shreddit-post-selftext"></div>`,
+          `<div class="shreddit-post-selftext userscript-code"></div>`,
           postEl
         );
         // selfTextEl.textContent = postData.selftext;
@@ -250,7 +250,9 @@
     'shreddit-post',
     'id',
     /t3_(.+)$/,
-    'https://sh.reddit.com'
+    null,
+    false
+    // 'https://sh.reddit.com'
   );
 
   //* Collapsible
