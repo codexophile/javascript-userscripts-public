@@ -92,7 +92,9 @@
       return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({
           method: 'GET',
-          url: `https://oauth.reddit.com/comments/${postId}?limit=${limit}&depth=1&sort=top`,
+          url: `https://oauth.reddit.com/comments/${postId}?limit=${
+            limit + 10
+          }&depth=1&sort=top`,
           headers: {
             Authorization: `Bearer ${token}`,
             'User-Agent': USER_AGENT,
