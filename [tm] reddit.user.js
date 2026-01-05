@@ -102,7 +102,11 @@
               const data = JSON.parse(response.responseText);
               if (data && data.length > 1 && data[1].data.children) {
                 const comments = data[1].data.children
-                  .filter(child => child.kind === 't1' && child.data.author !== 'AutoModerator')
+                  .filter(
+                    child =>
+                      child.kind === 't1' &&
+                      child.data.author !== 'AutoModerator'
+                  )
                   .slice(0, limit)
                   .map(child => child.data);
                 resolve(comments);
