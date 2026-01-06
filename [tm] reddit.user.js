@@ -86,6 +86,26 @@
           loadCommentsBtn.textContent = '❌ Error loading comments';
         }
       });
+
+      // Add button to load gallery view
+      const galleryBtn = createSecondaryToolbarElement(
+        '🖼️ Gallery View',
+        null,
+        secondaryToolbarEl
+      );
+      galleryBtn.addEventListener('click', async () => {
+        galleryBtn.disabled = true;
+        galleryBtn.textContent = 'Loading...';
+
+        try {
+          const posts = await getUserImagePosts(author, token, 30);
+          displayGallery(posts, postEl, galleryBtn);
+        } catch (error) {
+          console.error('Error loading gallery:', error);
+          galleryBtn.textContent = '❌ Error loading gallery';
+          galleryBtn.disabled = false;
+        }
+      });
     });
 
     async function getTopComments(postId, token, limit = 3) {
@@ -197,6 +217,165 @@
       });
 
       buttonEl.textContent = `💬 Loaded ${comments.length} comments`;
+      buttonEl.disabled = false;
+    }
+
+    async function getUserImagePosts(username, token, limit = 30) {
+      return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+          method: 'GET',
+          url: `https://oauth.reddit.com/user/${username}/submitted?limit=${limit}&sort=new`,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'User-Agent': USER_AGENT,
+          },
+          onload: function (response) {
+            try {
+              const data = JSON.parse(response.responseText);
+              if (data && data.data && data.data.children) {
+                const imagePosts = data.data.children
+                  .map(child => child.data)
+                  .filter(post => {
+                    // Check if post has an image
+                    return (
+                      post.post_hint === 'image' ||
+                      post.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+                      post.is_gallery
+                    );
+                  });
+                resolve(imagePosts);
+              } else {
+                reject(new Error('User posts not found'));
+              }
+            } catch (error) {
+              reject(error);
+            }
+          },
+          onerror: function (error) {
+            reject(error);
+          },
+        });
+      });
+    }
+
+    function displayGallery(posts, postEl, buttonEl) {
+      // Remove existing gallery container if it exists
+      const existingContainer = postEl.querySelector(
+        '.userscript-gallery-container'
+      );
+      if (existingContainer) {
+        existingContainer.remove();
+      }
+
+      if (posts.length === 0) {
+        buttonEl.textContent = '🖼️ No images found';
+        buttonEl.disabled = false;
+        return;
+      }
+
+      // Create container for gallery
+      const galleryContainer = generateElements(
+        '<div class="userscript-gallery-container"></div>',
+        postEl
+      );
+
+      style(
+        galleryContainer,
+        `
+        margin: 10px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 5px;
+        border-left: 3px solid #ff4500;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      `
+      );
+
+      posts.forEach((post, index) => {
+        const galleryItem = generateElements(
+          '<div class="userscript-gallery-item"></div>',
+          galleryContainer
+        );
+
+        style(
+          galleryItem,
+          `
+          width: 200px;
+          display: flex;
+          flex-direction: column;
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 5px;
+          overflow: hidden;
+          transition: transform 0.2s;
+          cursor: pointer;
+        `
+        );
+
+        // Add hover effect
+        galleryItem.addEventListener('mouseenter', () => {
+          galleryItem.style.transform = 'scale(1.05)';
+          galleryItem.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+        });
+        galleryItem.addEventListener('mouseleave', () => {
+          galleryItem.style.transform = 'scale(1)';
+          galleryItem.style.boxShadow = 'none';
+        });
+
+        const linkEl = generateElements(
+          `<a href="https://reddit.com${post.permalink}" target="_blank"></a>`,
+          galleryItem
+        );
+        style(linkEl, 'text-decoration: none; color: inherit;');
+
+        const imgEl = generateElements('<img />', linkEl);
+        imgEl.src = post.url;
+        imgEl.alt = post.title;
+        style(
+          imgEl,
+          `
+          width: 100%;
+          height: 200px;
+          object-fit: cover;
+        `
+        );
+
+        const infoEl = generateElements('<div></div>', linkEl);
+        style(
+          infoEl,
+          `
+          padding: 8px;
+        `
+        );
+
+        const titleEl = generateElements(`<div>${post.title}</div>`, infoEl);
+        style(
+          titleEl,
+          `
+          font-size: 0.85em;
+          line-height: 1.3;
+          max-height: 50px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin-bottom: 5px;
+        `
+        );
+
+        const scoreEl = generateElements(
+          `<div>👍 ${post.score} • 💬 ${post.num_comments}</div>`,
+          infoEl
+        );
+        style(
+          scoreEl,
+          `
+          font-size: 0.75em;
+          color: #666;
+        `
+        );
+      });
+
+      buttonEl.textContent = `🖼️ Loaded ${posts.length} images`;
       buttonEl.disabled = false;
     }
 
