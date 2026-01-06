@@ -294,54 +294,134 @@
       );
 
       posts.forEach((post, index) => {
-        const galleryItem = generateElements(
-          '<div class="userscript-gallery-item"></div>',
+        // Check if it's a gallery post with multiple images
+        const isGallery = post.is_gallery && post.media_metadata;
+        const imageUrls = [];
+
+        if (isGallery) {
+          // Extract all images from gallery
+          const galleryOrder = post.gallery_data?.items || [];
+          galleryOrder.forEach(item => {
+            const mediaId = item.media_id;
+            const media = post.media_metadata[mediaId];
+            if (media && media.s) {
+              // Get the highest quality image
+              const imageUrl = media.s.u || media.s.gif;
+              if (imageUrl) {
+                imageUrls.push(imageUrl.replace(/&amp;/g, '&'));
+              }
+            }
+          });
+        } else {
+          // Single image post
+          imageUrls.push(post.url);
+        }
+
+        // Create a container for the post (may contain multiple images)
+        const postContainer = generateElements(
+          '<div class="userscript-gallery-post"></div>',
           galleryContainer
         );
 
         style(
-          galleryItem,
+          postContainer,
           `
-          width: 200px;
+          ${isGallery ? 'width: auto;' : 'width: 200px;'}
           display: flex;
           flex-direction: column;
           background: rgba(255, 255, 255, 0.5);
           border-radius: 5px;
           overflow: hidden;
-          transition: transform 0.2s;
-          cursor: pointer;
         `
         );
 
-        // Add hover effect
-        galleryItem.addEventListener('mouseenter', () => {
-          galleryItem.style.transform = 'scale(1.05)';
-          galleryItem.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-        });
-        galleryItem.addEventListener('mouseleave', () => {
-          galleryItem.style.transform = 'scale(1)';
-          galleryItem.style.boxShadow = 'none';
-        });
-
-        const linkEl = generateElements(
-          `<a href="https://reddit.com${post.permalink}" target="_blank"></a>`,
-          galleryItem
+        // Create images container for gallery posts
+        const imagesContainer = generateElements(
+          '<div class="userscript-images-container"></div>',
+          postContainer
         );
-        style(linkEl, 'text-decoration: none; color: inherit;');
 
-        const imgEl = generateElements('<img />', linkEl);
-        imgEl.src = post.url;
-        imgEl.alt = post.title;
         style(
-          imgEl,
+          imagesContainer,
           `
-          width: 100%;
-          height: 200px;
-          object-fit: cover;
+          display: flex;
+          flex-wrap: ${isGallery ? 'wrap' : 'nowrap'};
+          gap: ${isGallery ? '5px' : '0'};
+          padding: ${isGallery ? '5px' : '0'};
         `
         );
 
-        const infoEl = generateElements('<div></div>', linkEl);
+        imageUrls.forEach((imageUrl, imgIndex) => {
+          const galleryItem = generateElements(
+            '<div class="userscript-gallery-item"></div>',
+            imagesContainer
+          );
+
+          style(
+            galleryItem,
+            `
+            ${isGallery ? 'width: calc(50% - 2.5px);' : 'width: 200px;'}
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+            cursor: pointer;
+            position: relative;
+          `
+          );
+
+          // Add hover effect
+          galleryItem.addEventListener('mouseenter', () => {
+            galleryItem.style.transform = 'scale(1.05)';
+            galleryItem.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+          });
+          galleryItem.addEventListener('mouseleave', () => {
+            galleryItem.style.transform = 'scale(1)';
+            galleryItem.style.boxShadow = 'none';
+          });
+
+          const linkEl = generateElements(
+            `<a href="https://reddit.com${post.permalink}" target="_blank"></a>`,
+            galleryItem
+          );
+          style(linkEl, 'text-decoration: none; color: inherit;');
+
+          const imgEl = generateElements('<img />', linkEl);
+          imgEl.src = imageUrl;
+          imgEl.alt = post.title;
+          style(
+            imgEl,
+            `
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+          `
+          );
+
+          // Add badge for multi-image posts
+          if (isGallery && imgIndex === 0) {
+            const badgeEl = generateElements(
+              `<div>📸 ${imageUrls.length}</div>`,
+              galleryItem
+            );
+            style(
+              badgeEl,
+              `
+              position: absolute;
+              top: 5px;
+              right: 5px;
+              background: rgba(0, 0, 0, 0.7);
+              color: white;
+              padding: 3px 8px;
+              border-radius: 3px;
+              font-size: 0.75em;
+              font-weight: bold;
+            `
+            );
+          }
+        });
+
+        // Post info (title, score) - shown once per post
+        const infoEl = generateElements('<div></div>', postContainer);
         style(
           infoEl,
           `
@@ -363,7 +443,9 @@
         );
 
         const scoreEl = generateElements(
-          `<div>👍 ${post.score} • 💬 ${post.num_comments}</div>`,
+          `<div>👍 ${post.score} • 💬 ${post.num_comments}${
+            isGallery ? ' • 📸 ' + imageUrls.length : ''
+          }</div>`,
           infoEl
         );
         style(
@@ -375,7 +457,16 @@
         );
       });
 
-      buttonEl.textContent = `🖼️ Loaded ${posts.length} images`;
+      // Count total images including gallery images
+      const totalImages = posts.reduce((count, post) => {
+        if (post.is_gallery && post.media_metadata) {
+          const galleryItems = post.gallery_data?.items || [];
+          return count + galleryItems.length;
+        }
+        return count + 1;
+      }, 0);
+
+      buttonEl.textContent = `🖼️ Loaded ${totalImages} images from ${posts.length} posts`;
       buttonEl.disabled = false;
     }
 
