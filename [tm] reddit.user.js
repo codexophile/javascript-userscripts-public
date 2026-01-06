@@ -107,7 +107,9 @@
                   .filter(
                     child =>
                       child.kind === 't1' &&
-                      child.data.author !== 'AutoModerator'
+                      child.data.author !== 'AutoModerator' &&
+                      child.data.stickied !== true &&
+                      child.data.distinguished !== 'moderator'
                   )
                   .slice(0, limit)
                   .map(child => child.data);
