@@ -65,7 +65,7 @@
         downvotes,
         secondaryToolbarEl
       );
-      postEl.querySelector('a[data-ks-id]').remove();
+      postEl.querySelector('a[data-ks-id]')?.remove();
       const opDispEl = createOpDispEl(author, secondaryToolbarEl);
 
       // Add button to load top 3 comments
