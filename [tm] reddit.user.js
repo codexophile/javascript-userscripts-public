@@ -220,7 +220,7 @@
       buttonEl.disabled = false;
     }
 
-    async function getUserImagePosts(username, token, limit = 30) {
+    async function getUserImagePosts(username, token, limit = 20) {
       return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({
           method: 'GET',
@@ -256,6 +256,36 @@
           },
         });
       });
+    }
+
+    function getThumbnailUrl(post, mediaId = null) {
+      // Try to get a smaller preview/thumbnail image instead of full resolution
+      if (post.is_gallery && mediaId && post.media_metadata) {
+        const media = post.media_metadata[mediaId];
+        if (media) {
+          // Try to get preview images (smaller resolution)
+          if (media.p && media.p.length > 0) {
+            // Get medium-sized preview (not the largest, not the smallest)
+            const previews = media.p;
+            const midIndex = Math.min(2, previews.length - 1);
+            return previews[midIndex].u.replace(/&amp;/g, '&');
+          }
+          // Fallback to full size
+          return (media.s.u || media.s.gif)?.replace(/&amp;/g, '&');
+        }
+      } else {
+        // For single image posts, try to use preview
+        if (post.preview && post.preview.images && post.preview.images[0]) {
+          const resolutions = post.preview.images[0].resolutions;
+          if (resolutions && resolutions.length > 0) {
+            // Get medium-sized preview
+            const midIndex = Math.min(2, resolutions.length - 1);
+            return resolutions[midIndex].url.replace(/&amp;/g, '&');
+          }
+        }
+        // Fallback to original URL
+        return post.url;
+      }
     }
 
     function displayGallery(posts, postEl, buttonEl) {
@@ -305,16 +335,16 @@
             const mediaId = item.media_id;
             const media = post.media_metadata[mediaId];
             if (media && media.s) {
-              // Get the highest quality image
-              const imageUrl = media.s.u || media.s.gif;
+              // Use thumbnail instead of full quality
+              const imageUrl = getThumbnailUrl(post, mediaId);
               if (imageUrl) {
-                imageUrls.push(imageUrl.replace(/&amp;/g, '&'));
+                imageUrls.push(imageUrl);
               }
             }
           });
         } else {
-          // Single image post
-          imageUrls.push(post.url);
+          // Single image post - use thumbnail
+          imageUrls.push(getThumbnailUrl(post));
         }
 
         // Create a container for the post (may contain multiple images)
@@ -386,8 +416,12 @@
           style(linkEl, 'text-decoration: none; color: inherit;');
 
           const imgEl = generateElements('<img />', linkEl);
-          imgEl.src = imageUrl;
+          // Lazy loading: use data-src and only set src when visible
+          imgEl.dataset.src = imageUrl;
           imgEl.alt = post.title;
+          // Placeholder background while loading
+          imgEl.style.background =
+            'linear-gradient(135deg, #f0f0f0 25%, #e0e0e0 25%, #e0e0e0 50%, #f0f0f0 50%, #f0f0f0 75%, #e0e0e0 75%, #e0e0e0)';
           style(
             imgEl,
             `
@@ -396,6 +430,9 @@
             object-fit: cover;
           `
           );
+
+          // Add to lazy load queue
+          imgEl.classList.add('lazy-load-image');
 
           // Add badge for multi-image posts
           if (isGallery && imgIndex === 0) {
@@ -465,6 +502,31 @@
         }
         return count + 1;
       }, 0);
+
+      // Set up lazy loading with Intersection Observer
+      const lazyImages = galleryContainer.querySelectorAll('.lazy-load-image');
+      const imageObserver = new IntersectionObserver(
+        (entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              if (img.dataset.src) {
+                img.src = img.dataset.src;
+                img.onload = () => {
+                  img.style.background = 'none';
+                };
+                delete img.dataset.src;
+              }
+              observer.unobserve(img);
+            }
+          });
+        },
+        {
+          rootMargin: '50px', // Start loading 50px before image enters viewport
+        }
+      );
+
+      lazyImages.forEach(img => imageObserver.observe(img));
 
       buttonEl.textContent = `🖼️ Loaded ${totalImages} images from ${posts.length} posts`;
       buttonEl.disabled = false;
