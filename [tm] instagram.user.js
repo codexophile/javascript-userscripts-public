@@ -191,12 +191,16 @@
     }
 
     if (location.href.includes('/p/')) {
+      // when image is on an overlay
+      const locatorId0 = document.querySelector('h2 [href^="/"][href$="/"]');
       const locatorId1 = document.querySelector(`header a`);
+      console.log(locatorId1);
       const locatorId2 = document.querySelector(`a span`);
-      if (locatorId1) {
-        userId = locatorId1.href.match(
-          /https:\/\/www\.instagram\.com\/(.+?)\/$/
-        )[1];
+      const matches1 = locatorId1.href.match(/\/(.+?)\/$/);
+      if (locatorId0) {
+        userId = locatorId0.href.match(/(\.com\/|^\/)(.+?)\//)[2];
+      } else if (locatorId1 && matches1) {
+        userId = matches1[1];
       } else if (locatorId2) {
         userId = locatorId2.textContent;
       }
