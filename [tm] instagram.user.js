@@ -171,7 +171,9 @@
       const uri = c.toDataURL();
 
       const link = $(`<a></a>`)[0];
-      let fileName = `${getUserId(image)} - (instagram)${getPostId(image)}`;
+      let fileName = `${getUserId(image)} - (instagram)${getPostId(
+        image
+      )} - (${getTagged(image)})`;
       link.setAttribute('download', `${fileName}.png`);
       link.setAttribute('href', uri);
       link.click();
