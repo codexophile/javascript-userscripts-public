@@ -203,8 +203,20 @@
     }
 
     if (location.href.includes('/p/')) {
+      let userId;
+
       // when image is on an overlay
       const locatorId0 = document.querySelector('h2 [href^="/"][href$="/"]');
+
+      // when image is on a dedicated page
+      const locatorImgEl = document.querySelector(
+        `main [alt*="'s profile picture"]`
+      );
+      if (locatorImgEl) {
+        const grandParentEl = grandParent(locatorImgEl, 7);
+        return grandParentEl?.querySelector('a')?.textContent;
+      }
+
       //
       const locatorId1 = document.querySelector(`header a`);
       console.log(locatorId1);
