@@ -288,6 +288,28 @@
       }
     }
 
+    function getFullResUrl(post, mediaId = null) {
+      // Get the full resolution image URL
+      if (post.is_gallery && mediaId && post.media_metadata) {
+        const media = post.media_metadata[mediaId];
+        if (media && media.s) {
+          return (media.s.u || media.s.gif)?.replace(/&amp;/g, '&');
+        }
+      } else {
+        // For single image posts, get the highest resolution or original
+        if (post.preview && post.preview.images && post.preview.images[0]) {
+          const resolutions = post.preview.images[0].resolutions;
+          if (resolutions && resolutions.length > 0) {
+            // Get the highest resolution preview
+            const highRes = resolutions[resolutions.length - 1];
+            return highRes.url.replace(/&amp;/g, '&');
+          }
+        }
+        // Fallback to original URL
+        return post.url;
+      }
+    }
+
     function displayGallery(posts, postEl, buttonEl) {
       // Remove existing gallery container if it exists
       const existingContainer = postEl.querySelector(
@@ -326,7 +348,7 @@
       posts.forEach((post, index) => {
         // Check if it's a gallery post with multiple images
         const isGallery = post.is_gallery && post.media_metadata;
-        const imageUrls = [];
+        const imageData = [];
 
         if (isGallery) {
           // Extract all images from gallery
@@ -335,16 +357,21 @@
             const mediaId = item.media_id;
             const media = post.media_metadata[mediaId];
             if (media && media.s) {
-              // Use thumbnail instead of full quality
-              const imageUrl = getThumbnailUrl(post, mediaId);
-              if (imageUrl) {
-                imageUrls.push(imageUrl);
+              const thumbnailUrl = getThumbnailUrl(post, mediaId);
+              const fullResUrl = getFullResUrl(post, mediaId);
+              if (thumbnailUrl) {
+                imageData.push({
+                  thumbnail: thumbnailUrl,
+                  fullRes: fullResUrl,
+                });
               }
             }
           });
         } else {
           // Single image post - use thumbnail
-          imageUrls.push(getThumbnailUrl(post));
+          const thumbnailUrl = getThumbnailUrl(post);
+          const fullResUrl = getFullResUrl(post);
+          imageData.push({ thumbnail: thumbnailUrl, fullRes: fullResUrl });
         }
 
         // Create a container for the post (may contain multiple images)
@@ -381,7 +408,7 @@
         `
         );
 
-        imageUrls.forEach((imageUrl, imgIndex) => {
+        imageData.forEach((imgData, imgIndex) => {
           const galleryItem = generateElements(
             '<div class="userscript-gallery-item"></div>',
             imagesContainer
@@ -417,7 +444,11 @@
 
           const imgEl = generateElements('<img />', linkEl);
           // Lazy loading: use data-src and only set src when visible
-          imgEl.dataset.src = imageUrl;
+          imgEl.dataset.src = imgData.thumbnail;
+          // Add full-res URL to srcset for high-DPI displays or zoom
+          if (imgData.fullRes && imgData.fullRes !== imgData.thumbnail) {
+            imgEl.srcset = `${imgData.thumbnail} 1x, ${imgData.fullRes} 2x`;
+          }
           imgEl.alt = post.title;
           // Placeholder background while loading
           imgEl.style.background =
@@ -437,7 +468,7 @@
           // Add badge for multi-image posts
           if (isGallery && imgIndex === 0) {
             const badgeEl = generateElements(
-              `<div>📸 ${imageUrls.length}</div>`,
+              `<div>📸 ${imageData.length}</div>`,
               galleryItem
             );
             style(
@@ -481,7 +512,7 @@
 
         const scoreEl = generateElements(
           `<div>👍 ${post.score} • 💬 ${post.num_comments}${
-            isGallery ? ' • 📸 ' + imageUrls.length : ''
+            isGallery ? ' • 📸 ' + imageData.length : ''
           }</div>`,
           infoEl
         );
