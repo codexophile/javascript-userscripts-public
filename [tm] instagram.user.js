@@ -193,8 +193,10 @@
     if (location.href.includes('/p/')) {
       // when image is on an overlay
       const locatorId0 = document.querySelector('h2 [href^="/"][href$="/"]');
+      //
       const locatorId1 = document.querySelector(`header a`);
       console.log(locatorId1);
+      //
       const locatorId2 = document.querySelector(`a span`);
       const matches1 = locatorId1.href.match(/\/(.+?)\/$/);
       if (locatorId0) {
