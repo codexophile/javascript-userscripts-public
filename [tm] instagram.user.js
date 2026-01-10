@@ -178,6 +178,16 @@
     });
   };
 
+  function getTagged(image) {
+    const tagEls = document.querySelectorAll(
+      '[style*="left: "][style*="margin-top: "]'
+    );
+    const tagsString = Array.from(tagEls)
+      .map(tagEl => tagEl.textContent)
+      .join(', ');
+    return tagsString;
+  }
+
   function getUserId(image) {
     let $parent, userId;
 
