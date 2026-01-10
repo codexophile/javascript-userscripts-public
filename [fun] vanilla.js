@@ -2947,6 +2947,7 @@ function parents(el, selector) {
 }
 
 function grandParent(child, iterations) {
+  if (!child) return null;
   let currentIteration = iterations;
   let parent = child.parentNode;
 
