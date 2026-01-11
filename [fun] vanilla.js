@@ -1630,6 +1630,106 @@ function autoPip(videoEl) {
 
 // MARK: Rest
 
+function getPlayerConfig() {
+  try {
+    // 1. Find all script elements on the page
+    const scriptElements = document.querySelectorAll(
+      'script[type="text/javascript"]'
+    );
+
+    if (!scriptElements.length) {
+      console.warn('No script elements found on the page');
+      return null;
+    }
+
+    // 2. Search for the script containing 'flashvars' or similar config variable
+    let configString = null;
+
+    for (const scriptEl of scriptElements) {
+      const scriptContent = scriptEl.textContent;
+
+      // Look for variable assignment with object (flashvars, playerConfig, etc.)
+      const varMatch = scriptContent.match(/var\s+(\w+)\s*=\s*\{/);
+
+      if (varMatch) {
+        const varName = varMatch[1];
+        const startIndex = varMatch.index;
+
+        // Find the matching closing brace by counting braces
+        let braceCount = 0;
+        let inString = false;
+        let stringChar = null;
+        let escaped = false;
+        let objectStart = scriptContent.indexOf('{', startIndex);
+        let objectEnd = -1;
+
+        for (let i = objectStart; i < scriptContent.length; i++) {
+          const char = scriptContent[i];
+
+          // Handle escape sequences
+          if (escaped) {
+            escaped = false;
+            continue;
+          }
+
+          if (char === '\\') {
+            escaped = true;
+            continue;
+          }
+
+          // Handle strings
+          if (char === '"' || char === "'") {
+            if (!inString) {
+              inString = true;
+              stringChar = char;
+            } else if (char === stringChar) {
+              inString = false;
+              stringChar = null;
+            }
+            continue;
+          }
+
+          // Only count braces outside of strings
+          if (!inString) {
+            if (char === '{') {
+              braceCount++;
+            } else if (char === '}') {
+              braceCount--;
+              if (braceCount === 0) {
+                objectEnd = i;
+                break;
+              }
+            }
+          }
+        }
+
+        if (objectEnd !== -1) {
+          // Extract the complete variable assignment
+          configString = scriptContent.substring(startIndex, objectEnd + 1);
+          // Add semicolon if not present
+          if (!configString.trim().endsWith(';')) {
+            configString += ';';
+          }
+          break;
+        }
+      }
+    }
+
+    if (!configString) {
+      console.warn('No player configuration found in script elements');
+      return null;
+    }
+
+    // 3. Process the config string using the existing converter function
+    const resultObject = convertPlayerConfigStringToObject(configString);
+
+    return resultObject;
+  } catch (error) {
+    console.error('Error in getPlayerConfig:', error);
+    return null;
+  }
+}
+
 function convertPlayerConfigStringToObject(configString) {
   try {
     // 1. Isolate the object literal part of the string.
