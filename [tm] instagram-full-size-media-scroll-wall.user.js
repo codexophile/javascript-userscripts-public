@@ -432,11 +432,11 @@
   }
 
   /**
-   * Sets up autoplay/pause logic for a video element based on viewport visibility.
-   * Video plays when fully visible in viewport and pauses when it leaves.
+   * Sets up auto-pause logic for a video element based on viewport visibility.
+   * Video pauses when it leaves the viewport.
    * @param {HTMLVideoElement} videoEl - The video element to manage.
    */
-  function setupVideoAutoplayOnViewport(videoEl) {
+  function setupVideoAutoPauseOnViewport(videoEl) {
     const checkAndUpdatePlayState = () => {
       // Check if video is fully in viewport
       const rect = videoEl.getBoundingClientRect();
@@ -448,11 +448,7 @@
         rect.right <=
           (window.innerWidth || document.documentElement.clientWidth);
 
-      if (isFullyVisible) {
-        videoEl.play().catch(() => {
-          // Autoplay might be prevented by browser, ignore silently
-        });
-      } else {
+      if (!isFullyVisible) {
         videoEl.pause();
       }
     };
@@ -472,9 +468,6 @@
     // Add listeners
     state.mediaWallContainer.addEventListener('scroll', onScroll);
     window.addEventListener('resize', onResize);
-
-    // Initial check
-    checkAndUpdatePlayState();
 
     // Return cleanup function
     return () => {
@@ -542,8 +535,8 @@
           video.volume = config.VIDEO_VOLUME;
           video.preload = 'metadata';
 
-          // Set up autoplay when video enters/leaves viewport
-          setupVideoAutoplayOnViewport(video);
+          // Set up auto-pause when video leaves viewport
+          setupVideoAutoPauseOnViewport(video);
 
           link.className = 'media-link';
           link.textContent = `Post by @${item.user.username}`;
