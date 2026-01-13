@@ -344,6 +344,7 @@
       /* --- Media Item Styles --- */
       #media-wall-content img,
       #media-wall-content video {
+        width: 300px;
         max-height: ${vh}vh;
         max-width: ${vw}vw;
         margin: 8px;
