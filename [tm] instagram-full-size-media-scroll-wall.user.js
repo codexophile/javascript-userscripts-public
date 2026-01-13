@@ -373,6 +373,26 @@
       #media-wall-content .media-link:hover {
         text-decoration: underline;
       }
+
+      /* --- Media Group Styles --- */
+      #media-wall-content .media-group {
+        display: inline-block;
+        padding: 15px;
+        margin: 10px;
+        border: 1px solid #404040;
+        border-radius: 8px;
+        background-color: rgba(20, 20, 25, 0.8);
+        vertical-align: top;
+      }
+      #media-wall-content .media-group-info {
+        color: #888;
+        font-size: 11px;
+        text-align: center;
+        padding: 5px 0 10px 0;
+        border-bottom: 1px solid #303030;
+        margin-bottom: 10px;
+        font-family: sans-serif;
+      }
     `;
     const styleSheet = document.createElement('style');
     styleSheet.type = 'text/css';
@@ -413,6 +433,7 @@
 
   /**
    * Processes a list of media items and appends them to the DOM.
+   * Groups items by post and visually separates each group.
    * @param {Array<object>} mediaList - An array of media items from the API.
    */
   function renderMediaItems(mediaList) {
@@ -426,6 +447,20 @@
         console.log('Skipping ad or non-media item:', item);
         continue;
       }
+
+      // Create a group container for this post
+      const group = document.createElement('div');
+      group.className = 'media-group';
+
+      // Add post info header
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'media-group-info';
+      infoDiv.innerHTML = `<strong>@${item.user?.username}</strong> • ${
+        item.taken_at
+          ? new Date(item.taken_at * 1000).toLocaleDateString()
+          : 'Unknown'
+      }`;
+      group.appendChild(infoDiv);
 
       // A single post can contain a carousel of multiple images/videos.
       const carouselItems = item.carousel_media || [item];
@@ -459,16 +494,18 @@
 
           container.appendChild(video);
           container.appendChild(link);
-          contentContainer.appendChild(container);
+          group.appendChild(container);
         }
         // Handle images
         else if (media.image_versions2) {
           const image = document.createElement('img');
           image.src = getBestImageUrl(media);
           link.appendChild(image);
-          contentContainer.appendChild(link);
+          group.appendChild(link);
         }
       }
+
+      contentContainer.appendChild(group);
     }
   }
 
