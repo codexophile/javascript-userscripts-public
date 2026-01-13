@@ -432,6 +432,59 @@
   }
 
   /**
+   * Sets up autoplay/pause logic for a video element based on viewport visibility.
+   * Video plays when fully visible in viewport and pauses when it leaves.
+   * @param {HTMLVideoElement} videoEl - The video element to manage.
+   */
+  function setupVideoAutoplayOnViewport(videoEl) {
+    const checkAndUpdatePlayState = () => {
+      // Check if video is fully in viewport
+      const rect = videoEl.getBoundingClientRect();
+      const isFullyVisible =
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <=
+          (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <=
+          (window.innerWidth || document.documentElement.clientWidth);
+
+      if (isFullyVisible) {
+        videoEl.play().catch(() => {
+          // Autoplay might be prevented by browser, ignore silently
+        });
+      } else {
+        videoEl.pause();
+      }
+    };
+
+    // Check on scroll with throttle to improve performance
+    let scrollTimeout = null;
+    const onScroll = () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(checkAndUpdatePlayState, 50);
+    };
+
+    // Check on resize
+    const onResize = () => {
+      checkAndUpdatePlayState();
+    };
+
+    // Add listeners
+    state.mediaWallContainer.addEventListener('scroll', onScroll);
+    window.addEventListener('resize', onResize);
+
+    // Initial check
+    checkAndUpdatePlayState();
+
+    // Return cleanup function
+    return () => {
+      state.mediaWallContainer.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
+  }
+
+  /**
    * Processes a list of media items and appends them to the DOM.
    * Groups items by post and visually separates each group.
    * @param {Array<object>} mediaList - An array of media items from the API.
@@ -488,6 +541,9 @@
           video.loop = true;
           video.volume = config.VIDEO_VOLUME;
           video.preload = 'metadata';
+
+          // Set up autoplay when video enters/leaves viewport
+          setupVideoAutoplayOnViewport(video);
 
           link.className = 'media-link';
           link.textContent = `Post by @${item.user.username}`;
