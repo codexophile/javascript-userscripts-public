@@ -189,6 +189,12 @@
     if (state.isLoadingNextPage) return;
     state.isLoadingNextPage = true;
 
+    // Show loading indicator
+    const loadingIndicator = document.getElementById(
+      'media-wall-loading-indicator'
+    );
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+
     const request = buildApiRequest();
     if (!request) {
       state.isLoadingNextPage = false;
@@ -221,6 +227,7 @@
       if (!mediaList || mediaList.length === 0) {
         console.log('No more media found or empty response.');
         state.nextPageCursor = null; // Stop further requests.
+        updateLoadingIndicators();
         return;
       }
 
@@ -231,6 +238,7 @@
       alert('Failed to load Instagram media. Check the console for details.');
     } finally {
       state.isLoadingNextPage = false;
+      updateLoadingIndicators();
     }
   }
 
@@ -264,6 +272,23 @@
       state.isWallActive = false;
     };
     state.mediaWallContainer.appendChild(closeButton);
+
+    // Add loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'media-wall-loading-indicator';
+    loadingIndicator.innerHTML = `
+      <div class="loading-spinner"></div>
+      <div>Loading media...</div>
+    `;
+    loadingIndicator.style.display = 'none';
+    state.mediaWallContainer.appendChild(loadingIndicator);
+
+    // Add end-of-content indicator
+    const endIndicator = document.createElement('div');
+    endIndicator.id = 'media-wall-end-indicator';
+    endIndicator.textContent = 'All media loaded';
+    endIndicator.style.display = 'none';
+    state.mediaWallContainer.appendChild(endIndicator);
 
     document.body.appendChild(state.mediaWallContainer);
 
@@ -392,6 +417,44 @@
         border-bottom: 1px solid #303030;
         margin-bottom: 10px;
         font-family: sans-serif;
+      }
+
+      /* --- Loading Indicator Styles --- */
+      #media-wall-loading-indicator {
+        text-align: center;
+        padding: 40px 20px;
+        color: #ccc;
+        font-family: sans-serif;
+        font-size: 14px;
+      }
+      .loading-spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      #media-wall-end-indicator {
+        text-align: center;
+        padding: 40px 20px;
+        color: #888;
+        font-family: sans-serif;
+        font-size: 14px;
+        border-top: 1px solid #404040;
+        margin-top: 20px;
+      }
+      #media-wall-end-indicator::before {
+        content: '✓';
+        display: block;
+        font-size: 30px;
+        margin-bottom: 10px;
+        color: #4a9eff;
       }
     `;
     const styleSheet = document.createElement('style');
@@ -561,6 +624,32 @@
   // --- LOGIC & INITIALIZATION ---
 
   /**
+   * Updates the visibility of loading and end-of-content indicators.
+   */
+  function updateLoadingIndicators() {
+    const loadingIndicator = document.getElementById(
+      'media-wall-loading-indicator'
+    );
+    const endIndicator = document.getElementById('media-wall-end-indicator');
+
+    if (!loadingIndicator || !endIndicator) return;
+
+    if (state.isLoadingNextPage) {
+      // Currently loading
+      loadingIndicator.style.display = 'block';
+      endIndicator.style.display = 'none';
+    } else if (!state.nextPageCursor) {
+      // No more content to load
+      loadingIndicator.style.display = 'none';
+      endIndicator.style.display = 'block';
+    } else {
+      // Ready to load more, but not currently loading
+      loadingIndicator.style.display = 'none';
+      endIndicator.style.display = 'none';
+    }
+  }
+
+  /**
    * Sets up an on-scroll listener to load the next page of media
    * when the user scrolls near the bottom of the wall.
    */
@@ -568,6 +657,7 @@
     if (!state.nextPageCursor) {
       console.log('End of feed. Disabling infinite scroll.');
       state.mediaWallContainer.onscroll = null;
+      updateLoadingIndicators();
       return;
     }
 
