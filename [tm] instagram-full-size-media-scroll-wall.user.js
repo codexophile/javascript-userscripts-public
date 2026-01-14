@@ -28,6 +28,8 @@
     nextPageCursor: null,
     // A reference to the main container for the media wall.
     mediaWallContainer: null,
+    // IntersectionObserver for infinite scroll sentinel.
+    scrollObserver: null,
   };
 
   // --- UTILS ---
@@ -47,6 +49,29 @@
         createHTML: str => str,
       });
     }
+  }
+
+  /**
+   * Lightweight DOM builder utility.
+   * @param {string} tag
+   * @param {object} [props]
+   * @param {Array<Node|string>} [children]
+   * @returns {HTMLElement}
+   */
+  function el(tag, props = {}, children = []) {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'style' && typeof v === 'object') Object.assign(node.style, v);
+      else if (k in node) node[k] = v;
+      else node.setAttribute(k, v);
+    }
+    for (const child of [].concat(children)) {
+      if (child == null) continue;
+      node.appendChild(
+        typeof child === 'string' ? document.createTextNode(child) : child
+      );
+    }
+    return node;
   }
 
   /**
@@ -219,9 +244,11 @@
       console.log('API Response:', data);
 
       // Extract the media list and the next page cursor from the response.
-      const mediaList =
-        data.items ||
-        data.feed_items?.map(item => item.media_or_ad).filter(Boolean);
+      const mediaList = Array.isArray(data.items)
+        ? data.items
+        : (data.feed_items || [])
+            .map(item => item && item.media_or_ad)
+            .filter(Boolean);
       state.nextPageCursor = data.next_max_id;
 
       if (!mediaList || mediaList.length === 0) {
@@ -232,7 +259,7 @@
       }
 
       renderMediaItems(mediaList);
-      setupInfiniteScroll();
+      setupInfiniteScrollObserver();
     } catch (error) {
       console.error('Instagram full-size media script error:', error);
       alert('Failed to load Instagram media. Check the console for details.');
@@ -289,6 +316,13 @@
     endIndicator.textContent = 'All media loaded';
     endIndicator.style.display = 'none';
     state.mediaWallContainer.appendChild(endIndicator);
+
+    // Add scroll sentinel for IntersectionObserver-based infinite scroll
+    const sentinel = document.createElement('div');
+    sentinel.id = 'media-wall-scroll-sentinel';
+    sentinel.style.height = '1px';
+    sentinel.style.margin = '1px 0';
+    state.mediaWallContainer.appendChild(sentinel);
 
     document.body.appendChild(state.mediaWallContainer);
 
@@ -456,6 +490,7 @@
         margin-bottom: 10px;
         color: #4a9eff;
       }
+      #media-wall-scroll-sentinel { width: 100%; }
     `;
     const styleSheet = document.createElement('style');
     styleSheet.type = 'text/css';
@@ -469,14 +504,18 @@
    * @returns {string} The URL of the best quality image.
    */
   function getBestImageUrl(media) {
-    const candidates = media?.image_versions2?.candidates;
-    if (!candidates || candidates.length === 0) return '';
-
-    return candidates.reduce((best, current) => {
-      return current.width * current.height > best.width * best.height
-        ? current
-        : best;
-    }).url;
+    const candidates = media?.image_versions2?.candidates || [];
+    if (candidates.length === 0) return '';
+    let best = candidates[0];
+    for (let i = 1; i < candidates.length; i++) {
+      const c = candidates[i];
+      if (
+        (c.width || 0) * (c.height || 0) >
+        (best.width || 0) * (best.height || 0)
+      )
+        best = c;
+    }
+    return best.url || '';
   }
 
   /**
@@ -485,13 +524,18 @@
    * @returns {string} The URL of the best quality video.
    */
   function getBestVideoUrl(media) {
-    const versions = media?.video_versions;
-    if (!versions || versions.length === 0) return '';
-    return versions.reduce((best, current) => {
-      return current.width * current.height > best.width * best.height
-        ? current
-        : best;
-    }).url;
+    const versions = media?.video_versions || [];
+    if (versions.length === 0) return '';
+    let best = versions[0];
+    for (let i = 1; i < versions.length; i++) {
+      const v = versions[i];
+      if (
+        (v.width || 0) * (v.height || 0) >
+        (best.width || 0) * (best.height || 0)
+      )
+        best = v;
+    }
+    return best.url || '';
   }
 
   /**
@@ -500,44 +544,17 @@
    * @param {HTMLVideoElement} videoEl - The video element to manage.
    */
   function setupVideoAutoPauseOnViewport(videoEl) {
-    const checkAndUpdatePlayState = () => {
-      // Check if video is fully in viewport
-      const rect = videoEl.getBoundingClientRect();
-      const isFullyVisible =
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <=
-          (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <=
-          (window.innerWidth || document.documentElement.clientWidth);
-
-      if (!isFullyVisible) {
-        videoEl.pause();
-      }
-    };
-
-    // Check on scroll with throttle to improve performance
-    let scrollTimeout = null;
-    const onScroll = () => {
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(checkAndUpdatePlayState, 50);
-    };
-
-    // Check on resize
-    const onResize = () => {
-      checkAndUpdatePlayState();
-    };
-
-    // Add listeners
-    state.mediaWallContainer.addEventListener('scroll', onScroll);
-    window.addEventListener('resize', onResize);
-
-    // Return cleanup function
-    return () => {
-      state.mediaWallContainer.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-    };
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          // Pause when not sufficiently visible within the wall container
+          if (entry.intersectionRatio < 0.6) videoEl.pause();
+        }
+      },
+      { root: state.mediaWallContainer, threshold: [0, 0.6, 1] }
+    );
+    observer.observe(videoEl);
+    return () => observer.disconnect();
   }
 
   /**
@@ -551,6 +568,7 @@
       contentContainer = createMediaWallDom();
     }
 
+    const frag = document.createDocumentFragment();
     for (const item of mediaList) {
       if (!item?.code || item?.ad_id || item?.label === 'Sponsored') {
         console.log('Skipping ad or non-media item:', item);
@@ -558,45 +576,46 @@
       }
 
       // Create a group container for this post
-      const group = document.createElement('div');
-      group.className = 'media-group';
+      const group = el('div', { className: 'media-group' });
 
       // Add post info header
-      const infoDiv = document.createElement('div');
-      infoDiv.className = 'media-group-info';
-      infoDiv.innerHTML = `<strong>@${item.user?.username}</strong> • ${
-        item.taken_at
-          ? new Date(item.taken_at * 1000).toLocaleDateString()
-          : 'Unknown'
-      }`;
-      group.appendChild(infoDiv);
+      group.appendChild(
+        el('div', {
+          className: 'media-group-info',
+          innerHTML: `<strong>@${item.user?.username}</strong> • ${
+            item.taken_at
+              ? new Date(item.taken_at * 1000).toLocaleDateString()
+              : 'Unknown'
+          }`,
+        })
+      );
 
       // A single post can contain a carousel of multiple images/videos.
       const carouselItems = item.carousel_media || [item];
 
       for (const [index, media] of carouselItems.entries()) {
-        const link = document.createElement('a');
-        link.href = `https://www.instagram.com/p/${item.code}/`;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.title = `${item.user?.full_name || ''} (@${
-          item.user?.username
-        })\n${item.caption?.text || ''}`;
+        const link = el('a', {
+          href: `https://www.instagram.com/p/${item.code}/`,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          title: `${item.user?.full_name || ''} (@${item.user?.username})\n${
+            item.caption?.text || ''
+          }`,
+        });
         if (carouselItems.length > 1) {
           link.title += ` [${index + 1}/${carouselItems.length}]`;
         }
 
         // Handle videos
         if (media.video_versions) {
-          const container = document.createElement('div');
-          container.className = 'media-container';
-
-          const video = document.createElement('video');
-          video.src = getBestVideoUrl(media);
-          video.controls = true;
-          video.loop = true;
-          video.volume = config.VIDEO_VOLUME;
-          video.preload = 'metadata';
+          const container = el('div', { className: 'media-container' });
+          const video = el('video', {
+            src: getBestVideoUrl(media),
+            controls: true,
+            loop: true,
+            volume: config.VIDEO_VOLUME,
+            preload: 'metadata',
+          });
 
           // Set up auto-pause when video leaves viewport
           setupVideoAutoPauseOnViewport(video);
@@ -610,15 +629,15 @@
         }
         // Handle images
         else if (media.image_versions2) {
-          const image = document.createElement('img');
-          image.src = getBestImageUrl(media);
+          const image = el('img', { src: getBestImageUrl(media) });
           link.appendChild(image);
           group.appendChild(link);
         }
       }
 
-      contentContainer.appendChild(group);
+      frag.appendChild(group);
     }
+    contentContainer.appendChild(frag);
   }
 
   // --- LOGIC & INITIALIZATION ---
@@ -653,30 +672,37 @@
    * Sets up an on-scroll listener to load the next page of media
    * when the user scrolls near the bottom of the wall.
    */
-  function setupInfiniteScroll() {
+  function setupInfiniteScrollObserver() {
+    // Disconnect any prior observer
+    if (state.scrollObserver) {
+      state.scrollObserver.disconnect();
+      state.scrollObserver = null;
+    }
+
     if (!state.nextPageCursor) {
       console.log('End of feed. Disabling infinite scroll.');
-      state.mediaWallContainer.onscroll = null;
       updateLoadingIndicators();
       return;
     }
 
-    const triggerElement =
-      document.querySelector(
-        `#media-wall-content > *:nth-last-of-type(${config.INFINITE_SCROLL_TRIGGER_OFFSET})`
-      ) || document.querySelector('#media-wall-content > *:last-of-type');
+    const sentinel = document.getElementById('media-wall-scroll-sentinel');
+    if (!sentinel) return;
 
-    if (!triggerElement) return;
-
-    state.mediaWallContainer.onscroll = () => {
-      // Check if the trigger element is within the viewport
-      const rect = triggerElement.getBoundingClientRect();
-      if (rect.top < window.innerHeight + 200) {
-        // +200px buffer
-        state.mediaWallContainer.onscroll = null; // Prevent multiple triggers
-        fetchMedia();
-      }
-    };
+    state.scrollObserver = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (
+            entry.isIntersecting &&
+            !state.isLoadingNextPage &&
+            state.nextPageCursor
+          ) {
+            fetchMedia();
+          }
+        }
+      },
+      { root: state.mediaWallContainer, rootMargin: '200px 0px', threshold: 0 }
+    );
+    state.scrollObserver.observe(sentinel);
   }
 
   /**
