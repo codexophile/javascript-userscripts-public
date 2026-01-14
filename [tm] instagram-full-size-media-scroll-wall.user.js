@@ -603,13 +603,7 @@
           href: `https://www.instagram.com/p/${item.code}/`,
           target: '_blank',
           rel: 'noopener noreferrer',
-          title: `${item.user?.full_name || ''} (@${item.user?.username})\n${
-            item.caption?.text || ''
-          }`,
         });
-        if (carouselItems.length > 1) {
-          link.title += ` [${index + 1}/${carouselItems.length}]`;
-        }
 
         // Handle videos
         if (media.video_versions) {
@@ -627,6 +621,9 @@
 
           link.className = 'media-link';
           link.textContent = `Post by @${item.user.username}`;
+          if (carouselItems.length > 1) {
+            link.textContent += ` [${index + 1}/${carouselItems.length}]`;
+          }
 
           container.appendChild(video);
           container.appendChild(link);
