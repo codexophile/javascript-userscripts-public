@@ -492,10 +492,15 @@
       }
       #media-wall-scroll-sentinel { width: 100%; }
     `;
-    const styleSheet = document.createElement('style');
-    styleSheet.type = 'text/css';
-    styleSheet.innerText = styles;
-    document.head.appendChild(styleSheet);
+    // Prefer shared helper if available to avoid duplicate styles
+    if (typeof addStyle === 'function') {
+      addStyle(styles);
+    } else {
+      const styleSheet = document.createElement('style');
+      styleSheet.type = 'text/css';
+      styleSheet.innerText = styles;
+      document.head.appendChild(styleSheet);
+    }
   }
 
   /**
@@ -764,43 +769,60 @@
       return; // Button already exists.
     }
 
-    let insertionPoint = null;
-    let buttonHtml = '';
-
-    // --- Profile Page Button ---
-    // Targets the tab list for "Posts", "Reels", "Tagged".
-    const profileTabList = document.querySelector('div[role=tablist]');
-    if (profileTabList) {
-      insertionPoint = profileTabList;
-      buttonHtml = `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" id="media-wall-trigger-button-profile"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Media Wall</span></a>`;
-    }
-    // --- Home Feed Button ---
-    // Targets the container above the first post.
-    else {
-      insertionPoint = document.querySelector('.collapsible-content');
-      buttonHtml = `<article class="_ab6k _ab6l _ab6m" role="presentation" id="media-wall-trigger-button-home">
-                <div>Click to Load Full-Size Media Wall</div>
-            </article>`;
+    // Determine page mode early to choose correct insertion target
+    const href = window.location.href;
+    if (href.match(/https:\/\/(www\.)?instagram\.com\/?(\?|$|#)/)) {
+      state.pageMode = 'home';
+    } else if (href.match(/\/tagged\//)) {
+      state.pageMode = 'tagged';
+    } else if (href.match(/\/explore\//)) {
+      state.pageMode = 'explore';
+    } else if (href.match(/https:\/\/(www\.)?instagram\.com\/p\//)) {
+      state.pageMode = 'post';
+    } else {
+      state.pageMode = 'profile';
     }
 
-    if (insertionPoint && buttonHtml) {
+    const isHome = state.pageMode === 'home';
+    const targetSelector = isHome
+      ? '.collapsible-content'
+      : 'div[role=tablist]';
+    const buttonHtml = isHome
+      ? `<article class="_ab6k _ab6l _ab6m" role="presentation" id="media-wall-trigger-button-home">
+            <div>Click to Load Full-Size Media Wall</div>
+         </article>`
+      : `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" id="media-wall-trigger-button-profile"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Media Wall</span></a>`;
+
+    const placeButton = insertionPoint => {
+      if (!insertionPoint) return;
       console.log('Injecting trigger button...');
-      domParserContainer.innerHTML = buttonHtml;
-      const triggerButton = domParserContainer.firstElementChild;
+      let triggerButton;
+      if (typeof generateElements === 'function') {
+        triggerButton = generateElements(buttonHtml);
+      } else {
+        domParserContainer.innerHTML = buttonHtml;
+        triggerButton = domParserContainer.firstElementChild;
+      }
       triggerButton.onclick = e => {
         e.preventDefault();
         e.stopPropagation();
         initializeMediaWall();
       };
+      if (isHome) insertionPoint.prepend(triggerButton);
+      else insertionPoint.appendChild(triggerButton);
+    };
 
-      if (state.pageMode === 'home') {
-        insertionPoint.prepend(triggerButton);
-      } else {
-        insertionPoint.appendChild(triggerButton);
-      }
+    // Prefer `waitFor` from vanilla.js if available
+    if (typeof waitFor === 'function') {
+      waitFor(targetSelector).then(placeButton);
     } else {
-      // If no insertion point is found, try again shortly.
-      setTimeout(insertTriggerButton, 250);
+      const insertionPoint = document.querySelector(targetSelector);
+      if (insertionPoint) {
+        placeButton(insertionPoint);
+      } else {
+        // Fallback: poll briefly until available
+        setTimeout(insertTriggerButton, 250);
+      }
     }
   }
 
