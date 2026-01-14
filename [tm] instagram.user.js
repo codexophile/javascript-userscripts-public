@@ -203,8 +203,6 @@
     }
 
     if (location.href.includes('/p/')) {
-      let userId;
-
       // when image is on an overlay
       const locatorId0 = document.querySelector('h2 [href^="/"][href$="/"]');
 
@@ -240,7 +238,7 @@
     if (location.href === 'https://www.instagram.com/')
       href = $(image).closest('article').find('[href*="/p/"]').attr('href');
     if (location.href.includes('/p/')) href = location.href;
-    return href.match(/\/p\/(.+?)(\/|$)/)[1];
+    return href.match(/\/p\/(.+?)(\/|$|\?)/)[1];
   }
 
   function copyImageToClipboard(imageUrl) {
