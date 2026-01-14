@@ -1630,103 +1630,201 @@ function autoPip(videoEl) {
 
 // MARK: Rest
 
-function getPlayerConfig() {
+function getPlayerConfig(options = {}) {
+  const {
+    getAll = false,
+    includeMetadata = false,
+    varNames = null, // Array of specific variable names to look for, or null for any
+    functionNames = null, // Array of function names to capture config from (e.g., ['renderVideoPlayerV3'])
+  } = typeof options === 'boolean' ? { getAll: options } : options;
+
   try {
     // 1. Find all script elements on the page
-    const scriptElements = document.querySelectorAll(
-      'script[type="text/javascript"]'
-    );
+    const scriptElements = document.querySelectorAll('script');
 
     if (!scriptElements.length) {
       console.warn('No script elements found on the page');
-      return null;
+      return getAll ? [] : null;
     }
 
-    // 2. Search for the script containing 'flashvars' or similar config variable
-    let configString = null;
+    // 2. Search for script(s) containing config variables
+    const configs = [];
 
     for (const scriptEl of scriptElements) {
       const scriptContent = scriptEl.textContent;
+      console.log(scriptContent);
 
-      // Look for variable assignment with object (flashvars, playerConfig, etc.)
-      const varMatch = scriptContent.match(/var\s+(\w+)\s*=\s*\{/);
+      // A. Look for variable assignments with objects: var playerConfig = {...}
+      const varRegex = /var\s+(\w+)\s*=\s*\{/g;
+      let varMatch;
 
-      if (varMatch) {
+      while ((varMatch = varRegex.exec(scriptContent)) !== null) {
         const varName = varMatch[1];
-        const startIndex = varMatch.index;
 
-        // Find the matching closing brace by counting braces
-        let braceCount = 0;
-        let inString = false;
-        let stringChar = null;
-        let escaped = false;
-        let objectStart = scriptContent.indexOf('{', startIndex);
-        let objectEnd = -1;
+        // Filter by variable names if specified
+        if (varNames && !varNames.includes(varName)) {
+          continue;
+        }
 
-        for (let i = objectStart; i < scriptContent.length; i++) {
-          const char = scriptContent[i];
+        const result = extractObjectFromPosition(
+          scriptContent,
+          varMatch.index,
+          'variable',
+          varName
+        );
 
-          // Handle escape sequences
-          if (escaped) {
-            escaped = false;
-            continue;
+        if (result) {
+          configs.push(result);
+
+          // If not getting all, return after first successful match
+          if (!getAll) {
+            return includeMetadata ? result : result.data || result;
           }
+        }
+      }
 
-          if (char === '\\') {
-            escaped = true;
-            continue;
-          }
+      // B. Look for function calls with object arguments: functionName({...})
+      if (functionNames) {
+        for (const funcName of functionNames) {
+          const funcRegex = new RegExp(
+            `\\b${funcName.replace(
+              /[.*+?^${}()|[\]\\]/g,
+              '\\$&'
+            )}\\s*\\(\\s*\\{`,
+            'g'
+          );
+          let funcMatch;
 
-          // Handle strings
-          if (char === '"' || char === "'") {
-            if (!inString) {
-              inString = true;
-              stringChar = char;
-            } else if (char === stringChar) {
-              inString = false;
-              stringChar = null;
-            }
-            continue;
-          }
+          while ((funcMatch = funcRegex.exec(scriptContent)) !== null) {
+            // Find where the opening brace is
+            const openBraceIndex = scriptContent.indexOf('{', funcMatch.index);
 
-          // Only count braces outside of strings
-          if (!inString) {
-            if (char === '{') {
-              braceCount++;
-            } else if (char === '}') {
-              braceCount--;
-              if (braceCount === 0) {
-                objectEnd = i;
-                break;
+            const result = extractObjectFromPosition(
+              scriptContent,
+              funcMatch.index,
+              'function',
+              funcName,
+              openBraceIndex
+            );
+
+            if (result) {
+              configs.push(result);
+
+              if (!getAll) {
+                return includeMetadata ? result : result.data || result;
               }
             }
           }
         }
-
-        if (objectEnd !== -1) {
-          // Extract the complete variable assignment
-          configString = scriptContent.substring(startIndex, objectEnd + 1);
-          // Add semicolon if not present
-          if (!configString.trim().endsWith(';')) {
-            configString += ';';
-          }
-          break;
-        }
       }
     }
 
-    if (!configString) {
+    if (!configs.length) {
       console.warn('No player configuration found in script elements');
-      return null;
+      return getAll ? [] : null;
     }
 
-    // 3. Process the config string using the existing converter function
-    const resultObject = convertPlayerConfigStringToObject(configString);
+    return configs;
 
-    return resultObject;
+    // Helper function to extract object from a position in the script
+    function extractObjectFromPosition(
+      scriptContent,
+      startIndex,
+      type,
+      name,
+      customObjectStart = null
+    ) {
+      // Find the matching closing brace by counting braces
+      let braceCount = 0;
+      let inString = false;
+      let stringChar = null;
+      let escaped = false;
+      let objectStart =
+        customObjectStart !== null
+          ? customObjectStart
+          : scriptContent.indexOf('{', startIndex);
+      let objectEnd = -1;
+
+      for (let i = objectStart; i < scriptContent.length; i++) {
+        const char = scriptContent[i];
+
+        // Handle escape sequences
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+
+        if (char === '\\') {
+          escaped = true;
+          continue;
+        }
+
+        // Handle strings
+        if (char === '"' || char === "'") {
+          if (!inString) {
+            inString = true;
+            stringChar = char;
+          } else if (char === stringChar) {
+            inString = false;
+            stringChar = null;
+          }
+          continue;
+        }
+
+        // Only count braces outside of strings
+        if (!inString) {
+          if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              objectEnd = i;
+              break;
+            }
+          }
+        }
+      }
+
+      if (objectEnd !== -1) {
+        // Extract the complete object string
+        let configString = scriptContent.substring(startIndex, objectEnd + 1);
+
+        // For function calls, we need to extract just the object part
+        if (type === 'function') {
+          const objectOnlyString = scriptContent.substring(
+            objectStart,
+            objectEnd + 1
+          );
+          configString = `var temp = ${objectOnlyString};`;
+        }
+
+        // Add semicolon if not present
+        if (!configString.trim().endsWith(';')) {
+          configString += ';';
+        }
+
+        // Convert to object
+        const configObject = convertPlayerConfigStringToObject(configString);
+
+        if (configObject !== null) {
+          if (includeMetadata) {
+            return {
+              type: type, // 'variable' or 'function'
+              name: name, // variable name or function name
+              data: configObject,
+              rawString: configString,
+            };
+          } else {
+            return configObject;
+          }
+        }
+      }
+
+      return null;
+    }
   } catch (error) {
     console.error('Error in getPlayerConfig:', error);
-    return null;
+    return getAll ? [] : null;
   }
 }
 
@@ -1749,13 +1847,36 @@ function convertPlayerConfigStringToObject(configString) {
     }
 
     // 2. Use the Function constructor to "evaluate" the object literal string.
-    // This will execute the JSON.parse() calls and the boolean comparisons.
-    // The 'JSON' object needs to be available in the scope where this function runs.
-    // (It is a standard built-in object in JavaScript environments).
-    const func = new Function(`return ${objectLiteralString};`);
-    const resultObject = func();
+    // We attempt to fix ReferenceErrors by stubbing missing variables.
+    let preamble = '';
+    let maxRetries = 50;
 
-    return resultObject;
+    while (maxRetries > 0) {
+      try {
+        const func = new Function(preamble + `return ${objectLiteralString};`);
+        const resultObject = func();
+        return resultObject;
+      } catch (error) {
+        if (error instanceof ReferenceError) {
+          // Extract variable name from error message (e.g. "x is not defined")
+          const varNameMatch = error.message.match(
+            /['"]?(\w+)['"]?\s+is not defined/
+          );
+          if (varNameMatch) {
+            const varName = varNameMatch[1];
+            // Stub the missing variable as a dummy function that returns null.
+            // This handles simple variable access (x) and function calls (x()).
+            preamble += `var ${varName} = function(){ return null; };\n`;
+            maxRetries--;
+            continue;
+          }
+        }
+        // If not a ReferenceError or we can't parse the name, rethrow/break
+        console.warn('Evaluation warning:', error.message);
+        break;
+      }
+    }
+    return null;
   } catch (error) {
     console.error('Failed to convert string to object:', error);
     // Depending on your needs, you might want to throw the error,
@@ -3210,7 +3331,7 @@ async function getDoodStoryboardSrc(url, linkEl = null) {
     throw new Error('Could not find storyboard image ID in meta content');
   }
   const imgId = matches[2];
-  const storyboardUrl = `https://imagecdn.co/slides/${imgId}.jpg`;
+  const storyboardUrl = `https://postercdn.net/slides/${imgId}.jpg`;
   return storyboardUrl;
 }
 
