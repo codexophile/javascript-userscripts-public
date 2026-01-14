@@ -1,85 +1,98 @@
-( async function () {
-  'use strict';
-  if ( window.top != window.self ) return; //don't run on frames or iframes
+(async function () {
+  ('use strict');
+  if (window.top != window.self) return; //don't run on frames or iframes
+
+  const config = getPlayerConfig({
+    functionNames: ['renderVideoPlayerV3', 'renderVideoPlayer'],
+  });
+  // config.thumbnailFallback.urlBase should now be available
+  console.log(location.href, config);
 
   //* Beep
   beep();
-  function beep () {
+  function beep() {
     const blackListUrls = [
       'https://www.google.com/url?q=',
-      'https://mail.google.com'
+      'https://mail.google.com',
     ];
-    if ( blackListUrls.some( url => location.href.includes( url ) ) ) return; // 🛑
-    if ( document.hidden ) return;
-    GM_setClipboard( `global-document-ready-${ document.title }` );
+    if (blackListUrls.some(url => location.href.includes(url))) return; // 🛑
+    if (document.hidden) return;
+    GM_setClipboard(`global-document-ready-${document.title}`);
   }
 
   //* toolbar and toolbar buttons
-  const collapsible = await Collapsible( "", {
-    width: "300px",
-    height: "50px",
-    collapsedWidth: "40px",
-  } );
+  const collapsible = await Collapsible('', {
+    width: '300px',
+    height: '50px',
+    collapsedWidth: '40px',
+  });
   collapsible.collapsibleToggler.click();
 
-
-  collapsible.addButton( "🔝", null, () => window.scrollTo( 0, 0 ) );
+  collapsible.addButton('🔝', null, () => window.scrollTo(0, 0));
   const headersPopup = collapsible.addPopup();
-  collapsible.addButton( "🇭", headersPopup );
+  collapsible.addButton('🇭', headersPopup);
   const iframesPopup = collapsible.addPopup();
-  collapsible.addButton( "ℹ️", iframesPopup );
+  collapsible.addButton('ℹ️', iframesPopup);
 
-  waitForEach( "h,h1,h2,iframe", ( element ) => {
-    switch ( element.tagName ) {
-      case "H":
-      case "H1":
-      case "H2":
+  waitForEach('h,h1,h2,iframe', element => {
+    switch (element.tagName) {
+      case 'H':
+      case 'H1':
+      case 'H2':
         generateElements(
-          `<div>${ element.textContent }</div>`,
+          `<div>${element.textContent}</div>`,
           headersPopup
-        ).addEventListener( "click", () => {
+        ).addEventListener('click', () => {
           element.scrollIntoView();
-        } );
+        });
         break;
-      case "IFRAME":
+      case 'IFRAME':
         generateElements(
-          `<a href=${ element.src } target=_blank>${ element.src }</a>`
-          , iframesPopup );
+          `<a href=${element.src} target=_blank>${element.src}</a>`,
+          iframesPopup
+        );
         break;
 
       default:
         break;
     }
-  } );
+  });
 
-  collapsible.addButton( '🔊', null, () => {
-    const text = window.getSelection().toString().replaceAll( '\n', '. ' );
-    if ( !text ) return; // 🛑
-    location.href = `edge-tts:${ text }`;
-  } );
+  collapsible.addButton('🔊', null, () => {
+    const text = window.getSelection().toString().replaceAll('\n', '. ');
+    if (!text) return; // 🛑
+    location.href = `edge-tts:${text}`;
+  });
 
-  const ytdlpBtn = collapsible.addButton( 'ytdlp', null, () => {
-    GM_setClipboard( `initiate-ytdlp:url:${ location.href }::` );
-  } );
+  const ytdlpBtn = collapsible.addButton('ytdlp', null, () => {
+    GM_setClipboard(`initiate-ytdlp:url:${location.href}::`);
+  });
   ytdlpBtn.id = 'yt-dlp-Btn';
 
-  const rssLinks = document.querySelectorAll( 'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]' );
-  if ( rssLinks.length ) {
+  const rssLinks = document.querySelectorAll(
+    'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]'
+  );
+  if (rssLinks.length) {
     const rssFeedsContainer = collapsible.addPopup();
-    collapsible.addButton( '📶', rssFeedsContainer );
+    collapsible.addButton('📶', rssFeedsContainer);
 
-    const addFeedBtnEl = generateElements( `<a>➕ Inoreader</a>`, rssFeedsContainer );
-    var encodedURI = encodeURIComponent( window.location );
-    addFeedBtnEl.href = `https://www.inoreader.com/search/feeds/${ encodedURI }`;
+    const addFeedBtnEl = generateElements(
+      `<a>➕ Inoreader</a>`,
+      rssFeedsContainer
+    );
+    var encodedURI = encodeURIComponent(window.location);
+    addFeedBtnEl.href = `https://www.inoreader.com/search/feeds/${encodedURI}`;
     addFeedBtnEl.target = '_blank';
 
-    rssLinks.forEach( link => {
-      generateElements( `<a
-                        href='${ link.href }'
+    rssLinks.forEach(link => {
+      generateElements(
+        `<a
+                        href='${link.href}'
                         target=_blank
                         style='display: block;'
-                >${ link.title }</a>`, rssFeedsContainer );
-    } );
+                >${link.title}</a>`,
+        rssFeedsContainer
+      );
+    });
   }
-
-} )();
+})();
