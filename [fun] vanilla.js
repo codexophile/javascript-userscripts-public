@@ -1565,6 +1565,13 @@ function deepLoad({
 
 //  MARK: Video related
 
+function isVideoByExtension(url) {
+  const videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'wmv', 'mkv']; // Add more as needed
+  const urlObject = new URL(url);
+  const extension = urlObject.pathname.split('.').pop();
+  return videoExtensions.includes(extension.toLowerCase());
+}
+
 function autoPip(videoEl) {
   // Check if PIP is supported
   if (!document.pictureInPictureEnabled) {
