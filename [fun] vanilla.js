@@ -75,7 +75,7 @@ function markdownToPlainText(markdownText) {
   // 1. Check if marked is loaded
   if (typeof marked === 'undefined') {
     alert(
-      '⚠️ Warning: marked.js is not loaded. Calculations may be inaccurate. Please add this to your userscript header:\n// @require https://cdn.jsdelivr.net/npm/marked/marked.min.js'
+      '⚠️ Warning: marked.js is not loaded. Calculations may be inaccurate. Please add this to your userscript header:\n// @require https://cdn.jsdelivr.net/npm/marked/marked.min.js',
     );
     // Fallback: return the original text so the script doesn't crash,
     // though the count will include markdown symbols.
@@ -104,7 +104,7 @@ async function getTranslation(
   text,
   outputLanguage = 'en',
   inputLanguage = 'auto',
-  alts = 3
+  alts = 3,
 ) {
   return new Promise((resolve, reject) => {
     GM.xmlHttpRequest({
@@ -152,7 +152,7 @@ function generateUniqueString(length) {
 function downloadText(filename, text) {
   const dlLink = generateElements(`<a>down</a>`, document.body);
   const uriContent = `data:text/plain;charset=utf-8,${encodeURIComponent(
-    text
+    text,
   )}`;
   dlLink.href = uriContent;
   dlLink.setAttribute('download', filename);
@@ -413,7 +413,7 @@ function getTimezoneDateTime(timeZone) {
     };
   } catch (error) {
     throw new Error(
-      `Unable to retrieve time for timezone ${timeZone}. Error: ${error.message}`
+      `Unable to retrieve time for timezone ${timeZone}. Error: ${error.message}`,
     );
   }
 }
@@ -463,7 +463,7 @@ function forHumans(seconds) {
           unit.label !== 's'
             ? 's'
             : ''
-        }`
+        }`,
       );
       remainingSeconds %= unit.value;
     }
@@ -570,7 +570,7 @@ function addStyle(css) {
   const newStyleEl = generateElements(
     `<style>${css}</style>`,
     document.head,
-    true
+    true,
   );
   return newStyleEl;
 }
@@ -597,7 +597,7 @@ function positionRelativeToElement(
   staticEl,
   x = 0,
   y = 0,
-  positionProperty = 'absolute'
+  positionProperty = 'absolute',
 ) {
   var rect = staticEl.getBoundingClientRect();
   style(
@@ -607,7 +607,7 @@ function positionRelativeToElement(
         left: ${rect.left + x}px;
         top: ${rect.top + y}px;
         zIndex: 1
-    `
+    `,
   );
 }
 
@@ -820,7 +820,7 @@ function waitFor(selector) {
         unobserve(); // Remove the observer once found
         resolve(element);
       },
-      false
+      false,
     ); // Don't process existing elements (we already checked)
   });
 }
@@ -850,7 +850,7 @@ function markAndFilterCOM(
   itemSelector,
   uidSelector = 'a',
   uidAttribute,
-  uidRegex
+  uidRegex,
 ) {
   // Initialize filter list from storage
   let filterList = GM_getValue('filterList', []);
@@ -910,13 +910,13 @@ function markAndFilterCOM(
           <div>Filtered</div>
           <a target="_blank" href="${permalink}">${title}</a>
         </div>
-      `
+      `,
       );
       style(
         filterNoticeEl,
         `
         outline: 2px solid red;
-      `
+      `,
       );
     }
   });
@@ -1032,7 +1032,7 @@ function makeMarkable({
       border: none;
       padding: 5px;
       cursor: pointer;
-    `
+    `,
     );
     markBtnEl.addEventListener('click', () => {
       const uidEl = mainElement.querySelector(uidElSelector);
@@ -1063,7 +1063,7 @@ function makeMarkable({
     const href =
       element.querySelector(hrefElSelector)?.getAttribute('href') || '#';
     const newEl = generateElements(
-      `<a href="${href}">${element.textContent}</a>`
+      `<a href="${href}">${element.textContent}</a>`,
     );
     style(
       newEl,
@@ -1071,7 +1071,7 @@ function makeMarkable({
       margin: 5px;
       padding: 5px;
       border: 1px solid yellow;
-      `
+      `,
     );
     element.replaceWith(newEl);
     return newEl;
@@ -1087,7 +1087,7 @@ function markAndFilter(
   uidRegex,
   locationHrefRegex,
   addOverlay = true,
-  filterNoticeHtml = null
+  filterNoticeHtml = null,
 ) {
   // Initialize filter list from storage
   let filterList = GM_getValue('filterList', []);
@@ -1101,7 +1101,7 @@ function markAndFilter(
       const locationHref = window.location.href;
       if (!locationHref.match(locationHrefRegex)) {
         console.log(
-          'markAndFilter: locationHrefRegex does not match, exiting function.'
+          'markAndFilter: locationHrefRegex does not match, exiting function.',
         );
         return;
       }
@@ -1174,13 +1174,13 @@ function markAndFilter(
           <div>Filtered</div>
           <a target="_blank" href="${permalink}">${title}</a>
         </div>
-      `
+      `,
         );
         style(
           filterNoticeEl,
           `
         outline: 2px solid red;
-      `
+      `,
         );
       }
 
@@ -1351,7 +1351,7 @@ function lazyLoadScrollPast(
   selector,
   load,
   scrollableEl = window,
-  direction = 'up'
+  direction = 'up',
 ) {
   let items = [];
   let enteredViewport = new WeakSet();
@@ -1453,7 +1453,7 @@ async function setupYtDlpBtn(
   title,
   urlSelector,
   destinationPath,
-  extraInfoFunc
+  extraInfoFunc,
 ) {
   const titleSegment = title ? `title:${title}::` : '';
 
@@ -1472,7 +1472,7 @@ async function setupYtDlpBtn(
       : '';
 
     GM_setClipboard(
-      `initiate-ytdlp:${urlSegment}${titleSegment}${destinationSegment}${extraInfoSegment}`
+      `initiate-ytdlp:${urlSegment}${titleSegment}${destinationSegment}${extraInfoSegment}`,
     );
   });
   style(ytDlpBtnEl, `outline: solid red 2px;`);
@@ -1496,7 +1496,7 @@ function downloadImgWithTextFunctionality({
 
     const dlBtnEl = generateElements(
       `<button id=dlBtn>D</button>`,
-      imgWrapperEl
+      imgWrapperEl,
     );
     style(
       dlBtnEl,
@@ -1509,7 +1509,7 @@ function downloadImgWithTextFunctionality({
             color: white;
             border-radius: 5px;
             border: 5px;
-        `
+        `,
     );
 
     dlBtnEl.addEventListener('click', () => {
@@ -1628,6 +1628,31 @@ function autoPip(videoEl) {
   };
 }
 
+function getVideoDuration(url) {
+  return new Promise((resolve, reject) => {
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: url,
+      responseType: 'blob',
+      onload: function (response) {
+        const blobUrl = URL.createObjectURL(response.response);
+        const video = document.createElement('video');
+
+        video.onloadedmetadata = function () {
+          const duration = video.duration;
+          URL.revokeObjectURL(blobUrl); // Free up memory
+          video.remove();
+          resolve(duration);
+        };
+
+        video.onerror = () => reject('Metadata error');
+        video.src = blobUrl;
+      },
+      onerror: err => reject(err),
+    });
+  });
+}
+
 // MARK: Rest
 
 function getPlayerConfig(options = {}) {
@@ -1670,7 +1695,7 @@ function getPlayerConfig(options = {}) {
           scriptContent,
           varMatch.index,
           'variable',
-          varName
+          varName,
         );
 
         if (result) {
@@ -1689,9 +1714,9 @@ function getPlayerConfig(options = {}) {
           const funcRegex = new RegExp(
             `\\b${funcName.replace(
               /[.*+?^${}()|[\]\\]/g,
-              '\\$&'
+              '\\$&',
             )}\\s*\\(\\s*\\{`,
-            'g'
+            'g',
           );
           let funcMatch;
 
@@ -1704,7 +1729,7 @@ function getPlayerConfig(options = {}) {
               funcMatch.index,
               'function',
               funcName,
-              openBraceIndex
+              openBraceIndex,
             );
 
             if (result) {
@@ -1732,7 +1757,7 @@ function getPlayerConfig(options = {}) {
       startIndex,
       type,
       name,
-      customObjectStart = null
+      customObjectStart = null,
     ) {
       // Find the matching closing brace by counting braces
       let braceCount = 0;
@@ -1793,7 +1818,7 @@ function getPlayerConfig(options = {}) {
         if (type === 'function') {
           const objectOnlyString = scriptContent.substring(
             objectStart,
-            objectEnd + 1
+            objectEnd + 1,
           );
           configString = `var temp = ${objectOnlyString};`;
         }
@@ -1860,7 +1885,7 @@ function convertPlayerConfigStringToObject(configString) {
         if (error instanceof ReferenceError) {
           // Extract variable name from error message (e.g. "x is not defined")
           const varNameMatch = error.message.match(
-            /['"]?(\w+)['"]?\s+is not defined/
+            /['"]?(\w+)['"]?\s+is not defined/,
           );
           if (varNameMatch) {
             const varName = varNameMatch[1];
@@ -2199,7 +2224,7 @@ function getAccentColor() {
 
 // Helper function to convert RGB to HSL
 function rgbToHsl(r, g, b) {
-  (r /= 255), (g /= 255), (b /= 255);
+  ((r /= 255), (g /= 255), (b /= 255));
   const max = Math.max(r, g, b),
     min = Math.min(r, g, b);
   let h,
@@ -2274,7 +2299,7 @@ function fallbackCopyMethod(img) {
 
 function getFaviconUrl() {
   const links = document.querySelectorAll(
-    'link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]'
+    'link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]',
   );
   if (links.length > 0) {
     return links[0].href;
@@ -2381,7 +2406,7 @@ function sanitizeLinksTraditional(urlString) {
 function sanitizeTrackingLinks(
   selector,
   mainTrackerRegex,
-  secondaryTrackerRegex
+  secondaryTrackerRegex,
 ) {
   document.querySelectorAll(selector).forEach(link => {
     link.removeAttribute('data-saferedirecturl');
@@ -2397,9 +2422,11 @@ function sanitizeTrackingLinks(
 }
 
 function beep(duration, frequency, volume, type, callback) {
-  var audioCtx = new (window.AudioContext ||
+  var audioCtx = new (
+    window.AudioContext ||
     window.webkitAudioContext ||
-    window.audioContext)();
+    window.audioContext
+  )();
 
   //All arguments are optional:
 
@@ -2446,7 +2473,7 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
   try {
     const resText = fullYTHtml;
     const fullStoryboardURL = resText.match(
-      /"playerStoryboardSpecRenderer":.+?"spec":"(.+?)"/
+      /"playerStoryboardSpecRenderer":.+?"spec":"(.+?)"/,
     );
 
     if (!fullStoryboardURL) {
@@ -2459,7 +2486,7 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
     // Check for ad storyboards
     if (rawSpecStr.includes('googleadservices')) {
       console.warn(
-        '[YT-Storyboard] Ad storyboard detected, not video storyboard'
+        '[YT-Storyboard] Ad storyboard detected, not video storyboard',
       );
       return { allUrls: [], trueNoOfSlots: 0, samplingFq: 0 };
     }
@@ -2519,7 +2546,7 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
     }
 
     console.log(
-      `[YT-Storyboard] Selected Level ${bestIndex}: ${bestData.width}x${bestData.height}px`
+      `[YT-Storyboard] Selected Level ${bestIndex}: ${bestData.width}x${bestData.height}px`,
     );
 
     // Construct the URL with the best quality level
@@ -2546,10 +2573,10 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
       videoLength <= 120
         ? 1
         : videoLength <= 300
-        ? 2
-        : videoLength < 900
-        ? 5
-        : 10;
+          ? 2
+          : videoLength < 900
+            ? 5
+            : 10;
 
     const trueNoOfSlots = Math.round(videoLength / samplingFq);
 
@@ -2565,7 +2592,7 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
     }
 
     console.log(
-      `[YT-Storyboard] Generated ${allUrls.length} URLs for ${trueNoOfSlots} slots (${bestData.cols}x${bestData.rows} grid)`
+      `[YT-Storyboard] Generated ${allUrls.length} URLs for ${trueNoOfSlots} slots (${bestData.cols}x${bestData.rows} grid)`,
     );
 
     return {
@@ -3009,7 +3036,7 @@ function elementsToArray(els) {
 
 function contains(selector, text, parent = document) {
   const elsContaining = [...parent.querySelectorAll(selector)].filter(el =>
-    el.textContent.includes(text)
+    el.textContent.includes(text),
   );
   return elsContaining;
 }
@@ -3275,7 +3302,7 @@ function calculateWidthAndExpand(collapsibleContent) {
     let widthValue = +getStyleOrComputedStyle(child, 'width').replace('px', '');
     let marginValue = +getStyleOrComputedStyle(child, 'margin').replace(
       'px',
-      ''
+      '',
     );
     totalWidth += (widthValue ? widthValue : 0) + marginValue * 2;
   }
@@ -3292,6 +3319,7 @@ function getStreamwishQuery() {
 
 function getDoodHostsQuery() {
   const doodHosts = [
+    'myvidplay',
     'dsvplay',
     'd-s',
     'vidply',
@@ -3312,27 +3340,40 @@ function getDoodHostsQuery() {
   return doodHostsQuery;
 }
 
-async function getDoodStoryboardSrc(url, linkEl = null) {
+// Helper function for fetching Dood images (storyboard or poster)
+async function getDoodImageSrc(url, pathType = 'slides') {
   const outdatedHostNames = ['ds2play.com', 'doodstream.com', 'd-s.io'];
 
   const urlObj = new URL(url);
   if (outdatedHostNames.includes(urlObj.hostname)) {
     // If the URL is from an outdated host, we need to update it to the new doodcdn.io format
     url = url.replace(urlObj.hostname, 'dsvplay.com');
-    if (linkEl) {
-      linkEl.href = url; // Update the link element's href if provided
-    }
   }
 
   const doodDoc = await fetchDoc(url);
   const metaEl = doodDoc.querySelector('meta[name="og:image"]');
   const matches = metaEl.content.match(/(snaps|splash)\/(.+?)\./);
   if (!matches || matches.length < 2) {
-    throw new Error('Could not find storyboard image ID in meta content');
+    throw new Error(`Could not find ${pathType} image ID in meta content`);
   }
   const imgId = matches[2];
-  const storyboardUrl = `https://postercdn.net/slides/${imgId}.jpg`;
-  return storyboardUrl;
+  return `https://postercdn.net/${pathType}/${imgId}.jpg`;
+}
+
+async function getDoodStoryboardSrc(url, linkEl = null) {
+  if (linkEl) {
+    const urlObj = new URL(url);
+    const outdatedHostNames = ['ds2play.com', 'doodstream.com', 'd-s.io'];
+    if (outdatedHostNames.includes(urlObj.hostname)) {
+      url = url.replace(urlObj.hostname, 'dsvplay.com');
+      linkEl.href = url; // Update the link element's href if provided
+    }
+  }
+  return getDoodImageSrc(url, 'slides');
+}
+
+async function getDoodPosterSrc(url) {
+  return getDoodImageSrc(url, 'splash');
 }
 
 async function getVoeStoryboardImg(voeUrl) {
@@ -3342,7 +3383,7 @@ async function getVoeStoryboardImg(voeUrl) {
   const posterImgUrl = levelTwoDoc.querySelector('[name="og:image"]').content;
   const storyboardUrl = posterImgUrl.replace(
     /_storyboard_L\d+/,
-    '_storyboard_L0'
+    '_storyboard_L0',
   );
   return storyboardUrl;
 }
@@ -3350,11 +3391,11 @@ async function getVoeStoryboardImg(voeUrl) {
 async function bftStoryboardFromUrl(bftvUrl, sbGrandParent) {
   const bftvDoc = await fetchDoc(bftvUrl);
   const bftvScript = bftvDoc.querySelector(
-    'script[type="application/ld+json"]'
+    'script[type="application/ld+json"]',
   );
 
   const durationMatches = bftvScript.textContent.match(
-    /"duration":"PT(.+?)H(.+?)M(.+?)S"/
+    /"duration":"PT(.+?)H(.+?)M(.+?)S"/,
   );
   const durationString = `${durationMatches[1]}:${durationMatches[2]}:${durationMatches[3]}`;
   const durationInSeconds = toSeconds(durationString);
