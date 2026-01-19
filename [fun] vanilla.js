@@ -1565,6 +1565,47 @@ function deepLoad({
 
 //  MARK: Video related
 
+// 1. Helper function to format bytes into readable text (MB, GB)
+function formatBytes(bytes, decimals = 2) {
+  if (!+bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+// 2. The function to get size
+function getVideoSize(url) {
+  return new Promise((resolve, reject) => {
+    GM_xmlhttpRequest({
+      method: 'HEAD', // HEAD requests headers only, not the video body
+      url: url,
+      onload: function (response) {
+        // The headers usually come as a single string, parse it
+        // Case-insensitive regex to find Content-Length
+        const match = response.responseHeaders.match(
+          /content-length:\s*(\d+)/i,
+        );
+
+        if (match && match[1]) {
+          const sizeInBytes = parseInt(match[1], 10);
+          resolve({
+            bytes: sizeInBytes,
+            formatted: formatBytes(sizeInBytes),
+          });
+        } else {
+          // Sometimes servers send chunked data and no total length
+          reject('Content-Length header missing (Stream might be chunked).');
+        }
+      },
+      onerror: function (err) {
+        reject(err);
+      },
+    });
+  });
+}
+
 function isVideoByExtension(url) {
   const videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'wmv', 'mkv']; // Add more as needed
   const urlObject = new URL(url);
@@ -1635,27 +1676,84 @@ function autoPip(videoEl) {
   };
 }
 
-function getVideoDuration(url) {
+/**
+ * Processes a video URL to get duration and/or a thumbnail frame.
+ *
+ * @param {string} url - Direct link to the video file.
+ * @param {Object} options - Configuration object.
+ * @param {boolean} [options.getDuration=true] - Whether to return the duration.
+ * @param {boolean} [options.getThumbnail=true] - Whether to return a thumbnail.
+ * @param {number} [options.percentage=10] - Where to capture the frame (0-100).
+ * @returns {Promise<{duration?: number, thumbnail?: string}>}
+ */
+function getVideoInfo(url, options = {}) {
+  // Set default options
+  const { getDuration = true, getThumbnail = true, percentage = 10 } = options;
+
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: 'GET',
       url: url,
       responseType: 'blob',
       onload: function (response) {
+        if (response.status !== 200)
+          return reject(`HTTP Error: ${response.status}`);
+        console.log('success', response);
+
         const blobUrl = URL.createObjectURL(response.response);
         const video = document.createElement('video');
+        video.muted = true;
+        video.preload = 'metadata';
 
-        video.onloadedmetadata = function () {
-          const duration = video.duration;
-          URL.revokeObjectURL(blobUrl); // Free up memory
-          video.remove();
-          resolve(duration);
+        let result = {};
+
+        video.onloadedmetadata = () => {
+          if (getDuration) {
+            result.duration = video.duration;
+          }
+
+          // If thumbnail is NOT needed, resolve immediately after metadata
+          if (!getThumbnail) {
+            URL.revokeObjectURL(blobUrl);
+            video.remove();
+            return resolve(result);
+          }
+
+          // If thumbnail IS needed, jump to the requested percentage
+          video.currentTime = video.duration * (percentage / 100);
         };
 
-        video.onerror = () => reject('Metadata error');
+        video.onseeked = () => {
+          // This event only triggers if getThumbnail was true and currentTime was changed
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          result.thumbnail = canvas.toDataURL('image/jpeg', 0.8);
+
+          // Final Cleanup
+          URL.revokeObjectURL(blobUrl);
+          video.remove();
+          resolve(result);
+        };
+
+        video.onerror = () => {
+          URL.revokeObjectURL(blobUrl);
+          reject('Error processing video file.');
+        };
+
         video.src = blobUrl;
       },
-      onerror: err => reject(err),
+      onerror: err => {
+        console.log('getVideoInfo error:', err);
+        const errorMsg = err.statusText
+          ? `Network error: ${err.status} ${err.statusText}`
+          : `Network error: Failed to load video (status: ${err.status || 'unknown'})`;
+        reject(errorMsg);
+      },
     });
   });
 }

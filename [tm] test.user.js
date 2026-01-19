@@ -4,10 +4,6 @@
 (async function () {
   'use strict';
 
-  const doc = await fetchDoc(
-    'https://gay.xtapes.tw/163012/ended-waking-roommate-alexandro-cabrera-andrea-novak-diego-ferreira/',
-    null,
-    true
-  );
+  const doc = await fetchDoc('https://dhcplay.com/e/58tlle6jmnr7', null, true);
   GM_setClipboard(doc);
 })();

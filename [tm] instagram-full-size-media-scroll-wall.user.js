@@ -88,6 +88,28 @@
     return window._sharedData?.config?.csrf_token || null;
   }
 
+  /**
+   * Provides a rank token required by some Instagram endpoints (e.g., usertags).
+   * Attempts to reuse device_id when available to keep requests consistent.
+   */
+  function getRankToken() {
+    const stored = localStorage.getItem('mediaWallRankToken');
+    if (stored) return stored;
+
+    const deviceId = window._sharedData?.device_id;
+    if (deviceId) {
+      localStorage.setItem('mediaWallRankToken', deviceId);
+      return deviceId;
+    }
+
+    const token =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem('mediaWallRankToken', token);
+    return token;
+  }
+
   // --- API & DATA FETCHING ---
 
   /**
@@ -128,11 +150,27 @@
       console.warn('Could not retrieve User ID from IndexedDB.', error);
     }
 
-    // 3. As a last resort, fetch it using the ?__a=1 endpoint.
+    // 3. For tagged pages, try to get the profile URL without the /tagged suffix
+    const currentPath = window.location.pathname;
+    const isTaggedPage = currentPath.includes('/tagged');
+    const fetchUrl = isTaggedPage
+      ? window.location.origin +
+        currentPath.replace(/\/tagged\/?$/, '') +
+        '?__a=1'
+      : `${window.location.href.replace(/\/$/, '')}?__a=1`;
+
+    // 4. As a last resort, fetch it using the ?__a=1 endpoint.
     try {
-      const response = await fetch(
-        `${window.location.href.replace(/\/$/, '')}?__a=1`
-      );
+      console.log('Fetching user ID from:', fetchUrl);
+      const response = await fetch(fetchUrl);
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(
+          'Non-JSON response (likely blocked): ' + text.slice(0, 120)
+        );
+      }
+
       const data = await response.json();
       userId = data?.graphql?.user?.id;
       if (userId) {
@@ -169,6 +207,8 @@
         'X-IG-App-ID': app_id,
         'X-ASBD-ID': asbd_id,
         'X-CSRFToken': csrfToken,
+        'User-Agent': navigator.userAgent,
+        Accept: '*/*',
       },
     };
 
@@ -178,12 +218,26 @@
         if (state.nextPageCursor) url += `&max_id=${state.nextPageCursor}`;
         break;
 
-      case 'tagged':
-        url = `https://i.instagram.com/api/v1/usertags/${state.targetUserId}/feed/?count=${config.MEDIA_PER_QUERY}`;
-        if (state.nextPageCursor) url += `&max_id=${state.nextPageCursor}`;
+      case 'tagged': {
+        // Web GraphQL endpoint for tagged media (more reliable from browser)
+        const variables = {
+          id: state.targetUserId,
+          first: config.MEDIA_PER_QUERY,
+          after: state.nextPageCursor || null,
+        };
+        const queryHash = '5b80a0b479b98c5a984bc4b0d6d09fa6'; // edge_user_to_photos_of_you
+        url =
+          'https://www.instagram.com/graphql/query/?query_hash=' +
+          queryHash +
+          '&variables=' +
+          encodeURIComponent(JSON.stringify(variables));
+        options.headers = {
+          'X-Requested-With': 'XMLHttpRequest',
+        };
         break;
+      }
 
-      case 'home':
+      case 'home': {
         url = 'https://i.instagram.com/api/v1/feed/timeline/';
         const formData = new URLSearchParams();
         // These parameters seem to be required for the timeline endpoint.
@@ -196,6 +250,7 @@
         options.method = 'POST';
         options.body = formData;
         break;
+      }
 
       default:
         console.warn(
@@ -234,22 +289,48 @@
 
     try {
       const response = await fetch(request.url, request.options);
-      if (!response.ok) {
-        const errorData = await response.json();
+
+      // Check content type first before trying to parse
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await response.text();
         throw new Error(
-          errorData.message || `Request failed with status ${response.status}`
+          `Non-JSON response (status ${response.status}): ${text.slice(0, 120)}`
         );
       }
+
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `Request failed with status ${response.status}`
+        );
+      }
+
       console.log('API Response:', data);
 
       // Extract the media list and the next page cursor from the response.
-      const mediaList = Array.isArray(data.items)
-        ? data.items
-        : (data.feed_items || [])
-            .map(item => item && item.media_or_ad)
-            .filter(Boolean);
-      state.nextPageCursor = data.next_max_id;
+      let mediaList;
+      if (
+        state.pageMode === 'tagged' &&
+        data?.data?.user?.edge_user_to_photos_of_you
+      ) {
+        const edgeObj = data.data.user.edge_user_to_photos_of_you;
+        state.nextPageCursor = edgeObj.page_info?.has_next_page
+          ? edgeObj.page_info.end_cursor
+          : null;
+
+        mediaList = (edgeObj.edges || []).map(edge =>
+          normalizeGraphqlNode(edge.node)
+        );
+      } else {
+        mediaList = Array.isArray(data.items)
+          ? data.items
+          : (data.feed_items || [])
+              .map(item => item && item.media_or_ad)
+              .filter(Boolean);
+        state.nextPageCursor = data.next_max_id;
+      }
 
       if (!mediaList || mediaList.length === 0) {
         console.log('No more media found or empty response.');
@@ -544,6 +625,63 @@
   }
 
   /**
+   * Normalizes a GraphQL node (edge_user_to_photos_of_you) to the shape expected by renderMediaItems.
+   */
+  function normalizeGraphqlNode(node) {
+    if (!node) return null;
+    const base = {
+      code: node.shortcode,
+      id: node.id,
+      taken_at: node.taken_at_timestamp,
+      user: {
+        username: node.owner?.username,
+        full_name: node.owner?.full_name,
+      },
+      caption: {
+        text:
+          node.edge_media_to_caption?.edges?.[0]?.node?.text ||
+          node.title ||
+          '',
+      },
+    };
+
+    const toCandidates = resources =>
+      (resources || []).map(res => ({
+        url: res.src,
+        width: res.config_width || res.width,
+        height: res.config_height || res.height,
+      }));
+
+    // Sidecar (carousel)
+    if (node.edge_sidecar_to_children?.edges?.length) {
+      base.carousel_media = node.edge_sidecar_to_children.edges
+        .map(child => normalizeGraphqlNode(child.node))
+        .filter(Boolean);
+      return base;
+    }
+
+    // Video
+    if (node.is_video && node.video_url) {
+      base.video_versions = [
+        {
+          url: node.video_url,
+          width: node.dimensions?.width,
+          height: node.dimensions?.height,
+        },
+      ];
+    }
+
+    // Image
+    if (node.display_resources?.length) {
+      base.image_versions2 = {
+        candidates: toCandidates(node.display_resources),
+      };
+    }
+
+    return base;
+  }
+
+  /**
    * Sets up auto-pause logic for a video element based on viewport visibility.
    * Video pauses when it leaves the viewport.
    * @param {HTMLVideoElement} videoEl - The video element to manage.
@@ -781,9 +919,18 @@
     }
 
     const isHome = state.pageMode === 'home';
-    const targetSelector = isHome
-      ? '.collapsible-content'
-      : 'div[role=tablist]';
+    const isTagged = state.pageMode === 'tagged';
+
+    // For tagged pages, try both the main tablist and a fallback selector
+    let targetSelector;
+    if (isHome) {
+      targetSelector = '.collapsible-content';
+    } else if (isTagged) {
+      targetSelector = 'div[role=tablist], main header section';
+    } else {
+      targetSelector = 'div[role=tablist]';
+    }
+
     const buttonHtml = isHome
       ? `<article class="_ab6k _ab6l _ab6m" role="presentation" id="media-wall-trigger-button-home">
             <div>Click to Load Full-Size Media Wall</div>
@@ -791,8 +938,14 @@
       : `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" id="media-wall-trigger-button-profile"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Media Wall</span></a>`;
 
     const placeButton = insertionPoint => {
-      if (!insertionPoint) return;
-      console.log('Injecting trigger button...');
+      if (!insertionPoint) {
+        // For tagged pages, retry with different selector
+        if (isTagged) {
+          setTimeout(insertTriggerButton, 250);
+        }
+        return;
+      }
+      console.log('Injecting trigger button for', state.pageMode, 'page...');
       let triggerButton;
       if (typeof generateElements === 'function') {
         triggerButton = generateElements(buttonHtml);

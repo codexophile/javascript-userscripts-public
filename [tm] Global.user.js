@@ -2,11 +2,11 @@
   ('use strict');
   if (window.top != window.self) return; //don't run on frames or iframes
 
-  const config = getPlayerConfig({
-    functionNames: ['renderVideoPlayerV3', 'renderVideoPlayer'],
-  });
-  // config.thumbnailFallback.urlBase should now be available
-  console.log(location.href, config);
+  // const config = getPlayerConfig({
+  //   functionNames: ['renderVideoPlayerV3', 'renderVideoPlayer'],
+  // });
+  // // config.thumbnailFallback.urlBase should now be available
+  // console.log(location.href, config);
 
   //* Beep
   beep();
@@ -41,7 +41,7 @@
       case 'H2':
         generateElements(
           `<div>${element.textContent}</div>`,
-          headersPopup
+          headersPopup,
         ).addEventListener('click', () => {
           element.scrollIntoView();
         });
@@ -49,7 +49,7 @@
       case 'IFRAME':
         generateElements(
           `<a href=${element.src} target=_blank>${element.src}</a>`,
-          iframesPopup
+          iframesPopup,
         );
         break;
 
@@ -70,7 +70,7 @@
   ytdlpBtn.id = 'yt-dlp-Btn';
 
   const rssLinks = document.querySelectorAll(
-    'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]'
+    'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
   );
   if (rssLinks.length) {
     const rssFeedsContainer = collapsible.addPopup();
@@ -78,7 +78,7 @@
 
     const addFeedBtnEl = generateElements(
       `<a>➕ Inoreader</a>`,
-      rssFeedsContainer
+      rssFeedsContainer,
     );
     var encodedURI = encodeURIComponent(window.location);
     addFeedBtnEl.href = `https://www.inoreader.com/search/feeds/${encodedURI}`;
@@ -91,7 +91,7 @@
                         target=_blank
                         style='display: block;'
                 >${link.title}</a>`,
-        rssFeedsContainer
+        rssFeedsContainer,
       );
     });
   }

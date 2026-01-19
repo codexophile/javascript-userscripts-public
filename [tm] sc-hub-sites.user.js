@@ -3,12 +3,11 @@
   if (window.top != window.self) return; //don't run on frames or iframes
 
   const doodHostsQuery = getDoodHostsQuery();
-
   const itemEls = document.querySelectorAll(`.videos-list article`);
   itemEls.forEach(async itemEl => {
     const newContainerEl = generateElements(
       `<div class=new-container></div>`,
-      itemEl
+      itemEl,
     );
 
     const itemUrl = itemEl.querySelector(`a`).href;
@@ -21,7 +20,7 @@
       const iframeSrc = iframeEl.src;
       const linkEl = generateElements(
         `<a target=_blank href="${iframeSrc}">${iframeSrc}</a>`,
-        newContainerEl
+        newContainerEl,
       );
     });
 
@@ -29,7 +28,7 @@
       const doodSBUrl = await getDoodStoryboardSrc(doodLinkEl.href);
       generateElements(
         `<img src="${doodSBUrl}" alt="Dood storyboard" style="max-width: 100px; margin-right: 10px;">`,
-        newContainerEl
+        newContainerEl,
       );
     });
 
@@ -44,7 +43,7 @@
           const videoParentEl = doc.querySelector('video').parentElement;
           const scriptEl = videoParentEl.querySelector('script');
           const PlayerConfigObj = convertPlayerConfigStringToObject(
-            scriptEl.textContent
+            scriptEl.textContent,
           );
           console.log(PlayerConfigObj);
         }

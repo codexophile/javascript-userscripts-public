@@ -37,6 +37,9 @@
     );
   });
 
+  //* get tags button
+  addButton('🏷️');
+
   //* Shortcuts
   document.addEventListener(
     'keydown',

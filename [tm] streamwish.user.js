@@ -1,6 +1,8 @@
 (async function () {
   'use strict';
 
+  await waitFor(`#vplayer.jwplayer`);
+
   window.close = () => {};
 
   const videoTitle = document.title.replace(' • [Browser:Private-profile]', '');
@@ -26,7 +28,7 @@
     let parent;
     if ($('.videoplayer, #vplayer').length)
       parent = $(`<div></div>`).insertAfter(
-        $('.videoplayer, #vplayer').first()
+        $('.videoplayer, #vplayer').first(),
       );
     else parent = $(`<div></div>`).appendTo(document.body);
 
