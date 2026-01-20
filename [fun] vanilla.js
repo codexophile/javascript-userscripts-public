@@ -13,7 +13,7 @@ async function getVideoFileSize(videoUrl) {
       resolve(fileSize);
     };
 
-    video.onerror = (error) => {
+    video.onerror = error => {
       reject('Error loading video metadata: ' + error);
     };
   });
