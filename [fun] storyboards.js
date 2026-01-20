@@ -33,6 +33,11 @@ function setSlotSize(sbParent, newWidth) {
 
 async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
   const collapsible = await Collapsible();
+  const getTotalSlots = () => {
+    const slotCount = sbParent.querySelectorAll('.storyboardItem').length;
+    if (!Number.isFinite(trueNoOfSlots) || trueNoOfSlots <= 0) return slotCount;
+    return Math.min(trueNoOfSlots, slotCount);
+  };
 
   if (video) {
     collapsible.collapsibleContent
@@ -73,10 +78,14 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
     collapsible
       .addButton('🌆', imgUrlsPopupEl)
       .classList.add('storyboardControl');
-    generateElements(
-      `<div>Total slots: ${trueNoOfSlots}</div>`,
-      imgUrlsPopupEl,
-    );
+    const totalSlots = getTotalSlots();
+    const slotsLabel =
+      Number.isFinite(trueNoOfSlots) &&
+      trueNoOfSlots > 0 &&
+      trueNoOfSlots !== totalSlots
+        ? `Slots shown: ${totalSlots} (limit: ${trueNoOfSlots})`
+        : `Slots shown: ${totalSlots}`;
+    generateElements(`<div>${slotsLabel}</div>`, imgUrlsPopupEl);
 
     console.log('xxx', video.duration);
     if (video.readyState > 0) jumpToSlot();
@@ -90,8 +99,11 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
     video.addEventListener('timeupdate', handleTimeUpdate);
     function handleTimeUpdate() {
       const duration = video.duration;
-      const currentSlotNo = Math.round(
-        (video.currentTime * trueNoOfSlots) / duration,
+      const totalSlots = getTotalSlots();
+      if (!totalSlots) return;
+      const currentSlotNo = Math.min(
+        totalSlots - 1,
+        Math.round((video.currentTime * totalSlots) / duration),
       );
       const storyboardItems = sbParent.querySelectorAll('.storyboardItem');
       setHash(`slot=${currentSlotNo}`);
@@ -110,10 +122,12 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
     function addTimeStrings() {
       console.log(video, video.duration);
       const slotEls = sbParent.querySelectorAll('.storyboardItem');
-      repeat(trueNoOfSlots, index => {
+      const totalSlots = getTotalSlots();
+      repeat(totalSlots, index => {
+        if (!slotEls[index]) return;
         const timeStringEl = generateElements(`<div></div>`, slotEls[index]);
         timeStringEl.classList.add('timeString');
-        const timeString = Math.round((index * video.duration) / trueNoOfSlots);
+        const timeString = Math.round((index * video.duration) / totalSlots);
         const timeStringReadable = forHumans(timeString);
         timeStringEl.textContent = timeStringReadable;
         style(
@@ -140,10 +154,15 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
 
     addHistoryEntry(location.href.replace(location.hash, ''));
     const slotNo = matches[1];
-    if (slotNo) playVideo(video, trueNoOfSlots, slotNo);
+    const totalSlots = getTotalSlots();
+    if (slotNo && totalSlots) playVideo(video, totalSlots, slotNo);
   }
 }
 
+/**
+ * Renders storyboard tiles for a video.
+ * @param {number} trueNoOfSlots - Max slots to render (clamped to available).
+ */
 async function storyboard({
   storyboardParent,
   horizontal,
@@ -172,8 +191,10 @@ async function storyboard({
   // @ts-ignore
   const results = await Promise.allSettled(promises);
   let index = 0;
+  let totalSlots = 0;
 
   results.forEach(result => {
+    if (result.status !== 'fulfilled' || !result.value) return;
     result.value.forEach(slot => {
       slotsDiv.append(slot);
       slot.index = index;
@@ -197,7 +218,7 @@ async function storyboard({
       slot.addEventListener('click', ev => {
         const samplingFreq =
           samplingFq ||
-          vidOnPage.duration / trueNoOfSlots ||
+          vidOnPage.duration / totalSlots ||
           vidOnPage.duration / (horizontal * vertical);
         // const samplingFreq = samplingFq || ( vidOnPage.duration / ( horizontal * vertical ) );
         const newTime =
@@ -210,10 +231,15 @@ async function storyboard({
     });
   });
 
+  totalSlots =
+    Number.isFinite(trueNoOfSlots) && trueNoOfSlots > 0
+      ? Math.min(trueNoOfSlots, index)
+      : index;
+
   if (slotWidth) setSlotSize(storyboardParent, slotWidth);
   else if (storyboardParent.querySelector('canvas').width < 200)
     setSlotSize(storyboardParent, 200);
-  sbControls(vidOnPage, trueNoOfSlots, storyboardParent, imgUrls);
+  sbControls(vidOnPage, totalSlots, storyboardParent, imgUrls);
   return slotsDiv;
 }
 
@@ -248,6 +274,10 @@ async function storyboardToggleable({
   return slotsDiv;
 }
 
+/**
+ * Builds a storyboard grid from one image, respecting the overall slot limit.
+ * @param {number} trueNoOfSlots - Max slots to render (clamped to available).
+ */
 async function storyboardFlex(
   horizontal,
   vertical,
@@ -271,23 +301,34 @@ async function storyboardFlex(
   const promise = new Promise((resolve, reject) => {
     imgElement.onload = () => {
       const allSlots = [];
-      const normalTotal = horizontal * vertical;
-      const noOfSlotsRemaining = trueNoOfSlots - index * normalTotal;
-      const thisIsFinalSb = noOfSlotsRemaining < normalTotal;
+      const gridHorizontal = horizontal;
+      const gridVertical = vertical;
+      const normalTotal = gridHorizontal * gridVertical;
+      const hasSlotLimit = Number.isFinite(trueNoOfSlots) && trueNoOfSlots > 0;
+      const noOfSlotsRemaining = hasSlotLimit
+        ? trueNoOfSlots - index * normalTotal
+        : normalTotal;
 
-      if (thisIsFinalSb) vertical = Math.ceil(noOfSlotsRemaining / horizontal);
+      if (hasSlotLimit && noOfSlotsRemaining <= 0) {
+        resolve([]);
+        imgElement.remove();
+        return;
+      }
 
-      const total = horizontal * vertical;
-      const itemWidth = imgElement.naturalWidth / horizontal;
-      const itemHeight = imgElement.naturalHeight / vertical;
+      const total = hasSlotLimit
+        ? Math.min(normalTotal, noOfSlotsRemaining)
+        : normalTotal;
+
+      const itemWidth = imgElement.naturalWidth / gridHorizontal;
+      const itemHeight = imgElement.naturalHeight / gridVertical;
 
       for (let i = 0; i < total; i++) {
         const storyboardItem = document.createElement('div');
         storyboardItem.classList.add(imgSrc.slice(-7), 'storyboardItem');
         allSlots.push(storyboardItem);
 
-        const x = i % horizontal;
-        const y = Math.floor(i / horizontal);
+        const x = i % gridHorizontal;
+        const y = Math.floor(i / gridHorizontal);
 
         const canvas = document.createElement('canvas');
         canvas.classList.add('storyboard-canvas');
