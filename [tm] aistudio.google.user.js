@@ -38,6 +38,15 @@
     });
   })();
 
+  //* decode real urls
+  waitForEach('[href^="https://www.google.com/url?sa=E&q="]', linkEl => {
+    const url = new URL(linkEl.href);
+    const realUrl = url.searchParams.get('q');
+    if (realUrl) {
+      linkEl.href = realUrl;
+    }
+  });
+
   //* url query template processing
 
   const modalObj = new ModalBox();
@@ -59,7 +68,7 @@
 
   addButton('🧹', null, async () => {
     const clearChatBtnEl = document.querySelector(
-      `button[aria-label="Clear chat"]`
+      `button[aria-label="Clear chat"]`,
     );
     clearChatBtnEl.click();
     const continueBtn = await waitFor('mat-dialog-actions > [color="primary"]');
@@ -94,7 +103,7 @@
       display: inline-block;
       position: relative;
       margin: 5px;
-    `
+    `,
     );
     wrapperEl.appendChild(clonedImgEl);
     modalContentEl.appendChild(wrapperEl);
@@ -124,7 +133,7 @@
         text: 'Ready',
         timeout: 1000,
       });
-    }
+    },
   );
 
   function clearImgHistory() {
