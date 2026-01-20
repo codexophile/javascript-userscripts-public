@@ -1,3 +1,23 @@
+// Temporarily disabling video duration and thumbnail functionalities
+// function getVideoDuration(videoElement) { ... }
+// function getVideoThumbnail(videoElement) { ... }
+
+async function getVideoFileSize(videoUrl) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.src = videoUrl;
+
+    video.onloadedmetadata = () => {
+      const fileSize = video.videoWidth * video.videoHeight; // Example calculation
+      resolve(fileSize);
+    };
+
+    video.onerror = (error) => {
+      reject('Error loading video metadata: ' + error);
+    };
+  });
+}
 //  MARK: Advanced
 
 function reEnableConsole() {
