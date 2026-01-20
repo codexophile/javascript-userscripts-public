@@ -67,7 +67,7 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
                     <a href="${url}" target="_blank">${index}</a>
                 </li>
             `,
-        imgUrlsListEl
+        imgUrlsListEl,
       );
     });
     collapsible
@@ -75,19 +75,23 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
       .classList.add('storyboardControl');
     generateElements(
       `<div>Total slots: ${trueNoOfSlots}</div>`,
-      imgUrlsPopupEl
+      imgUrlsPopupEl,
     );
 
+    console.log('xxx', video.duration);
     if (video.readyState > 0) jumpToSlot();
     video.addEventListener('loadeddata', jumpToSlot);
-    video.addEventListener('loadeddata', addTimeStrings);
+
+    if (+video.duration > 0) {
+      addTimeStrings();
+    } else video.addEventListener('loadeddata', addTimeStrings);
 
     video.removeEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('timeupdate', handleTimeUpdate);
     function handleTimeUpdate() {
       const duration = video.duration;
       const currentSlotNo = Math.round(
-        (video.currentTime * trueNoOfSlots) / duration
+        (video.currentTime * trueNoOfSlots) / duration,
       );
       const storyboardItems = sbParent.querySelectorAll('.storyboardItem');
       setHash(`slot=${currentSlotNo}`);
@@ -104,6 +108,7 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
     }
 
     function addTimeStrings() {
+      console.log(video, video.duration);
       const slotEls = sbParent.querySelectorAll('.storyboardItem');
       repeat(trueNoOfSlots, index => {
         const timeStringEl = generateElements(`<div></div>`, slotEls[index]);
@@ -120,7 +125,7 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
             position: relative;
             top: -15%;
             left: 5%;
-        `
+        `,
         );
       });
     }
@@ -161,7 +166,7 @@ async function storyboard({
   if (!imgUrls.length) alert('imgUrls: Error!');
 
   const promises = imgUrls.map((url, index) =>
-    storyboardFlex(horizontal, vertical, url, index, trueNoOfSlots)
+    storyboardFlex(horizontal, vertical, url, index, trueNoOfSlots),
   );
 
   // @ts-ignore
@@ -248,7 +253,7 @@ async function storyboardFlex(
   vertical,
   imgSrc,
   index,
-  trueNoOfSlots
+  trueNoOfSlots,
 ) {
   let imgElement;
   try {
@@ -300,7 +305,7 @@ async function storyboardFlex(
           0,
           0, // Destination x, y
           canvas.width,
-          canvas.height // Destination width, height
+          canvas.height, // Destination width, height
         );
         storyboardItem.append(canvas);
 
