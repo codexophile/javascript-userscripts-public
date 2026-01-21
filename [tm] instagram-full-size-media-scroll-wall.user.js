@@ -68,7 +68,7 @@
     for (const child of [].concat(children)) {
       if (child == null) continue;
       node.appendChild(
-        typeof child === 'string' ? document.createTextNode(child) : child
+        typeof child === 'string' ? document.createTextNode(child) : child,
       );
     }
     return node;
@@ -167,7 +167,7 @@
       if (!contentType.includes('application/json')) {
         const text = await response.text();
         throw new Error(
-          'Non-JSON response (likely blocked): ' + text.slice(0, 120)
+          'Non-JSON response (likely blocked): ' + text.slice(0, 120),
         );
       }
 
@@ -254,7 +254,7 @@
 
       default:
         console.warn(
-          `Page mode "${state.pageMode}" is not supported for media loading.`
+          `Page mode "${state.pageMode}" is not supported for media loading.`,
         );
         return null;
     }
@@ -271,7 +271,7 @@
 
     // Show loading indicator
     const loadingIndicator = document.getElementById(
-      'media-wall-loading-indicator'
+      'media-wall-loading-indicator',
     );
     if (loadingIndicator) loadingIndicator.style.display = 'block';
 
@@ -284,7 +284,7 @@
     console.log(
       `Fetching media for mode: ${state.pageMode}, cursor: ${
         state.nextPageCursor || 'initial'
-      }`
+      }`,
     );
 
     try {
@@ -295,7 +295,7 @@
       if (!contentType.includes('application/json')) {
         const text = await response.text();
         throw new Error(
-          `Non-JSON response (status ${response.status}): ${text.slice(0, 120)}`
+          `Non-JSON response (status ${response.status}): ${text.slice(0, 120)}`,
         );
       }
 
@@ -303,7 +303,7 @@
 
       if (!response.ok) {
         throw new Error(
-          data.message || `Request failed with status ${response.status}`
+          data.message || `Request failed with status ${response.status}`,
         );
       }
 
@@ -321,7 +321,7 @@
           : null;
 
         mediaList = (edgeObj.edges || []).map(edge =>
-          normalizeGraphqlNode(edge.node)
+          normalizeGraphqlNode(edge.node),
         );
       } else {
         mediaList = Array.isArray(data.items)
@@ -366,7 +366,7 @@
       </div>`;
     state.mediaWallContainer = domParserContainer.firstElementChild;
     const contentContainer = state.mediaWallContainer.querySelector(
-      '#media-wall-content'
+      '#media-wall-content',
     );
 
     // Add a close button
@@ -496,8 +496,11 @@
         border: 2px solid #008000;
       }
       #media-wall-content .media-container {
-        display: inline-block;
-        vertical-align: top;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        align-items: flex-start;
         margin: 5px;
         text-align: left;
       }
@@ -694,7 +697,7 @@
           if (entry.intersectionRatio < 0.6) videoEl.pause();
         }
       },
-      { root: state.mediaWallContainer, threshold: [0, 0.6, 1] }
+      { root: state.mediaWallContainer, threshold: [0, 0.6, 1] },
     );
     observer.observe(videoEl);
     return () => observer.disconnect();
@@ -730,7 +733,7 @@
               ? new Date(item.taken_at * 1000).toLocaleDateString()
               : 'Unknown'
           }`,
-        })
+        }),
       );
 
       // A single post can contain a carousel of multiple images/videos.
@@ -757,15 +760,23 @@
           // Set up auto-pause when video leaves viewport
           setupVideoAutoPauseOnViewport(video);
 
+          // Add poster image alongside the video
+          const posterUrl = getBestImageUrl(media);
+          if (posterUrl) {
+            const poster = el('img', { src: posterUrl });
+            container.appendChild(poster);
+          }
+
+          container.appendChild(video);
+
           link.className = 'media-link';
           link.textContent = `Post by @${item.user.username}`;
           if (carouselItems.length > 1) {
             link.textContent += ` [${index + 1}/${carouselItems.length}]`;
           }
 
-          container.appendChild(video);
-          container.appendChild(link);
           group.appendChild(container);
+          group.appendChild(link);
         }
         // Handle images
         else if (media.image_versions2) {
@@ -787,7 +798,7 @@
    */
   function updateLoadingIndicators() {
     const loadingIndicator = document.getElementById(
-      'media-wall-loading-indicator'
+      'media-wall-loading-indicator',
     );
     const endIndicator = document.getElementById('media-wall-end-indicator');
 
@@ -840,7 +851,7 @@
           }
         }
       },
-      { root: state.mediaWallContainer, rootMargin: '200px 0px', threshold: 0 }
+      { root: state.mediaWallContainer, rootMargin: '200px 0px', threshold: 0 },
     );
     state.scrollObserver.observe(sentinel);
   }
@@ -868,7 +879,7 @@
 
     if (['explore', 'post'].includes(state.pageMode)) {
       alert(
-        `The media wall script does not support "${state.pageMode}" pages yet.`
+        `The media wall script does not support "${state.pageMode}" pages yet.`,
       );
       return;
     }
@@ -878,7 +889,7 @@
       state.targetUserId = await findTargetUserId();
       if (!state.targetUserId) {
         alert(
-          'Could not determine the Instagram User ID for this page. The script cannot continue.'
+          'Could not determine the Instagram User ID for this page. The script cannot continue.',
         );
         return;
       }
