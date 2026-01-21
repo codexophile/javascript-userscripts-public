@@ -2,37 +2,37 @@
 const parentEl = document.querySelector(`.search-box`);
 
 let button720p = jQuery(`<button> 720p     </button>`).on(
-  "click",
-  appendToSearchQuery
+  'click',
+  appendToSearchQuery,
 );
 let button1080p = jQuery(`<button>1080p</button>`).on(
-  "click",
-  appendToSearchQuery
+  'click',
+  appendToSearchQuery,
 );
 let buttonComplete = jQuery(`<button> Complete </button>`).on(
-  "click",
-  appendToSearchQuery
+  'click',
+  appendToSearchQuery,
 );
 let buttons01e01 = jQuery(`<button> s01e01   </button>`).on(
-  "click",
-  appendToSearchQuery
+  'click',
+  appendToSearchQuery,
 );
 parentEl.append(
   button720p[0],
   button1080p[0],
   buttonComplete[0],
-  buttons01e01[0]
+  buttons01e01[0],
 );
 
 if (location.href.match(/s\d+?e\d+?/)) {
   const btnPrevEpisode = generateElements(`<button>⏮️</button>`, parentEl);
   const btnNextEpisode = generateElements(`<button>⏭️</button>`, parentEl);
 
-  btnPrevEpisode.addEventListener("click", (event) => {
+  btnPrevEpisode.addEventListener('click', event => {
     switchEpisode(-1);
   });
 
-  btnNextEpisode.addEventListener("click", (event) => {
+  btnNextEpisode.addEventListener('click', event => {
     switchEpisode(1);
   });
 
@@ -50,12 +50,12 @@ if (location.href.match(/s\d+?e\d+?/)) {
       episodeNumber = 1;
     }
 
-    const newSeasonNumber = seasonNumber.toString().padStart(2, "0");
-    const newEpisodeNumber = episodeNumber.toString().padStart(2, "0");
+    const newSeasonNumber = seasonNumber.toString().padStart(2, '0');
+    const newEpisodeNumber = episodeNumber.toString().padStart(2, '0');
 
     const newUrl = location.href.replace(
       /s\d+e\d+/,
-      `s${newSeasonNumber}e${newEpisodeNumber}`
+      `s${newSeasonNumber}e${newEpisodeNumber}`,
     );
     location.href = newUrl;
     console.log({ newSeasonNumber, newEpisodeNumber });
@@ -73,8 +73,8 @@ function appendToSearchQuery(event) {
 // Rest
 let href = location.href;
 
-if (href.includes("/torrent/")) {
-  $magnetLink = jQuery("ul:not(.dropdown-menu) > li > [href*=magnet]");
+if (href.includes('/torrent/')) {
+  $magnetLink = jQuery('ul:not(.dropdown-menu) > li > [href*=magnet]');
   createSeedrLink($magnetLink);
 }
 
@@ -83,8 +83,8 @@ let $torrentLinks = jQuery(`[href*='/torrent/']`).each(function () {
   let $newDiv = jQuery(`<div class='newDiv' style="width: 10%"></div>`)
     .appendTo($this.parent())
     .load(`${this.href} ul:not(.dropdown-menu) > li > [href*=magnet]`, () => {
-      let magnet = $newDiv.find("a");
-      magnet.text("🧲");
+      let magnet = $newDiv.find('a');
+      magnet.text('🧲');
       magnet.children().remove();
       magnet.css(`padding`, `unset`);
       magnet.css(`width`, `50%`);
@@ -99,16 +99,16 @@ let $torrentLinks = jQuery(`[href*='/torrent/']`).each(function () {
 });
 
 function createSeedrLink($originalMagnet) {
-  link = $originalMagnet.attr("href");
+  link = $originalMagnet.attr('href');
   $originalMagnet.after(`
         <a id=seedrLink href=https://www.seedr.cc/files?link=${link} target=_blank>
             <img src="https://static.seedr.cc/images/seed_v2.png">
         </a>`);
-  $seedrLink = jQuery("#seedrLink");
-  $seedrLink.addClass($originalMagnet.attr("class"));
+  $seedrLink = jQuery('#seedrLink');
+  $seedrLink.addClass($originalMagnet.attr('class'));
 
   $originalMagnet.parent().css(`display`, `flex`);
   $seedrLink.css(`width`, `50%`).css(`margin`, `6px`);
-  $seedrLink.css("box-sizing", "border-box");
-  $seedrLink.css("padding", "unset");
+  $seedrLink.css('box-sizing', 'border-box');
+  $seedrLink.css('padding', 'unset');
 }
