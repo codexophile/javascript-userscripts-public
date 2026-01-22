@@ -60,7 +60,15 @@
 
       if (linkAnchor) {
         const tweetUrl = linkAnchor.href;
-        console.log('Downloading from:', tweetUrl);
+        const urlSegment = `url:${tweetUrl}::`;
+        const destinationSegment = `dest:x:\\tw::`;
+        const modeSegment = `mode:noprompt::`;
+        const browserSegment = `browser:firefox::`;
+        const profileSegment = `profile:ZaSNRfjB.Profile 1::`;
+        GM_setClipboard(
+          `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
+        );
+        console.log('Download initiated for:', tweetUrl);
       } else {
         alert('Could not find Tweet URL');
       }
