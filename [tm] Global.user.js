@@ -47,10 +47,11 @@
         });
         break;
       case 'IFRAME':
-        generateElements(
+        const iframeLinkEl = generateElements(
           `<a href=${element.src} target=_blank>${element.src}</a>`,
           iframesPopup,
         );
+        iframeLinkEl.style.display = 'block';
         break;
 
       default:
