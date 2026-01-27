@@ -96,4 +96,43 @@
       );
     });
   }
+
+  //* scraping meta elements
+  const metaElements = document.querySelectorAll('meta');
+  if (metaElements.length) {
+    const metaContainer = collapsible.addPopup();
+    collapsible.addButton('🏷️', metaContainer);
+
+    const metaData = [];
+    metaElements.forEach(meta => {
+      const metaObj = {};
+
+      // Collect all attributes
+      for (const attr of meta.attributes) {
+        metaObj[attr.name] = attr.value;
+      }
+
+      if (Object.keys(metaObj).length > 0) {
+        metaData.push(metaObj);
+      }
+    });
+
+    // Display meta elements in a formatted list
+    metaData.forEach((metaObj, index) => {
+      const metaEntry = generateElements(
+        `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #404040;"></div>`,
+        metaContainer,
+      );
+
+      Object.entries(metaObj).forEach(([key, value]) => {
+        const line = generateElements(
+          `<div style="word-break: break-word; font-size: 12px; margin: 4px 0;">
+            <strong style="color: #a0a0a0;">${key}:</strong> 
+            <span style="color: #d0d0d0;">${value}</span>
+          </div>`,
+          metaEntry,
+        );
+      });
+    });
+  }
 })();
