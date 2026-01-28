@@ -1,26 +1,26 @@
-async function Collapsible(togglerText = "Toggle", options = {}) {
-  await waitFor("body");
+async function Collapsible(togglerText = 'Toggle', options = {}) {
+  await waitFor('body');
 
   //* Methods for adding elements and handling popups
   function addButton(text, popupEl = null, onclick) {
     const button = generateElements(`<button></button>`);
-    button.className = "collapsible-button button-like";
+    button.className = 'collapsible-button button-like';
     button.textContent = text;
     collapsibleContent.appendChild(button);
 
     if (onclick) {
-      button.addEventListener("click", onclick);
+      button.addEventListener('click', onclick);
     }
 
     if (popupEl) {
-      button.addEventListener("click", (e) => {
+      button.addEventListener('click', e => {
         e.stopPropagation();
-        popupEl.classList.toggle("visible");
+        popupEl.classList.toggle('visible');
       });
 
-      document.addEventListener("click", (e) => {
+      document.addEventListener('click', e => {
         if (!button.contains(e.target)) {
-          popupEl.classList.remove("visible");
+          popupEl.classList.remove('visible');
         }
       });
     }
@@ -29,8 +29,8 @@ async function Collapsible(togglerText = "Toggle", options = {}) {
   }
 
   function addPopup() {
-    const popup = document.createElement("div");
-    popup.className = "popup";
+    const popup = document.createElement('div');
+    popup.className = 'popup';
     collapsibleContent.appendChild(popup);
     return popup;
   }
@@ -47,9 +47,9 @@ async function Collapsible(togglerText = "Toggle", options = {}) {
   if (alreadyOnPage) {
     const collapsibleStructure = alreadyOnPage;
     const collapsibleToggler = alreadyOnPage.querySelector(
-      ".collapsible-toggler"
+      '.collapsible-toggler',
     );
-    collapsibleContent = alreadyOnPage.querySelector(".collapsible-content");
+    collapsibleContent = alreadyOnPage.querySelector('.collapsible-content');
     return {
       collapsibleStructure,
       collapsibleToggler,
@@ -61,21 +61,21 @@ async function Collapsible(togglerText = "Toggle", options = {}) {
   }
 
   const {
-    bottom = "0px",
-    left = "0px",
-    backgroundColor = "#1e1e1e", // Darker background
-    hoverColor = "#2c2c2c", // Darker hover
-    textColor = "#e0e0e0", // Light gray text
-    contentBgColor = "#2d2d2d", // Dark gray content background
-    fontSize = "14px",
-    borderRadius = "5px",
-    boxShadow = "0 2px 5px rgba(0,0,0,0.95)", // Darker shadow
-    transition = "all 0.3s ease-out",
-    width = "300px",
-    height = "200px",
-    collapsedWidth = "30px",
-    popupHeight = "150px",
-    buttonSize = "30px",
+    bottom = '0px',
+    left = '0px',
+    backgroundColor = '#1e1e1e', // Darker background
+    hoverColor = '#2c2c2c', // Darker hover
+    textColor = '#e0e0e0', // Light gray text
+    contentBgColor = '#2d2d2d', // Dark gray content background
+    fontSize = '14px',
+    borderRadius = '5px',
+    boxShadow = '0 2px 5px rgba(0,0,0,0.95)', // Darker shadow
+    transition = 'all 0.3s ease-out',
+    width = '300px',
+    height = '200px',
+    collapsedWidth = '30px',
+    popupHeight = '150px',
+    buttonSize = '30px',
   } = options;
 
   const css = `
@@ -200,7 +200,7 @@ async function Collapsible(togglerText = "Toggle", options = {}) {
         }
     `;
 
-  const style = document.createElement("style");
+  const style = document.createElement('style');
   style.textContent = css;
   document.head.appendChild(style);
 
@@ -212,31 +212,31 @@ async function Collapsible(togglerText = "Toggle", options = {}) {
       <div class="resize-handle"></div>
     </div>
   `,
-    document.body
+    document.body,
   );
-  collapsibleStructure.className = "collapsible-container";
+  collapsibleStructure.className = 'collapsible-container';
 
   collapsibleContent = collapsibleStructure.querySelector(
-    ".collapsible-content"
+    '.collapsible-content',
   );
   const collapsibleToggler = collapsibleStructure.querySelector(
-    ".collapsible-toggler"
+    '.collapsible-toggler',
   );
-  const resizeHandle = collapsibleStructure.querySelector(".resize-handle");
+  const resizeHandle = collapsibleStructure.querySelector('.resize-handle');
 
   let isExpanded = false;
   let expandedWidth = width;
 
-  collapsibleToggler.addEventListener("click", function (e) {
+  collapsibleToggler.addEventListener('click', function (e) {
     e.stopPropagation();
     isExpanded = !isExpanded;
     if (isExpanded) {
       collapsibleStructure.style.width = expandedWidth;
-      collapsibleStructure.classList.add("expanded");
+      collapsibleStructure.classList.add('expanded');
     } else {
       expandedWidth = collapsibleStructure.style.width;
       collapsibleStructure.style.width = collapsedWidth;
-      collapsibleStructure.classList.remove("expanded");
+      collapsibleStructure.classList.remove('expanded');
     }
   });
 
@@ -250,10 +250,10 @@ async function Collapsible(togglerText = "Toggle", options = {}) {
   let xOffset = 0;
   let yOffset = 0;
 
-  collapsibleToggler.addEventListener("mousedown", dragStart);
-  resizeHandle.addEventListener("mousedown", resizeStart);
-  document.addEventListener("mousemove", drag);
-  document.addEventListener("mouseup", dragEnd);
+  collapsibleToggler.addEventListener('mousedown', dragStart);
+  resizeHandle.addEventListener('mousedown', resizeStart);
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('mouseup', dragEnd);
 
   function dragStart(e) {
     initialX = e.clientX - xOffset;
@@ -311,47 +311,47 @@ async function Collapsible(togglerText = "Toggle", options = {}) {
   };
 }
 
-function dialog(title = "", contentElement, maxHeight = "300px") {
+function dialog(title = '', contentElement, maxHeight = '300px') {
   // Create the GUI container
-  const guiContainer = document.createElement("div");
-  guiContainer.style.position = "fixed";
-  guiContainer.style.top = "100px";
-  guiContainer.style.right = "50px";
-  guiContainer.style.width = "300px";
-  guiContainer.style.border = "1px solid #ccc";
-  guiContainer.style.backgroundColor = "#f0f0f0";
-  guiContainer.style.zIndex = "9999";
-  guiContainer.style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.1)";
+  const guiContainer = document.createElement('div');
+  guiContainer.style.position = 'fixed';
+  guiContainer.style.top = '100px';
+  guiContainer.style.right = '50px';
+  guiContainer.style.width = '300px';
+  guiContainer.style.border = '1px solid #ccc';
+  guiContainer.style.backgroundColor = '#f0f0f0';
+  guiContainer.style.zIndex = '9999';
+  guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
 
   // Create the header
-  const header = document.createElement("div");
-  header.style.backgroundColor = "#e0e0e0";
+  const header = document.createElement('div');
+  header.style.backgroundColor = '#e0e0e0';
   // header.style.padding = '10px';
-  header.style.cursor = "move";
-  header.style.display = "flex";
-  header.style.justifyContent = "space-between";
-  header.style.alignItems = "center";
+  header.style.cursor = 'move';
+  header.style.display = 'flex';
+  header.style.justifyContent = 'space-between';
+  header.style.alignItems = 'center';
   header.innerText = title;
 
   // Create the collapse button
-  const collapseBtn = document.createElement("button");
-  collapseBtn.id = "expand-btn";
-  collapseBtn.innerHTML = "+";
-  collapseBtn.style.marginLeft = "auto";
-  collapseBtn.style.marginRight = "5px";
+  const collapseBtn = document.createElement('button');
+  collapseBtn.id = 'expand-btn';
+  collapseBtn.innerHTML = '+';
+  collapseBtn.style.marginLeft = 'auto';
+  collapseBtn.style.marginRight = '5px';
   collapseBtn.onclick = () => {
-    if (body.style.display === "none") {
-      body.style.display = "block";
-      collapseBtn.innerHTML = "-";
+    if (body.style.display === 'none') {
+      body.style.display = 'block';
+      collapseBtn.innerHTML = '-';
     } else {
-      body.style.display = "none";
-      collapseBtn.innerHTML = "+";
+      body.style.display = 'none';
+      collapseBtn.innerHTML = '+';
     }
   };
 
   // Create the close button
-  const closeBtn = document.createElement("button");
-  closeBtn.innerHTML = "x";
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = 'x';
   closeBtn.onclick = () => {
     guiContainer.remove();
   };
@@ -361,12 +361,12 @@ function dialog(title = "", contentElement, maxHeight = "300px") {
   header.appendChild(closeBtn);
 
   // Create the body
-  const body = document.createElement("div");
-  body.style.display = "none";
-  body.style.padding = "10px";
-  body.style.backgroundColor = "#fff";
+  const body = document.createElement('div');
+  body.style.display = 'none';
+  body.style.padding = '10px';
+  body.style.backgroundColor = '#fff';
   body.style.maxHeight = maxHeight;
-  body.style.overflow = "auto";
+  body.style.overflow = 'auto';
   // adding the content element given by the function parameter
   body.append(contentElement);
 
@@ -382,13 +382,13 @@ function dialog(title = "", contentElement, maxHeight = "300px") {
   let offsetX = 0;
   let offsetY = 0;
 
-  header.onmousedown = (e) => {
+  header.onmousedown = e => {
     isDragging = true;
     offsetX = e.clientX - guiContainer.getBoundingClientRect().left;
     offsetY = e.clientY - guiContainer.getBoundingClientRect().top;
   };
 
-  document.onmousemove = (e) => {
+  document.onmousemove = e => {
     if (isDragging) {
       guiContainer.style.left = `${e.clientX - offsetX}px`;
       guiContainer.style.top = `${e.clientY - offsetY}px`;
@@ -444,16 +444,16 @@ function addTooltip(tooltipParent, tooltipContent) {
         }
     `);
 
-  tooltipParent.classList.add("tooltipParent");
-  const toolTip = generateElements("<span class=tooltip></span>", null, true);
+  tooltipParent.classList.add('tooltipParent');
+  const toolTip = generateElements('<span class=tooltip></span>', null, true);
   tooltipParent.after(toolTip);
-  const wrapper = wrap("<div class=wrapper></div>", tooltipParent, toolTip);
+  const wrapper = wrap('<div class=wrapper></div>', tooltipParent, toolTip);
   style(
     wrapper,
     `
         position: relative;
         width:    fit-content;
-    `
+    `,
   );
   toolTip.append(tooltipContent);
 }
@@ -591,25 +591,25 @@ function slideshowGallery() {
                 <div class=numbertext>${+item + 1} / ${arguments.length}</div>
                 <img src=${arguments[item]} style='width:100%'>
             </div>
-        `)
+        `),
     );
     row.append(
       generateElements(/*html*/ `
             <div class=column>
                 <img class='demo cursor' src=${arguments[item]} style='width:100%'>
             </div>
-            `)
+            `),
     );
   }
 
-  document.querySelector(`.prev`).addEventListener("click", () => {
+  document.querySelector(`.prev`).addEventListener('click', () => {
     plusSlides(-1);
   });
-  document.querySelector(`.next`).addEventListener("click", () => {
+  document.querySelector(`.next`).addEventListener('click', () => {
     plusSlides(1);
   });
-  document.querySelectorAll(`.demo`).forEach((item) => {
-    item.addEventListener("click", (event) => {
+  document.querySelectorAll(`.demo`).forEach(item => {
+    item.addEventListener('click', event => {
       const element = event.target.parentNode;
       const index =
         Array.from(element.parentNode.children).indexOf(element) + 1;
@@ -630,9 +630,9 @@ function slideshowGallery() {
 
   function showSlides(n) {
     let i;
-    let slides = document.getElementsByClassName("mySlides");
-    let dots = document.getElementsByClassName("demo");
-    let captionText = document.getElementById("caption");
+    let slides = document.getElementsByClassName('mySlides');
+    let dots = document.getElementsByClassName('demo');
+    let captionText = document.getElementById('caption');
     if (n > slides.length) {
       slideIndex = 1;
     }
@@ -640,13 +640,13 @@ function slideshowGallery() {
       slideIndex = slides.length;
     }
     for (i = 0; i < slides.length; i++) {
-      slides[i].style.display = "none";
+      slides[i].style.display = 'none';
     }
     for (i = 0; i < dots.length; i++) {
-      dots[i].className = dots[i].className.replace(" active", "");
+      dots[i].className = dots[i].className.replace(' active', '');
     }
-    slides[slideIndex - 1].style.display = "block";
-    dots[slideIndex - 1].className += " active";
+    slides[slideIndex - 1].style.display = 'block';
+    dots[slideIndex - 1].className += ' active';
     captionText.innerHTML = dots[slideIndex - 1].alt;
   }
 
@@ -730,16 +730,16 @@ class modalBox {
             `);
 
     document.body.append(this.modal);
-    this.header = this.modal.querySelector("#header-content");
-    this.body = this.modal.querySelector("#modal-body");
-    const dismiss = this.modal.querySelector("#dismiss");
-    dismiss.addEventListener("click", () => {
+    this.header = this.modal.querySelector('#header-content');
+    this.body = this.modal.querySelector('#modal-body');
+    const dismiss = this.modal.querySelector('#dismiss');
+    dismiss.addEventListener('click', () => {
       this.destroy();
     });
   }
 
   display() {
-    this.modal.style.display = "block";
+    this.modal.style.display = 'block';
   }
   headerAddContent(content) {
     this.header.append(content);
@@ -748,13 +748,13 @@ class modalBox {
     this.body.append(content);
   }
   hide() {
-    this.modal.style.display = "none";
+    this.modal.style.display = 'none';
   }
   flushHeader() {
-    this.modal.querySelector("#header-content").replaceChildren();
+    this.modal.querySelector('#header-content').replaceChildren();
   }
   flushBody() {
-    this.modal.querySelector("#modal-body").replaceChildren();
+    this.modal.querySelector('#modal-body').replaceChildren();
   }
   destroy() {
     this.flushHeader();
@@ -766,11 +766,11 @@ class modalBox {
 class ModalBox {
   constructor(options = {}) {
     this.options = {
-      width: options.width || "95%",
-      backgroundColor: options.backgroundColor || "#ffffff",
-      headerColor: options.headerColor || "#5cb85c",
-      headerTextColor: options.headerTextColor || "#ffffff",
-      closeButtonColor: options.closeButtonColor || "#ffffff",
+      width: options.width || '95%',
+      backgroundColor: options.backgroundColor || '#ffffff',
+      headerColor: options.headerColor || '#5cb85c',
+      headerTextColor: options.headerTextColor || '#ffffff',
+      closeButtonColor: options.closeButtonColor || '#ffffff',
       animation: options.animation !== undefined ? options.animation : true,
       destroyOnClose:
         options.destroyOnClose !== undefined ? options.destroyOnClose : false,
@@ -872,35 +872,35 @@ class ModalBox {
                 <div class="vanilla-modal-body"></div>
             </div>
             `);
-    this.modal.className = "vanilla-modal";
+    this.modal.className = 'vanilla-modal';
     document.body.appendChild(this.modal);
 
-    this.titleElement = this.modal.querySelector(".vanilla-modal-title");
-    this.bodyElement = this.modal.querySelector(".vanilla-modal-body");
-    this.closeButton = this.modal.querySelector(".vanilla-modal-close");
+    this.titleElement = this.modal.querySelector('.vanilla-modal-title');
+    this.bodyElement = this.modal.querySelector('.vanilla-modal-body');
+    this.closeButton = this.modal.querySelector('.vanilla-modal-close');
   }
 
   setupEventListeners() {
-    this.closeButton.addEventListener("click", () => {
+    this.closeButton.addEventListener('click', () => {
       if (this.options.destroyOnClose) this.destroy();
       else this.hide();
     });
 
     if (this.options.closeOnOutsideClick) {
-      this.modal.addEventListener("click", (e) => {
+      this.modal.addEventListener('click', e => {
         if (e.target === this.modal) this.hide();
       });
     }
 
     if (this.options.closeOnEscape) {
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && this.isVisible()) this.hide();
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && this.isVisible()) this.hide();
       });
     }
   }
 
   setTitle(title) {
-    if (typeof title === "string") {
+    if (typeof title === 'string') {
       this.titleElement.textContent = title;
     }
     // else {
@@ -910,36 +910,169 @@ class ModalBox {
   }
 
   setContent(content) {
-    if (typeof content === "string") {
+    if (typeof content === 'string') {
       this.bodyElement.innerHTML = content;
     } else if (content instanceof Node) {
       const uniqueString = generateUniqueString();
       let policy = trustedTypes.createPolicy(uniqueString, {
-        createHTML: (input) => input,
+        createHTML: input => input,
       });
-      this.bodyElement.innerHTML = policy.createHTML("");
+      this.bodyElement.innerHTML = policy.createHTML('');
 
       this.bodyElement.appendChild(content);
     }
   }
 
   show() {
-    this.modal.style.display = "block";
-    setTimeout(() => this.modal.classList.add("show"), 10);
+    this.modal.style.display = 'block';
+    setTimeout(() => this.modal.classList.add('show'), 10);
   }
 
   hide() {
-    this.modal.classList.remove("show");
+    this.modal.classList.remove('show');
     setTimeout(() => {
-      this.modal.style.display = "none";
+      this.modal.style.display = 'none';
     }, 300);
   }
 
   isVisible() {
-    return this.modal.style.display === "block";
+    return this.modal.style.display === 'block';
   }
 
   destroy() {
     document.body.removeChild(this.modal);
+  }
+}
+
+/**
+ * Lightweight helper around the native dialog element.
+ * Mirrors the demo from index.html/script.js with modal and non-modal support.
+ *
+ * Example:
+ * const enrollDialog = new VanillaDialog({
+ *   title: "Enroll in my awesome course!",
+ *   content: enrollFormEl,
+ *   mode: "modal",
+ *   trigger: "#enroll-btn",
+ *   closeOnBackdrop: true,
+ * });
+ *
+ * const chatDialog = new VanillaDialog({
+ *   title: "Chat Support",
+ *   content: chatContentEl,
+ *   mode: "non-modal",
+ *   trigger: document.querySelector("#chat-toggle"),
+ * });
+ */
+class VanillaDialog {
+  constructor(options = {}) {
+    const {
+      title = "",
+      content = "",
+      mode = "modal", // modal uses showModal(); non-modal uses show()
+      trigger = null,
+      closeOnBackdrop = true,
+      closeButton = true,
+      id = "",
+      className = "",
+    } = options;
+
+    this.mode = mode === "modal" ? "modal" : "non-modal";
+
+    this.dialog = document.createElement("dialog");
+    if (id) this.dialog.id = id;
+    if (className) this.dialog.className = className;
+
+    this.header = document.createElement("div");
+    this.header.className = "dialog-header";
+
+    this.titleEl = document.createElement("h2");
+    this.titleEl.textContent = title;
+    this.header.appendChild(this.titleEl);
+
+    if (closeButton) {
+      this.closeBtn = document.createElement("button");
+      this.closeBtn.type = "button";
+      this.closeBtn.className = "btn-icon";
+      this.closeBtn.setAttribute("aria-label", "Close dialog");
+      this.closeBtn.innerHTML =
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>';
+      this.header.appendChild(this.closeBtn);
+    }
+
+    this.body = document.createElement("div");
+    this.body.className = "dialog-body";
+    this.setContent(content);
+
+    this.dialog.appendChild(this.header);
+    this.dialog.appendChild(this.body);
+
+    document.body.appendChild(this.dialog);
+
+    this.boundTriggerHandler = this.show.bind(this);
+    this.boundBackdropHandler = (e) => {
+      const rect = this.dialog.getBoundingClientRect();
+      const outside =
+        e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom;
+      if (outside) this.close();
+    };
+
+    if (trigger) this.attachTrigger(trigger);
+    if (this.closeBtn) this.closeBtn.addEventListener("click", () => this.close());
+    if (closeOnBackdrop)
+      this.dialog.addEventListener("click", this.boundBackdropHandler);
+  }
+
+  attachTrigger(trigger) {
+    const el = typeof trigger === "string" ? document.querySelector(trigger) : trigger;
+    if (!el) return;
+    this.trigger = el;
+    this.trigger.addEventListener("click", this.boundTriggerHandler);
+  }
+
+  setTitle(title) {
+    if (typeof title === "string") {
+      this.titleEl.textContent = title;
+    } else if (title instanceof Node) {
+      this.titleEl.replaceChildren(title);
+    }
+  }
+
+  setContent(content) {
+    if (typeof content === "string") {
+      this.body.innerHTML = content;
+    } else if (content instanceof Node) {
+      this.body.replaceChildren(content);
+    }
+  }
+
+  show() {
+    if (this.mode === "modal") {
+      this.dialog.showModal();
+    } else {
+      this.dialog.show();
+    }
+  }
+
+  close() {
+    this.dialog.close();
+  }
+
+  toggle() {
+    if (this.dialog.open) {
+      this.close();
+    } else {
+      this.show();
+    }
+  }
+
+  destroy() {
+    if (this.trigger)
+      this.trigger.removeEventListener("click", this.boundTriggerHandler);
+    this.dialog.removeEventListener("click", this.boundBackdropHandler);
+    this.dialog.remove();
   }
 }
