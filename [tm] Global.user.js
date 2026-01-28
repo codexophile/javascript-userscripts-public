@@ -100,9 +100,6 @@
   //* scraping meta elements
   const metaElements = document.querySelectorAll('meta');
   if (metaElements.length) {
-    const metaContainer = collapsible.addPopup();
-    collapsible.addButton('🏷️', metaContainer);
-
     const metaData = [];
     metaElements.forEach(meta => {
       const metaObj = {};
@@ -117,15 +114,18 @@
       }
     });
 
+    // Create content container
+    const metaContentContainer = document.createElement('div');
+
     // Display meta elements in a formatted list
     metaData.forEach((metaObj, index) => {
       const metaEntry = generateElements(
         `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #404040;"></div>`,
-        metaContainer,
+        metaContentContainer,
       );
 
       Object.entries(metaObj).forEach(([key, value]) => {
-        const line = generateElements(
+        generateElements(
           `<div style="word-break: break-word; font-size: 12px; margin: 4px 0;">
             <strong style="color: #a0a0a0;">${key}:</strong> 
             <span style="color: #d0d0d0;">${value}</span>
@@ -133,6 +133,17 @@
           metaEntry,
         );
       });
+    });
+
+    // Create button and attach VanillaDialog
+    const metaBtn = collapsible.addButton('🏷️', null, () => {});
+    new VanillaDialog({
+      title: `Page Meta Tags (${metaData.length})`,
+      content: metaContentContainer,
+      mode: 'modal',
+      trigger: metaBtn,
+      closeOnBackdrop: true,
+      closeButton: true,
     });
   }
 })();
