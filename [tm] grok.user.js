@@ -50,57 +50,81 @@
       `textarea[aria-label="Make a video"]`,
     );
     if (promptTextareaEl) {
-      promptTextareaEl.value = prompt;
+      const { set } = Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype,
+        'value',
+      );
+      set.call(promptTextareaEl, prompt);
       promptTextareaEl.dispatchEvent(new Event('input', { bubbles: true }));
-      promptTextareaEl.focus();
+      promptTextareaEl.dispatchEvent(new Event('change', { bubbles: true }));
     }
   }
 
   // Create UI for saved prompts
   async function createPromptsUI() {
-    const collapsible = await Collapsible('Prompts', {
-      bottom: '20px',
-      left: '20px',
-      width: '400px',
-      height: '300px',
-      backgroundColor: '#1a1a1a',
-      contentBgColor: '#252525',
-    });
+    const container = document.createElement('div');
+    container.id = 'grok-prompt-history';
+    container.className = 'grok-prompt-history__container';
+    container.style.cssText =
+      'display: flex; flex-direction: column; gap: 6px;';
+
+    const headerHint = document.createElement('div');
+    headerHint.id = 'grok-prompt-history-hint';
+    headerHint.className = 'grok-prompt-history__hint';
+    headerHint.style.cssText =
+      'font-size: 12px; color: #666; margin-bottom: 4px;';
+    headerHint.textContent = 'Click a prompt to reuse it.';
+    container.appendChild(headerHint);
+
+    const listContainer = document.createElement('div');
+    listContainer.id = 'grok-prompt-history-list';
+    listContainer.className = 'grok-prompt-history__list';
+    listContainer.style.cssText =
+      'display: flex; flex-direction: column; gap: 5px;';
+    container.appendChild(listContainer);
+
+    const guiContainer = dialog('Saved Prompts', container, '300px');
+    guiContainer.querySelector('#expand-btn').click();
+    guiContainer.id = 'grok-prompt-history-dialog';
+    guiContainer.classList.add('grok-prompt-history__dialog');
+    guiContainer.style.backgroundColor = '#f6f6f6';
 
     function refreshPromptsList() {
-      collapsible.collapsibleContent.replaceChildren();
+      listContainer.replaceChildren();
 
       const prompts = getSavedPrompts();
 
       if (prompts.length === 0) {
         const emptyMsg = document.createElement('div');
+        emptyMsg.id = 'grok-prompt-history-empty';
+        emptyMsg.className = 'grok-prompt-history__empty';
         emptyMsg.style.cssText =
-          'padding: 10px; color: #888; text-align: center; width: 100%;';
+          'padding: 8px; color: #888; text-align: center; width: 100%;';
         emptyMsg.textContent = 'No saved prompts yet';
-        collapsible.addElement(emptyMsg);
+        listContainer.appendChild(emptyMsg);
         return;
       }
 
-      const listContainer = document.createElement('div');
-      listContainer.style.cssText =
-        'display: flex; flex-direction: column; gap: 5px; padding: 5px; width: 100%;';
-
       prompts.forEach(prompt => {
         const promptItem = document.createElement('div');
+        promptItem.className = 'grok-prompt-history__item';
+        promptItem.setAttribute('data-prompt', prompt);
         promptItem.style.cssText = `
           display: flex;
-          gap: 5px;
-          background: #1a1a1a;
+          gap: 6px;
+          background: #ffffff;
           padding: 8px;
           border-radius: 4px;
+          border: 1px solid #e1e1e1;
           cursor: pointer;
           transition: background 0.2s;
         `;
 
         const promptText = document.createElement('div');
+        promptText.className = 'grok-prompt-history__text';
         promptText.style.cssText = `
           flex: 1;
-          color: #e0e0e0;
+          color: #333;
           font-size: 12px;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -110,9 +134,13 @@
         promptText.title = prompt;
 
         const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'grok-prompt-history__delete-btn';
+        deleteBtn.type = 'button';
         deleteBtn.textContent = '🗑️';
+        deleteBtn.title = 'Delete prompt';
         deleteBtn.style.cssText = `
           background: #ff4444;
+          color: #fff;
           border: none;
           border-radius: 3px;
           cursor: pointer;
@@ -131,19 +159,17 @@
         });
 
         promptItem.addEventListener('mouseenter', () => {
-          promptItem.style.background = '#2c2c2c';
+          promptItem.style.background = '#f0f0f0';
         });
 
         promptItem.addEventListener('mouseleave', () => {
-          promptItem.style.background = '#1a1a1a';
+          promptItem.style.background = '#ffffff';
         });
 
         promptItem.appendChild(promptText);
         promptItem.appendChild(deleteBtn);
         listContainer.appendChild(promptItem);
       });
-
-      collapsible.addElement(listContainer);
     }
 
     refreshPromptsList();
