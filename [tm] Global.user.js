@@ -31,8 +31,7 @@
   collapsible.addButton('🔝', null, () => window.scrollTo(0, 0));
   const headersPopup = collapsible.addPopup();
   collapsible.addButton('🇭', headersPopup);
-  const iframesPopup = collapsible.addPopup();
-  collapsible.addButton('ℹ️', iframesPopup);
+  let iframesPopup;
 
   waitForEach('h,h1,h2,iframe', element => {
     switch (element.tagName) {
@@ -47,6 +46,10 @@
         });
         break;
       case 'IFRAME':
+        if (!iframesPopup) {
+          iframesPopup = collapsible.addPopup();
+          collapsible.addButton('ℹ️', iframesPopup);
+        }
         const iframeLinkEl = generateElements(
           `<a href=${element.src} target=_blank>${element.src}</a>`,
           iframesPopup,
