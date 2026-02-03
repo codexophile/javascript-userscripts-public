@@ -1,20 +1,20 @@
 (async function () {
-  "use strict";
+  'use strict';
 
   // markAndFilter( 'ytd-rich-item-renderer', 'a[href^="/watch?v="]', 'href', /\?v=(...........)/ );
 
-  waitFor(`#video-controlPanel`).then((el) => {
-    el.style.top = "0px";
-    el.style.left = "260px";
+  waitFor(`#video-controlPanel`).then(el => {
+    el.style.top = '0px';
+    el.style.left = '260px';
   });
 
   fixUrl();
   for (const s of [
-    "yt-navigate",
-    "yt-navigate-start",
-    "yt-page-data-fetched",
-    "yt-page-data-updated",
-    "yt-navigate-finish",
+    'yt-navigate',
+    'yt-navigate-start',
+    'yt-page-data-fetched',
+    'yt-page-data-updated',
+    'yt-navigate-finish',
   ]) {
     document.addEventListener(s, fixUrl, true);
   }
@@ -30,7 +30,7 @@
 
     if (liveOrShortMatch) {
       let href = location.href;
-      href = href.replace(liveOrShortMatch[0], "/watch?v=");
+      href = href.replace(liveOrShortMatch[0], '/watch?v=');
       stopAndChangeUrl(href);
     }
 
@@ -39,11 +39,11 @@
       const videoID = locationHref.match(/[\?&]v=(...........)/)[1];
 
       let hashSlots = locationHref.match(/#slot=\d+?($|#)/);
-      hashSlots = hashSlots ? hashSlots[0] : "";
+      hashSlots = hashSlots ? hashSlots[0] : '';
       const newUrl = `https://www.youtube.com/watch?v=${videoID}${hashSlots}`;
 
       if (location.href !== newUrl) {
-        history.pushState({ state: 1 }, "new state", newUrl);
+        history.pushState({ state: 1 }, 'new state', newUrl);
       }
     }
   }
@@ -51,47 +51,52 @@
   //* Auto pause on losing focus
   // Auto pause video on losing focus
   (async function () {
-    "use strict";
+    'use strict';
 
-    const checkboxEl = generateElements(`<input type=checkbox></input>`);
-    checkboxEl.id = "auto-pause-checkbox";
-    const { addElement } = await Collapsible();
-    addElement(checkboxEl);
+    const video = await waitFor('video');
 
-    // Helper function to check conditions
-    const shouldIgnoreEvent = (requirePaused = false) => {
-      const checkboxEl = document.querySelector("#auto-pause-checkbox");
-      if (document.visibilityState === "hidden") return true;
-      if (!checkboxEl) return true;
-      if (checkboxEl.checked) return true;
-      return requirePaused && video.paused;
+    // Helper function to handle state changes
+    const handleVisibilityChange = isHidden => {
+      if (isHidden) {
+        // -- Browser lost focus/hidden --
+
+        // Check if video is actually playing right now
+        // (readyState > 2 ensures we don't try to check loading videos)
+        if (!video.paused && !video.ended && video.readyState > 2) {
+          // Set a custom property to remember it was playing
+          video.shouldResume = true;
+          video.pause();
+        } else {
+          // User had already paused it, so we shouldn't auto-resume
+          video.shouldResume = false;
+        }
+      } else {
+        // -- Browser gained focus/visible --
+
+        // Only play if our custom flag says so
+        if (video.shouldResume) {
+          // Play returns a promise, helpful to catch auto-play errors
+          video.play().catch(error => {
+            console.log('Auto-resume prevented by browser policy:', error);
+          });
+          video.shouldResume = false; // Reset flag
+        }
+      }
     };
 
-    const video = await waitFor("video");
-    const autoPauseCheckboxEl = await waitFor("#auto-pause-checkbox");
-    let autoPaused = false;
+    // 1. Handle Tab Switching and Minimizing (Page Visibility API)
+    document.addEventListener('visibilitychange', () => {
+      handleVisibilityChange(document.hidden);
+    });
 
-    // Event handlers
-    const handleBlur = () => {
-      if (shouldIgnoreEvent(true)) return;
-      video.pause();
-      autoPaused = true;
-    };
+    // 2. Handle clicking out of the browser window (e.g., dual monitors)
+    window.addEventListener('blur', () => {
+      handleVisibilityChange(true);
+    });
 
-    const handleFocus = () => {
-      if (shouldIgnoreEvent() || !autoPaused) return;
-      video.play();
-    };
-
-    const handleVideoClick = () => {
-      if (shouldIgnoreEvent()) return;
-      autoPaused = false;
-    };
-
-    // Event listeners
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("focus", handleFocus);
-    video.addEventListener("click", handleVideoClick);
+    window.addEventListener('focus', () => {
+      handleVisibilityChange(false);
+    });
   })();
 
   GM_addStyle(`
@@ -127,7 +132,7 @@
     `);
 
   //* Toggle sidebar
-  waitFor("#guide[opened]").then(() => {
+  waitFor('#guide[opened]').then(() => {
     $(`#guide-button.ytd-masthead`).click();
   });
 
@@ -139,28 +144,28 @@
 
   //* video flex fix in 'videos' pages
   //? adding this because stylus css fix doesn't work
-  waitForEach("ytd-two-column-browse-results-renderer", (element) => {
+  waitForEach('ytd-two-column-browse-results-renderer', element => {
     if (!location.href.match(/\/videos|\/shorts/)) return;
-    element.style.width = "unset !important";
-    element.style.maxWidth = "unset !important";
+    element.style.width = 'unset !important';
+    element.style.maxWidth = 'unset !important';
   });
 
   let observer = new MutationObserver(() => {
     //* @channelName links -> @channelName/videos/
-    document.querySelectorAll(`[href*='/@']`).forEach((link) => {
+    document.querySelectorAll(`[href*='/@']`).forEach(link => {
       if (link.href.match(/\/videos\/?$/)) return;
-      link.href += "/videos/";
+      link.href += '/videos/';
     });
 
     //* fixing hrefs
 
     const shortLinks = document.querySelectorAll(`[href*='/shorts/']`);
-    shortLinks.forEach((item) => {
-      item.href = item.href.replace("/shorts/", "/watch?v=");
+    shortLinks.forEach(item => {
+      item.href = item.href.replace('/shorts/', '/watch?v=');
     });
 
     const videoLinks = document.querySelectorAll(
-      `:not(#storyboard) :is([href*="&list="],[href*="&index="],[href*="&pp="],[href*="&t="])`
+      `:not(#storyboard) :is([href*="&list="],[href*="&index="],[href*="&pp="],[href*="&t="])`,
     );
     videoLinks.forEach(function (link) {
       if (!link.href) return; // 🛑
