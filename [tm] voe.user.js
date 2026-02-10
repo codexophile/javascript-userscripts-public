@@ -1,6 +1,14 @@
 (function () {
   'use strict';
 
+  if (
+    !document.title.includes(
+      'VOE | Content Delivery Network (CDN) & Video Cloud',
+    )
+  ) {
+    return;
+  }
+
   disableConsoleClear();
 
   //* ads
