@@ -60,6 +60,42 @@
     }
   }
 
+  function isPostUrl(url) {
+    return url.includes('/post/');
+  }
+
+  function createUrlChangeWatcher(onChange) {
+    let lastUrl = window.location.href;
+    let installed = false;
+
+    function notifyIfChanged() {
+      const currentUrl = window.location.href;
+      if (currentUrl === lastUrl) return;
+      lastUrl = currentUrl;
+      onChange(currentUrl);
+    }
+
+    if (installed) return;
+    installed = true;
+
+    const wrapHistoryMethod = methodName => {
+      const original = history[methodName];
+      history[methodName] = function (...args) {
+        const result = original.apply(this, args);
+        notifyIfChanged();
+        return result;
+      };
+    };
+
+    wrapHistoryMethod('pushState');
+    wrapHistoryMethod('replaceState');
+    window.addEventListener('popstate', notifyIfChanged);
+    window.addEventListener('hashchange', notifyIfChanged);
+
+    // Initial page load
+    onChange(lastUrl);
+  }
+
   // Create UI for saved prompts
   async function createPromptsUI() {
     const container = document.createElement('div');
@@ -73,7 +109,8 @@
     headerHint.className = 'grok-prompt-history__hint';
     headerHint.style.cssText =
       'font-size: 12px; color: #666; margin-bottom: 4px;';
-    headerHint.textContent = 'Click a prompt to reuse it.';
+    headerHint.textContent =
+      'Click a prompt to reuse it. Only on /post/ pages.';
     container.appendChild(headerHint);
 
     const listContainer = document.createElement('div');
@@ -173,12 +210,38 @@
     }
 
     refreshPromptsList();
-    return refreshPromptsList;
+    return { refresh: refreshPromptsList, root: guiContainer };
   }
 
-  let refreshUI;
-  createPromptsUI().then(refresh => {
-    refreshUI = refresh;
+  const promptUiState = {
+    refresh: null,
+    root: null,
+    created: false,
+  };
+
+  function teardownPromptsUI() {
+    if (promptUiState.root && promptUiState.root.remove) {
+      promptUiState.root.remove();
+    }
+    promptUiState.refresh = null;
+    promptUiState.root = null;
+    promptUiState.created = false;
+  }
+
+  async function ensurePromptsUI() {
+    if (promptUiState.created) return;
+    const { refresh, root } = await createPromptsUI();
+    promptUiState.refresh = refresh;
+    promptUiState.root = root;
+    promptUiState.created = true;
+  }
+
+  createUrlChangeWatcher(url => {
+    if (isPostUrl(url)) {
+      ensurePromptsUI();
+    } else {
+      teardownPromptsUI();
+    }
   });
 
   waitForEach('button[aria-label="Make video"]', makeVidBtnEl => {
@@ -190,7 +253,7 @@
 
       if (savePrompt(prompt)) {
         // Prompt was saved (wasn't a duplicate)
-        if (refreshUI) refreshUI();
+        if (promptUiState.refresh) promptUiState.refresh();
       }
     });
   });
