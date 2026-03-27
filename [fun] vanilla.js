@@ -458,38 +458,13 @@ function toSecondsFromHMS(hours, minutes, seconds) {
 }
 
 function forHumans(seconds) {
-  if (seconds === 0) return '0s';
   if (!Number.isInteger(seconds) || seconds < 0) return 'Invalid input';
 
-  const timeUnits = [
-    { value: 31536000, label: 'year' },
-    { value: 86400, label: 'day' },
-    { value: 3600, label: 'h' },
-    { value: 60, label: 'm' },
-    { value: 1, label: 's' },
-  ];
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
 
-  let remainingSeconds = seconds;
-  const parts = [];
-
-  for (const unit of timeUnits) {
-    const count = Math.floor(remainingSeconds / unit.value);
-    if (count > 0) {
-      parts.push(
-        `${count}${unit.label}${
-          count > 1 &&
-          unit.label !== 'h' &&
-          unit.label !== 'm' &&
-          unit.label !== 's'
-            ? 's'
-            : ''
-        }`,
-      );
-      remainingSeconds %= unit.value;
-    }
-  }
-
-  return parts.join(' ');
+  return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(remainingSeconds).padStart(2, '0')}s`;
 }
 
 // MARK: - Style related
