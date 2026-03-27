@@ -182,7 +182,7 @@ async function storyboard({
   slotsDiv.style.flexWrap = 'wrap';
   slotsDiv.style.justifyContent = 'space-evenly';
 
-  if (!imgUrls.length) alert('imgUrls: Error!');
+  if (!imgUrls.length) console.error('imgUrls: Error!');
 
   const promises = imgUrls.map((url, index) =>
     storyboardFlex(horizontal, vertical, url, index, trueNoOfSlots),

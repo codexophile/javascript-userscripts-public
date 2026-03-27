@@ -4,6 +4,10 @@
 (async function () {
   'use strict';
 
-  const doc = await fetchDoc('https://dhcplay.com/e/58tlle6jmnr7', null, true);
+  const doc = await fetchDoc(
+    'https://www.fullboys.com/video/watch/dash-02-hack-my-heart-sathaporn',
+    null,
+    true,
+  );
   GM_setClipboard(doc);
 })();

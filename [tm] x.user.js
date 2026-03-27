@@ -1,6 +1,13 @@
 (function () {
   'use strict';
 
+  //* sets volume to a low value
+  waitForEach('video,audio', mediaItem => {
+    mediaItem.addEventListener('volumechange', () => {
+      if (mediaItem.volume === 1) mediaItem.volume = 0.01;
+    });
+  });
+
   //* Automatically clicking 'New post notifications for ' item
   const notifQuery = '[data-testid="notification"]';
   waitForEach(notifQuery, notifEl => {
@@ -64,7 +71,7 @@
         const destinationSegment = `dest:x:\\tw::`;
         const modeSegment = `mode:noprompt::`;
         const browserSegment = `browser:firefox::`;
-        const profileSegment = `profile:ZaSNRfjB.Profile 1::`;
+        const profileSegment = `profile:3vm341ho.default-release::`;
         GM_setClipboard(
           `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
         );

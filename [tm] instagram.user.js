@@ -9,7 +9,7 @@
     // /\/explore\//
     null,
     false,
-    ``
+    ``,
   );
 
   //* new yt-dlp button
@@ -33,7 +33,7 @@
     const destinationSegment = `dest:x:\\tiktok::`;
     const modeSegment = `mode:noprompt::`;
     GM_setClipboard(
-      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`
+      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
     );
   });
 
@@ -49,14 +49,14 @@
         case 'd': // next
           event.preventDefault();
           let nextUnreadItem = document.querySelector(
-            'span[data-visualcompletion="ignore"]'
+            'span[data-visualcompletion="ignore"]',
           );
           nextUnreadItem.scrollIntoView();
           nextUnreadItem.click();
           break;
       }
     },
-    false
+    false,
   );
 
   //* moving video control panel
@@ -69,18 +69,18 @@
         left: unset;
         right: 500px;
         top: 50vh;
-      `
+      `,
     );
   })();
 
   waitFor('main > div').then(feedEl => {
-    console.log(feedEl);
+    return;
     style(
       feedEl,
       `
         width: -webkit-fill-available;
         max-width: unset;
-      `
+      `,
     );
   });
   waitForEach(`li [alt*="'s profile picture"]`, locatorEl => {
@@ -94,14 +94,14 @@
         `
       display:        flex;
       flex-wrap:   wrap;
-    `
+    `,
       );
       grandParentEl.before(newContainerEl);
     }
     const profilePicSrc = locatorEl.src;
     const profileLink = locatorEl.closest('a').href;
     const profileName = grandParent(locatorEl, 3).querySelector(
-      'div > span > span'
+      'div > span > span',
     ).textContent;
     const newLinkEl = generateElements(
       `
@@ -109,14 +109,14 @@
           <img id=profile-pic src='${profilePicSrc}' style='object-fit:contain;border-radius:50%;'>
           <div id=profile-name>${profileName}</div>
         </a>
-      `
+      `,
     );
     newContainerEl.append(newLinkEl);
   });
 
   let observer = new MutationObserver(() => {
     //* click all 'see translation' button
-    $(`[role=button]:contains('See translation')`).click();
+    // $(`[role=button]:contains('See translation')`).click();
 
     // const $imagesOpened = $( '[style*="padding-bottom:"] > img[src]:not(.imgProcessed)' )
     const queryForIGPosts =
@@ -125,7 +125,7 @@
     const queryForOpenedImgs = 'article li img:not(.imgProcessed)';
 
     const $imagesOpened = $(
-      `${queryForIGAllImagesItems}, ${queryForIGPosts}, ${queryForOpenedImgs}`
+      `${queryForIGAllImagesItems}, ${queryForIGPosts}, ${queryForOpenedImgs}`,
     );
     $imagesOpened.each(function () {
       this.classList.add('imgProcessed');
@@ -140,7 +140,7 @@
                 top:      5px;
                 left:     5px;
                 z-index:  1000;
-            `
+            `,
       );
       $linksContainer.append(`<a href='${imgSrc}' target=_blank> 🔗 </a>`);
       $(`<button>⬇️</button>`)
@@ -175,7 +175,7 @@
 
       const link = $(`<a></a>`)[0];
       let fileName = `${getUserId(image)} - (instagram)${getPostId(
-        image
+        image,
       )} - (${getTagged(image)})`;
       link.setAttribute('download', `${fileName}.png`);
       link.setAttribute('href', uri);
@@ -185,7 +185,7 @@
 
   function getTagged(image) {
     const tagEls = document.querySelectorAll(
-      '[style*="left: "][style*="margin-top: "]'
+      '[style*="left: "][style*="margin-top: "]',
     );
     const tagsString = Array.from(tagEls)
       .map(tagEl => tagEl.textContent)
@@ -211,7 +211,7 @@
 
       // when image is on a dedicated page
       const locatorImgEl = document.querySelector(
-        `main [alt*="'s profile picture"]`
+        `main [alt*="'s profile picture"]`,
       );
       if (locatorImgEl) {
         const grandParentEl = grandParent(locatorImgEl, 7);

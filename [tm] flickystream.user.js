@@ -2,6 +2,15 @@
   'use strict';
   if (window.top != window.self) return; //don't run on frames or iframes
 
+  waitForEach('h1', headerEl => {
+    if (!location.href.includes('/player/')) return;
+    let observer = new MutationObserver(() => {
+      console.log(headerEl, headerEl.textContent);
+      document.title = headerEl.textContent.trim() + ' - FlickyStream';
+    });
+    observer.observe(headerEl, { childList: true, subtree: true });
+  });
+
   // 1. Inject the CSS for the dropdown first
   const style = document.createElement('style');
   style.innerHTML = `

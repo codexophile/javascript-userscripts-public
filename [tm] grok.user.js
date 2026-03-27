@@ -14,11 +14,14 @@
   });
 
   waitForEach('video', videoEl => {
-    videoEl.volume = 0.1;
+    videoEl.volume = 0.05;
   });
 
   //* Prompt history management
   const STORAGE_KEY = 'grok_video_prompts';
+  const GROK_GIST_API_KEY = getSecret('GROK_GIST_API_KEY');
+  const GIST_ID = '9576ca02964493f5b31fb102e6c332af';
+  const GIST_FILENAME = 'grok-video-prompts.json';
 
   function getSavedPrompts() {
     const saved = GM_getValue(STORAGE_KEY, '[]');
@@ -43,6 +46,119 @@
     const prompts = getSavedPrompts();
     const filtered = prompts.filter(p => p !== prompt);
     GM_setValue(STORAGE_KEY, JSON.stringify(filtered));
+  }
+
+  //* GitHub Gist Sync
+  async function fetchPromptsFromGist() {
+    if (!GROK_GIST_API_KEY || !GIST_ID) {
+      throw new Error('Gist API key or ID not configured');
+    }
+
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        method: 'GET',
+        url: `https://api.github.com/gists/${GIST_ID}`,
+        headers: {
+          Authorization: `Bearer ${GROK_GIST_API_KEY}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+        onload: response => {
+          if (response.status === 200) {
+            const gist = JSON.parse(response.responseText);
+            if (gist.files && gist.files[GIST_FILENAME]) {
+              const content = gist.files[GIST_FILENAME].content;
+              resolve(JSON.parse(content));
+            } else {
+              resolve([]);
+            }
+          } else {
+            reject(new Error(`Failed to fetch gist: ${response.status}`));
+          }
+        },
+        onerror: () => reject(new Error('Network error while fetching gist')),
+      });
+    });
+  }
+
+  async function uploadPromptsToGist(prompts) {
+    if (!GROK_GIST_API_KEY || !GIST_ID) {
+      throw new Error('Gist API key or ID not configured');
+    }
+
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        method: 'PATCH',
+        url: `https://api.github.com/gists/${GIST_ID}`,
+        headers: {
+          Authorization: `Bearer ${GROK_GIST_API_KEY}`,
+          Accept: 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({
+          files: {
+            [GIST_FILENAME]: {
+              content: JSON.stringify(prompts, null, 2),
+            },
+          },
+        }),
+        onload: response => {
+          if (response.status === 200) {
+            resolve();
+          } else {
+            reject(new Error(`Failed to update gist: ${response.status}`));
+          }
+        },
+        onerror: () => reject(new Error('Network error while updating gist')),
+      });
+    });
+  }
+
+  async function syncPrompts() {
+    try {
+      const localPrompts = getSavedPrompts();
+      const remotePrompts = await fetchPromptsFromGist();
+
+      // Merge: combine both and remove duplicates, keeping order
+      const merged = [...localPrompts];
+      remotePrompts.forEach(prompt => {
+        if (!merged.includes(prompt)) {
+          merged.push(prompt);
+        }
+      });
+
+      // Save merged to local
+      GM_setValue(STORAGE_KEY, JSON.stringify(merged));
+
+      // Upload merged to gist
+      await uploadPromptsToGist(merged);
+
+      return { success: true, count: merged.length };
+    } catch (error) {
+      console.error('Sync error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async function pushPromptsToGist() {
+    try {
+      const localPrompts = getSavedPrompts();
+      await uploadPromptsToGist(localPrompts);
+      return { success: true };
+    } catch (error) {
+      console.error('Push error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async function pullPromptsFromGist() {
+    try {
+      const remotePrompts = await fetchPromptsFromGist();
+      GM_setValue(STORAGE_KEY, JSON.stringify(remotePrompts));
+      return { success: true, count: remotePrompts.length };
+    } catch (error) {
+      console.error('Pull error:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   function usePrompt(prompt) {
@@ -112,6 +228,64 @@
     headerHint.textContent =
       'Click a prompt to reuse it. Only on /post/ pages.';
     container.appendChild(headerHint);
+
+    // Sync controls
+    const syncControls = document.createElement('div');
+    syncControls.className = 'grok-prompt-history__sync-controls';
+    syncControls.style.cssText = 'display: flex; gap: 4px; margin-bottom: 6px;';
+
+    const syncBtn = document.createElement('button');
+    syncBtn.textContent = '🔄 Sync';
+    syncBtn.title = 'Merge local and remote prompts';
+    syncBtn.className = 'grok-prompt-history__sync-btn';
+    syncBtn.style.cssText = `
+      flex: 1;
+      padding: 6px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    `;
+
+    const pushBtn = document.createElement('button');
+    pushBtn.textContent = '⬆️ Push';
+    pushBtn.title = 'Upload local prompts to Gist';
+    pushBtn.className = 'grok-prompt-history__push-btn';
+    pushBtn.style.cssText = `
+      flex: 1;
+      padding: 6px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    `;
+
+    const pullBtn = document.createElement('button');
+    pullBtn.textContent = '⬇️ Pull';
+    pullBtn.title = 'Download prompts from Gist (overwrites local)';
+    pullBtn.className = 'grok-prompt-history__pull-btn';
+    pullBtn.style.cssText = `
+      flex: 1;
+      padding: 6px;
+      background: #6f42c1;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    `;
+
+    syncControls.appendChild(syncBtn);
+    syncControls.appendChild(pushBtn);
+    syncControls.appendChild(pullBtn);
+    container.appendChild(syncControls);
 
     const listContainer = document.createElement('div');
     listContainer.id = 'grok-prompt-history-list';
@@ -209,7 +383,80 @@
       });
     }
 
+    // Hook up sync button handlers
+    syncBtn.addEventListener('click', async () => {
+      syncBtn.disabled = true;
+      syncBtn.textContent = '⏳ Syncing...';
+      const result = await syncPrompts();
+      if (result.success) {
+        syncBtn.textContent = `✅ Synced (${result.count})`;
+        refreshPromptsList();
+        setTimeout(() => {
+          syncBtn.textContent = '🔄 Sync';
+          syncBtn.disabled = false;
+        }, 2000);
+      } else {
+        syncBtn.textContent = '❌ Failed';
+        console.error('Sync failed:', result.error);
+        setTimeout(() => {
+          syncBtn.textContent = '🔄 Sync';
+          syncBtn.disabled = false;
+        }, 2000);
+      }
+    });
+
+    pushBtn.addEventListener('click', async () => {
+      pushBtn.disabled = true;
+      pushBtn.textContent = '⏳ Pushing...';
+      const result = await pushPromptsToGist();
+      if (result.success) {
+        pushBtn.textContent = '✅ Pushed';
+        setTimeout(() => {
+          pushBtn.textContent = '⬆️ Push';
+          pushBtn.disabled = false;
+        }, 2000);
+      } else {
+        pushBtn.textContent = '❌ Failed';
+        console.error('Push failed:', result.error);
+        setTimeout(() => {
+          pushBtn.textContent = '⬆️ Push';
+          pushBtn.disabled = false;
+        }, 2000);
+      }
+    });
+
+    pullBtn.addEventListener('click', async () => {
+      pullBtn.disabled = true;
+      pullBtn.textContent = '⏳ Pulling...';
+      const result = await pullPromptsFromGist();
+      if (result.success) {
+        pullBtn.textContent = `✅ Pulled (${result.count})`;
+        refreshPromptsList();
+        setTimeout(() => {
+          pullBtn.textContent = '⬇️ Pull';
+          pullBtn.disabled = false;
+        }, 2000);
+      } else {
+        pullBtn.textContent = '❌ Failed';
+        console.error('Pull failed:', result.error);
+        setTimeout(() => {
+          pullBtn.textContent = '⬇️ Pull';
+          pullBtn.disabled = false;
+        }, 2000);
+      }
+    });
+
     refreshPromptsList();
+
+    // Auto-sync on load
+    if (GROK_GIST_API_KEY && GIST_ID) {
+      syncPrompts().then(result => {
+        if (result.success) {
+          refreshPromptsList();
+        }
+      });
+    }
+
     return { refresh: refreshPromptsList, root: guiContainer };
   }
 
