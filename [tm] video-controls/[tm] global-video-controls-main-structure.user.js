@@ -64,7 +64,7 @@ const styles = `
     transition: left 0.5s, top 0.5s, opacity 0.2s;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
+    font-family: 'Courier New', monospace;
     color: #ecf0f1;
     padding: ${margins};
     opacity: 0.5;
@@ -109,7 +109,7 @@ const styles = `
   .controlRow, .buttonsRow {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin: ${margins} 0;
   }
 
