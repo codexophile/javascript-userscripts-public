@@ -25,6 +25,7 @@
   const autoSpeedEnabledStorageKey = `global-video-controls:autoSpeedEnabled:${location.hostname}`;
   const autoSpeedSelectorStorageKey = `global-video-controls:autoSpeedSelector:${location.hostname}`;
   const autoSpeedFastSpeedStorageKey = `global-video-controls:autoSpeedFast:${location.hostname}`;
+  const musicalSubtitlePattern = /[♪♫♬♩🎵🎶]/;
   const hasModernGMStorage =
     typeof GM !== 'undefined' &&
     typeof GM.getValue === 'function' &&
@@ -199,18 +200,30 @@
     }, 300);
   }
 
-  function isSubtitlePresentBySelector() {
+  function getSubtitleStateBySelector() {
     if (!subtitleSelector || !subtitleSelector.trim()) {
       subtitleSelectorInvalid = false;
-      return false;
+      return { present: false, hasMusicalSymbols: false };
     }
 
     try {
       subtitleSelectorInvalid = false;
-      return !!document.querySelector(subtitleSelector);
+      const matchedSubtitles = document.querySelectorAll(subtitleSelector);
+      if (!matchedSubtitles.length) {
+        return { present: false, hasMusicalSymbols: false };
+      }
+
+      for (const matchedSubtitle of matchedSubtitles) {
+        const subtitleText = (matchedSubtitle?.textContent || '').trim();
+        if (subtitleText && musicalSubtitlePattern.test(subtitleText)) {
+          return { present: true, hasMusicalSymbols: true };
+        }
+      }
+
+      return { present: true, hasMusicalSymbols: false };
     } catch (error) {
       subtitleSelectorInvalid = true;
-      return false;
+      return { present: false, hasMusicalSymbols: false };
     }
   }
 
@@ -236,7 +249,7 @@
       return;
     }
 
-    const subtitlePresent = isSubtitlePresentBySelector();
+    const subtitleState = getSubtitleStateBySelector();
 
     if (subtitleSelectorInvalid) {
       setPlaybackRateIfNeeded(video, 1);
@@ -244,6 +257,13 @@
       return;
     }
 
+    if (subtitleState.present && subtitleState.hasMusicalSymbols) {
+      setPlaybackRateIfNeeded(video, fastSpeed);
+      setAutoSpeedStatus('AUTO FAST (MUSIC)', '#8e44ad');
+      return;
+    }
+
+    const subtitlePresent = subtitleState.present;
     lastSubtitlePresentState = subtitlePresent;
     if (subtitlePresent) {
       setPlaybackRateIfNeeded(video, 1);

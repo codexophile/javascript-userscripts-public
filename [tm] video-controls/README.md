@@ -8,6 +8,7 @@ Behavior:
 
 - If your subtitle selector exists in the DOM, playback is forced to normal speed (`1x`).
 - If your subtitle selector is not found, playback is forced to your configured fast speed.
+- If matched subtitle text contains common musical symbols (`♪`, `♫`, `♬`, `♩`, `🎵`, `🎶`), playback is forced to fast speed.
 
 This approach is site-agnostic and works even when native media text tracks are unavailable.
 
@@ -25,6 +26,7 @@ Status badge values:
 - `INVALID SELECTOR`: selector syntax is invalid.
 - `AUTO NORMAL`: selector currently found, speed set to `1x`.
 - `AUTO FAST`: selector not found, speed set to fast speed.
+- `AUTO FAST (MUSIC)`: selector found and subtitle text contains musical symbols.
 
 ## Suggested Selectors
 
