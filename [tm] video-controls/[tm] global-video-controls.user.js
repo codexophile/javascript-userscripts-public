@@ -13,6 +13,7 @@
     volDispEl,
     slidVolFinEl,
     divHeightEl;
+  let panelUiState = 0;
 
   new MutationObserver(debounce(main, 150)).observe(document.body, {
     childList: true,
@@ -52,9 +53,7 @@
     GM_addStyle(styles);
 
     document.body.append(controlPanel);
-    controlPanel.querySelectorAll(':not(.important)').forEach(item => {
-      item.style.display = 'none';
-    });
+    applyPanelUiState(controlPanel, panelUiState);
 
     const contPanelHeader = controlPanel.querySelector('#contPanelHeader');
     vidProgressEl = controlPanel.querySelector(`#progress`);
@@ -72,7 +71,8 @@
       controlPanel.style.transition = 'left 0.5s, top 0.5s, opacity 0.2s';
     });
     controlPanel.querySelector('.head').addEventListener('click', () => {
-      toggle(controlPanel.querySelectorAll(':not(.important)'));
+      panelUiState = (panelUiState + 1) % 3;
+      applyPanelUiState(controlPanel, panelUiState);
     });
     controlPanel.querySelector('#speedToggle').addEventListener('click', () => {
       speedToggle();
@@ -198,6 +198,38 @@
     //?pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
 
     initializeToolbar();
+  }
+
+  function applyPanelUiState(controlPanelEl, state) {
+    const descendants = controlPanelEl.querySelectorAll('*');
+    descendants.forEach(item => {
+      item.style.display = '';
+    });
+
+    if (state === 0) {
+      controlPanelEl.querySelectorAll(':not(.important)').forEach(item => {
+        item.style.display = 'none';
+      });
+      return;
+    }
+
+    if (state === 1) {
+      return;
+    }
+
+    descendants.forEach(item => {
+      item.style.display = 'none';
+    });
+
+    const headButton = controlPanelEl.querySelector('button.head');
+    if (!headButton) return;
+
+    headButton.style.display = '';
+    let parent = headButton.parentElement;
+    while (parent && parent !== controlPanelEl) {
+      parent.style.display = '';
+      parent = parent.parentElement;
+    }
   }
 
   function initializeToolbar() {

@@ -18,7 +18,7 @@ const htmlStructure = `
     </div>
       
     <div class="buttonsRow important">
-      <button class="head important">⚫</button>
+      <button class="head important" title="Cycle panel view (compact/full/head-only)">⚫</button>
       <button class="important" id="buttonPlay">▶</button> 
       <button class="important" id="speedToggle">💨</button>
       <button class="important" id="rewind-btn">0️⃣</button>
