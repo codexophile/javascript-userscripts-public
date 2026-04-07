@@ -15,6 +15,7 @@ const htmlStructure = `
       <input type="range" class="slidSpeedFin important vidContRange" min="0.1" max="4" step="0.1" value="1">
       <button id="muteButton" for="volDisp">🔊</button>
       <input type="checkbox" title="Auto Switch" id="cbAutoSwitch">
+      <input type="checkbox" title="Auto Hide (head-only on mouse leave)" id="cbAutoHide">
     </div>
       
     <div class="buttonsRow important">

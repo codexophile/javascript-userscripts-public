@@ -14,6 +14,9 @@
     slidVolFinEl,
     divHeightEl;
   let panelUiState = 0;
+  let panelUiLastNonHeadState = 0;
+  let panelAutoHideEnabled = false;
+  let panelMouseInside = false;
 
   new MutationObserver(debounce(main, 150)).observe(document.body, {
     childList: true,
@@ -53,9 +56,10 @@
     GM_addStyle(styles);
 
     document.body.append(controlPanel);
-    applyPanelUiState(controlPanel, panelUiState);
+    applyEffectivePanelUiState(controlPanel);
 
     const contPanelHeader = controlPanel.querySelector('#contPanelHeader');
+    const cbAutoHideEl = controlPanel.querySelector('#cbAutoHide');
     vidProgressEl = controlPanel.querySelector(`#progress`);
     speedDispEl = controlPanel.querySelector('#speedDisp');
     volDispEl = controlPanel.querySelector('#volDisp');
@@ -70,9 +74,22 @@
     contPanelHeader.addEventListener('mouseup', () => {
       controlPanel.style.transition = 'left 0.5s, top 0.5s, opacity 0.2s';
     });
+    controlPanel.addEventListener('mouseenter', () => {
+      panelMouseInside = true;
+      applyEffectivePanelUiState(controlPanel);
+    });
+    controlPanel.addEventListener('mouseleave', () => {
+      panelMouseInside = false;
+      applyEffectivePanelUiState(controlPanel);
+    });
     controlPanel.querySelector('.head').addEventListener('click', () => {
       panelUiState = (panelUiState + 1) % 3;
-      applyPanelUiState(controlPanel, panelUiState);
+      if (panelUiState !== 2) panelUiLastNonHeadState = panelUiState;
+      applyEffectivePanelUiState(controlPanel);
+    });
+    cbAutoHideEl.addEventListener('change', event => {
+      panelAutoHideEnabled = event.target.checked;
+      applyEffectivePanelUiState(controlPanel);
     });
     controlPanel.querySelector('#speedToggle').addEventListener('click', () => {
       speedToggle();
@@ -198,6 +215,20 @@
     //?pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
 
     initializeToolbar();
+  }
+
+  function applyEffectivePanelUiState(controlPanelEl) {
+    if (!panelAutoHideEnabled) {
+      applyPanelUiState(controlPanelEl, panelUiState);
+      return;
+    }
+
+    if (panelMouseInside) {
+      applyPanelUiState(controlPanelEl, panelUiLastNonHeadState);
+      return;
+    }
+
+    applyPanelUiState(controlPanelEl, 2);
   }
 
   function applyPanelUiState(controlPanelEl, state) {
