@@ -17,6 +17,7 @@
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
   let panelMouseInside = false;
+  const panelAutoHideStorageKey = `global-video-controls:autoHide:${location.hostname}`;
 
   new MutationObserver(debounce(main, 150)).observe(document.body, {
     childList: true,
@@ -56,10 +57,12 @@
     GM_addStyle(styles);
 
     document.body.append(controlPanel);
-    applyEffectivePanelUiState(controlPanel);
 
     const contPanelHeader = controlPanel.querySelector('#contPanelHeader');
     const cbAutoHideEl = controlPanel.querySelector('#cbAutoHide');
+    panelAutoHideEnabled = loadPanelAutoHideSetting();
+    cbAutoHideEl.checked = panelAutoHideEnabled;
+    applyEffectivePanelUiState(controlPanel);
     vidProgressEl = controlPanel.querySelector(`#progress`);
     speedDispEl = controlPanel.querySelector('#speedDisp');
     volDispEl = controlPanel.querySelector('#volDisp');
@@ -89,6 +92,7 @@
     });
     cbAutoHideEl.addEventListener('change', event => {
       panelAutoHideEnabled = event.target.checked;
+      savePanelAutoHideSetting(panelAutoHideEnabled);
       applyEffectivePanelUiState(controlPanel);
     });
     controlPanel.querySelector('#speedToggle').addEventListener('click', () => {
@@ -229,6 +233,20 @@
     }
 
     applyPanelUiState(controlPanelEl, 2);
+  }
+
+  function loadPanelAutoHideSetting() {
+    try {
+      return localStorage.getItem(panelAutoHideStorageKey) === 'true';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function savePanelAutoHideSetting(enabled) {
+    try {
+      localStorage.setItem(panelAutoHideStorageKey, String(enabled));
+    } catch (error) {}
   }
 
   function applyPanelUiState(controlPanelEl, state) {
