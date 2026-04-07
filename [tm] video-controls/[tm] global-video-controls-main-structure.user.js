@@ -17,6 +17,13 @@ const htmlStructure = `
       <input type="checkbox" title="Auto Switch" id="cbAutoSwitch">
       <input type="checkbox" title="Auto Hide (head-only on mouse leave)" id="cbAutoHide">
     </div>
+
+    <div class="controlRow important" title="Subtitle auto-speed: selector present = normal speed, selector absent = fast speed.">
+      <input type="checkbox" title="Enable subtitle auto-speed mode" id="cbSubtitleAutoSpeed">
+      <input type="number" title="Fast speed used when subtitle selector is not present" step="0.1" min="0.1" max="16" class="numinp" id="numAutoFastSpeed" value="3">
+      <input type="text" title="CSS selector for subtitle element. If selector exists in DOM => normal speed, otherwise fast speed." id="inputSubtitleSelector" placeholder="Subtitle selector (example: .ytp-caption-segment)">
+      <span id="autoSpeedState" class="text important" title="Current subtitle auto-speed state">AUTO OFF</span>
+    </div>
       
     <div class="buttonsRow important">
       <button class="head important" title="Cycle panel view (compact/full/head-only)">⚫</button>
@@ -115,6 +122,28 @@ const styles = `
 
   #video-controlPanel :is(.numinp:hover, button:hover, .button:hover) {
     background-color: #2980b9;
+  }
+
+  #video-controlPanel input[type="text"] {
+    min-width: 280px;
+    background-color: #3498db;
+    border: none;
+    color: #fff;
+    padding: ${margins};
+    margin: ${margins};
+    border-radius: 4px;
+  }
+
+  #video-controlPanel input[type="text"]::placeholder {
+    color: #d6eaf8;
+  }
+
+  #autoSpeedState {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    background-color: #95a5a6 !important;
+    color: #fff !important;
   }
 
   #video-controlPanel input[type="checkbox"] {

@@ -2,7 +2,7 @@
   'use strict';
 
   let activeVideo;
-  const fastSpeed = 3;
+  let fastSpeed = 3;
   let timeIncrTiny = 6 / 160;
   let timeIncrSmall = 5;
   let timeIncrLarge = 60;
@@ -12,12 +12,32 @@
     speedDispEl,
     volDispEl,
     slidVolFinEl,
-    divHeightEl;
+    divHeightEl,
+    cbSubtitleAutoSpeedEl,
+    inputSubtitleSelectorEl,
+    numAutoFastSpeedEl,
+    autoSpeedStateEl;
   let panelUiState = 0;
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
   let panelMouseInside = false;
   const panelAutoHideStorageKey = `global-video-controls:autoHide:${location.hostname}`;
+  const autoSpeedEnabledStorageKey = `global-video-controls:autoSpeedEnabled:${location.hostname}`;
+  const autoSpeedSelectorStorageKey = `global-video-controls:autoSpeedSelector:${location.hostname}`;
+  const autoSpeedFastSpeedStorageKey = `global-video-controls:autoSpeedFast:${location.hostname}`;
+
+  let subtitleAutoSpeedEnabled = loadSubtitleAutoSpeedEnabledSetting();
+  let subtitleSelector = loadSubtitleSelectorSetting();
+  let subtitleSelectorInvalid = false;
+  let subtitleObserver = null;
+  let subtitlePollIntervalId = null;
+  let lastSubtitlePresentState = null;
+
+  const syncSubtitleAutoSpeedSoon = debounce(() => {
+    syncSubtitleAutoSpeed();
+  }, 75);
+
+  fastSpeed = loadFastSpeedSetting(fastSpeed);
 
   new MutationObserver(debounce(main, 150)).observe(document.body, {
     childList: true,
@@ -26,6 +46,7 @@
   document.addEventListener('scroll', debounce(main, 150));
   document.addEventListener('keyup', keyboardEvent, false);
   document.addEventListener('mousedown', addMouseEvents);
+  window.addEventListener('beforeunload', stopSubtitlePresenceMonitoring);
 
   async function main() {
     activeVideo = getActiveVideo();
@@ -47,7 +68,155 @@
     if (activeVideo) {
       videoEventListeners(activeVideo);
       initializeToolbar();
+      syncSubtitleAutoSpeed(activeVideo);
     }
+  }
+
+  function loadSubtitleAutoSpeedEnabledSetting() {
+    try {
+      return localStorage.getItem(autoSpeedEnabledStorageKey) === 'true';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function saveSubtitleAutoSpeedEnabledSetting(enabled) {
+    try {
+      localStorage.setItem(autoSpeedEnabledStorageKey, String(enabled));
+    } catch (error) {}
+  }
+
+  function loadSubtitleSelectorSetting() {
+    try {
+      return localStorage.getItem(autoSpeedSelectorStorageKey) || '';
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function saveSubtitleSelectorSetting(selector) {
+    try {
+      localStorage.setItem(autoSpeedSelectorStorageKey, selector);
+    } catch (error) {}
+  }
+
+  function loadFastSpeedSetting(defaultValue) {
+    try {
+      const raw = localStorage.getItem(autoSpeedFastSpeedStorageKey);
+      if (!raw) return defaultValue;
+
+      const parsed = parseFloat(raw);
+      if (!Number.isFinite(parsed) || parsed <= 0) return defaultValue;
+      return parsed;
+    } catch (error) {
+      return defaultValue;
+    }
+  }
+
+  function saveFastSpeedSetting(value) {
+    try {
+      localStorage.setItem(autoSpeedFastSpeedStorageKey, String(value));
+    } catch (error) {}
+  }
+
+  function setAutoSpeedStatus(text, color) {
+    if (!autoSpeedStateEl) return;
+
+    autoSpeedStateEl.textContent = text;
+    if (color) {
+      autoSpeedStateEl.style.backgroundColor = color;
+    } else {
+      autoSpeedStateEl.style.backgroundColor = '#95a5a6';
+    }
+  }
+
+  function stopSubtitlePresenceMonitoring() {
+    if (subtitleObserver) {
+      subtitleObserver.disconnect();
+      subtitleObserver = null;
+    }
+
+    if (subtitlePollIntervalId) {
+      clearInterval(subtitlePollIntervalId);
+      subtitlePollIntervalId = null;
+    }
+  }
+
+  function startSubtitlePresenceMonitoring() {
+    stopSubtitlePresenceMonitoring();
+
+    if (!subtitleAutoSpeedEnabled) return;
+
+    subtitleObserver = new MutationObserver(() => {
+      syncSubtitleAutoSpeedSoon();
+    });
+    subtitleObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'hidden'],
+    });
+
+    subtitlePollIntervalId = setInterval(() => {
+      if (!activeVideo) return;
+      syncSubtitleAutoSpeed(activeVideo);
+    }, 300);
+  }
+
+  function isSubtitlePresentBySelector() {
+    if (!subtitleSelector || !subtitleSelector.trim()) {
+      subtitleSelectorInvalid = false;
+      return false;
+    }
+
+    try {
+      subtitleSelectorInvalid = false;
+      return !!document.querySelector(subtitleSelector);
+    } catch (error) {
+      subtitleSelectorInvalid = true;
+      return false;
+    }
+  }
+
+  function setPlaybackRateIfNeeded(video, rate) {
+    if (!video || !Number.isFinite(rate) || rate <= 0) return;
+    if (Math.abs(video.playbackRate - rate) < 0.001) return;
+    video.playbackRate = rate;
+  }
+
+  function syncSubtitleAutoSpeed(video = activeVideo) {
+    if (!video || video !== activeVideo) return;
+
+    if (!subtitleAutoSpeedEnabled) {
+      subtitleSelectorInvalid = false;
+      lastSubtitlePresentState = null;
+      setAutoSpeedStatus('AUTO OFF', '#95a5a6');
+      return;
+    }
+
+    if (!subtitleSelector || !subtitleSelector.trim()) {
+      setPlaybackRateIfNeeded(video, 1);
+      setAutoSpeedStatus('SELECTOR REQUIRED', '#f39c12');
+      return;
+    }
+
+    const subtitlePresent = isSubtitlePresentBySelector();
+
+    if (subtitleSelectorInvalid) {
+      setPlaybackRateIfNeeded(video, 1);
+      setAutoSpeedStatus('INVALID SELECTOR', '#e74c3c');
+      return;
+    }
+
+    lastSubtitlePresentState = subtitlePresent;
+    if (subtitlePresent) {
+      setPlaybackRateIfNeeded(video, 1);
+      setAutoSpeedStatus('AUTO NORMAL', '#2ecc71');
+      return;
+    }
+
+    setPlaybackRateIfNeeded(video, fastSpeed);
+    setAutoSpeedStatus('AUTO FAST', '#3498db');
   }
 
   function addToolbar() {
@@ -60,8 +229,23 @@
 
     const contPanelHeader = controlPanel.querySelector('#contPanelHeader');
     const cbAutoHideEl = controlPanel.querySelector('#cbAutoHide');
+    cbSubtitleAutoSpeedEl = controlPanel.querySelector('#cbSubtitleAutoSpeed');
+    inputSubtitleSelectorEl = controlPanel.querySelector(
+      '#inputSubtitleSelector',
+    );
+    numAutoFastSpeedEl = controlPanel.querySelector('#numAutoFastSpeed');
+    autoSpeedStateEl = controlPanel.querySelector('#autoSpeedState');
     panelAutoHideEnabled = loadPanelAutoHideSetting();
     cbAutoHideEl.checked = panelAutoHideEnabled;
+    if (cbSubtitleAutoSpeedEl) {
+      cbSubtitleAutoSpeedEl.checked = subtitleAutoSpeedEnabled;
+    }
+    if (inputSubtitleSelectorEl) {
+      inputSubtitleSelectorEl.value = subtitleSelector;
+    }
+    if (numAutoFastSpeedEl) {
+      numAutoFastSpeedEl.value = String(fastSpeed);
+    }
     applyEffectivePanelUiState(controlPanel);
     vidProgressEl = controlPanel.querySelector(`#progress`);
     speedDispEl = controlPanel.querySelector('#speedDisp');
@@ -95,6 +279,51 @@
       savePanelAutoHideSetting(panelAutoHideEnabled);
       applyEffectivePanelUiState(controlPanel);
     });
+    if (cbSubtitleAutoSpeedEl) {
+      cbSubtitleAutoSpeedEl.addEventListener('change', event => {
+        subtitleAutoSpeedEnabled = event.target.checked;
+        saveSubtitleAutoSpeedEnabledSetting(subtitleAutoSpeedEnabled);
+
+        if (subtitleAutoSpeedEnabled) {
+          startSubtitlePresenceMonitoring();
+          syncSubtitleAutoSpeed(activeVideo);
+        } else {
+          stopSubtitlePresenceMonitoring();
+          setAutoSpeedStatus('AUTO OFF', '#95a5a6');
+        }
+      });
+    }
+
+    if (inputSubtitleSelectorEl) {
+      const applySelector = value => {
+        subtitleSelector = (value || '').trim();
+        saveSubtitleSelectorSetting(subtitleSelector);
+        syncSubtitleAutoSpeed(activeVideo);
+      };
+
+      inputSubtitleSelectorEl.addEventListener('change', event => {
+        applySelector(event.target.value);
+      });
+      inputSubtitleSelectorEl.addEventListener('keyup', event => {
+        if (event.key === 'Enter') {
+          applySelector(event.target.value);
+        }
+      });
+    }
+
+    if (numAutoFastSpeedEl) {
+      numAutoFastSpeedEl.addEventListener('change', event => {
+        const parsed = parseFloat(event.target.value);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+          event.target.value = String(fastSpeed);
+          return;
+        }
+
+        fastSpeed = parsed;
+        saveFastSpeedSetting(fastSpeed);
+        syncSubtitleAutoSpeed(activeVideo);
+      });
+    }
     controlPanel.querySelector('#speedToggle').addEventListener('click', () => {
       speedToggle();
     });
@@ -200,11 +429,31 @@
       });
 
     speedDispEl.addEventListener('change', e => {
+      if (subtitleAutoSpeedEnabled) {
+        const parsed = parseFloat(e.target.value);
+        if (Number.isFinite(parsed) && parsed > 0) {
+          fastSpeed = parsed;
+          saveFastSpeedSetting(fastSpeed);
+          if (numAutoFastSpeedEl) {
+            numAutoFastSpeedEl.value = String(fastSpeed);
+          }
+          syncSubtitleAutoSpeed(activeVideo);
+        }
+        return;
+      }
+
       activeVideo.playbackRate = e.target.value;
     });
     volDispEl.addEventListener('change', e => {
       activeVideo.volume = e.target.value;
     });
+
+    if (subtitleAutoSpeedEnabled) {
+      startSubtitlePresenceMonitoring();
+      syncSubtitleAutoSpeed(activeVideo);
+    } else {
+      setAutoSpeedStatus('AUTO OFF', '#95a5a6');
+    }
 
     return controlPanel;
 
@@ -326,6 +575,10 @@
       lastUpdate = now;
 
       if (activeVideo != event.target) return; // 🛑
+
+      if (subtitleAutoSpeedEnabled) {
+        syncSubtitleAutoSpeed(video);
+      }
 
       vidProgressEl.value = (video.currentTime / video.duration) * 100;
 
@@ -480,12 +733,15 @@
       activeVideo.currentTime = activeVideo.currentTime + timeIncrSmall;
     }
     if (e.key == 'z') {
+      if (subtitleAutoSpeedEnabled) return;
       speedToggle();
     }
     if (e.key === 'x') {
+      if (subtitleAutoSpeedEnabled) return;
       activeVideo.playbackRate = activeVideo.playbackRate - 0.5;
     }
     if (e.key === 'c') {
+      if (subtitleAutoSpeedEnabled) return;
       activeVideo.playbackRate = activeVideo.playbackRate + 0.5;
     }
     if (e.key === 'm') {
@@ -514,6 +770,11 @@
   }
 
   function speedToggle() {
+    if (subtitleAutoSpeedEnabled) {
+      syncSubtitleAutoSpeed(activeVideo);
+      return;
+    }
+
     if (activeVideo.playbackRate == 1) {
       activeVideo.playbackRate = fastSpeed;
     } else {
