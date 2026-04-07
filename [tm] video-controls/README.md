@@ -42,6 +42,6 @@ Tip:
 
 ## Notes
 
-- Settings are stored per hostname using `localStorage`.
+- Settings are stored per hostname using `GM.getValue`/`GM.setValue` when available, with `localStorage` used only as a compatibility fallback.
 - While auto-speed is enabled, manual speed hotkeys (`z`, `x`, `c`) are ignored to avoid conflicts.
 - Cross-origin iframe players may expose subtitles outside the userscript context; in that case, use a selector that is visible from the current page context.

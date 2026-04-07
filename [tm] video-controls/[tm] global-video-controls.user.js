@@ -25,9 +25,13 @@
   const autoSpeedEnabledStorageKey = `global-video-controls:autoSpeedEnabled:${location.hostname}`;
   const autoSpeedSelectorStorageKey = `global-video-controls:autoSpeedSelector:${location.hostname}`;
   const autoSpeedFastSpeedStorageKey = `global-video-controls:autoSpeedFast:${location.hostname}`;
+  const hasModernGMStorage =
+    typeof GM !== 'undefined' &&
+    typeof GM.getValue === 'function' &&
+    typeof GM.setValue === 'function';
 
-  let subtitleAutoSpeedEnabled = loadSubtitleAutoSpeedEnabledSetting();
-  let subtitleSelector = loadSubtitleSelectorSetting();
+  let subtitleAutoSpeedEnabled = false;
+  let subtitleSelector = '';
   let subtitleSelectorInvalid = false;
   let subtitleObserver = null;
   let subtitlePollIntervalId = null;
@@ -37,7 +41,7 @@
     syncSubtitleAutoSpeed();
   }, 75);
 
-  fastSpeed = loadFastSpeedSetting(fastSpeed);
+  await hydrateStoredSettings();
 
   new MutationObserver(debounce(main, 150)).observe(document.body, {
     childList: true,
@@ -56,7 +60,7 @@
     }
 
     if (activeVideo && !vidContPanel) {
-      addToolbar();
+      await addToolbar();
       const collapsibleCont = await waitFor('#collapsibleContent');
       generateToolbarButton('📹', collapsibleCont, null, () => {
         fadeToggle(document.querySelectorAll(`#video-controlPanel`), 2500);
@@ -72,51 +76,83 @@
     }
   }
 
-  function loadSubtitleAutoSpeedEnabledSetting() {
-    try {
-      return localStorage.getItem(autoSpeedEnabledStorageKey) === 'true';
-    } catch (error) {
-      return false;
+  async function hydrateStoredSettings() {
+    subtitleAutoSpeedEnabled = await loadSubtitleAutoSpeedEnabledSetting();
+    subtitleSelector = await loadSubtitleSelectorSetting();
+    fastSpeed = await loadFastSpeedSetting(fastSpeed);
+    panelAutoHideEnabled = await loadPanelAutoHideSetting();
+  }
+
+  async function loadStoredString(key, defaultValue = '') {
+    if (hasModernGMStorage) {
+      try {
+        const gmValue = await GM.getValue(key);
+        if (gmValue !== undefined && gmValue !== null) {
+          return String(gmValue);
+        }
+      } catch (error) {}
     }
+
+    try {
+      const localValue = localStorage.getItem(key);
+      if (localValue !== null) {
+        if (hasModernGMStorage) {
+          saveStoredString(key, localValue);
+        }
+        return localValue;
+      }
+    } catch (error) {}
+
+    return defaultValue;
+  }
+
+  function saveStoredString(key, value) {
+    const storedValue = String(value);
+
+    if (hasModernGMStorage) {
+      Promise.resolve(GM.setValue(key, storedValue)).catch(() => {
+        try {
+          localStorage.setItem(key, storedValue);
+        } catch (error) {}
+      });
+      return;
+    }
+
+    try {
+      localStorage.setItem(key, storedValue);
+    } catch (error) {}
+  }
+
+  async function loadSubtitleAutoSpeedEnabledSetting() {
+    const raw = await loadStoredString(autoSpeedEnabledStorageKey, 'false');
+    return raw === 'true';
   }
 
   function saveSubtitleAutoSpeedEnabledSetting(enabled) {
-    try {
-      localStorage.setItem(autoSpeedEnabledStorageKey, String(enabled));
-    } catch (error) {}
+    saveStoredString(autoSpeedEnabledStorageKey, String(enabled));
   }
 
-  function loadSubtitleSelectorSetting() {
-    try {
-      return localStorage.getItem(autoSpeedSelectorStorageKey) || '';
-    } catch (error) {
-      return '';
-    }
+  async function loadSubtitleSelectorSetting() {
+    return loadStoredString(autoSpeedSelectorStorageKey, '');
   }
 
   function saveSubtitleSelectorSetting(selector) {
-    try {
-      localStorage.setItem(autoSpeedSelectorStorageKey, selector);
-    } catch (error) {}
+    saveStoredString(autoSpeedSelectorStorageKey, selector);
   }
 
-  function loadFastSpeedSetting(defaultValue) {
-    try {
-      const raw = localStorage.getItem(autoSpeedFastSpeedStorageKey);
-      if (!raw) return defaultValue;
+  async function loadFastSpeedSetting(defaultValue) {
+    const raw = await loadStoredString(
+      autoSpeedFastSpeedStorageKey,
+      String(defaultValue),
+    );
 
-      const parsed = parseFloat(raw);
-      if (!Number.isFinite(parsed) || parsed <= 0) return defaultValue;
-      return parsed;
-    } catch (error) {
-      return defaultValue;
-    }
+    const parsed = parseFloat(raw);
+    if (!Number.isFinite(parsed) || parsed <= 0) return defaultValue;
+    return parsed;
   }
 
   function saveFastSpeedSetting(value) {
-    try {
-      localStorage.setItem(autoSpeedFastSpeedStorageKey, String(value));
-    } catch (error) {}
+    saveStoredString(autoSpeedFastSpeedStorageKey, String(value));
   }
 
   function setAutoSpeedStatus(text, color) {
@@ -219,7 +255,7 @@
     setAutoSpeedStatus('AUTO FAST', '#3498db');
   }
 
-  function addToolbar() {
+  async function addToolbar() {
     // HTML Structure
     const controlPanel = generateElements(htmlStructure);
     // CSS Styles
@@ -235,7 +271,7 @@
     );
     numAutoFastSpeedEl = controlPanel.querySelector('#numAutoFastSpeed');
     autoSpeedStateEl = controlPanel.querySelector('#autoSpeedState');
-    panelAutoHideEnabled = loadPanelAutoHideSetting();
+    panelAutoHideEnabled = await loadPanelAutoHideSetting();
     cbAutoHideEl.checked = panelAutoHideEnabled;
     if (cbSubtitleAutoSpeedEl) {
       cbSubtitleAutoSpeedEl.checked = subtitleAutoSpeedEnabled;
@@ -484,18 +520,13 @@
     applyPanelUiState(controlPanelEl, 2);
   }
 
-  function loadPanelAutoHideSetting() {
-    try {
-      return localStorage.getItem(panelAutoHideStorageKey) === 'true';
-    } catch (error) {
-      return false;
-    }
+  async function loadPanelAutoHideSetting() {
+    const raw = await loadStoredString(panelAutoHideStorageKey, 'false');
+    return raw === 'true';
   }
 
   function savePanelAutoHideSetting(enabled) {
-    try {
-      localStorage.setItem(panelAutoHideStorageKey, String(enabled));
-    } catch (error) {}
+    saveStoredString(panelAutoHideStorageKey, String(enabled));
   }
 
   function applyPanelUiState(controlPanelEl, state) {
