@@ -71,10 +71,6 @@
     contPanelHeader.addEventListener('mouseup', () => {
       controlPanel.style.transition = 'left 0.5s, top 0.5s, opacity 0.2s';
     });
-
-    controlPanel.querySelector('.butClose').addEventListener('click', () => {
-      fadeOut(controlPanel, 250);
-    });
     controlPanel.querySelector('.head').addEventListener('click', () => {
       toggle(controlPanel.querySelectorAll(':not(.important)'));
     });
@@ -90,7 +86,7 @@
     });
     slidVolFinEl.addEventListener('input', e => {
       activeVideo.volume = parseFloat(
-        parseFloat(e.target.value)
+        parseFloat(e.target.value),
       ); /* ; volumeDisplay.value = this.value */
     });
 
@@ -265,7 +261,7 @@
       const spanRemainingTime = document.querySelector('#spanRemainingTime');
       const spanCurrentTime = document.querySelector('#spanCurrentTime');
       const spanActualRemTime = document.querySelector(
-        `#spanActualRemainingTime`
+        `#spanActualRemainingTime`,
       );
 
       fadeIn(spanRemainingTime);
@@ -282,7 +278,7 @@
       } // 🛑
       fadeIn(spanActualRemTime);
       const actualRemainingTime = Math.round(
-        (duration - currentTime) / video.playbackRate
+        (duration - currentTime) / video.playbackRate,
       );
       const readableActual = forHumans(actualRemainingTime);
       spanActualRemTime.textContent = readableActual;
@@ -454,8 +450,8 @@
     const activeMedia = playingMedia.length
       ? playingMedia
       : visibleEls.length
-      ? visibleEls
-      : workingMedia;
+        ? visibleEls
+        : workingMedia;
 
     if (activeMedia[0]) return activeMedia[0];
     return null;

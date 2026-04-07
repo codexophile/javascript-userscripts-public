@@ -7,7 +7,6 @@ const htmlStructure = `
       <span id="spanCurrentTime" class="text"></span>
       <span id="spanRemainingTime" class="text">x</span>
       <span id="spanActualRemainingTime" class="text">x</span>
-      <button class="butClose important">❌</button>
     </div>
     
     <div class="controlRow">
@@ -93,17 +92,6 @@ const styles = `
     margin: 0 ${margins};
     border-radius: 4px;
     font-weight: bold;
-  }
-
-  .butClose {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: none;
-    border: none;
-    color: #e74c3c;
-    cursor: pointer;
-    font-size: 16px;
   }
 
   .controlRow, .buttonsRow {
