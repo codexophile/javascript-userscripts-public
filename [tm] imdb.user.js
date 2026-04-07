@@ -1,6 +1,17 @@
 (function () {
   'use strict';
 
+  //* link to gallery fix
+  const photosLinkEl = document.querySelector(
+    `[data-testid="Photos"] > [data-testid="photos-title"] a`,
+  );
+  if (photosLinkEl) {
+    photosLinkEl.href = photosLinkEl.href.replace(
+      /\/mediaviewer\/.+/,
+      '/mediaindex/',
+    );
+  }
+
   //* link fixes
   let observer = new MutationObserver(() => {
     $('a[href*="?ref"]').each(function () {
@@ -41,7 +52,7 @@
     function addExtLink(
       urlBase,
       urlRest,
-      imgSrc = `https://www.google.com/s2/favicons?sz=64&domain=${urlBase}`
+      imgSrc = `https://www.google.com/s2/favicons?sz=64&domain=${urlBase}`,
     ) {
       generateElements(
         `
@@ -50,7 +61,7 @@
                     <img style='width: 32px' src='${imgSrc}'>
                 </a>
             </li>`,
-        el
+        el,
       );
     }
   }
