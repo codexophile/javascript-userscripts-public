@@ -345,6 +345,7 @@
           syncSubtitleAutoSpeed(activeVideo);
         } else {
           stopSubtitlePresenceMonitoring();
+          setPlaybackRateIfNeeded(activeVideo, 1);
           setAutoSpeedStatus('AUTO OFF', '#95a5a6');
         }
       });
