@@ -54,6 +54,7 @@ const htmlStructure = `
     </div>
 
     <input type="range" class="slidVolFin important vidContRange" min="0" max="0.25" step="0.001">
+    <input type="range" class="slidVolExt important vidContRange" min="0.25" max="1" step="0.001" style="display: none;" title="Extended volume (0.25 to 1)">
     <input type="range" id="progress" class="important vidContRange" min="0" max="100" step="0.001" value="0">
   </div>
 `;

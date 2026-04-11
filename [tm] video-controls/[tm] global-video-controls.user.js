@@ -12,6 +12,7 @@
     speedDispEl,
     volDispEl,
     slidVolFinEl,
+    slidVolExtEl,
     divHeightEl,
     cbSubtitleAutoSpeedEl,
     inputSubtitleSelectorEl,
@@ -350,6 +351,7 @@
     speedDispEl = controlPanel.querySelector('#speedDisp');
     volDispEl = controlPanel.querySelector('#volDisp');
     slidVolFinEl = controlPanel.querySelector(`.slidVolFin`);
+    slidVolExtEl = controlPanel.querySelector(`.slidVolExt`);
     divHeightEl = controlPanel.querySelector('.divHeight');
 
     // dragElement( controlPanel, controlPanel );
@@ -448,6 +450,12 @@
         parseFloat(e.target.value),
       ); /* ; volumeDisplay.value = this.value */
     });
+    if (slidVolExtEl) {
+      slidVolExtEl.addEventListener('input', e => {
+        if (!activeVideo) return;
+        activeVideo.volume = parseFloat(e.target.value);
+      });
+    }
 
     controlPanel.querySelector('#rewind-btn').addEventListener('click', () => {
       activeVideo.currentTime = 0;
@@ -579,15 +587,18 @@
   function applyEffectivePanelUiState(controlPanelEl) {
     if (!panelAutoHideEnabled) {
       applyPanelUiState(controlPanelEl, panelUiState);
+      updateExtendedVolumeSliderVisibility();
       return;
     }
 
     if (panelMouseInside) {
       applyPanelUiState(controlPanelEl, panelUiLastNonHeadState);
+      updateExtendedVolumeSliderVisibility();
       return;
     }
 
     applyPanelUiState(controlPanelEl, 2);
+    updateExtendedVolumeSliderVisibility();
   }
 
   async function loadPanelAutoHideSetting() {
@@ -640,9 +651,28 @@
     }
   }
 
+  function updateExtendedVolumeSliderVisibility() {
+    if (!slidVolExtEl) return;
+
+    const primaryAtMax =
+      !!slidVolFinEl &&
+      Math.abs(parseFloat(slidVolFinEl.value) - parseFloat(slidVolFinEl.max)) <
+        0.0005;
+    const volumeAboveBase = !!activeVideo && activeVideo.volume > 0.25;
+    const showExtendedSlider = primaryAtMax || volumeAboveBase;
+
+    slidVolExtEl.style.display = showExtendedSlider ? '' : 'none';
+  }
+
   function initializeToolbar() {
+    if (!activeVideo) return;
+
     slidVolFinEl.value = activeVideo.volume;
+    if (slidVolExtEl) {
+      slidVolExtEl.value = activeVideo.volume;
+    }
     volDispEl.value = activeVideo.volume;
+    updateExtendedVolumeSliderVisibility();
     speedDispEl.value = activeVideo.playbackRate;
     divHeightEl.textContent = `${activeVideo.videoWidth}×${activeVideo.videoHeight}`;
     divHeightEl.title = activeVideo.videoWidth * activeVideo.videoHeight;
@@ -737,6 +767,8 @@
     video.addEventListener('volumechange', event => {
       volDispEl.value = event.target.volume;
       slidVolFinEl.value = event.target.volume;
+      if (slidVolExtEl) slidVolExtEl.value = event.target.volume;
+      updateExtendedVolumeSliderVisibility();
     });
 
     video.classList.add('video-processed');

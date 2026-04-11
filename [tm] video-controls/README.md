@@ -19,6 +19,7 @@ This approach is site-agnostic and works even when native media text tracks are 
 3. Enter a subtitle CSS selector in `Subtitle selector`.
 4. Set `Auto fast speed` (for subtitle gaps).
 5. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
+6. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
 
 Status badge values:
 
@@ -52,3 +53,4 @@ Tip:
 - Disabling subtitle auto-speed immediately resets playback to `1x`.
 - The auto-pause behavior is frame-local, so it continues to work when the userscript is running inside an iframe.
 - Cross-origin iframe players may expose subtitles outside the userscript context; in that case, use a selector that is visible from the current page context.
+- The extended volume slider is shown only when the base slider is at its maximum (or effective volume is above `0.25`) and hides again when volume returns below that threshold.
