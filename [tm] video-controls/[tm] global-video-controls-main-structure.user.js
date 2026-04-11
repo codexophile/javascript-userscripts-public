@@ -1,6 +1,7 @@
 const htmlStructure = `
   <div class="controlPanel" id="video-controlPanel">
     <div id="contPanelHeader" class=important>
+      <button class="head important" title="Cycle panel view (compact/full/header-only)">⚫</button>
       <span id="frame-rate-display" class=important></span>
       <span id="bitrate-display" class=important></span>
       <span class="divHeight text important">x</span>
@@ -15,7 +16,7 @@ const htmlStructure = `
       <input type="range" class="slidSpeedFin important vidContRange" min="0.1" max="4" step="0.1" value="1">
       <button id="muteButton" for="volDisp">🔊</button>
       <input type="checkbox" title="Auto Switch" id="cbAutoSwitch">
-      <input type="checkbox" title="Auto Hide (head-only on mouse leave)" id="cbAutoHide">
+      <input type="checkbox" title="Auto Hide (header-only on mouse leave)" id="cbAutoHide">
       <input type="checkbox" title="Pause video when the tab loses focus, the browser is minimized, or focus moves away" id="cbAutoPauseOnBlur">
     </div>
 
@@ -27,7 +28,6 @@ const htmlStructure = `
     </div>
       
     <div class="buttonsRow important">
-      <button class="head important" title="Cycle panel view (compact/full/head-only)">⚫</button>
       <button class="important" id="buttonPlay">▶</button> 
       <button class="important" id="speedToggle">💨</button>
       <button class="important" id="rewind-btn">0️⃣</button>
@@ -91,7 +91,10 @@ const styles = `
     padding: ${margins};
     border-radius: 6px 6px 0 0;
     position: relative;
-    font-size: small; 
+    font-size: small;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
   #contPanelHeader span {

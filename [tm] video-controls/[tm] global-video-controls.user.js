@@ -634,15 +634,13 @@
       item.style.display = 'none';
     });
 
-    const headButton = controlPanelEl.querySelector('button.head');
-    if (!headButton) return;
+    const header = controlPanelEl.querySelector('#contPanelHeader');
+    if (!header) return;
 
-    headButton.style.display = '';
-    let parent = headButton.parentElement;
-    while (parent && parent !== controlPanelEl) {
-      parent.style.display = '';
-      parent = parent.parentElement;
-    }
+    header.style.display = '';
+    header.querySelectorAll('*').forEach(item => {
+      item.style.display = '';
+    });
   }
 
   function updateExtendedVolumeSliderVisibility() {
