@@ -745,9 +745,13 @@
     });
 
     if (state === 0) {
-      controlPanelEl.querySelectorAll(':not(.important)').forEach(item => {
-        item.style.display = 'none';
-      });
+      controlPanelEl
+        .querySelectorAll(
+          ':not(.important):not(#contPanelHeader *):not(#contPanelHeader)',
+        )
+        .forEach(item => {
+          item.style.display = 'none';
+        });
       return;
     }
 
