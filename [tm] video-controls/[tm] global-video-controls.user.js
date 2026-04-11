@@ -39,8 +39,13 @@
   let subtitleSelector = '';
   let subtitleSelectorInvalid = false;
   let subtitleObserver = null;
-  let subtitlePollIntervalId = null;
+  let subtitleObserverUnsubscribe = null;
   let lastSubtitlePresentState = null;
+
+  const canUseSharedSubtitleObserver =
+    typeof waitForEach === 'function' &&
+    typeof CentralObserverManager !== 'undefined' &&
+    typeof CentralObserverManager.observe === 'function';
 
   const syncSubtitleAutoSpeedSoon = debounce(() => {
     syncSubtitleAutoSpeed();
@@ -205,14 +210,14 @@
   }
 
   function stopSubtitlePresenceMonitoring() {
+    if (subtitleObserverUnsubscribe) {
+      subtitleObserverUnsubscribe();
+      subtitleObserverUnsubscribe = null;
+    }
+
     if (subtitleObserver) {
       subtitleObserver.disconnect();
       subtitleObserver = null;
-    }
-
-    if (subtitlePollIntervalId) {
-      clearInterval(subtitlePollIntervalId);
-      subtitlePollIntervalId = null;
     }
   }
 
@@ -221,6 +226,29 @@
 
     if (!subtitleAutoSpeedEnabled) return;
 
+    const hasSelector = !!(subtitleSelector && subtitleSelector.trim());
+    if (!hasSelector) return;
+
+    if (canUseSharedSubtitleObserver) {
+      const observerControl = waitForEach(
+        subtitleSelector,
+        () => {
+          syncSubtitleAutoSpeedSoon();
+        },
+        { once: false },
+      );
+
+      subtitleObserverUnsubscribe = observerControl?.unobserve || null;
+
+      // Ensure selector-level dedupe is reset when monitoring restarts.
+      if (observerControl?.reload) {
+        observerControl.reload();
+      }
+
+      syncSubtitleAutoSpeedSoon();
+      return;
+    }
+
     subtitleObserver = new MutationObserver(() => {
       syncSubtitleAutoSpeedSoon();
     });
@@ -228,13 +256,11 @@
       childList: true,
       subtree: true,
       attributes: true,
+      characterData: true,
       attributeFilter: ['class', 'style', 'hidden'],
     });
 
-    subtitlePollIntervalId = setInterval(() => {
-      if (!activeVideo) return;
-      syncSubtitleAutoSpeed(activeVideo);
-    }, 300);
+    syncSubtitleAutoSpeedSoon();
   }
 
   function getSubtitleStateBySelector() {
@@ -409,6 +435,9 @@
       const applySelector = value => {
         subtitleSelector = (value || '').trim();
         saveSubtitleSelectorSetting(subtitleSelector);
+        if (subtitleAutoSpeedEnabled) {
+          startSubtitlePresenceMonitoring();
+        }
         syncSubtitleAutoSpeed(activeVideo);
       };
 
