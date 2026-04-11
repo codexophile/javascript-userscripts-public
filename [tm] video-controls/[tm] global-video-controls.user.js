@@ -20,8 +20,10 @@
   let panelUiState = 0;
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
+  let autoPauseOnBlurEnabled = false;
   let panelMouseInside = false;
   const panelAutoHideStorageKey = `global-video-controls:autoHide:${location.hostname}`;
+  const autoPauseOnBlurStorageKey = `global-video-controls:autoPauseOnBlur:${location.hostname}`;
   const autoSpeedEnabledStorageKey = `global-video-controls:autoSpeedEnabled:${location.hostname}`;
   const autoSpeedSelectorStorageKey = `global-video-controls:autoSpeedSelector:${location.hostname}`;
   const autoSpeedFastSpeedStorageKey = `global-video-controls:autoSpeedFast:${location.hostname}`;
@@ -43,6 +45,10 @@
   }, 75);
 
   await hydrateStoredSettings();
+
+  document.addEventListener('visibilitychange', handleAutoPauseTrigger);
+  window.addEventListener('blur', handleAutoPauseTrigger);
+  window.addEventListener('pagehide', handleAutoPauseTrigger);
 
   new MutationObserver(debounce(main, 150)).observe(document.body, {
     childList: true,
@@ -79,6 +85,7 @@
 
   async function hydrateStoredSettings() {
     subtitleAutoSpeedEnabled = await loadSubtitleAutoSpeedEnabledSetting();
+    autoPauseOnBlurEnabled = await loadAutoPauseOnBlurSetting();
     subtitleSelector = await loadSubtitleSelectorSetting();
     fastSpeed = await loadFastSpeedSetting(fastSpeed);
     panelAutoHideEnabled = await loadPanelAutoHideSetting();
@@ -152,6 +159,16 @@
     return parsed;
   }
 
+  function handleAutoPauseTrigger() {
+    if (!autoPauseOnBlurEnabled) return;
+    if (!activeVideo || activeVideo.paused) return;
+
+    if (document.visibilityState === 'visible' && document.hasFocus()) {
+      return;
+    }
+
+    activeVideo.pause();
+  }
   function saveFastSpeedSetting(value) {
     saveStoredString(autoSpeedFastSpeedStorageKey, String(value));
   }
@@ -220,6 +237,8 @@
         }
       }
 
+      const cbAutoPauseOnBlurEl =
+        controlPanel.querySelector('#cbAutoPauseOnBlur');
       return { present: true, hasMusicalSymbols: false };
     } catch (error) {
       subtitleSelectorInvalid = true;
@@ -285,6 +304,8 @@
 
     const contPanelHeader = controlPanel.querySelector('#contPanelHeader');
     const cbAutoHideEl = controlPanel.querySelector('#cbAutoHide');
+    const cbAutoPauseOnBlurEl =
+      controlPanel.querySelector('#cbAutoPauseOnBlur');
     cbSubtitleAutoSpeedEl = controlPanel.querySelector('#cbSubtitleAutoSpeed');
     inputSubtitleSelectorEl = controlPanel.querySelector(
       '#inputSubtitleSelector',
@@ -293,6 +314,9 @@
     autoSpeedStateEl = controlPanel.querySelector('#autoSpeedState');
     panelAutoHideEnabled = await loadPanelAutoHideSetting();
     cbAutoHideEl.checked = panelAutoHideEnabled;
+    if (cbAutoPauseOnBlurEl) {
+      cbAutoPauseOnBlurEl.checked = autoPauseOnBlurEnabled;
+    }
     if (cbSubtitleAutoSpeedEl) {
       cbSubtitleAutoSpeedEl.checked = subtitleAutoSpeedEnabled;
     }
@@ -335,6 +359,15 @@
       savePanelAutoHideSetting(panelAutoHideEnabled);
       applyEffectivePanelUiState(controlPanel);
     });
+    if (cbAutoPauseOnBlurEl) {
+      cbAutoPauseOnBlurEl.addEventListener('change', event => {
+        autoPauseOnBlurEnabled = event.target.checked;
+        saveAutoPauseOnBlurSetting(autoPauseOnBlurEnabled);
+        if (autoPauseOnBlurEnabled) {
+          handleAutoPauseTrigger();
+        }
+      });
+    }
     if (cbSubtitleAutoSpeedEl) {
       cbSubtitleAutoSpeedEl.addEventListener('change', event => {
         subtitleAutoSpeedEnabled = event.target.checked;
@@ -548,6 +581,15 @@
 
   function savePanelAutoHideSetting(enabled) {
     saveStoredString(panelAutoHideStorageKey, String(enabled));
+  }
+
+  async function loadAutoPauseOnBlurSetting() {
+    const raw = await loadStoredString(autoPauseOnBlurStorageKey, 'false');
+    return raw === 'true';
+  }
+
+  function saveAutoPauseOnBlurSetting(enabled) {
+    saveStoredString(autoPauseOnBlurStorageKey, String(enabled));
   }
 
   function applyPanelUiState(controlPanelEl, state) {

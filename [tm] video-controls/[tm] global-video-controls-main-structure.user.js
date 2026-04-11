@@ -16,6 +16,7 @@ const htmlStructure = `
       <button id="muteButton" for="volDisp">🔊</button>
       <input type="checkbox" title="Auto Switch" id="cbAutoSwitch">
       <input type="checkbox" title="Auto Hide (head-only on mouse leave)" id="cbAutoHide">
+      <input type="checkbox" title="Pause video when the tab loses focus, the browser is minimized, or focus moves away" id="cbAutoPauseOnBlur">
     </div>
 
     <div class="controlRow important" title="Subtitle auto-speed: selector present = normal speed, selector absent = fast speed.">
