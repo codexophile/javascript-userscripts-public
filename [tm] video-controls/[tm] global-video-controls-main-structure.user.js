@@ -152,8 +152,9 @@ const styles = `
   }
 
   .vidContRange {
+    display: block;
     width: 100%;
-    margin: ${margins} 0;
+    margin: 10px 0px;
     -webkit-appearance: none;
     background: transparent;
   }
