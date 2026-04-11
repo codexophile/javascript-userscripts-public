@@ -47,6 +47,7 @@ Tip:
 
 - Settings are stored per hostname using `GM.getValue`/`GM.setValue` when available, with `localStorage` used only as a compatibility fallback.
 - `Pause on focus loss` is also stored per hostname, so each domain can remember its own preference independently.
+- When `Pause on focus loss` is enabled, playback resumes automatically when the tab regains focus after an automatic pause.
 - While auto-speed is enabled, manual speed hotkeys (`z`, `x`, `c`) are ignored to avoid conflicts.
 - Disabling subtitle auto-speed immediately resets playback to `1x`.
 - The auto-pause behavior is frame-local, so it continues to work when the userscript is running inside an iframe.

@@ -21,6 +21,7 @@
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
   let autoPauseOnBlurEnabled = false;
+  let autoPausedByFocusLoss = false;
   let panelMouseInside = false;
   const panelAutoHideStorageKey = `global-video-controls:autoHide:${location.hostname}`;
   const autoPauseOnBlurStorageKey = `global-video-controls:autoPauseOnBlur:${location.hostname}`;
@@ -47,6 +48,8 @@
   await hydrateStoredSettings();
 
   document.addEventListener('visibilitychange', handleAutoPauseTrigger);
+  document.addEventListener('visibilitychange', handleAutoResumeTrigger);
+  window.addEventListener('focus', handleAutoResumeTrigger);
   window.addEventListener('blur', handleAutoPauseTrigger);
   window.addEventListener('pagehide', handleAutoPauseTrigger);
 
@@ -167,7 +170,23 @@
       return;
     }
 
+    autoPausedByFocusLoss = true;
     activeVideo.pause();
+  }
+
+  function handleAutoResumeTrigger() {
+    if (!autoPauseOnBlurEnabled) return;
+    if (!autoPausedByFocusLoss) return;
+    if (!activeVideo || !activeVideo.paused) return;
+
+    if (document.visibilityState !== 'visible' || !document.hasFocus()) {
+      return;
+    }
+
+    autoPausedByFocusLoss = false;
+    activeVideo.play().catch(() => {
+      autoPausedByFocusLoss = true;
+    });
   }
   function saveFastSpeedSetting(value) {
     saveStoredString(autoSpeedFastSpeedStorageKey, String(value));
@@ -654,6 +673,9 @@
     });
     video.addEventListener('pause', () => {
       titler('[media  paused]');
+      if (document.visibilityState === 'visible' && document.hasFocus()) {
+        autoPausedByFocusLoss = false;
+      }
     });
     video.addEventListener('waiting', () => {
       titler('[media waiting]');
