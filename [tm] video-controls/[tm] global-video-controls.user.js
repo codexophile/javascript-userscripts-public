@@ -514,9 +514,6 @@
     controlPanel.querySelector(`#buttonSnap`).addEventListener('click', () => {
       snap();
     });
-    controlPanel.querySelector(`#buttonGenSb`).addEventListener('click', () => {
-      generateStoryboard();
-    });
 
     controlPanel
       .querySelector(`#buttonRotateL`)
@@ -814,15 +811,6 @@
 
     canvas.remove();
     link.remove();
-  }
-
-  function generateStoryboard() {
-    activeVideo.currentTime = 0;
-    setInterval(() => {
-      activeVideo.currentTime += 60;
-    }, 1000);
-    // while ( activeVideo.currentTime < activeVideo.duration ) {
-    // }
   }
 
   function addMouseEvents(event) {
