@@ -4,6 +4,12 @@
 
 This userscript now includes a speed-transition mode inspired by mpv behavior, adapted for webpages.
 
+Shadow DOM support:
+
+- Video and audio detection now searches through reachable shadow roots.
+- Subtitle selector matching also searches through reachable shadow roots.
+- Closed shadow roots are best-effort only: they can be supported when created after script injection, but browser encapsulation can still block full coverage.
+
 Behavior:
 
 - If your subtitle selector exists in the DOM, playback is forced to normal speed (`1x`).
@@ -43,6 +49,7 @@ Examples to try and adjust per site:
 Tip:
 
 - Prefer a selector that appears only when subtitle text is shown (not always-on wrapper elements).
+- If subtitles live inside a web component, keep the selector relative to the subtitle nodes themselves; the script now searches inside shadow roots automatically.
 
 ## Notes
 
@@ -54,6 +61,7 @@ Tip:
 - Disabling subtitle auto-speed immediately resets playback to `1x`.
 - The auto-pause behavior is frame-local, so it continues to work when the userscript is running inside an iframe.
 - Cross-origin iframe players may expose subtitles outside the userscript context; in that case, use a selector that is visible from the current page context.
+- Open shadow roots are supported directly; closed shadow roots are only partially discoverable by platform design.
 - The extended volume slider is shown only when the base slider is at its maximum (or effective volume is above `0.25`) and hides again when volume returns below that threshold.
 - The control panel remembers its dragged position per hostname and respawns there on reload; if no saved position exists yet, it starts at the default location and does not write a per-site position until you manually drag it.
 - If saved coordinates become off-screen (for example after viewport size changes), they are clamped back into view automatically.

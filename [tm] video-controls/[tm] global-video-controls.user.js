@@ -37,6 +37,8 @@
     typeof GM !== 'undefined' &&
     typeof GM.getValue === 'function' &&
     typeof GM.setValue === 'function';
+  const trackedShadowRootsByHost = new WeakMap();
+  let shadowRootTrackingInstalled = false;
 
   let subtitleAutoSpeedEnabled = false;
   let subtitleSelector = '';
@@ -54,6 +56,8 @@
     syncSubtitleAutoSpeed();
   }, 75);
 
+  installShadowRootTracking();
+
   await hydrateStoredSettings();
 
   document.addEventListener('visibilitychange', handleAutoPauseTrigger);
@@ -70,6 +74,68 @@
   document.addEventListener('keyup', keyboardEvent, false);
   document.addEventListener('mousedown', addMouseEvents);
   window.addEventListener('beforeunload', stopSubtitlePresenceMonitoring);
+
+  function installShadowRootTracking() {
+    if (shadowRootTrackingInstalled) return;
+    shadowRootTrackingInstalled = true;
+
+    const elementPrototype = window.Element?.prototype;
+    const originalAttachShadow = elementPrototype?.attachShadow;
+    if (typeof originalAttachShadow !== 'function') return;
+
+    try {
+      elementPrototype.attachShadow = function patchedAttachShadow(init) {
+        const createdShadowRoot = originalAttachShadow.call(this, init);
+
+        // Closed roots are only discoverable if captured when created.
+        if (createdShadowRoot) {
+          trackedShadowRootsByHost.set(this, createdShadowRoot);
+        }
+
+        return createdShadowRoot;
+      };
+    } catch (error) {}
+  }
+
+  function getKnownShadowRoot(hostElement) {
+    if (!hostElement) return null;
+
+    try {
+      if (hostElement.shadowRoot) {
+        return hostElement.shadowRoot;
+      }
+    } catch (error) {}
+
+    return trackedShadowRootsByHost.get(hostElement) || null;
+  }
+
+  function querySelectorAllDeep(selector, root = document) {
+    const matchedElements = [];
+    const seenElements = new Set();
+    const seenRoots = new Set();
+
+    const visitRoot = currentRoot => {
+      if (!currentRoot || seenRoots.has(currentRoot)) return;
+      seenRoots.add(currentRoot);
+
+      const directMatches = currentRoot.querySelectorAll(selector);
+      directMatches.forEach(item => {
+        if (seenElements.has(item)) return;
+        seenElements.add(item);
+        matchedElements.push(item);
+      });
+
+      const descendants = currentRoot.querySelectorAll('*');
+      descendants.forEach(element => {
+        const nestedShadowRoot = getKnownShadowRoot(element);
+        if (!nestedShadowRoot) return;
+        visitRoot(nestedShadowRoot);
+      });
+    };
+
+    visitRoot(root);
+    return matchedElements;
+  }
 
   async function main() {
     activeVideo = getActiveVideo();
@@ -359,7 +425,7 @@
 
     try {
       subtitleSelectorInvalid = false;
-      const matchedSubtitles = document.querySelectorAll(subtitleSelector);
+      const matchedSubtitles = querySelectorAllDeep(subtitleSelector);
       if (!matchedSubtitles.length) {
         return { present: false, hasMusicalSymbols: false };
       }
@@ -1046,7 +1112,7 @@
   }
 
   function getActiveVideo() {
-    let mediaEls = [...document.querySelectorAll('video, audio')];
+    let mediaEls = querySelectorAllDeep('video, audio');
     const workingMedia = mediaEls.filter(el => el.duration);
     const playingMedia = mediaEls.filter(el => !el.paused);
     let visibleEls = playingMedia.filter(el => isElementInViewport(el));
