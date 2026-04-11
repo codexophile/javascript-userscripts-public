@@ -21,10 +21,13 @@
   let panelUiState = 0;
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
+  let panelPosition = null;
   let autoPauseOnBlurEnabled = false;
   let autoPausedByFocusLoss = false;
   let panelMouseInside = false;
+  const panelDefaultPosition = { top: 100, left: 10 };
   const panelAutoHideStorageKey = `global-video-controls:autoHide:${location.hostname}`;
+  const panelPositionStorageKey = `global-video-controls:panelPosition:${location.hostname}`;
   const autoPauseOnBlurStorageKey = `global-video-controls:autoPauseOnBlur:${location.hostname}`;
   const autoSpeedEnabledStorageKey = `global-video-controls:autoSpeedEnabled:${location.hostname}`;
   const autoSpeedSelectorStorageKey = `global-video-controls:autoSpeedSelector:${location.hostname}`;
@@ -98,6 +101,87 @@
     subtitleSelector = await loadSubtitleSelectorSetting();
     fastSpeed = await loadFastSpeedSetting(fastSpeed);
     panelAutoHideEnabled = await loadPanelAutoHideSetting();
+    panelPosition = await loadPanelPositionSetting();
+  }
+
+  function parsePanelPosition(rawValue) {
+    if (!rawValue) return null;
+
+    try {
+      const parsed = JSON.parse(rawValue);
+      const top = Number(parsed?.top);
+      const left = Number(parsed?.left);
+      if (!Number.isFinite(top) || !Number.isFinite(left)) return null;
+
+      return { top, left };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async function loadPanelPositionSetting() {
+    const raw = await loadStoredString(panelPositionStorageKey, '');
+    return parsePanelPosition(raw);
+  }
+
+  function savePanelPositionSetting(position) {
+    if (!position) return;
+    saveStoredString(panelPositionStorageKey, JSON.stringify(position));
+  }
+
+  function clampPanelPosition(controlPanelEl, position) {
+    if (!controlPanelEl || !position) return null;
+
+    const panelWidth = controlPanelEl.offsetWidth || 0;
+    const panelHeight = controlPanelEl.offsetHeight || 0;
+    const maxLeft = Math.max(0, window.innerWidth - panelWidth);
+    const maxTop = Math.max(0, window.innerHeight - panelHeight);
+
+    const clampedLeft = Math.min(Math.max(position.left, 0), maxLeft);
+    const clampedTop = Math.min(Math.max(position.top, 0), maxTop);
+
+    return {
+      left: clampedLeft,
+      top: clampedTop,
+    };
+  }
+
+  function persistControlPanelPosition(controlPanelEl) {
+    if (!controlPanelEl) return;
+
+    const rect = controlPanelEl.getBoundingClientRect();
+    const clamped = clampPanelPosition(controlPanelEl, {
+      top: rect.top,
+      left: rect.left,
+    });
+
+    if (!clamped) return;
+
+    controlPanelEl.style.top = `${clamped.top}px`;
+    controlPanelEl.style.left = `${clamped.left}px`;
+    panelPosition = clamped;
+    savePanelPositionSetting(clamped);
+  }
+
+  function applyStoredPanelPosition(controlPanelEl) {
+    if (!controlPanelEl) return;
+
+    const basePosition = panelPosition || panelDefaultPosition;
+    const clamped = clampPanelPosition(controlPanelEl, basePosition);
+    if (!clamped) return;
+
+    controlPanelEl.style.top = `${clamped.top}px`;
+    controlPanelEl.style.left = `${clamped.left}px`;
+
+    const changedFromSaved =
+      !panelPosition ||
+      Math.abs(panelPosition.top - clamped.top) > 0.01 ||
+      Math.abs(panelPosition.left - clamped.left) > 0.01;
+
+    panelPosition = clamped;
+    if (changedFromSaved) {
+      savePanelPositionSetting(clamped);
+    }
   }
 
   async function loadStoredString(key, defaultValue = '') {
@@ -372,6 +456,7 @@
     if (numAutoFastSpeedEl) {
       numAutoFastSpeedEl.value = String(fastSpeed);
     }
+    applyStoredPanelPosition(controlPanel);
     applyEffectivePanelUiState(controlPanel);
     vidProgressEl = controlPanel.querySelector(`#progress`);
     speedDispEl = controlPanel.querySelector('#speedDisp');
@@ -382,11 +467,18 @@
 
     // dragElement( controlPanel, controlPanel );
     makeDraggable(controlPanel);
+    let panelDragStarted = false;
     contPanelHeader.addEventListener('mousedown', () => {
+      panelDragStarted = true;
       controlPanel.style.transition = 'unset';
     });
     contPanelHeader.addEventListener('mouseup', () => {
       controlPanel.style.transition = 'left 0.5s, top 0.5s, opacity 0.2s';
+    });
+    window.addEventListener('mouseup', () => {
+      if (!panelDragStarted) return;
+      panelDragStarted = false;
+      persistControlPanelPosition(controlPanel);
     });
     controlPanel.addEventListener('mouseenter', () => {
       panelMouseInside = true;
