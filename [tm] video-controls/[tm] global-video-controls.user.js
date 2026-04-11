@@ -585,20 +585,14 @@
   }
 
   function applyEffectivePanelUiState(controlPanelEl) {
-    if (!panelAutoHideEnabled) {
-      applyPanelUiState(controlPanelEl, panelUiState);
-      updateExtendedVolumeSliderVisibility();
-      return;
-    }
-
-    if (panelMouseInside) {
-      applyPanelUiState(controlPanelEl, panelUiLastNonHeadState);
-      updateExtendedVolumeSliderVisibility();
-      return;
-    }
-
-    applyPanelUiState(controlPanelEl, 2);
+    const effectiveState = getEffectivePanelUiState();
+    applyPanelUiState(controlPanelEl, effectiveState);
     updateExtendedVolumeSliderVisibility();
+  }
+
+  function getEffectivePanelUiState() {
+    if (!panelAutoHideEnabled) return panelUiState;
+    return panelMouseInside ? panelUiLastNonHeadState : 2;
   }
 
   async function loadPanelAutoHideSetting() {
@@ -653,6 +647,11 @@
 
   function updateExtendedVolumeSliderVisibility() {
     if (!slidVolExtEl) return;
+
+    if (getEffectivePanelUiState() === 2) {
+      slidVolExtEl.style.display = 'none';
+      return;
+    }
 
     const primaryAtMax =
       !!slidVolFinEl &&
