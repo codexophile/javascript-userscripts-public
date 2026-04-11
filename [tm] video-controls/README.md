@@ -55,4 +55,5 @@ Tip:
 - The auto-pause behavior is frame-local, so it continues to work when the userscript is running inside an iframe.
 - Cross-origin iframe players may expose subtitles outside the userscript context; in that case, use a selector that is visible from the current page context.
 - The extended volume slider is shown only when the base slider is at its maximum (or effective volume is above `0.25`) and hides again when volume returns below that threshold.
-- The control panel remembers its dragged position per hostname and respawns there on reload; if the saved coordinates are off-screen (for example after viewport size changes), they are clamped back into view automatically.
+- The control panel remembers its dragged position per hostname and respawns there on reload; if no saved position exists yet, it starts at the default location and does not write a per-site position until you manually drag it.
+- If saved coordinates become off-screen (for example after viewport size changes), they are clamped back into view automatically.

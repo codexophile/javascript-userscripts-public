@@ -166,6 +166,7 @@
   function applyStoredPanelPosition(controlPanelEl) {
     if (!controlPanelEl) return;
 
+    const hasStoredPanelPosition = !!panelPosition;
     const basePosition = panelPosition || panelDefaultPosition;
     const clamped = clampPanelPosition(controlPanelEl, basePosition);
     if (!clamped) return;
@@ -173,8 +174,11 @@
     controlPanelEl.style.top = `${clamped.top}px`;
     controlPanelEl.style.left = `${clamped.left}px`;
 
+    if (!hasStoredPanelPosition) {
+      return;
+    }
+
     const changedFromSaved =
-      !panelPosition ||
       Math.abs(panelPosition.top - clamped.top) > 0.01 ||
       Math.abs(panelPosition.left - clamped.left) > 0.01;
 
