@@ -1449,11 +1449,18 @@ async function setupYtDlpBtn(
   urlSelector,
   destinationPath,
   extraInfoFunc,
+  parentElement = null,
 ) {
   const titleSegment = title ? `title:${title}::` : '';
 
-  let ytDlpBtnEl = await waitFor('#yt-dlp-Btn');
-  ytDlpBtnEl = removeListenersByCloning(ytDlpBtnEl);
+  let ytDlpBtnEl;
+  if (parentElement) {
+    ytDlpBtnEl = generateElements(`<button>⬇️</button>`, parentElement);
+  } else {
+    ytDlpBtnEl = await waitFor('#yt-dlp-Btn');
+    ytDlpBtnEl = removeListenersByCloning(ytDlpBtnEl);
+  }
+
   ytDlpBtnEl.addEventListener('click', () => {
     if (urlSelector) url = document.querySelector(urlSelector).href;
     const urlSegment = `url:${url}::`;
@@ -1471,6 +1478,8 @@ async function setupYtDlpBtn(
     );
   });
   style(ytDlpBtnEl, `outline: solid red 2px;`);
+
+  return ytDlpBtnEl;
 }
 
 function downloadImgWithTextFunctionality({
