@@ -71,6 +71,7 @@
   });
   waitForEach(`li [alt*="'s profile picture"]`, locatorEl => {
     //* Suggested accounts on profile pages
+    if (location.href === 'https://www.instagram.com/') return;
     const grandParentEl = grandParent(locatorEl, 12);
     let newContainerEl = document.querySelector('#new-profiles-cont');
     if (!newContainerEl) {
@@ -271,4 +272,131 @@
       img.src = imageUrl;
     });
   }
+
+  /**
+   * Extracts deep data from Instagram's React Fiber tree.
+   * Searches for the hidden 'carousel_media' arrays holding the image URLs.
+   */
+  function extractCarouselImages(articleElement) {
+    // 1. Find the hidden React internal key attached to the DOM element
+    const fiberKey = Object.keys(articleElement).find(k =>
+      k.startsWith('__reactFiber$'),
+    );
+    if (!fiberKey) return [];
+
+    const fiber = articleElement[fiberKey];
+    let urls = new Set();
+
+    // 2. Recursive function to dig through React's props state
+    function dig(obj, depth = 0) {
+      // Stop if we go too deep or hit an invalid object
+      if (depth > 10 || !obj || typeof obj !== 'object') return;
+
+      if (Array.isArray(obj)) {
+        obj.forEach(item => dig(item, depth + 1));
+      } else {
+        // Look for modern Instagram Carousel Data Structures
+        if (obj.carousel_media && Array.isArray(obj.carousel_media)) {
+          obj.carousel_media.forEach(media => {
+            const url = media?.image_versions2?.candidates?.[0]?.url;
+            if (url) urls.add(url);
+          });
+        }
+        // Look for older/GraphQL Carousel Structures
+        else if (
+          obj.edge_sidecar_to_children &&
+          obj.edge_sidecar_to_children.edges
+        ) {
+          obj.edge_sidecar_to_children.edges.forEach(edge => {
+            const url = edge?.node?.display_url;
+            if (url) urls.add(url);
+          });
+        }
+
+        // Dig into children properties
+        Object.values(obj).forEach(val => dig(val, depth + 1));
+      }
+    }
+
+    // 3. Search the current fiber node and a few children down
+    let curr = fiber;
+    let attempts = 0;
+    while (curr && attempts < 5) {
+      dig(curr.memoizedProps);
+      if (urls.size > 1) break; // If we found multiple images, stop digging
+      curr = curr.child; // Move down the React tree
+      attempts++;
+    }
+
+    return Array.from(urls);
+  }
+
+  /**
+   * Replaces the carousel UI with a vertical unrolled list of images
+   */
+  function unrollCarousel(article) {
+    // Prevent processing the same article twice
+    if (article.dataset.unrolled) return;
+    article.dataset.unrolled = 'true';
+
+    console.log('xxxxxxxx');
+    const urls = extractCarouselImages(article);
+    console.log(urls);
+
+    // If there's 1 or 0 URLs, it's a single image/video, so we ignore it.
+    if (urls.length <= 1) return;
+
+    // Find the original media container.
+    // We find the first image, and traverse up until we find the direct child wrapper of the <article>
+    const firstImg = article.querySelector('img');
+    if (!firstImg) return;
+
+    let mediaContainer = firstImg;
+    while (
+      mediaContainer.parentElement &&
+      mediaContainer.parentElement !== article
+    ) {
+      // Instagram wraps the media in a div directly under the <article>
+      // or inside a main wrapper inside the article.
+      mediaContainer = mediaContainer.parentElement;
+    }
+
+    // 1. Hide the original Instagram carousel container
+    // mediaContainer.style.display = 'none';
+
+    // 2. Create our new "Unrolled" container
+    const unrolledContainer = document.createElement('div');
+    unrolledContainer.className = 'custom-unrolled-carousel';
+    unrolledContainer.style.cssText = `
+            display: flex; 
+            flex-wrap: wrap;
+            gap: 12px; 
+            width: 100%; 
+            background: #000;
+            padding-bottom: 12px;
+        `;
+
+    // 3. Create and append all individual images
+    urls.forEach(url => {
+      const img = document.createElement('img');
+      img.src = url;
+      // Styling perfectly matches Instagram's standard widths
+      img.style.cssText =
+        'max-width: 300px; height: auto; object-fit: contain; display: block;';
+      unrolledContainer.appendChild(img);
+    });
+
+    // 4. Insert the new vertical images exactly where the old carousel was
+    mediaContainer.insertAdjacentElement('afterend', unrolledContainer);
+  }
+
+  // Call your custom function!
+  // Every time an <article> appears on the page (scrolling main feed, opening a post), process it.
+  waitForEach('[__idm_watch__], div:has(ul)[tabindex]', articleElement => {
+    // Instagram sometimes takes a split second to attach React props to newly injected DOM nodes.
+    // A tiny timeout ensures the React Fiber tree is populated before we search it.
+    setTimeout(() => {
+      unrollCarousel(articleElement);
+    }, 300);
+  });
 })();
