@@ -1466,7 +1466,7 @@ async function setupYtDlpBtn(
     const urlSegment = `url:${url}::`;
 
     const destinationSegment = destinationPath
-      ? `destination:${destinationPath}::`
+      ? `dest:${destinationPath}::`
       : '';
 
     const extraInfoSegment = extraInfoFunc
