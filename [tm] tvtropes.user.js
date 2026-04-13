@@ -8,6 +8,7 @@
   const TROPE_RE = /\.php\/\w+\/(\w+)$/;
   const COLOR_SEEN = '#690f08';
   const COLOR_IMPORTANT = '#07540b';
+  const fetchSpinners = new WeakMap();
 
   let unsavedChanges = false;
   ['tropesSeen', 'tropesImportant'].forEach(key => {
@@ -24,10 +25,15 @@
 
   lazyLoad(
     async item => {
+      showFetchSpinner(item);
       const laconicHref = item.href.replace('/Main/', '/laconic/');
-      const tempDoc = await fetchDoc(laconicHref);
-      const tooltipText = getArticleText(tempDoc).replace(/\.(\w)/, '.\n\n$1');
-      item.title = tooltipText;
+      try {
+        const tempDoc = await fetchDoc(laconicHref);
+        const tooltipText = getArticleText(tempDoc).replace(/\.(\w)/, '.\n\n$1');
+        item.title = tooltipText;
+      } finally {
+        hideFetchSpinner(item);
+      }
     },
     ...$(SEL_MAIN),
   );
@@ -125,6 +131,33 @@
     return array.filter(
       (currentVal, index, arr) => arr.indexOf(currentVal) !== index,
     );
+  }
+
+  function showFetchSpinner(link) {
+    if (fetchSpinners.has(link)) return;
+
+    const spinner = document.createElement('span');
+    spinner.className = 'tm-fetch-spinner';
+    spinner.title = 'Loading laconic summary...';
+    spinner.style.cssText =
+      'display:inline-block;width:.75em;height:.75em;margin-left:.35em;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;vertical-align:middle;animation:tm-fetch-spin .7s linear infinite;';
+
+    link.appendChild(spinner);
+    fetchSpinners.set(link, spinner);
+
+    if (document.getElementById('tm-fetch-spinner-style')) return;
+    const styleEl = document.createElement('style');
+    styleEl.id = 'tm-fetch-spinner-style';
+    styleEl.textContent =
+      '@keyframes tm-fetch-spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(styleEl);
+  }
+
+  function hideFetchSpinner(link) {
+    const spinner = fetchSpinners.get(link);
+    if (!spinner) return;
+    spinner.remove();
+    fetchSpinners.delete(link);
   }
 
   async function appendTrope(which, tropeName) {
