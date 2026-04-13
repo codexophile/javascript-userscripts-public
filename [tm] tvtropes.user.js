@@ -29,7 +29,10 @@
       const laconicHref = item.href.replace('/Main/', '/laconic/');
       try {
         const tempDoc = await fetchDoc(laconicHref);
-        const tooltipText = getArticleText(tempDoc).replace(/\.(\w)/, '.\n\n$1');
+        const tooltipText = getArticleText(tempDoc).replace(
+          /\.(\w)/,
+          '.\n\n$1',
+        );
         item.title = tooltipText;
       } finally {
         hideFetchSpinner(item);
