@@ -12,6 +12,12 @@
     VIEWPORT_WIDTH_PERCENTAGE: 0.49,
     // Default volume for videos (0.0 to 1.0).
     VIDEO_VOLUME: 0.02,
+    // Virtual scrolling tunables.
+    VIRTUAL_OVERSCAN_PIXELS: 1400,
+    VIRTUAL_DEFAULT_ITEM_HEIGHT: 520,
+    VIRTUAL_FETCH_THRESHOLD_PIXELS: 1400,
+    // Enable virtual scrolling (set to false to disable and revert to simple rendering).
+    VIRTUAL_SCROLL_ENABLED: false,
   };
 
   // --- STATE ---
@@ -28,8 +34,30 @@
     nextPageCursor: null,
     // A reference to the main container for the media wall.
     mediaWallContainer: null,
+    // A reference to the scrollable overlay viewport.
+    mediaWallViewport: null,
     // IntersectionObserver for infinite scroll sentinel.
     scrollObserver: null,
+    // Prevents re-attaching the Escape key handler on reopen.
+    isEscapeHandlerAttached: false,
+    // Prevents re-attaching the legacy scroll handler in non-virtual mode.
+    isLegacyScrollHandlerAttached: false,
+    // Restorable virtual wall session state.
+    virtual: {
+      sessionKey: null,
+      items: [],
+      itemKeySet: new Set(),
+      estimatedHeights: {},
+      measuredHeights: {},
+      prefixHeights: [0],
+      visibleRange: { start: 0, end: 0 },
+      nextPageCursor: null,
+      scrollTop: 0,
+      renderFrameId: null,
+      isScrollLocked: false,
+      lastScrollTop: 0,
+      lastTotalHeight: 0,
+    },
   };
 
   // --- UTILS ---
@@ -335,11 +363,13 @@
       if (!mediaList || mediaList.length === 0) {
         console.log('No more media found or empty response.');
         state.nextPageCursor = null; // Stop further requests.
+        state.virtual.nextPageCursor = null;
         updateLoadingIndicators();
         return;
       }
 
       renderMediaItems(mediaList);
+      state.virtual.nextPageCursor = state.nextPageCursor || null;
       setupInfiniteScrollObserver();
     } catch (error) {
       console.error('Instagram full-size media script error:', error);
@@ -360,11 +390,19 @@
     // Hide the original page content and prevent it from scrolling.
     document.body.style.overflow = 'hidden';
 
-    domParserContainer.innerHTML = `
-      <div id="media-wall-overlay">
-        <div id="media-wall-content"></div>
-      </div>`;
+    domParserContainer.innerHTML = config.VIRTUAL_SCROLL_ENABLED
+      ? `<div id="media-wall-overlay">
+          <div id="media-wall-content">
+            <div id="media-wall-top-spacer"></div>
+            <div id="media-wall-virtual-items"></div>
+            <div id="media-wall-bottom-spacer"></div>
+          </div>
+        </div>`
+      : `<div id="media-wall-overlay">
+          <div id="media-wall-content"></div>
+        </div>`;
     state.mediaWallContainer = domParserContainer.firstElementChild;
+    state.mediaWallViewport = state.mediaWallContainer;
     const contentContainer = state.mediaWallContainer.querySelector(
       '#media-wall-content',
     );
@@ -375,8 +413,18 @@
     closeButton.textContent = '×';
     closeButton.title = 'Close Media Wall (or press Esc)';
     closeButton.onclick = () => {
+      if (state.virtual.renderFrameId) {
+        cancelAnimationFrame(state.virtual.renderFrameId);
+        state.virtual.renderFrameId = null;
+      }
+      if (state.mediaWallViewport) {
+        state.virtual.scrollTop = state.mediaWallViewport.scrollTop;
+      }
+      cleanupVirtualNodes(document.getElementById('media-wall-virtual-items'));
       state.mediaWallContainer.remove();
       document.body.style.overflow = 'auto';
+      state.mediaWallContainer = null;
+      state.mediaWallViewport = null;
       state.isWallActive = false;
     };
     state.mediaWallContainer.appendChild(closeButton);
@@ -398,21 +446,39 @@
     endIndicator.style.display = 'none';
     state.mediaWallContainer.appendChild(endIndicator);
 
-    // Add scroll sentinel for IntersectionObserver-based infinite scroll
-    const sentinel = document.createElement('div');
-    sentinel.id = 'media-wall-scroll-sentinel';
-    sentinel.style.height = '1px';
-    sentinel.style.margin = '1px 0';
-    state.mediaWallContainer.appendChild(sentinel);
-
     document.body.appendChild(state.mediaWallContainer);
 
+    if (config.VIRTUAL_SCROLL_ENABLED) {
+      state.mediaWallViewport.addEventListener('scroll', onMediaWallScroll, {
+        passive: true,
+      });
+    } else if (!state.isLegacyScrollHandlerAttached) {
+      state.mediaWallViewport.addEventListener(
+        'scroll',
+        onLegacyMediaWallScroll,
+        {
+          passive: true,
+        },
+      );
+      state.isLegacyScrollHandlerAttached = true;
+    }
+
     // Allow closing with the Escape key
-    window.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && state.isWallActive) {
-        closeButton.click();
-      }
-    });
+    if (!state.isEscapeHandlerAttached) {
+      window.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && state.isWallActive) {
+          const activeCloseButton = document.getElementById(
+            'media-wall-close-button',
+          );
+          if (activeCloseButton) activeCloseButton.click();
+        }
+      });
+      state.isEscapeHandlerAttached = true;
+    }
+
+    if (state.virtual.scrollTop > 0) {
+      state.mediaWallViewport.scrollTop = state.virtual.scrollTop;
+    }
 
     return contentContainer;
   }
@@ -451,7 +517,7 @@
         height: 100vh;
         background-color: rgba(10, 10, 15, 0.98);
         z-index: 9999;
-        overflow-y: scroll;
+        overflow-y: auto;
         -webkit-backdrop-filter: blur(5px);
         backdrop-filter: blur(5px);
       }
@@ -459,6 +525,7 @@
         display: block;
         text-align: center;
         padding-top: 50px; /* Space for close button */
+        min-height: 100%;
       }
       #media-wall-close-button {
         position: fixed;
@@ -574,7 +641,11 @@
         margin-bottom: 10px;
         color: #4a9eff;
       }
-      #media-wall-scroll-sentinel { width: 100%; }
+      #media-wall-virtual-items { width: 100%; }
+      #media-wall-top-spacer,
+      #media-wall-bottom-spacer {
+        width: 100%;
+      }
     `;
     // Prefer shared helper if available to avoid duplicate styles
     if (typeof addStyle === 'function') {
@@ -704,91 +775,468 @@
   }
 
   /**
+   * Builds a unique session key used to restore a previous media wall state.
+   * @returns {string}
+   */
+  function getCurrentWallSessionKey() {
+    const userPart = state.targetUserId || 'anon';
+    return `${state.pageMode}:${userPart}:${window.location.pathname}`;
+  }
+
+  /**
+   * Returns a stable key for deduping and indexing a media item.
+   * @param {object} item
+   * @returns {string|null}
+   */
+  function getItemKey(item) {
+    return item?.code || item?.id || null;
+  }
+
+  /**
+   * Resets virtual scroll data for a new session key.
+   * @param {string} sessionKey
+   */
+  function resetVirtualState(sessionKey) {
+    if (state.virtual.renderFrameId) {
+      cancelAnimationFrame(state.virtual.renderFrameId);
+    }
+    state.virtual.sessionKey = sessionKey;
+    state.virtual.items = [];
+    state.virtual.itemKeySet = new Set();
+    state.virtual.estimatedHeights = {};
+    state.virtual.measuredHeights = {};
+    state.virtual.prefixHeights = [0];
+    state.virtual.visibleRange = { start: 0, end: 0 };
+    state.virtual.nextPageCursor = null;
+    state.virtual.scrollTop = 0;
+    state.virtual.renderFrameId = null;
+  }
+
+  /**
+   * Determines whether the existing virtual state can be restored for this page.
+   * @param {string} sessionKey
+   * @returns {boolean}
+   */
+  function canRestoreVirtualState(sessionKey) {
+    return (
+      state.virtual.sessionKey === sessionKey &&
+      Array.isArray(state.virtual.items) &&
+      state.virtual.items.length > 0
+    );
+  }
+
+  /**
+   * Creates an estimated post height to initialize virtual layout before measurements.
+   * @param {object} item
+   * @returns {number}
+   */
+  function estimateMediaGroupHeight(item) {
+    const carouselCount = Math.max(1, (item?.carousel_media || [item]).length);
+    const captionLength = item?.caption?.text?.length || 0;
+    const mediaBlockHeight = 310;
+    const headerAndChrome = 95;
+    const captionHeight = Math.min(140, Math.ceil(captionLength / 80) * 18);
+    return headerAndChrome + carouselCount * mediaBlockHeight + captionHeight;
+  }
+
+  /**
+   * Recomputes virtual prefix heights used to convert pixels <-> index.
+   */
+  function recomputePrefixHeights() {
+    const prefix = [0];
+    for (const item of state.virtual.items) {
+      const key = getItemKey(item);
+      const measured = key ? state.virtual.measuredHeights[key] : null;
+      const estimated = key ? state.virtual.estimatedHeights[key] : null;
+      const h =
+        measured ||
+        estimated ||
+        Math.max(320, config.VIRTUAL_DEFAULT_ITEM_HEIGHT);
+      prefix.push(prefix[prefix.length - 1] + h);
+    }
+    state.virtual.prefixHeights = prefix;
+  }
+
+  /**
+   * Lower-bound lookup in prefix heights.
+   * @param {number[]} prefix
+   * @param {number} value
+   * @returns {number}
+   */
+  function lowerBoundPrefix(prefix, value) {
+    let low = 0;
+    let high = prefix.length;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (prefix[mid] < value) low = mid + 1;
+      else high = mid;
+    }
+    return low;
+  }
+
+  /**
+   * Calculates the current visible range for virtual rendering.
+   * @param {number} scrollTop
+   * @param {number} viewportHeight
+   * @returns {{start:number,end:number,top:number,bottom:number}}
+   */
+  function getVirtualRange(scrollTop, viewportHeight) {
+    const prefix = state.virtual.prefixHeights;
+    const totalItems = state.virtual.items.length;
+    if (!totalItems) return { start: 0, end: 0, top: 0, bottom: 0 };
+
+    // Conservative overscan to avoid jumps during measurement corrections
+    const overscan = Math.min(
+      config.VIRTUAL_OVERSCAN_PIXELS,
+      viewportHeight * 0.75,
+    );
+    const rangeStartPx = Math.max(0, scrollTop - overscan);
+    const rangeEndPx = scrollTop + viewportHeight + overscan;
+
+    const start = Math.max(
+      0,
+      Math.min(totalItems, lowerBoundPrefix(prefix, rangeStartPx) - 1),
+    );
+    let end = Math.max(
+      start + 1,
+      Math.min(totalItems, lowerBoundPrefix(prefix, rangeEndPx) + 1),
+    );
+
+    // Limit batch size to avoid rendering too many at once
+    const maxBatch =
+      Math.ceil(
+        (config.VIRTUAL_OVERSCAN_PIXELS * 2 + viewportHeight) /
+          config.VIRTUAL_DEFAULT_ITEM_HEIGHT,
+      ) + 4;
+    if (end - start > maxBatch) {
+      end = start + maxBatch;
+    }
+
+    const top = prefix[start] || 0;
+    const totalHeight = prefix[prefix.length - 1] || 0;
+    const bottom = Math.max(0, totalHeight - (prefix[end] || 0));
+
+    return { start, end, top, bottom };
+  }
+
+  /**
+   * Cleans up observers and media state for unmounted virtual nodes.
+   * @param {HTMLElement} root
+   */
+  function cleanupVirtualNodes(root) {
+    if (!root) return;
+    const groups = root.querySelectorAll('.media-group');
+    for (const group of groups) {
+      const cleanupFns = group.__cleanupFns || [];
+      for (const fn of cleanupFns) {
+        try {
+          fn();
+        } catch (error) {
+          console.warn('Failed virtual cleanup task', error);
+        }
+      }
+      const videos = group.querySelectorAll('video');
+      for (const video of videos) {
+        try {
+          video.pause();
+        } catch (_) {
+          // Ignore cleanup pause errors.
+        }
+      }
+    }
+  }
+
+  /**
+   * Builds a DOM node for a single post group.
+   * @param {object} item
+   * @param {number} itemIndex
+   * @returns {HTMLElement|null}
+   */
+  function createMediaGroupElement(item, itemIndex) {
+    if (!item?.code || item?.ad_id || item?.label === 'Sponsored') {
+      return null;
+    }
+
+    const group = el('div', {
+      className: 'media-group',
+      'data-virtual-index': String(itemIndex),
+    });
+    group.__cleanupFns = [];
+
+    group.appendChild(
+      el('div', {
+        className: 'media-group-info',
+        innerHTML: `<strong>@${item.user?.username || 'unknown'}</strong> • ${
+          item.taken_at
+            ? new Date(item.taken_at * 1000).toLocaleDateString()
+            : 'Unknown'
+        }`,
+      }),
+    );
+
+    const carouselItems = item.carousel_media || [item];
+
+    for (const [index, media] of carouselItems.entries()) {
+      const link = el('a', {
+        href: `https://www.instagram.com/p/${item.code}/`,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      });
+
+      if (media.video_versions) {
+        const container = el('div', { className: 'media-container' });
+        const video = el('video', {
+          src: getBestVideoUrl(media),
+          controls: true,
+          loop: true,
+          volume: config.VIDEO_VOLUME,
+          preload: 'metadata',
+        });
+
+        const disconnectVideoObserver = setupVideoAutoPauseOnViewport(video);
+        group.__cleanupFns.push(disconnectVideoObserver);
+
+        const posterUrl = getBestImageUrl(media);
+        if (posterUrl) {
+          const poster = el('img', { src: posterUrl });
+          container.appendChild(poster);
+        }
+
+        container.appendChild(video);
+        link.className = 'media-link';
+        link.textContent = `Post by @${item.user?.username || 'unknown'}`;
+        if (carouselItems.length > 1) {
+          link.textContent += ` [${index + 1}/${carouselItems.length}]`;
+        }
+
+        group.appendChild(container);
+        group.appendChild(link);
+      } else if (media.image_versions2) {
+        const image = el('img', { src: getBestImageUrl(media) });
+        link.appendChild(image);
+        group.appendChild(link);
+      }
+    }
+
+    return group;
+  }
+
+  /**
+   * Measures rendered virtual nodes and updates height cache when needed.
+   */
+  function measureVisibleVirtualItems() {
+    if (state.virtual.isScrollLocked) return; // Don't measure during scroll-locked render
+    const container = document.getElementById('media-wall-virtual-items');
+    if (!container) return;
+
+    let changed = false;
+    const groups = container.querySelectorAll(
+      '.media-group[data-virtual-index]',
+    );
+    for (const group of groups) {
+      const index = Number(group.dataset.virtualIndex);
+      const item = state.virtual.items[index];
+      const key = getItemKey(item);
+      if (!key) continue;
+
+      const height = Math.ceil(group.offsetHeight);
+      if (!height || height < 100) continue; // Skip suspiciously small heights (partial renders)
+
+      const prev = state.virtual.measuredHeights[key] || 0;
+      const diff = Math.abs(prev - height);
+      // Only update on significant changes to avoid constant re-renders
+      if (diff > 20) {
+        state.virtual.measuredHeights[key] = height;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      recomputePrefixHeights();
+      // Don't force full re-render, just update range if needed
+      const viewport = state.mediaWallViewport;
+      if (viewport) {
+        const range = getVirtualRange(
+          viewport.scrollTop,
+          viewport.clientHeight,
+        );
+        if (
+          range.start !== state.virtual.visibleRange.start ||
+          range.end !== state.virtual.visibleRange.end
+        ) {
+          renderVirtualWindow(false);
+        }
+      }
+    }
+  }
+
+  /**
+   * Renders only the visible slice of media into the virtual items container.
+   * @param {boolean} force
+   */
+  function renderVirtualWindow(force = false) {
+    const viewport = state.mediaWallViewport;
+    const topSpacer = document.getElementById('media-wall-top-spacer');
+    const itemsRoot = document.getElementById('media-wall-virtual-items');
+    const bottomSpacer = document.getElementById('media-wall-bottom-spacer');
+    if (!viewport || !topSpacer || !itemsRoot || !bottomSpacer) return;
+
+    const scrollTop = viewport.scrollTop;
+    const viewportHeight = viewport.clientHeight;
+    const range = getVirtualRange(scrollTop, viewportHeight);
+    const previous = state.virtual.visibleRange;
+    const isSameRange =
+      previous.start === range.start && previous.end === range.end;
+
+    if (!force && isSameRange) {
+      maybeFetchNextPage();
+      return;
+    }
+
+    console.log(
+      `[VIRTUAL] Render: scroll=${scrollTop} range=[${range.start}..${range.end}] total=${state.virtual.items.length} mounted=${itemsRoot.querySelectorAll('.media-group').length}`,
+    );
+    state.virtual.visibleRange = { start: range.start, end: range.end };
+    const oldTotalHeight = state.virtual.lastTotalHeight;
+
+    cleanupVirtualNodes(itemsRoot);
+    itemsRoot.innerHTML = '';
+
+    const frag = document.createDocumentFragment();
+    for (let i = range.start; i < range.end; i++) {
+      const item = state.virtual.items[i];
+      const group = createMediaGroupElement(item, i);
+      if (!group) continue;
+      frag.appendChild(group);
+    }
+    itemsRoot.appendChild(frag);
+
+    topSpacer.style.height = `${Math.max(0, Math.floor(range.top))}px`;
+    bottomSpacer.style.height = `${Math.max(0, Math.floor(range.bottom))}px`;
+
+    const newTotalHeight =
+      state.virtual.prefixHeights[state.virtual.prefixHeights.length - 1] || 0;
+    state.virtual.lastTotalHeight = newTotalHeight;
+
+    requestAnimationFrame(() => {
+      measureVisibleVirtualItems();
+    });
+
+    maybeFetchNextPage();
+  }
+
+  /**
+   * Schedules a virtual render in the next animation frame.
+   */
+  function scheduleVirtualRender() {
+    if (state.virtual.renderFrameId) return;
+    state.virtual.renderFrameId = requestAnimationFrame(() => {
+      state.virtual.renderFrameId = null;
+      renderVirtualWindow();
+    });
+  }
+
+  /**
+   * Persists scroll state and rerenders virtual content while scrolling.
+   */
+  function onMediaWallScroll() {
+    if (!state.mediaWallViewport || state.virtual.isScrollLocked) return;
+    state.virtual.scrollTop = state.mediaWallViewport.scrollTop;
+    scheduleVirtualRender();
+  }
+
+  /**
+   * Legacy pagination for non-virtual mode based on distance from the bottom.
+   */
+  function onLegacyMediaWallScroll() {
+    const viewport = state.mediaWallViewport;
+    if (!viewport || state.isLoadingNextPage || !state.nextPageCursor) return;
+
+    const remaining =
+      viewport.scrollHeight - (viewport.scrollTop + viewport.clientHeight);
+    if (remaining <= config.VIRTUAL_FETCH_THRESHOLD_PIXELS) {
+      fetchMedia();
+    }
+  }
+
+  /**
+   * Fetches the next page when the viewport approaches the virtual end.
+   */
+  function maybeFetchNextPage() {
+    const viewport = state.mediaWallViewport;
+    if (!viewport || !state.nextPageCursor || state.isLoadingNextPage) return;
+
+    const remaining =
+      viewport.scrollHeight - (viewport.scrollTop + viewport.clientHeight);
+    if (remaining <= config.VIRTUAL_FETCH_THRESHOLD_PIXELS) {
+      fetchMedia();
+    }
+  }
+
+  /**
+   * Adds API media results into the virtual data store and rerenders.
+   * @param {Array<object>} mediaList
+   */
+  function appendVirtualItems(mediaList) {
+    let addedAny = false;
+    for (const item of mediaList) {
+      if (!item?.code || item?.ad_id || item?.label === 'Sponsored') {
+        continue;
+      }
+      const key = getItemKey(item);
+      if (!key || state.virtual.itemKeySet.has(key)) {
+        continue;
+      }
+      state.virtual.itemKeySet.add(key);
+      state.virtual.items.push(item);
+      state.virtual.estimatedHeights[key] = estimateMediaGroupHeight(item);
+      addedAny = true;
+    }
+
+    if (addedAny) {
+      state.virtual.isScrollLocked = true;
+      state.virtual.lastScrollTop = state.mediaWallViewport?.scrollTop || 0;
+      recomputePrefixHeights();
+      renderVirtualWindow(true);
+      requestAnimationFrame(() => {
+        state.virtual.isScrollLocked = false;
+      });
+    }
+  }
+
+  /**
    * Processes a list of media items and appends them to the DOM.
    * Groups items by post and visually separates each group.
    * @param {Array<object>} mediaList - An array of media items from the API.
    */
   function renderMediaItems(mediaList) {
-    let contentContainer = document.getElementById('media-wall-content');
-    if (!contentContainer) {
-      contentContainer = createMediaWallDom();
-    }
-
-    const frag = document.createDocumentFragment();
-    for (const item of mediaList) {
-      if (!item?.code || item?.ad_id || item?.label === 'Sponsored') {
-        console.log('Skipping ad or non-media item:', item);
-        continue;
+    if (!config.VIRTUAL_SCROLL_ENABLED) {
+      // Simple non-virtual rendering: just append all items
+      let contentContainer = document.getElementById('media-wall-content');
+      if (!contentContainer) {
+        createMediaWallDom();
+        contentContainer = document.getElementById('media-wall-content');
       }
 
-      // Create a group container for this post
-      const group = el('div', { className: 'media-group' });
-
-      // Add post info header
-      group.appendChild(
-        el('div', {
-          className: 'media-group-info',
-          innerHTML: `<strong>@${item.user?.username}</strong> • ${
-            item.taken_at
-              ? new Date(item.taken_at * 1000).toLocaleDateString()
-              : 'Unknown'
-          }`,
-        }),
-      );
-
-      // A single post can contain a carousel of multiple images/videos.
-      const carouselItems = item.carousel_media || [item];
-
-      for (const [index, media] of carouselItems.entries()) {
-        const link = el('a', {
-          href: `https://www.instagram.com/p/${item.code}/`,
-          target: '_blank',
-          rel: 'noopener noreferrer',
-        });
-
-        // Handle videos
-        if (media.video_versions) {
-          const container = el('div', { className: 'media-container' });
-          const video = el('video', {
-            src: getBestVideoUrl(media),
-            controls: true,
-            loop: true,
-            volume: config.VIDEO_VOLUME,
-            preload: 'metadata',
-          });
-
-          // Set up auto-pause when video leaves viewport
-          setupVideoAutoPauseOnViewport(video);
-
-          // Add poster image alongside the video
-          const posterUrl = getBestImageUrl(media);
-          if (posterUrl) {
-            const poster = el('img', { src: posterUrl });
-            container.appendChild(poster);
-          }
-
-          container.appendChild(video);
-
-          link.className = 'media-link';
-          link.textContent = `Post by @${item.user.username}`;
-          if (carouselItems.length > 1) {
-            link.textContent += ` [${index + 1}/${carouselItems.length}]`;
-          }
-
-          group.appendChild(container);
-          group.appendChild(link);
+      const frag = document.createDocumentFragment();
+      for (const item of mediaList) {
+        if (!item?.code || item?.ad_id || item?.label === 'Sponsored') {
+          console.log('Skipping ad or non-media item:', item);
+          continue;
         }
-        // Handle images
-        else if (media.image_versions2) {
-          const image = el('img', { src: getBestImageUrl(media) });
-          link.appendChild(image);
-          group.appendChild(link);
-        }
+
+        const group = createMediaGroupElement(item, 0);
+        if (group) frag.appendChild(group);
       }
-
-      frag.appendChild(group);
+      contentContainer.appendChild(frag);
+      return;
     }
-    contentContainer.appendChild(frag);
+
+    // Virtual scrolling path
+    if (!state.mediaWallContainer || !state.mediaWallViewport) {
+      createMediaWallDom();
+    }
+    appendVirtualItems(mediaList);
   }
 
   // --- LOGIC & INITIALIZATION ---
@@ -824,7 +1272,12 @@
    * when the user scrolls near the bottom of the wall.
    */
   function setupInfiniteScrollObserver() {
-    // Disconnect any prior observer
+    if (config.VIRTUAL_SCROLL_ENABLED) {
+      maybeFetchNextPage();
+      return;
+    }
+
+    // Non-virtual mode: add a sentinel element and use IntersectionObserver
     if (state.scrollObserver) {
       state.scrollObserver.disconnect();
       state.scrollObserver = null;
@@ -836,8 +1289,16 @@
       return;
     }
 
-    const sentinel = document.getElementById('media-wall-scroll-sentinel');
-    if (!sentinel) return;
+    let sentinel = document.getElementById('media-wall-scroll-sentinel');
+    if (!sentinel) {
+      sentinel = document.createElement('div');
+      sentinel.id = 'media-wall-scroll-sentinel';
+      sentinel.style.height = '1px';
+      const contentContainer = document.getElementById('media-wall-content');
+      if (contentContainer) contentContainer.appendChild(sentinel);
+    }
+
+    if (!sentinel.parentElement) return;
 
     state.scrollObserver = new IntersectionObserver(
       entries => {
@@ -851,7 +1312,11 @@
           }
         }
       },
-      { root: state.mediaWallContainer, rootMargin: '200px 0px', threshold: 0 },
+      {
+        root: state.mediaWallContainer,
+        rootMargin: '200px 0px',
+        threshold: 0,
+      },
     );
     state.scrollObserver.observe(sentinel);
   }
@@ -895,11 +1360,27 @@
       }
     }
 
+    const sessionKey = getCurrentWallSessionKey();
+    const restorePreviousState = canRestoreVirtualState(sessionKey);
+
     // Mark the wall as active and fetch the first page.
     if (!state.isWallActive) {
       state.isWallActive = true;
-      state.nextPageCursor = null; // Reset cursor for a new wall
-      await fetchMedia();
+      if (restorePreviousState) {
+        createMediaWallDom();
+        state.nextPageCursor = state.virtual.nextPageCursor || null;
+        renderVirtualWindow(true);
+        if (state.mediaWallViewport) {
+          state.mediaWallViewport.scrollTop = state.virtual.scrollTop || 0;
+        }
+        scheduleVirtualRender();
+        updateLoadingIndicators();
+      } else {
+        resetVirtualState(sessionKey);
+        state.nextPageCursor = null; // Reset cursor for a new wall
+        createMediaWallDom();
+        await fetchMedia();
+      }
     }
   }
 
@@ -944,9 +1425,9 @@
 
     const buttonHtml = isHome
       ? `<article class="_ab6k _ab6l _ab6m" role="presentation" id="media-wall-trigger-button-home">
-            <div>Click to Load Full-Size Media Wall</div>
+            <div>Click to Load Full-Size Media Wall (Virtual Scroll + Resume)</div>
          </article>`
-      : `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" id="media-wall-trigger-button-profile"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Media Wall</span></a>`;
+      : `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" title="Open virtualized media wall (restores your previous scroll position)" id="media-wall-trigger-button-profile"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Media Wall</span></a>`;
 
     const placeButton = insertionPoint => {
       if (!insertionPoint) {
@@ -991,7 +1472,9 @@
    * The main entry point for the script.
    */
   function initialize() {
-    console.log('Instagram Full-Size Media Scroll Wall script loaded.');
+    console.log(
+      'Instagram Full-Size Media Scroll Wall script loaded (virtual scrolling enabled).',
+    );
     setupTrustedTypes();
     injectGlobalStyles();
     insertTriggerButton();
