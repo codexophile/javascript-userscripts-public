@@ -59,20 +59,6 @@
     false,
   );
 
-  //* moving video control panel
-  (async function () {
-    'use strict';
-    const videoControlPanel = await waitFor('#video-controlPanel');
-    style(
-      videoControlPanel,
-      `
-        left: unset;
-        right: 500px;
-        top: 50vh;
-      `,
-    );
-  })();
-
   waitFor('main > div').then(feedEl => {
     return;
     style(
