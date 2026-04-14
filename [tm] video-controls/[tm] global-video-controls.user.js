@@ -868,6 +868,29 @@
     speedDispEl.value = activeVideo.playbackRate;
     divHeightEl.textContent = `${activeVideo.videoWidth}×${activeVideo.videoHeight}`;
     divHeightEl.title = activeVideo.videoWidth * activeVideo.videoHeight;
+    updatePlaybackPercentage(activeVideo);
+  }
+
+  function updatePlaybackPercentage(videoEl) {
+    const spanPlaybackPercentage = document.querySelector(
+      '#spanPlaybackPercentage',
+    );
+    if (!spanPlaybackPercentage) return;
+
+    const duration = Number(videoEl?.duration);
+    const currentTime = Number(videoEl?.currentTime);
+    if (
+      !Number.isFinite(duration) ||
+      duration <= 0 ||
+      !Number.isFinite(currentTime)
+    ) {
+      spanPlaybackPercentage.textContent = '0%';
+      return;
+    }
+
+    const percentPlayed = (currentTime / duration) * 100;
+    const clampedPercent = Math.min(Math.max(percentPlayed, 0), 100);
+    spanPlaybackPercentage.textContent = `${clampedPercent.toFixed(1)}%`;
   }
 
   function titler(text) {
@@ -919,6 +942,7 @@
 
       const duration = video.duration;
       const currentTime = video.currentTime;
+      updatePlaybackPercentage(video);
 
       const videoArea = video.videoWidth * video.videoHeight;
       const spanVidHeight = document.querySelector(`.divHeight`);

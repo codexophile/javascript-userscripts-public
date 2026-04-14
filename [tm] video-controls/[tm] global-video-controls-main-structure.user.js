@@ -5,6 +5,7 @@ const htmlStructure = `
       <span id="frame-rate-display" class=important></span>
       <span id="bitrate-display" class=important></span>
       <span class="divHeight text important">x</span>
+      <span id="spanPlaybackPercentage" class="text" title="Playback progress percentage">0%</span>
       <span id="spanCurrentTime" class="text"></span>
       <span id="spanRemainingTime" class="text">x</span>
       <span id="spanActualRemainingTime" class="text">x</span>
@@ -104,6 +105,11 @@ const styles = `
     margin: 0 ${margins};
     border-radius: 4px;
     font-weight: bold;
+  }
+
+  #spanPlaybackPercentage {
+    background-color: #f1c40f !important;
+    color: #2c3e50 !important;
   }
 
   .controlRow, .buttonsRow {

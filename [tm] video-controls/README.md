@@ -65,3 +65,4 @@ Tip:
 - The extended volume slider is shown only when the base slider is at its maximum (or effective volume is above `0.25`) and hides again when volume returns below that threshold.
 - The control panel remembers its dragged position per hostname and respawns there on reload; if no saved position exists yet, it starts at the default location and does not write a per-site position until you manually drag it.
 - If saved coordinates become off-screen (for example after viewport size changes), they are clamped back into view automatically.
+- The header now shows playback percentage (`played / duration * 100`) and updates continuously during playback.
