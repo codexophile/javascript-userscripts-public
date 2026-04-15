@@ -42,6 +42,10 @@
     isEscapeHandlerAttached: false,
     // Prevents re-attaching the legacy scroll handler in non-virtual mode.
     isLegacyScrollHandlerAttached: false,
+    // Enables automatic loading of all remaining pages without scroll triggers.
+    infiniteWallMode: false,
+    // Prevents parallel auto-load-all loops.
+    isLoadingAllRemaining: false,
     // Restorable virtual wall session state.
     virtual: {
       sessionKey: null,
@@ -380,6 +384,34 @@
     }
   }
 
+  /**
+   * In Infinite Wall mode, keeps loading pages until no cursor remains.
+   */
+  async function loadAllRemainingMedia() {
+    if (
+      !state.infiniteWallMode ||
+      state.isLoadingAllRemaining ||
+      !state.isWallActive ||
+      !state.nextPageCursor
+    ) {
+      return;
+    }
+
+    state.isLoadingAllRemaining = true;
+    try {
+      while (
+        state.infiniteWallMode &&
+        state.isWallActive &&
+        state.nextPageCursor
+      ) {
+        await fetchMedia();
+      }
+    } finally {
+      state.isLoadingAllRemaining = false;
+      updateLoadingIndicators();
+    }
+  }
+
   // --- DOM & RENDERING ---
 
   /**
@@ -426,6 +458,8 @@
       state.mediaWallContainer = null;
       state.mediaWallViewport = null;
       state.isWallActive = false;
+      state.infiniteWallMode = false;
+      state.isLoadingAllRemaining = false;
     };
     state.mediaWallContainer.appendChild(closeButton);
 
@@ -1325,7 +1359,8 @@
    * The main function to activate the media wall.
    * It determines the page type, finds the user ID if needed, and fetches the first batch of media.
    */
-  async function initializeMediaWall() {
+  async function initializeMediaWall(options = {}) {
+    const { infinite = false } = options;
     // Determine page type (mode)
     const href = window.location.href;
     if (href.match(/https:\/\/(www\.)?instagram\.com\/?(\?|$|#)/)) {
@@ -1366,6 +1401,7 @@
     // Mark the wall as active and fetch the first page.
     if (!state.isWallActive) {
       state.isWallActive = true;
+      state.infiniteWallMode = Boolean(infinite);
       if (restorePreviousState) {
         createMediaWallDom();
         state.nextPageCursor = state.virtual.nextPageCursor || null;
@@ -1375,11 +1411,17 @@
         }
         scheduleVirtualRender();
         updateLoadingIndicators();
+        if (state.infiniteWallMode) {
+          loadAllRemainingMedia();
+        }
       } else {
         resetVirtualState(sessionKey);
         state.nextPageCursor = null; // Reset cursor for a new wall
         createMediaWallDom();
         await fetchMedia();
+        if (state.infiniteWallMode) {
+          loadAllRemainingMedia();
+        }
       }
     }
   }
@@ -1391,7 +1433,9 @@
   function insertTriggerButton() {
     if (
       document.getElementById('media-wall-trigger-button-profile') ||
-      document.getElementById('media-wall-trigger-button-home')
+      document.getElementById('media-wall-trigger-button-home') ||
+      document.getElementById('media-wall-trigger-button-profile-infinite') ||
+      document.getElementById('media-wall-trigger-button-home-infinite')
     ) {
       return; // Button already exists.
     }
@@ -1423,11 +1467,25 @@
       targetSelector = 'div[role=tablist]';
     }
 
-    const buttonHtml = isHome
+    const normalButtonHtml = isHome
       ? `<article class="_ab6k _ab6l _ab6m" role="presentation" id="media-wall-trigger-button-home">
             <div>Click to Load Full-Size Media Wall (Virtual Scroll + Resume)</div>
          </article>`
       : `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" title="Open virtualized media wall (restores your previous scroll position)" id="media-wall-trigger-button-profile"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Media Wall</span></a>`;
+
+    const infiniteButtonHtml = isHome
+      ? `<article class="_ab6k _ab6l _ab6m" role="presentation" id="media-wall-trigger-button-home-infinite">
+            <div>Click to Load Infinite Wall (Auto-load Entire Profile)</div>
+         </article>`
+      : `<a aria-selected="false" class="_aa_0" role="tab" tabindex="0" title="Open Infinite Wall and auto-load all posts without scrolling" id="media-wall-trigger-button-profile-infinite"><span class="_aacl _aaco _aacp _aacu _aacx _aad6 _aade">Infinite Wall</span></a>`;
+
+    const createTrigger = html => {
+      if (typeof generateElements === 'function') {
+        return generateElements(html);
+      }
+      domParserContainer.innerHTML = html;
+      return domParserContainer.firstElementChild;
+    };
 
     const placeButton = insertionPoint => {
       if (!insertionPoint) {
@@ -1438,20 +1496,29 @@
         return;
       }
       console.log('Injecting trigger button for', state.pageMode, 'page...');
-      let triggerButton;
-      if (typeof generateElements === 'function') {
-        triggerButton = generateElements(buttonHtml);
-      } else {
-        domParserContainer.innerHTML = buttonHtml;
-        triggerButton = domParserContainer.firstElementChild;
-      }
+
+      const triggerButton = createTrigger(normalButtonHtml);
+      const infiniteTriggerButton = createTrigger(infiniteButtonHtml);
+
       triggerButton.onclick = e => {
         e.preventDefault();
         e.stopPropagation();
-        initializeMediaWall();
+        initializeMediaWall({ infinite: false });
       };
-      if (isHome) insertionPoint.prepend(triggerButton);
-      else insertionPoint.appendChild(triggerButton);
+
+      infiniteTriggerButton.onclick = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        initializeMediaWall({ infinite: true });
+      };
+
+      if (isHome) {
+        insertionPoint.prepend(infiniteTriggerButton);
+        insertionPoint.prepend(triggerButton);
+      } else {
+        insertionPoint.appendChild(triggerButton);
+        insertionPoint.appendChild(infiniteTriggerButton);
+      }
     };
 
     // Prefer `waitFor` from vanilla.js if available
