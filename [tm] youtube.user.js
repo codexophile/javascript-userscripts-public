@@ -48,57 +48,6 @@
     }
   }
 
-  //* Auto pause on losing focus
-  // Auto pause video on losing focus
-  (async function () {
-    'use strict';
-
-    const video = await waitFor('video');
-
-    // Helper function to handle state changes
-    const handleVisibilityChange = isHidden => {
-      if (isHidden) {
-        // -- Browser lost focus/hidden --
-
-        // Check if video is actually playing right now
-        // (readyState > 2 ensures we don't try to check loading videos)
-        if (!video.paused && !video.ended && video.readyState > 2) {
-          // Set a custom property to remember it was playing
-          video.shouldResume = true;
-          video.pause();
-        } else {
-          // User had already paused it, so we shouldn't auto-resume
-          video.shouldResume = false;
-        }
-      } else {
-        // -- Browser gained focus/visible --
-
-        // Only play if our custom flag says so
-        if (video.shouldResume) {
-          // Play returns a promise, helpful to catch auto-play errors
-          video.play().catch(error => {
-            console.log('Auto-resume prevented by browser policy:', error);
-          });
-          video.shouldResume = false; // Reset flag
-        }
-      }
-    };
-
-    // 1. Handle Tab Switching and Minimizing (Page Visibility API)
-    document.addEventListener('visibilitychange', () => {
-      handleVisibilityChange(document.hidden);
-    });
-
-    // 2. Handle clicking out of the browser window (e.g., dual monitors)
-    window.addEventListener('blur', () => {
-      handleVisibilityChange(true);
-    });
-
-    window.addEventListener('focus', () => {
-      handleVisibilityChange(false);
-    });
-  })();
-
   GM_addStyle(`
 
         #buttonsContainer { display: flex }
