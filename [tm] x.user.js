@@ -1,6 +1,11 @@
 (function () {
   'use strict';
 
+  //* Auto click 'show more'
+  waitForEach('[data-testid="tweet-text-show-more-link"]', showMoreLink => {
+    showMoreLink.click();
+  });
+
   //* sets volume to a low value
   waitForEach('video,audio', mediaItem => {
     mediaItem.addEventListener('volumechange', () => {
