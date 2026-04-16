@@ -2,6 +2,14 @@
   ('use strict');
   if (window.top != window.self) return; //don't run on frames or iframes
 
+  const REDDIT_TITLE_SUFFIX = '- [Reddit]';
+  function ensureRedditTitleSuffix() {
+    if (!document.title.includes(REDDIT_TITLE_SUFFIX)) {
+      document.title = `${document.title.trim()} ${REDDIT_TITLE_SUFFIX}`;
+    }
+  }
+  ensureRedditTitleSuffix();
+
   //* API
   (function () {
     'use strict';
@@ -824,6 +832,8 @@
   });
 
   let observer = new MutationObserver(() => {
+    ensureRedditTitleSuffix();
+
     //* gallery
     jQuery('gallery-carousel:not(.galleryDone)').each(function () {
       const $this = jQuery(this);
