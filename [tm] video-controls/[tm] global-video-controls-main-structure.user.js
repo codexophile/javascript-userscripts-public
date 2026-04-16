@@ -13,9 +13,7 @@ const htmlStructure = `
     
     <div class="controlRow">
       <input type="number" title="Speed" step="0.1" min="0.1" max="4" class="numinp" id="speedDisp" value="1">
-      <input type="number" title="Volume" step="0.001" class="numinp" id="volDisp">
       <input type="range" class="slidSpeedFin important vidContRange" min="0.1" max="4" step="0.1" value="1">
-      <button id="muteButton" for="volDisp">🔊</button>
       <input type="checkbox" title="Auto Switch" id="cbAutoSwitch">
       <input type="checkbox" title="Auto Hide (header-only on mouse leave)" id="cbAutoHide">
       <input type="checkbox" title="Pause video when the tab loses focus, the browser is minimized, or focus moves away" id="cbAutoPauseOnBlur">
@@ -54,9 +52,17 @@ const htmlStructure = `
       <button id="buttonRotateR">⭮</button>
     </div>
 
-    <input type="range" class="slidVolFin important vidContRange" min="0" max="0.25" step="0.001">
-    <input type="range" class="slidVolExt important vidContRange" min="0.25" max="1" step="0.001" style="display: none;" title="Extended volume (0.25 to 1)">
+    <div id="volume-related-elements" class="important" style="display: flex;">
+      <div id="volume-sliders">
+        <input type="range" class="slidVolFin important vidContRange" min="0" max="0.25" step="0.001">
+        <input type="range" class="slidVolExt important vidContRange" min="0.25" max="1" step="0.001" style="display: none;" title="Extended volume (0.25 to 1)">
+      </div>
+      <input type="number" title="Volume" step="0.001" class="numinp" id="volDisp">
+      <button id="muteButton" for="volDisp">🔊</button>
+    </div>
+    
     <input type="range" id="progress" class="important vidContRange" min="0" max="100" step="0.001" value="0">
+
   </div>
 `;
 
