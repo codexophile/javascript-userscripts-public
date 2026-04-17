@@ -25,9 +25,12 @@
           mediaItemBtnContainer.parentElement.querySelectorAll('a'),
         );
 
+        peekTagsBtnEl.textContent = '⏳';
         const taggedProfiles = await buildTaggedProfileList(profileLinkEls);
         showTaggedProfilesPopup(taggedProfiles);
+        peekTagsBtnEl.textContent = '🏷️';
       } catch (error) {
+        peekTagsBtnEl.textContent = '⚠️';
         console.error('Failed to open tagged profiles popup:', error);
       }
     });
