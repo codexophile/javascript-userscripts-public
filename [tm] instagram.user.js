@@ -31,7 +31,7 @@
         peekTagsBtnEl.textContent = '🏷️';
       } catch (error) {
         peekTagsBtnEl.textContent = '⚠️';
-        console.error('Failed to open tagged profiles popup:', error);
+        alert('Failed to open tagged profiles popup:', error);
       }
     });
   });
