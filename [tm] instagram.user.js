@@ -12,6 +12,27 @@
     ``,
   );
 
+  //* peeking tags
+  waitForEach('div:has(>button title)', mediaItemBtnContainer => {
+    const peekTagsBtnEl = generateElements(
+      `<button title="Peek tags">🏷️</button>`,
+      mediaItemBtnContainer,
+    );
+    peekTagsBtnEl.type = 'button';
+    peekTagsBtnEl.addEventListener('click', async () => {
+      try {
+        const profileLinkEls = Array.from(
+          mediaItemBtnContainer.parentElement.querySelectorAll('a'),
+        );
+
+        const taggedProfiles = await buildTaggedProfileList(profileLinkEls);
+        showTaggedProfilesPopup(taggedProfiles);
+      } catch (error) {
+        console.error('Failed to open tagged profiles popup:', error);
+      }
+    });
+  });
+
   //* new yt-dlp button
   const { addButton } = await Collapsible();
   addButton('tiktok', null, () => {
@@ -36,9 +57,6 @@
       `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
     );
   });
-
-  //* get tags button
-  addButton('🏷️');
 
   //* Shortcuts
   document.addEventListener(
@@ -178,6 +196,219 @@
       .map(tagEl => tagEl.textContent)
       .join(', ');
     return tagsString;
+  }
+
+  async function buildTaggedProfileList(profileLinkEls) {
+    const seenProfiles = new Set();
+    const taggedProfiles = [];
+
+    for (const profileLinkEl of profileLinkEls) {
+      const profileData = await extractTaggedProfileData(profileLinkEl);
+      if (!profileData) continue;
+
+      const uniqueKey = profileData.profileUrl || profileData.profileId;
+      if (!uniqueKey || seenProfiles.has(uniqueKey)) continue;
+
+      seenProfiles.add(uniqueKey);
+      taggedProfiles.push(profileData);
+    }
+
+    return taggedProfiles;
+  }
+
+  let taggedProfilesModal = null;
+
+  function extractProfileIdFromUrl(profileUrl) {
+    if (!profileUrl) return '';
+
+    try {
+      const normalizedUrl = new URL(profileUrl, location.origin);
+      const match = normalizedUrl.pathname.match(/^\/([^/]+)\/?$/);
+      return match ? match[1] : normalizedUrl.pathname.replaceAll('/', '');
+    } catch (error) {
+      const match = profileUrl.match(/\/([^/?#]+)\/?(?:[?#].*)?$/);
+      return match ? match[1] : profileUrl.replaceAll('/', '');
+    }
+  }
+
+  function getLinkProfileDataFromDom(profileLinkEl) {
+    const profileUrl =
+      profileLinkEl?.href || profileLinkEl?.getAttribute('href');
+    const profileId = extractProfileIdFromUrl(profileUrl);
+    const profileImageEl = profileLinkEl?.querySelector('img');
+    const profileImageUrl =
+      profileImageEl?.src || profileImageEl?.getAttribute('src') || '';
+    const userName =
+      profileLinkEl?.getAttribute('title') ||
+      profileImageEl?.alt ||
+      profileLinkEl?.textContent?.trim() ||
+      profileId;
+
+    return {
+      profileUrl,
+      profileId,
+      userName,
+      profileImageUrl,
+    };
+  }
+
+  async function extractTaggedProfileData(profileLinkEl) {
+    if (!profileLinkEl) return null;
+
+    const domProfileData = getLinkProfileDataFromDom(profileLinkEl);
+    if (!domProfileData.profileUrl && !domProfileData.profileId) return null;
+
+    if (domProfileData.profileImageUrl && domProfileData.userName) {
+      return domProfileData;
+    }
+
+    const fallbackProfileData = await fetchProfileData(
+      domProfileData.profileUrl,
+    );
+    return {
+      ...domProfileData,
+      ...fallbackProfileData,
+      profileId: domProfileData.profileId || fallbackProfileData.profileId,
+      profileUrl: domProfileData.profileUrl || fallbackProfileData.profileUrl,
+    };
+  }
+
+  async function fetchProfileData(profileUrl) {
+    if (!profileUrl) return {};
+
+    try {
+      const profileDoc = await fetchDoc(profileUrl);
+      const imageUrl =
+        profileDoc.querySelector('meta[property="og:image"]')?.content || '';
+      const userName =
+        profileDoc.querySelector('meta[property="og:title"]')?.content ||
+        profileDoc.querySelector('header h2')?.textContent?.trim() ||
+        profileDoc.querySelector('main h2')?.textContent?.trim() ||
+        '';
+
+      return {
+        profileUrl,
+        profileId: extractProfileIdFromUrl(profileUrl),
+        userName,
+        profileImageUrl: imageUrl,
+      };
+    } catch (error) {
+      console.error('Failed to fetch tagged profile data:', error);
+      return {
+        profileUrl,
+        profileId: extractProfileIdFromUrl(profileUrl),
+      };
+    }
+  }
+
+  function showTaggedProfilesPopup(taggedProfiles) {
+    if (!taggedProfilesModal) {
+      taggedProfilesModal = new ModalBox({
+        width: '420px',
+        backgroundColor: '#111111',
+        headerColor: '#1f1f1f',
+        headerTextColor: '#f5f5f5',
+        closeButtonColor: '#f5f5f5',
+        closeOnOutsideClick: true,
+        destroyOnClose: false,
+      });
+    }
+
+    taggedProfilesModal.setTitle('Tagged profiles');
+    taggedProfilesModal.setContent(buildTaggedProfilesMarkup(taggedProfiles));
+    taggedProfilesModal.show();
+  }
+
+  function buildTaggedProfilesMarkup(taggedProfiles) {
+    const escapeHtml = text =>
+      String(text ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+
+    const profileRows = taggedProfiles.length
+      ? taggedProfiles
+          .map(profileData => {
+            const profileUrl = escapeHtml(profileData.profileUrl || '#');
+            const profileId = escapeHtml(profileData.profileId || 'unknown');
+            const userName = escapeHtml(
+              profileData.userName || profileData.profileId || '',
+            );
+            const profileImageUrl = escapeHtml(
+              profileData.profileImageUrl || '',
+            );
+
+            const avatarMarkup = profileImageUrl
+              ? `<img src="${profileImageUrl}" alt="${userName || profileId}">`
+              : `<div></div>`;
+
+            return `
+              <a class="tagged-profile-row" href="${profileUrl}" target="_blank" rel="noopener noreferrer">
+                ${avatarMarkup}
+                <div class="tagged-profile-text">
+                  <div class="tagged-profile-id">${profileId}</div>
+                  <div class="tagged-profile-name">${userName}</div>
+                </div>
+              </a>
+            `;
+          })
+          .join('')
+      : `<div class="tagged-profiles-empty">No tagged profiles found for this post.</div>`;
+
+    return `
+      <div class="tagged-profiles-popup-body">
+        ${profileRows}
+      </div>
+      <style>
+        .tagged-profiles-popup-body {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          max-height: 65vh;
+          overflow: auto;
+          color: #f5f5f5;
+        }
+        .tagged-profile-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px;
+          border-radius: 10px;
+          background: #1c1c1c;
+          color: inherit;
+          text-decoration: none;
+        }
+        .tagged-profile-row img,
+        .tagged-profile-row > div:first-child {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          object-fit: cover;
+          background: #2a2a2a;
+          flex: 0 0 auto;
+        }
+        .tagged-profile-text {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+        .tagged-profile-id {
+          font-weight: 700;
+          font-size: 14px;
+          word-break: break-word;
+        }
+        .tagged-profile-name {
+          font-size: 12px;
+          opacity: 0.8;
+          word-break: break-word;
+        }
+        .tagged-profiles-empty {
+          color: #f5f5f5;
+        }
+      </style>
+    `;
   }
 
   function getUserId(image) {
