@@ -23,17 +23,17 @@
     'implicit',
     'implicitly',
     'implicitness',
-    'implicitnesses',
     'implicate',
     'implicated',
     'implicates',
     'implicating',
     'implicative',
     'implicatively',
-    'implicator',
-    'implicators',
-    'implicature',
-    'implicatures',
+
+    'suggest',
+    'suggests',
+    'suggesting',
+    'suggested',
   ];
 
   //* marking items with important words
