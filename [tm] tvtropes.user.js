@@ -10,6 +10,42 @@
   const COLOR_IMPORTANT = '#07540b';
   const fetchSpinners = new WeakMap();
 
+  const specialWords = [
+    'imply',
+    'implies',
+    'implying',
+    'implied',
+    'implication',
+    'implications',
+    'implicative',
+    'implicatively',
+    'implicational',
+    'implicit',
+    'implicitly',
+    'implicitness',
+    'implicitnesses',
+    'implicate',
+    'implicated',
+    'implicates',
+    'implicating',
+    'implicative',
+    'implicatively',
+    'implicator',
+    'implicators',
+    'implicature',
+    'implicatures',
+  ];
+
+  //* marking items with important words
+  const listEls = document.querySelectorAll(`li`);
+  listEls.forEach(listEl => {
+    const text = listEl.textContent.toLowerCase();
+    if (specialWords.some(word => text.includes(word))) {
+      listEl.style.border = '2px solid orange';
+      listEl.style.padding = '0.5em';
+    }
+  });
+
   let unsavedChanges = false;
   ['tropesSeen', 'tropesImportant'].forEach(key => {
     GM_addValueChangeListener(key, () => {
