@@ -70,6 +70,7 @@ Tip:
 - The control panel remembers its dragged position in the active profile and respawns there on reload; if no saved position exists yet, it starts at the default location and does not write a position until you manually drag it.
 - If saved coordinates become off-screen (for example after viewport size changes), they are clamped back into view automatically.
 - The header now shows playback percentage (`played / duration * 100`) and updates continuously during playback.
+- Internal control panel DOM updates are ignored by the page-level `MutationObserver` trigger path, which prevents self-induced refresh loops while paused.
 
 ### Storage Shape
 

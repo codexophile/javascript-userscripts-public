@@ -57,6 +57,7 @@
   const syncSubtitleAutoSpeedSoon = debounce(() => {
     syncSubtitleAutoSpeed();
   }, 75);
+  const debouncedMain = debounce(main, 150);
 
   installShadowRootTracking();
 
@@ -68,11 +69,17 @@
   window.addEventListener('blur', handleAutoPauseTrigger);
   window.addEventListener('pagehide', handleAutoPauseTrigger);
 
-  new MutationObserver(debounce(main, 150)).observe(document.body, {
+  new MutationObserver(mutations => {
+    const hasExternalMutation = mutations.some(
+      mutation => !isNodeInsideControlPanel(mutation?.target),
+    );
+    if (!hasExternalMutation) return;
+    debouncedMain();
+  }).observe(document.body, {
     childList: true,
     subtree: true,
   });
-  document.addEventListener('scroll', debounce(main, 150));
+  document.addEventListener('scroll', debouncedMain);
   document.addEventListener('keyup', keyboardEvent, false);
   document.addEventListener('mousedown', addMouseEvents);
   window.addEventListener('beforeunload', stopSubtitlePresenceMonitoring);
@@ -137,6 +144,19 @@
 
     visitRoot(root);
     return matchedElements;
+  }
+
+  function isNodeInsideControlPanel(node) {
+    const panelEl =
+      controlPanel || document.getElementById('video-controlPanel');
+    if (!panelEl || !node) return false;
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      return panelEl.contains(node);
+    }
+
+    const parentNode = node.parentNode;
+    return !!parentNode && panelEl.contains(parentNode);
   }
 
   async function main() {
