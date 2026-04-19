@@ -3,6 +3,7 @@ const htmlStructure = `
     <div id="contPanelHeader" class=important>
       <div id="header-row-one" class="header-row">
         <button class="head important" title="Cycle panel view (compact/full/header-only)">⚫</button>
+        <input type="checkbox" title="Auto Hide (header-only on mouse leave). Saved to the matched profile immediately." id="cbAutoHide">
         <span id="frame-rate-display" class=important></span>
         <span id="bitrate-display" class=important></span>
         <span class="divHeight text important">x</span>
@@ -16,6 +17,7 @@ const htmlStructure = `
         <button class="important" id="rewind-btn">0️⃣</button>
         <button class="important" id="speedToggle" title="Toggle speed between 1x and fast speed">💨</button>
         <button class="important" id="subtitleSpeedTransitionToggle" title="Toggle subtitle speed transition">🚀</button>
+        <input type="checkbox" title="Pause video when the tab loses focus, the browser is minimized, or focus moves away. Saved to the matched profile immediately." id="cbAutoPauseOnBlur">
       </div>
     </div>
     
@@ -23,8 +25,6 @@ const htmlStructure = `
       <input type="number" title="Speed" step="0.1" min="0.1" max="4" class="numinp" id="speedDisp" value="1">
       <input type="range" class="slidSpeedFin important vidContRange" min="0.1" max="4" step="0.1" value="1">
       <input type="checkbox" title="Auto Switch" id="cbAutoSwitch">
-      <input type="checkbox" title="Auto Hide (header-only on mouse leave). Saved to the matched profile immediately." id="cbAutoHide">
-      <input type="checkbox" title="Pause video when the tab loses focus, the browser is minimized, or focus moves away. Saved to the matched profile immediately." id="cbAutoPauseOnBlur">
     </div>
 
     <div class="controlRow important" title="Subtitle auto-speed: selector present = normal speed, selector absent = fast speed. Profile values update immediately.">
