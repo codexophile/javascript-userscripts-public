@@ -15,14 +15,14 @@ const htmlStructure = `
       <input type="number" title="Speed" step="0.1" min="0.1" max="4" class="numinp" id="speedDisp" value="1">
       <input type="range" class="slidSpeedFin important vidContRange" min="0.1" max="4" step="0.1" value="1">
       <input type="checkbox" title="Auto Switch" id="cbAutoSwitch">
-      <input type="checkbox" title="Auto Hide (header-only on mouse leave)" id="cbAutoHide">
-      <input type="checkbox" title="Pause video when the tab loses focus, the browser is minimized, or focus moves away" id="cbAutoPauseOnBlur">
+      <input type="checkbox" title="Auto Hide (header-only on mouse leave). Saved to the matched profile immediately." id="cbAutoHide">
+      <input type="checkbox" title="Pause video when the tab loses focus, the browser is minimized, or focus moves away. Saved to the matched profile immediately." id="cbAutoPauseOnBlur">
     </div>
 
-    <div class="controlRow important" title="Subtitle auto-speed: selector present = normal speed, selector absent = fast speed.">
-      <input type="checkbox" title="Enable subtitle auto-speed mode" id="cbSubtitleAutoSpeed">
-      <input type="number" title="Fast speed used when subtitle selector is not present" step="0.1" min="0.1" max="16" class="numinp" id="numAutoFastSpeed" value="3">
-      <input type="text" title="CSS selector for subtitle element. If selector exists in DOM => normal speed, otherwise fast speed." id="inputSubtitleSelector" placeholder="Subtitle selector (example: .ytp-caption-segment)">
+    <div class="controlRow important" title="Subtitle auto-speed: selector present = normal speed, selector absent = fast speed. Profile values update immediately.">
+      <input type="checkbox" title="Enable subtitle auto-speed mode. Saved to the matched profile immediately." id="cbSubtitleAutoSpeed">
+      <input type="number" title="Fast speed used when subtitle selector is not present. Saved to the matched profile immediately." step="0.1" min="0.1" max="16" class="numinp" id="numAutoFastSpeed" value="3">
+      <input type="text" title="CSS selector for subtitle element. If selector exists in DOM => normal speed, otherwise fast speed. Saved to the matched profile immediately." id="inputSubtitleSelector" placeholder="Subtitle selector (example: .ytp-caption-segment)">
       <span id="autoSpeedState" class="text important" title="Current subtitle auto-speed state">AUTO OFF</span>
     </div>
       

@@ -25,13 +25,10 @@
   let autoPauseOnBlurEnabled = false;
   let autoPausedByFocusLoss = false;
   let panelMouseInside = false;
+  const defaultFastSpeed = 3;
   const panelDefaultPosition = { top: 100, left: 10 };
-  const panelAutoHideStorageKey = `global-video-controls:autoHide:${location.hostname}`;
-  const panelPositionStorageKey = `global-video-controls:panelPosition:${location.hostname}`;
-  const autoPauseOnBlurStorageKey = `global-video-controls:autoPauseOnBlur:${location.hostname}`;
-  const autoSpeedEnabledStorageKey = `global-video-controls:autoSpeedEnabled:${location.hostname}`;
-  const autoSpeedSelectorStorageKey = `global-video-controls:autoSpeedSelector:${location.hostname}`;
-  const autoSpeedFastSpeedStorageKey = `global-video-controls:autoSpeedFast:${location.hostname}`;
+  const settingsConfigStorageKey = 'globalVideoControls';
+  const defaultProfileId = 'default';
   const musicalSubtitlePattern = /[♪♫♬♩🎵🎶]/;
   const hasModernGMStorage =
     typeof GM !== 'undefined' &&
@@ -39,6 +36,11 @@
     typeof GM.setValue === 'function';
   const trackedShadowRootsByHost = new WeakMap();
   let shadowRootTrackingInstalled = false;
+
+  let settingsConfig = null;
+  let activeRulePattern = null;
+  let activeProfileId = null;
+  let activeHostname = '';
 
   let subtitleAutoSpeedEnabled = false;
   let subtitleSelector = '';
@@ -162,6 +164,7 @@
   }
 
   async function hydrateStoredSettings() {
+    await ensureSettingsConfigLoaded();
     subtitleAutoSpeedEnabled = await loadSubtitleAutoSpeedEnabledSetting();
     autoPauseOnBlurEnabled = await loadAutoPauseOnBlurSetting();
     subtitleSelector = await loadSubtitleSelectorSetting();
@@ -170,29 +173,397 @@
     panelPosition = await loadPanelPositionSetting();
   }
 
-  function parsePanelPosition(rawValue) {
+  function getDefaultProfileShape() {
+    return {
+      autoHide: false,
+      autoPauseOnBlur: false,
+      autoSpeedEnabled: false,
+      autoSpeedSelector: '',
+      autoSpeedFast: defaultFastSpeed,
+    };
+  }
+
+  function createDefaultSettingsConfig() {
+    return {
+      profiles: {
+        [defaultProfileId]: getDefaultProfileShape(),
+      },
+      rules: {},
+    };
+  }
+
+  function normalizeHostname(hostname) {
+    const normalized = String(hostname || '')
+      .trim()
+      .toLowerCase();
+    return normalized.replace(/\.+$/, '');
+  }
+
+  function normalizePanelPositionValue(value) {
+    if (!value || typeof value !== 'object') return null;
+
+    const top = Number(value.top);
+    const left = Number(value.left);
+    if (!Number.isFinite(top) || !Number.isFinite(left)) return null;
+
+    return { top, left };
+  }
+
+  function sanitizeSelectorValue(value) {
+    return String(value || '').trim();
+  }
+
+  function normalizeFastSpeedValue(value, fallback = defaultFastSpeed) {
+    const parsed = Number.parseFloat(String(value));
+    if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+    return parsed;
+  }
+
+  function normalizeProfile(
+    profileValue,
+    fallbackFastSpeed = defaultFastSpeed,
+  ) {
+    const source =
+      profileValue && typeof profileValue === 'object' ? profileValue : {};
+    const normalized = {};
+
+    if (typeof source.autoHide === 'boolean') {
+      normalized.autoHide = source.autoHide;
+    }
+    if (typeof source.autoPauseOnBlur === 'boolean') {
+      normalized.autoPauseOnBlur = source.autoPauseOnBlur;
+    }
+    if (typeof source.autoSpeedEnabled === 'boolean') {
+      normalized.autoSpeedEnabled = source.autoSpeedEnabled;
+    }
+    if (source.autoSpeedSelector !== undefined) {
+      normalized.autoSpeedSelector = sanitizeSelectorValue(
+        source.autoSpeedSelector,
+      );
+    }
+    if (source.autoSpeedFast !== undefined) {
+      normalized.autoSpeedFast = normalizeFastSpeedValue(
+        source.autoSpeedFast,
+        fallbackFastSpeed,
+      );
+    }
+
+    const position = normalizePanelPositionValue(source.panelPosition);
+    if (position) {
+      normalized.panelPosition = position;
+    }
+
+    return normalized;
+  }
+
+  function getSettingsRoot(config = settingsConfig) {
+    if (!config || typeof config !== 'object') {
+      return null;
+    }
+
+    const root = config;
+
+    if (!root.profiles || typeof root.profiles !== 'object') {
+      root.profiles = {};
+    }
+    if (!root.rules || typeof root.rules !== 'object') {
+      root.rules = {};
+    }
+
+    return root;
+  }
+
+  function normalizeSettingsConfig(rawConfig) {
+    const seededConfig = createDefaultSettingsConfig();
+    const root = getSettingsRoot(seededConfig);
+
+    const parsedConfig = parseConfigPayload(rawConfig);
+    if (!parsedConfig || typeof parsedConfig !== 'object') {
+      return seededConfig;
+    }
+
+    const rawRoot =
+      parsedConfig.profiles || parsedConfig.rules ? parsedConfig : null;
+
+    if (!rawRoot || typeof rawRoot !== 'object') {
+      return seededConfig;
+    }
+
+    const rawProfiles =
+      rawRoot.profiles && typeof rawRoot.profiles === 'object'
+        ? rawRoot.profiles
+        : {};
+    const rawRules =
+      rawRoot.rules && typeof rawRoot.rules === 'object' ? rawRoot.rules : {};
+
+    root.profiles = {};
+    for (const [profileId, profileValue] of Object.entries(rawProfiles)) {
+      const normalizedProfileId = String(profileId || '').trim();
+      if (!normalizedProfileId) continue;
+      root.profiles[normalizedProfileId] = normalizeProfile(profileValue);
+    }
+
+    if (!root.profiles[defaultProfileId]) {
+      root.profiles[defaultProfileId] = getDefaultProfileShape();
+    }
+
+    root.rules = {};
+    for (const [pattern, profileId] of Object.entries(rawRules)) {
+      const normalizedPattern = normalizeHostname(pattern);
+      const normalizedProfileId = String(profileId || '').trim();
+      if (!normalizedPattern || !normalizedProfileId) continue;
+      root.rules[normalizedPattern] = normalizedProfileId;
+    }
+
+    return seededConfig;
+  }
+
+  function parseConfigPayload(rawValue) {
     if (!rawValue) return null;
 
-    try {
-      const parsed = JSON.parse(rawValue);
-      const top = Number(parsed?.top);
-      const left = Number(parsed?.left);
-      if (!Number.isFinite(top) || !Number.isFinite(left)) return null;
+    if (typeof rawValue === 'string') {
+      try {
+        return JSON.parse(rawValue);
+      } catch (error) {
+        return null;
+      }
+    }
 
-      return { top, left };
+    if (typeof rawValue === 'object') {
+      return rawValue;
+    }
+
+    return null;
+  }
+
+  async function readConfigFromStorage() {
+    if (!hasModernGMStorage) return undefined;
+
+    try {
+      const storedValue = await GM.getValue(settingsConfigStorageKey);
+      const parsed = parseConfigPayload(storedValue);
+      if (!parsed || typeof parsed !== 'object') return undefined;
+      if (!parsed.profiles || typeof parsed.profiles !== 'object') {
+        return undefined;
+      }
+      if (!parsed.rules || typeof parsed.rules !== 'object') return undefined;
+
+      return parsed;
     } catch (error) {
-      return null;
+      return undefined;
     }
   }
 
+  function writeConfigToStorage(config) {
+    if (!hasModernGMStorage) return;
+
+    Promise.resolve(GM.setValue(settingsConfigStorageKey, config)).catch(
+      () => {},
+    );
+  }
+
+  async function ensureSettingsConfigLoaded() {
+    if (settingsConfig) {
+      resolveActiveProfileForHostname(location.hostname);
+      return;
+    }
+
+    const storedConfig = await readConfigFromStorage();
+    settingsConfig = normalizeSettingsConfig(storedConfig);
+    writeConfigToStorage(settingsConfig);
+    resolveActiveProfileForHostname(location.hostname);
+  }
+
+  function getRuleMatchSpecificityScore(pattern) {
+    if (!pattern.includes('*')) {
+      return 1000000 + pattern.length;
+    }
+
+    const wildcardCount = (pattern.match(/\*/g) || []).length;
+    const literalChars = pattern.replace(/\*/g, '').length;
+    return literalChars * 100 - wildcardCount * 10;
+  }
+
+  function escapeRegex(text) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function buildHostnamePatternRegex(pattern) {
+    if (!pattern) return null;
+    if (/[^a-z0-9*.-]/.test(pattern)) return null;
+
+    const escapedPattern = escapeRegex(pattern).replace(/\\\*/g, '.*');
+    return new RegExp(`^${escapedPattern}$`);
+  }
+
+  function findMatchingRule(hostname) {
+    const root = getSettingsRoot();
+    if (!root) return null;
+
+    const normalizedHost = normalizeHostname(hostname);
+    const rules = Object.entries(root.rules || {});
+
+    let bestMatch = null;
+    for (const [pattern, profileId] of rules) {
+      const regex = buildHostnamePatternRegex(pattern);
+      if (!regex) continue;
+      if (!regex.test(normalizedHost)) continue;
+
+      const score = getRuleMatchSpecificityScore(pattern);
+      if (!bestMatch || score > bestMatch.score) {
+        bestMatch = { pattern, profileId, score };
+      }
+    }
+
+    return bestMatch;
+  }
+
+  function resolveActiveProfileForHostname(hostname) {
+    activeHostname = normalizeHostname(hostname);
+    activeRulePattern = null;
+    activeProfileId = null;
+
+    const bestMatch = findMatchingRule(activeHostname);
+    if (!bestMatch) {
+      return;
+    }
+
+    activeRulePattern = bestMatch.pattern;
+    activeProfileId = bestMatch.profileId;
+  }
+
+  function getActiveProfileForRead() {
+    if (!activeProfileId) return null;
+
+    const root = getSettingsRoot();
+    if (!root) return null;
+
+    const profile = root.profiles[activeProfileId];
+    if (!profile || typeof profile !== 'object') return null;
+
+    return profile;
+  }
+
+  function createAutoProfileId(hostname) {
+    const root = getSettingsRoot();
+    const profiles = root?.profiles || {};
+
+    const normalizedHost = normalizeHostname(hostname) || 'unknown-host';
+    const sanitizedHost = normalizedHost.replace(/[^a-z0-9.-]/g, '_');
+    const baseId = `auto:${sanitizedHost}`;
+    let candidateId = baseId;
+    let suffix = 2;
+
+    while (Object.prototype.hasOwnProperty.call(profiles, candidateId)) {
+      candidateId = `${baseId}-${suffix}`;
+      suffix += 1;
+    }
+
+    return candidateId;
+  }
+
+  function ensureWritableProfile() {
+    const root = getSettingsRoot();
+    if (!root) return null;
+
+    if (activeProfileId) {
+      if (!root.profiles[activeProfileId]) {
+        root.profiles[activeProfileId] = {};
+        writeConfigToStorage(settingsConfig);
+      }
+      return root.profiles[activeProfileId];
+    }
+
+    const newProfileId = createAutoProfileId(
+      activeHostname || location.hostname,
+    );
+    root.profiles[newProfileId] = {};
+    root.rules[activeHostname] = newProfileId;
+
+    activeRulePattern = activeHostname;
+    activeProfileId = newProfileId;
+
+    writeConfigToStorage(settingsConfig);
+    return root.profiles[newProfileId];
+  }
+
+  function loadBooleanSettingFromProfile(profileKey, defaultValue = false) {
+    const activeProfile = getActiveProfileForRead();
+    if (!activeProfile) return defaultValue;
+
+    const rawValue = activeProfile[profileKey];
+    return typeof rawValue === 'boolean' ? rawValue : defaultValue;
+  }
+
+  function saveBooleanSettingToProfile(profileKey, value) {
+    const writableProfile = ensureWritableProfile();
+    if (!writableProfile) return;
+
+    writableProfile[profileKey] = !!value;
+    writeConfigToStorage(settingsConfig);
+  }
+
+  function loadTextSettingFromProfile(profileKey, defaultValue = '') {
+    const activeProfile = getActiveProfileForRead();
+    if (!activeProfile) return defaultValue;
+
+    if (activeProfile[profileKey] === undefined) {
+      return defaultValue;
+    }
+
+    return String(activeProfile[profileKey] || '').trim();
+  }
+
+  function saveTextSettingToProfile(profileKey, value) {
+    const writableProfile = ensureWritableProfile();
+    if (!writableProfile) return;
+
+    writableProfile[profileKey] = String(value || '').trim();
+    writeConfigToStorage(settingsConfig);
+  }
+
+  function loadPanelPositionFromProfile() {
+    const activeProfile = getActiveProfileForRead();
+    if (!activeProfile) return null;
+
+    return normalizePanelPositionValue(activeProfile.panelPosition);
+  }
+
+  function savePanelPositionToProfile(position) {
+    if (!position) return;
+
+    const normalizedPosition = normalizePanelPositionValue(position);
+    if (!normalizedPosition) return;
+
+    const writableProfile = ensureWritableProfile();
+    if (!writableProfile) return;
+
+    writableProfile.panelPosition = normalizedPosition;
+    writeConfigToStorage(settingsConfig);
+  }
+
+  function loadFastSpeedFromProfile(defaultValue) {
+    const activeProfile = getActiveProfileForRead();
+    if (!activeProfile) return defaultValue;
+
+    return normalizeFastSpeedValue(activeProfile.autoSpeedFast, defaultValue);
+  }
+
+  function saveFastSpeedToProfile(value) {
+    const parsed = normalizeFastSpeedValue(value, defaultFastSpeed);
+    const writableProfile = ensureWritableProfile();
+    if (!writableProfile) return;
+
+    writableProfile.autoSpeedFast = parsed;
+    writeConfigToStorage(settingsConfig);
+  }
+
   async function loadPanelPositionSetting() {
-    const raw = await loadStoredString(panelPositionStorageKey, '');
-    return parsePanelPosition(raw);
+    return loadPanelPositionFromProfile();
   }
 
   function savePanelPositionSetting(position) {
-    if (!position) return;
-    saveStoredString(panelPositionStorageKey, JSON.stringify(position));
+    savePanelPositionToProfile(position);
   }
 
   function clampPanelPosition(controlPanelEl, position) {
@@ -254,72 +625,24 @@
     }
   }
 
-  async function loadStoredString(key, defaultValue = '') {
-    if (hasModernGMStorage) {
-      try {
-        const gmValue = await GM.getValue(key);
-        if (gmValue !== undefined && gmValue !== null) {
-          return String(gmValue);
-        }
-      } catch (error) {}
-    }
-
-    try {
-      const localValue = localStorage.getItem(key);
-      if (localValue !== null) {
-        if (hasModernGMStorage) {
-          saveStoredString(key, localValue);
-        }
-        return localValue;
-      }
-    } catch (error) {}
-
-    return defaultValue;
-  }
-
-  function saveStoredString(key, value) {
-    const storedValue = String(value);
-
-    if (hasModernGMStorage) {
-      Promise.resolve(GM.setValue(key, storedValue)).catch(() => {
-        try {
-          localStorage.setItem(key, storedValue);
-        } catch (error) {}
-      });
-      return;
-    }
-
-    try {
-      localStorage.setItem(key, storedValue);
-    } catch (error) {}
-  }
-
   async function loadSubtitleAutoSpeedEnabledSetting() {
-    const raw = await loadStoredString(autoSpeedEnabledStorageKey, 'false');
-    return raw === 'true';
+    return loadBooleanSettingFromProfile('autoSpeedEnabled', false);
   }
 
   function saveSubtitleAutoSpeedEnabledSetting(enabled) {
-    saveStoredString(autoSpeedEnabledStorageKey, String(enabled));
+    saveBooleanSettingToProfile('autoSpeedEnabled', enabled);
   }
 
   async function loadSubtitleSelectorSetting() {
-    return loadStoredString(autoSpeedSelectorStorageKey, '');
+    return loadTextSettingFromProfile('autoSpeedSelector', '');
   }
 
   function saveSubtitleSelectorSetting(selector) {
-    saveStoredString(autoSpeedSelectorStorageKey, selector);
+    saveTextSettingToProfile('autoSpeedSelector', selector);
   }
 
   async function loadFastSpeedSetting(defaultValue) {
-    const raw = await loadStoredString(
-      autoSpeedFastSpeedStorageKey,
-      String(defaultValue),
-    );
-
-    const parsed = parseFloat(raw);
-    if (!Number.isFinite(parsed) || parsed <= 0) return defaultValue;
-    return parsed;
+    return loadFastSpeedFromProfile(defaultValue);
   }
 
   function handleAutoPauseTrigger() {
@@ -349,7 +672,7 @@
     });
   }
   function saveFastSpeedSetting(value) {
-    saveStoredString(autoSpeedFastSpeedStorageKey, String(value));
+    saveFastSpeedToProfile(value);
   }
 
   function setAutoSpeedStatus(text, color) {
@@ -437,8 +760,6 @@
         }
       }
 
-      const cbAutoPauseOnBlurEl =
-        controlPanel.querySelector('#cbAutoPauseOnBlur');
       return { present: true, hasMusicalSymbols: false };
     } catch (error) {
       subtitleSelectorInvalid = true;
@@ -496,7 +817,7 @@
 
   async function addToolbar() {
     // HTML Structure
-    const controlPanel = generateElements(htmlStructure);
+    controlPanel = generateElements(htmlStructure);
     // CSS Styles
     GM_addStyle(styles);
 
@@ -787,21 +1108,19 @@
   }
 
   async function loadPanelAutoHideSetting() {
-    const raw = await loadStoredString(panelAutoHideStorageKey, 'false');
-    return raw === 'true';
+    return loadBooleanSettingFromProfile('autoHide', false);
   }
 
   function savePanelAutoHideSetting(enabled) {
-    saveStoredString(panelAutoHideStorageKey, String(enabled));
+    saveBooleanSettingToProfile('autoHide', enabled);
   }
 
   async function loadAutoPauseOnBlurSetting() {
-    const raw = await loadStoredString(autoPauseOnBlurStorageKey, 'false');
-    return raw === 'true';
+    return loadBooleanSettingFromProfile('autoPauseOnBlur', false);
   }
 
   function saveAutoPauseOnBlurSetting(enabled) {
-    saveStoredString(autoPauseOnBlurStorageKey, String(enabled));
+    saveBooleanSettingToProfile('autoPauseOnBlur', enabled);
   }
 
   function applyPanelUiState(controlPanelEl, state) {
