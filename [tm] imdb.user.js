@@ -1,6 +1,22 @@
 (function () {
   'use strict';
 
+  //* adding "connections" to the top nav
+  const subNavbarEl = document.querySelector(
+    `[data-testid="hero-subnav-bar-topic-links"]`,
+  );
+  if (subNavbarEl) {
+    const matches = location.href.match(/\/(tt.+?)\//);
+    const titleId = matches ? matches[1] : null;
+    if (!titleId) return;
+    generateElements(
+      `<li role="presentation" class="ipc-inline-list__item">
+        <a href=/title/${titleId}/movieconnections/>Connections</a>
+      </li>`,
+      subNavbarEl,
+    );
+  }
+
   //* link to gallery fix
   const photosLinkEl = document.querySelector(
     `[data-testid="Photos"] > [data-testid="photos-title"] a`,
