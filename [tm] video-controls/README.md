@@ -55,6 +55,9 @@ Tip:
 - On first run, the script seeds a default config object. If no rule matches the current hostname, the first setting write auto-creates an exact-host rule and profile (for example `auto:example.com`).
 - Wildcard rule patterns are supported (for example `vidrock.*` and `*.vidsrc.*`) so TLD/domain changes can keep using the same profile.
 - Setting changes are persisted immediately to the active profile (for example panel drag position, subtitle selector edits, auto-hide toggle, auto-speed toggle, and fast speed value).
+- On startup, the script scans for duplicate subtitle selectors across profiles and can prompt to merge them into one profile.
+- Duplicate selector matching is escape-tolerant for common quote variants (for example `[data-testid=\"caption-container\"]` and `[data-testid=caption-container]` are treated as the same selector for duplicate detection).
+- Duplicate-profile merge target defaults to the active profile. If non-selector fields conflict, active profile values win and missing target fields may be filled from merged profiles.
 - Subtitle auto-speed presence checks are observer-driven (no tight polling timer): it uses shared DOM observer helpers when available, with a local `MutationObserver` fallback for compatibility.
 - When `Pause on focus loss` is enabled, playback resumes automatically when the tab regains focus after an automatic pause.
 - While auto-speed is enabled, manual speed hotkeys (`z`, `x`, `c`) are ignored to avoid conflicts.

@@ -41,6 +41,7 @@
   let activeRulePattern = null;
   let activeProfileId = null;
   let activeHostname = '';
+  let duplicateSelectorScanCompleted = false;
 
   let subtitleAutoSpeedEnabled = false;
   let subtitleSelector = '';
@@ -235,6 +236,21 @@
     return String(value || '').trim();
   }
 
+  function normalizeSelectorForComparison(value) {
+    let normalized = sanitizeSelectorValue(value);
+    if (!normalized) return '';
+
+    normalized = normalized
+      .replace(/\\(["'])/g, '$1')
+      .replace(/\s*=\s*/g, '=')
+      .replace(
+        /\[\s*([^\]\s~|^$*!=]+)=['"]([A-Za-z0-9_-]+)['"]\s*\]/g,
+        '[$1=$2]',
+      );
+
+    return normalized;
+  }
+
   function normalizeFastSpeedValue(value, fallback = defaultFastSpeed) {
     const parsed = Number.parseFloat(String(value));
     if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
@@ -387,6 +403,9 @@
   async function ensureSettingsConfigLoaded() {
     if (settingsConfig) {
       resolveActiveProfileForHostname(location.hostname);
+      if (!duplicateSelectorScanCompleted) {
+        await scanAndPromptDuplicateSelectorProfiles();
+      }
       return;
     }
 
@@ -394,6 +413,167 @@
     settingsConfig = normalizeSettingsConfig(storedConfig);
     writeConfigToStorage(settingsConfig);
     resolveActiveProfileForHostname(location.hostname);
+    await scanAndPromptDuplicateSelectorProfiles();
+  }
+
+  function findDuplicateSelectorGroups(root = getSettingsRoot()) {
+    if (!root) return [];
+
+    const bySelector = new Map();
+    for (const [profileId, profile] of Object.entries(root.profiles || {})) {
+      const selectorKey = normalizeSelectorForComparison(
+        profile?.autoSpeedSelector,
+      );
+      if (!selectorKey) continue;
+
+      const group = bySelector.get(selectorKey) || [];
+      group.push({
+        profileId,
+        rawSelector: sanitizeSelectorValue(profile?.autoSpeedSelector),
+      });
+      bySelector.set(selectorKey, group);
+    }
+
+    return Array.from(bySelector.entries())
+      .filter(([, profiles]) => profiles.length > 1)
+      .map(([selectorKey, profiles]) => ({ selectorKey, profiles }))
+      .sort((a, b) => a.selectorKey.localeCompare(b.selectorKey));
+  }
+
+  function mergeProfileIntoTarget(targetProfile, sourceProfile) {
+    if (!targetProfile || !sourceProfile) return;
+
+    if (
+      targetProfile.autoHide === undefined &&
+      sourceProfile.autoHide !== undefined
+    ) {
+      targetProfile.autoHide = !!sourceProfile.autoHide;
+    }
+    if (
+      targetProfile.autoPauseOnBlur === undefined &&
+      sourceProfile.autoPauseOnBlur !== undefined
+    ) {
+      targetProfile.autoPauseOnBlur = !!sourceProfile.autoPauseOnBlur;
+    }
+    if (
+      targetProfile.autoSpeedEnabled === undefined &&
+      sourceProfile.autoSpeedEnabled !== undefined
+    ) {
+      targetProfile.autoSpeedEnabled = !!sourceProfile.autoSpeedEnabled;
+    }
+    if (
+      targetProfile.autoSpeedFast === undefined &&
+      sourceProfile.autoSpeedFast !== undefined
+    ) {
+      targetProfile.autoSpeedFast = normalizeFastSpeedValue(
+        sourceProfile.autoSpeedFast,
+        defaultFastSpeed,
+      );
+    }
+    if (
+      targetProfile.panelPosition === undefined &&
+      normalizePanelPositionValue(sourceProfile.panelPosition)
+    ) {
+      targetProfile.panelPosition = normalizePanelPositionValue(
+        sourceProfile.panelPosition,
+      );
+    }
+  }
+
+  function mergeDuplicateSelectorGroup(group, root = getSettingsRoot()) {
+    if (!root || !group || !group.profiles?.length) return false;
+
+    const orderedProfileIds = group.profiles
+      .map(entry => entry.profileId)
+      .filter(Boolean);
+    if (orderedProfileIds.length < 2) return false;
+
+    const targetProfileId =
+      activeProfileId && orderedProfileIds.includes(activeProfileId)
+        ? activeProfileId
+        : orderedProfileIds[0];
+    const targetProfile = root.profiles[targetProfileId];
+    if (!targetProfile || typeof targetProfile !== 'object') return false;
+
+    const canonicalSelector = group.selectorKey;
+    targetProfile.autoSpeedSelector = sanitizeSelectorValue(
+      targetProfile.autoSpeedSelector || canonicalSelector,
+    );
+
+    let changed = false;
+    for (const sourceProfileId of orderedProfileIds) {
+      if (sourceProfileId === targetProfileId) continue;
+      const sourceProfile = root.profiles[sourceProfileId];
+      if (!sourceProfile || typeof sourceProfile !== 'object') continue;
+
+      mergeProfileIntoTarget(targetProfile, sourceProfile);
+
+      for (const [pattern, mappedProfileId] of Object.entries(
+        root.rules || {},
+      )) {
+        if (mappedProfileId === sourceProfileId) {
+          root.rules[pattern] = targetProfileId;
+          changed = true;
+        }
+      }
+
+      if (sourceProfileId === defaultProfileId) {
+        sourceProfile.autoSpeedSelector = '';
+      } else {
+        delete root.profiles[sourceProfileId];
+      }
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  async function scanAndPromptDuplicateSelectorProfiles() {
+    if (duplicateSelectorScanCompleted) return;
+
+    const root = getSettingsRoot();
+    if (!root) {
+      duplicateSelectorScanCompleted = true;
+      return;
+    }
+
+    const duplicateGroups = findDuplicateSelectorGroups(root);
+    duplicateSelectorScanCompleted = true;
+    if (!duplicateGroups.length) return;
+
+    let hasAnyChange = false;
+    for (const group of duplicateGroups) {
+      const profileIds = group.profiles
+        .map(entry => entry.profileId)
+        .join(', ');
+      const selectorPreview =
+        group.profiles.find(entry => entry.rawSelector)?.rawSelector ||
+        group.selectorKey;
+      const targetProfile =
+        activeProfileId &&
+        group.profiles.some(entry => entry.profileId === activeProfileId)
+          ? activeProfileId
+          : group.profiles[0].profileId;
+
+      const shouldMerge = window.confirm(
+        [
+          `Duplicate subtitle selector found: ${selectorPreview}`,
+          `Profiles: ${profileIds}`,
+          `Merge these profiles into "${targetProfile}"?`,
+          'The active profile values are preserved on conflicts.',
+        ].join('\n'),
+      );
+
+      if (!shouldMerge) continue;
+      if (mergeDuplicateSelectorGroup(group, root)) {
+        hasAnyChange = true;
+      }
+    }
+
+    if (hasAnyChange) {
+      writeConfigToStorage(settingsConfig);
+      resolveActiveProfileForHostname(location.hostname);
+    }
   }
 
   function getRuleMatchSpecificityScore(pattern) {
@@ -811,7 +991,7 @@
   function promptForSubtitleSelector() {
     const seedValue = (subtitleSelector || '').trim();
     const enteredValue = window.prompt(
-      'Enter a CSS selector for subtitle text (example: .ytp-caption-segment):',
+      'Enter a CSS selector for subtitle text (example: .ytp-caption-segment). Duplicate selectors across profiles are checked on startup and can be merged:',
       seedValue,
     );
 
