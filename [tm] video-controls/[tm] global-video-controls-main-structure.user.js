@@ -12,6 +12,8 @@ const htmlStructure = `
         <span id="spanActualRemainingTime" class="text">x</span>
       </div>
       <div id="header-row-two" class="header-row">
+        <button class="important" id="buttonPlay">▶</button> 
+        <button class="important" id="rewind-btn">0️⃣</button>
         <button class="important" id="speedToggle" title="Toggle speed between 1x and fast speed">💨</button>
         <button class="important" id="subtitleSpeedTransitionToggle" title="Toggle subtitle speed transition">🚀</button>
       </div>
@@ -33,8 +35,6 @@ const htmlStructure = `
     </div>
       
     <div class="buttonsRow important">
-      <button class="important" id="buttonPlay">▶</button> 
-      <button class="important" id="rewind-btn">0️⃣</button>
       <button class="timejumpLTwo">➖</button> 
       <button class="timejumpLOne important">➖</button> 
       <button class="timejumpROne important">➕</button> 
