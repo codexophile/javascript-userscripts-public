@@ -11,87 +11,89 @@
     observer.observe(headerEl, { childList: true, subtree: true });
   });
 
-  // 1. Inject the CSS for the dropdown first
-  const style = document.createElement('style');
-  style.innerHTML = `
-    .us-source-dropdown-container { margin-bottom: 15px; }
-    .us-source-select {
-        width: 100%;
-        padding: 8px 12px;
-        background-color: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-        color: white;
-        font-size: 14px;
-        outline: none;
-        cursor: pointer;
-    }
-    .us-source-select:hover { background-color: rgba(255, 255, 255, 0.1); }
-    .us-source-select option { background-color: #1a1a1a; color: white; }
-    .us-hidden-grid { display: none !important; }
-`;
-  document.head.appendChild(style);
+  // Move Previous/Next into the same action bar as AutoNext/Details/Watch Party/Shuffle.
+  // This runs repeatedly via waitForEach so it also works for SPA route updates.
+  waitForEach('button', () => {
+    if (!location.href.includes('/player/')) return;
+    movePrevNextToActionBar();
+  });
 
-  // 2. Define the conversion logic
-  const convertToDropdown = gridElement => {
-    // SECURITY CHECK: Ensure this grid belongs to "Video Sources"
-    // We check the previous sibling for the header text "Video Sources"
-    const headerSection = gridElement.previousElementSibling;
-    const isVideoSourceSection =
-      headerSection && headerSection.textContent.includes('Video Sources');
+  function movePrevNextToActionBar() {
+    const navButtons = findNavButtons();
+    if (!navButtons) return;
 
-    // If this isn't the video sources grid, or if we already processed it, stop.
-    if (!isVideoSourceSection || gridElement.classList.contains('us-processed'))
+    const actionBar = findActionBarContainer();
+    if (!actionBar) return;
+
+    const { previousBtn, nextBtn } = navButtons;
+
+    // Already moved.
+    if (
+      previousBtn.parentElement === actionBar &&
+      nextBtn.parentElement === actionBar
+    ) {
       return;
+    }
 
-    // Create the Dropdown Wrapper
-    const selectContainer = document.createElement('div');
-    selectContainer.className = 'us-source-dropdown-container';
+    // Preserve original handlers/state by moving existing nodes (not cloning).
+    actionBar.prepend(nextBtn);
+    actionBar.prepend(previousBtn);
+  }
 
-    const select = document.createElement('select');
-    select.className = 'us-source-select';
+  function findNavButtons() {
+    const allButtons = Array.from(document.querySelectorAll('button'));
+    const previousCandidates = allButtons.filter(
+      btn => cleanText(btn.textContent) === 'Previous',
+    );
 
-    // Get all buttons within the grid
-    const buttons = gridElement.querySelectorAll('button');
+    for (const previousBtn of previousCandidates) {
+      const parent = previousBtn.parentElement;
+      if (!parent) continue;
 
-    buttons.forEach((btn, index) => {
-      const option = document.createElement('option');
-      option.value = index;
+      const siblingButtons = Array.from(parent.children).filter(
+        el => el.tagName === 'BUTTON',
+      );
+      const nextBtn = siblingButtons.find(
+        btn => cleanText(btn.textContent) === 'Next',
+      );
 
-      // Extract name: The text usually lives in a span inside the button
-      const labelSpan = btn.querySelector('span.font-medium');
-      option.text = labelSpan
-        ? labelSpan.textContent.trim()
-        : btn.textContent.trim();
-
-      // Check active state: Look for "Active" text or checkmark SVG
-      const isActive =
-        btn.innerHTML.includes('Active') ||
-        (labelSpan &&
-          getComputedStyle(labelSpan).color !== 'rgb(255, 255, 255)'); // Heuristic for accent color
-
-      if (isActive) option.selected = true;
-
-      select.appendChild(option);
-    });
-
-    // Add Change Listener
-    select.addEventListener('change', e => {
-      const btnIndex = e.target.value;
-      if (buttons[btnIndex]) {
-        buttons[btnIndex].click();
+      if (nextBtn) {
+        return { previousBtn, nextBtn };
       }
-    });
+    }
 
-    // Insert Dropdown and Hide Grid
-    selectContainer.appendChild(select);
-    gridElement.parentNode.insertBefore(selectContainer, gridElement);
+    return null;
+  }
 
-    gridElement.classList.add('us-hidden-grid', 'us-processed');
-  };
+  function findActionBarContainer() {
+    const allButtons = Array.from(document.querySelectorAll('button'));
+    const autoNextBtn = allButtons.find(
+      btn => cleanText(btn.textContent) === 'AutoNext',
+    );
+    if (!autoNextBtn) return null;
 
-  // 3. Call your function
-  // We target '.grid' because it's a structural class, not a random hash.
-  // We add 'grid-cols-2' to be more specific.
-  waitForEach('.grid.grid-cols-2', convertToDropdown);
+    let current = autoNextBtn.parentElement;
+    while (current && current !== document.body) {
+      if (
+        hasButton(current, 'AutoNext') &&
+        hasButton(current, 'Details') &&
+        hasButton(current, 'Watch Party') &&
+        hasButton(current, 'Shuffle')
+      ) {
+        return current;
+      }
+      current = current.parentElement;
+    }
+
+    return null;
+  }
+
+  function hasButton(container, label) {
+    const buttons = Array.from(container.querySelectorAll('button'));
+    return buttons.some(btn => cleanText(btn.textContent) === label);
+  }
+
+  function cleanText(text) {
+    return (text || '').replace(/\s+/g, ' ').trim();
+  }
 })();
