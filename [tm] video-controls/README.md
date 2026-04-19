@@ -29,14 +29,7 @@ This approach is site-agnostic and works even when native media text tracks are 
 7. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
 8. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
 
-Status badge values:
-
-- `AUTO OFF`: feature disabled.
-- `SELECTOR REQUIRED`: enabled but selector field is empty.
-- `INVALID SELECTOR`: selector syntax is invalid.
-- `AUTO NORMAL`: selector currently found, speed set to `1x`.
-- `AUTO FAST`: selector not found, speed set to fast speed.
-- `AUTO FAST (MUSIC)`: selector found and subtitle text contains musical symbols.
+The subtitle auto-speed status badge was removed from the panel UI. The feature behavior is unchanged and still follows selector presence and music-symbol detection rules described above.
 
 ## Suggested Selectors
 

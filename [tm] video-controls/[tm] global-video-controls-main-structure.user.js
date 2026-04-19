@@ -31,7 +31,6 @@ const htmlStructure = `
       <input type="checkbox" title="Enable subtitle auto-speed mode." id="cbSubtitleAutoSpeed">
       <input type="number" title="Fast speed used when subtitle selector is not present." step="0.1" min="0.1" max="16" class="numinp" id="numAutoFastSpeed" value="3">
       <input type="text" title="CSS selector for subtitle element." id="inputSubtitleSelector" placeholder="Subtitle selector (example: .ytp-caption-segment)">
-      <span id="autoSpeedState" class="text important" title="Current subtitle auto-speed state">AUTO OFF</span>
     </div>
       
     <div class="buttonsRow important">
@@ -183,14 +182,6 @@ const styles = `
 
   #video-controlPanel input[type="text"]::placeholder {
     color: #d6eaf8;
-  }
-
-  #autoSpeedState {
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    background-color: #95a5a6 !important;
-    color: #fff !important;
   }
 
   #video-controlPanel input[type="checkbox"] {

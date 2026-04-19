@@ -17,8 +17,7 @@
     cbSubtitleAutoSpeedEl,
     subtitleSpeedTransitionToggleEl,
     inputSubtitleSelectorEl,
-    numAutoFastSpeedEl,
-    autoSpeedStateEl;
+    numAutoFastSpeedEl;
   let panelUiState = 0;
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
@@ -698,17 +697,6 @@
     saveFastSpeedToProfile(value);
   }
 
-  function setAutoSpeedStatus(text, color) {
-    if (!autoSpeedStateEl) return;
-
-    autoSpeedStateEl.textContent = text;
-    if (color) {
-      autoSpeedStateEl.style.backgroundColor = color;
-    } else {
-      autoSpeedStateEl.style.backgroundColor = '#95a5a6';
-    }
-  }
-
   function stopSubtitlePresenceMonitoring() {
     if (subtitleObserverUnsubscribe) {
       subtitleObserverUnsubscribe();
@@ -841,7 +829,6 @@
 
     stopSubtitlePresenceMonitoring();
     setPlaybackRateIfNeeded(activeVideo, 1);
-    setAutoSpeedStatus('AUTO OFF', '#95a5a6');
   }
 
   function syncSubtitleAutoSpeed(video = activeVideo) {
@@ -850,13 +837,11 @@
     if (!subtitleAutoSpeedEnabled) {
       subtitleSelectorInvalid = false;
       lastSubtitlePresentState = null;
-      setAutoSpeedStatus('AUTO OFF', '#95a5a6');
       return;
     }
 
     if (!subtitleSelector || !subtitleSelector.trim()) {
       setPlaybackRateIfNeeded(video, 1);
-      setAutoSpeedStatus('SELECTOR REQUIRED', '#f39c12');
       return;
     }
 
@@ -864,13 +849,11 @@
 
     if (subtitleSelectorInvalid) {
       setPlaybackRateIfNeeded(video, 1);
-      setAutoSpeedStatus('INVALID SELECTOR', '#e74c3c');
       return;
     }
 
     if (subtitleState.present && subtitleState.hasMusicalSymbols) {
       setPlaybackRateIfNeeded(video, fastSpeed);
-      setAutoSpeedStatus('AUTO FAST (MUSIC)', '#8e44ad');
       return;
     }
 
@@ -878,12 +861,10 @@
     lastSubtitlePresentState = subtitlePresent;
     if (subtitlePresent) {
       setPlaybackRateIfNeeded(video, 1);
-      setAutoSpeedStatus('AUTO NORMAL', '#2ecc71');
       return;
     }
 
     setPlaybackRateIfNeeded(video, fastSpeed);
-    setAutoSpeedStatus('AUTO FAST', '#3498db');
   }
 
   async function addToolbar() {
@@ -906,7 +887,6 @@
       '#inputSubtitleSelector',
     );
     numAutoFastSpeedEl = controlPanel.querySelector('#numAutoFastSpeed');
-    autoSpeedStateEl = controlPanel.querySelector('#autoSpeedState');
     panelAutoHideEnabled = await loadPanelAutoHideSetting();
     cbAutoHideEl.checked = panelAutoHideEnabled;
     if (cbAutoPauseOnBlurEl) {
