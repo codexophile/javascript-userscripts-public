@@ -15,6 +15,7 @@
     slidVolExtEl,
     divHeightEl,
     cbSubtitleAutoSpeedEl,
+    subtitleSpeedTransitionToggleEl,
     inputSubtitleSelectorEl,
     numAutoFastSpeedEl,
     autoSpeedStateEl;
@@ -58,6 +59,8 @@
     syncSubtitleAutoSpeed();
   }, 75);
   const debouncedMain = debounce(main, 150);
+  const subtitleTransitionEnabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" fill="#FFD166" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" fill="#118AB2" /><circle cx="40.5" cy="19.5" r="1.5" fill="#FFFFFF" stroke="none" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" fill="#EF476F" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" fill="#EF476F" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" fill="#FF9F1C" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
+  const subtitleTransitionDisabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
 
   installShadowRootTracking();
 
@@ -793,6 +796,54 @@
     video.playbackRate = rate;
   }
 
+  function renderSubtitleTransitionToggle() {
+    if (!subtitleSpeedTransitionToggleEl) return;
+
+    const enabledSvg =
+      typeof speedTransitionEnabled === 'string'
+        ? speedTransitionEnabled
+        : subtitleTransitionEnabledSvgFallback;
+    const disabledSvg =
+      typeof speedTransitionDisabled === 'string'
+        ? speedTransitionDisabled
+        : subtitleTransitionDisabledSvgFallback;
+
+    subtitleSpeedTransitionToggleEl.innerHTML = subtitleAutoSpeedEnabled
+      ? enabledSvg
+      : disabledSvg;
+    subtitleSpeedTransitionToggleEl.setAttribute(
+      'aria-pressed',
+      subtitleAutoSpeedEnabled ? 'true' : 'false',
+    );
+    subtitleSpeedTransitionToggleEl.title = subtitleAutoSpeedEnabled
+      ? 'Subtitle speed transition is ON (selector present = 1x, selector absent = fast). Click to disable.'
+      : 'Subtitle speed transition is OFF. Click to enable selector-driven speed transition.';
+  }
+
+  function setSubtitleAutoSpeedEnabled(enabled, options = {}) {
+    const { persist = true } = options;
+    subtitleAutoSpeedEnabled = !!enabled;
+
+    if (cbSubtitleAutoSpeedEl) {
+      cbSubtitleAutoSpeedEl.checked = subtitleAutoSpeedEnabled;
+    }
+    if (persist) {
+      saveSubtitleAutoSpeedEnabledSetting(subtitleAutoSpeedEnabled);
+    }
+
+    renderSubtitleTransitionToggle();
+
+    if (subtitleAutoSpeedEnabled) {
+      startSubtitlePresenceMonitoring();
+      syncSubtitleAutoSpeed(activeVideo);
+      return;
+    }
+
+    stopSubtitlePresenceMonitoring();
+    setPlaybackRateIfNeeded(activeVideo, 1);
+    setAutoSpeedStatus('AUTO OFF', '#95a5a6');
+  }
+
   function syncSubtitleAutoSpeed(video = activeVideo) {
     if (!video || video !== activeVideo) return;
 
@@ -848,6 +899,9 @@
     const cbAutoPauseOnBlurEl =
       controlPanel.querySelector('#cbAutoPauseOnBlur');
     cbSubtitleAutoSpeedEl = controlPanel.querySelector('#cbSubtitleAutoSpeed');
+    subtitleSpeedTransitionToggleEl = controlPanel.querySelector(
+      '#subtitleSpeedTransitionToggle',
+    );
     inputSubtitleSelectorEl = controlPanel.querySelector(
       '#inputSubtitleSelector',
     );
@@ -920,17 +974,12 @@
     }
     if (cbSubtitleAutoSpeedEl) {
       cbSubtitleAutoSpeedEl.addEventListener('change', event => {
-        subtitleAutoSpeedEnabled = event.target.checked;
-        saveSubtitleAutoSpeedEnabledSetting(subtitleAutoSpeedEnabled);
-
-        if (subtitleAutoSpeedEnabled) {
-          startSubtitlePresenceMonitoring();
-          syncSubtitleAutoSpeed(activeVideo);
-        } else {
-          stopSubtitlePresenceMonitoring();
-          setPlaybackRateIfNeeded(activeVideo, 1);
-          setAutoSpeedStatus('AUTO OFF', '#95a5a6');
-        }
+        setSubtitleAutoSpeedEnabled(event.target.checked);
+      });
+    }
+    if (subtitleSpeedTransitionToggleEl) {
+      subtitleSpeedTransitionToggleEl.addEventListener('click', () => {
+        setSubtitleAutoSpeedEnabled(!subtitleAutoSpeedEnabled);
       });
     }
 
@@ -1094,12 +1143,7 @@
       activeVideo.volume = e.target.value;
     });
 
-    if (subtitleAutoSpeedEnabled) {
-      startSubtitlePresenceMonitoring();
-      syncSubtitleAutoSpeed(activeVideo);
-    } else {
-      setAutoSpeedStatus('AUTO OFF', '#95a5a6');
-    }
+    setSubtitleAutoSpeedEnabled(subtitleAutoSpeedEnabled, { persist: false });
 
     return controlPanel;
 

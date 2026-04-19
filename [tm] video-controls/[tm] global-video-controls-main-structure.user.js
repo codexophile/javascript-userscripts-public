@@ -1,14 +1,20 @@
 const htmlStructure = `
   <div class="controlPanel" id="video-controlPanel">
     <div id="contPanelHeader" class=important>
-      <button class="head important" title="Cycle panel view (compact/full/header-only)">⚫</button>
-      <span id="frame-rate-display" class=important></span>
-      <span id="bitrate-display" class=important></span>
-      <span class="divHeight text important">x</span>
-      <span id="spanPlaybackPercentage" class="text" title="Playback progress percentage">0%</span>
-      <span id="spanCurrentTime" class="text"></span>
-      <span id="spanRemainingTime" class="text">x</span>
-      <span id="spanActualRemainingTime" class="text">x</span>
+      <div id="header-row-one" class="header-row">
+        <button class="head important" title="Cycle panel view (compact/full/header-only)">⚫</button>
+        <span id="frame-rate-display" class=important></span>
+        <span id="bitrate-display" class=important></span>
+        <span class="divHeight text important">x</span>
+        <span id="spanPlaybackPercentage" class="text" title="Playback progress percentage">0%</span>
+        <span id="spanCurrentTime" class="text"></span>
+        <span id="spanRemainingTime" class="text">x</span>
+        <span id="spanActualRemainingTime" class="text">x</span>
+      </div>
+      <div id="header-row-two" class="header-row">
+        <button class="important" id="speedToggle" title="Toggle speed between 1x and fast speed">💨</button>
+        <button class="important" id="subtitleSpeedTransitionToggle" title="Toggle subtitle speed transition">🚀</button>
+      </div>
     </div>
     
     <div class="controlRow">
@@ -28,7 +34,6 @@ const htmlStructure = `
       
     <div class="buttonsRow important">
       <button class="important" id="buttonPlay">▶</button> 
-      <button class="important" id="speedToggle">💨</button>
       <button class="important" id="rewind-btn">0️⃣</button>
       <button class="timejumpLTwo">➖</button> 
       <button class="timejumpLOne important">➖</button> 
@@ -100,8 +105,33 @@ const styles = `
     position: relative;
     font-size: small;
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: ${margins};
+  }
+
+  #contPanelHeader .header-row {
+    display: flex;
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  #header-row-two {
+    justify-content: flex-start;
+  }
+
+  #subtitleSpeedTransitionToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    min-height: 30px;
+  }
+
+  #subtitleSpeedTransitionToggle svg {
+    width: 18px;
+    height: 18px;
+    display: block;
   }
 
   #contPanelHeader span {

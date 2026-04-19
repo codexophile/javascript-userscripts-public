@@ -21,11 +21,12 @@ This approach is site-agnostic and works even when native media text tracks are 
 ## How To Use
 
 1. Open the control panel on a page with video.
-2. Enable `Subtitle auto-speed` (checkbox).
-3. Enter a subtitle CSS selector in `Subtitle selector`.
-4. Set `Auto fast speed` (for subtitle gaps).
-5. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
-6. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
+2. In the header's second row, use the `💨` button for manual speed toggle and the `🚀` toggle button for subtitle speed transition mode.
+3. You can also enable the same transition mode from `Subtitle auto-speed` (checkbox); both controls stay synchronized.
+4. Enter a subtitle CSS selector in `Subtitle selector`.
+5. Set `Auto fast speed` (for subtitle gaps).
+6. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
+7. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
 
 Status badge values:
 
@@ -70,6 +71,7 @@ Tip:
 - The control panel remembers its dragged position in the active profile and respawns there on reload; if no saved position exists yet, it starts at the default location and does not write a position until you manually drag it.
 - If saved coordinates become off-screen (for example after viewport size changes), they are clamped back into view automatically.
 - The header now shows playback percentage (`played / duration * 100`) and updates continuously during playback.
+- The header now has two rows inside `contPanelHeader`; the second row contains manual speed toggle (`💨`) and subtitle transition toggle (`🚀`).
 - Internal control panel DOM updates are ignored by the page-level `MutationObserver` trigger path, which prevents self-induced refresh loops while paused.
 
 ### Storage Shape
