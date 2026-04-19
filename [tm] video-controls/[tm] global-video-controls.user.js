@@ -808,9 +808,50 @@
       : 'Subtitle speed transition is OFF. Click to enable selector-driven speed transition.';
   }
 
+  function promptForSubtitleSelector() {
+    const seedValue = (subtitleSelector || '').trim();
+    const enteredValue = window.prompt(
+      'Enter a CSS selector for subtitle text (example: .ytp-caption-segment):',
+      seedValue,
+    );
+
+    if (enteredValue === null) return null;
+
+    const normalizedValue = enteredValue.trim();
+    if (!normalizedValue) return '';
+
+    subtitleSelector = normalizedValue;
+    saveSubtitleSelectorSetting(subtitleSelector);
+    if (inputSubtitleSelectorEl) {
+      inputSubtitleSelectorEl.value = subtitleSelector;
+    }
+
+    return subtitleSelector;
+  }
+
   function setSubtitleAutoSpeedEnabled(enabled, options = {}) {
     const { persist = true } = options;
-    subtitleAutoSpeedEnabled = !!enabled;
+    const requestedEnabled = !!enabled;
+
+    if (requestedEnabled && !(subtitleSelector || '').trim()) {
+      const selectorFromPrompt = promptForSubtitleSelector();
+      if (!selectorFromPrompt) {
+        subtitleAutoSpeedEnabled = false;
+
+        if (cbSubtitleAutoSpeedEl) {
+          cbSubtitleAutoSpeedEl.checked = false;
+        }
+        if (persist) {
+          saveSubtitleAutoSpeedEnabledSetting(false);
+        }
+
+        renderSubtitleTransitionToggle();
+        setPlaybackRateIfNeeded(activeVideo, 1);
+        return;
+      }
+    }
+
+    subtitleAutoSpeedEnabled = requestedEnabled;
 
     if (cbSubtitleAutoSpeedEl) {
       cbSubtitleAutoSpeedEl.checked = subtitleAutoSpeedEnabled;

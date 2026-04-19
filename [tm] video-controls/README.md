@@ -24,10 +24,11 @@ This approach is site-agnostic and works even when native media text tracks are 
 2. In the header's second row, use the `💨` button for manual speed toggle and the `🚀` toggle button for subtitle speed transition mode.
 3. You can also enable the same transition mode from `Subtitle auto-speed` (checkbox); both controls stay synchronized.
 4. Enter a subtitle CSS selector in `Subtitle selector`.
-5. Set `Auto fast speed` (for subtitle gaps).
-6. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
-7. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
-8. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
+5. If you try to enable subtitle speed transition while the selector is empty, the script refuses to enable it and prompts you to enter the selector manually.
+6. Set `Auto fast speed` (for subtitle gaps).
+7. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
+8. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
+9. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
 
 The subtitle auto-speed status badge was removed from the panel UI. The feature behavior is unchanged and still follows selector presence and music-symbol detection rules described above.
 
