@@ -51,6 +51,7 @@ const htmlStructure = `
       <button id="frameStepL" title="Frame step">⇠</button> 
       <button id="frameStepR" title="Frame step">⇢</button> 
       <button id="buttonSnap" title="Snap">📷</button>
+      <button id="buttonSnapClipboard" title="Copy frame to clipboard">📋</button>
       <button id="buttonPiP" title="Picture in Picture">📺</button>
       <button id="buttonFullScreen" title="Full Screen">⛶</button>
       <button id="buttonRotateL">⭯</button>

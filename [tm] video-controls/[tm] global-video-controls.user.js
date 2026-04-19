@@ -1103,6 +1103,11 @@
     controlPanel.querySelector(`#buttonSnap`).addEventListener('click', () => {
       snap();
     });
+    controlPanel
+      .querySelector('#buttonSnapClipboard')
+      .addEventListener('click', () => {
+        copyFrameToClipboard();
+      });
 
     controlPanel
       .querySelector(`#buttonRotateL`)
@@ -1425,23 +1430,76 @@
   }
 
   function snap() {
-    const canvas = generateElements('<canvas></canvas>', document.body);
+    const canvas = renderCurrentVideoFrame();
+    if (!canvas) {
+      alert('Unable to capture the current frame');
+      return;
+    }
+
+    try {
+      const imageUrl = canvas
+        .toDataURL('image/png')
+        .replace('image/png', 'image/octet-stream');
+      const link = generateElements('<a></a>', document.body);
+      const fileName = document.title ? document.title : location.href;
+      link.setAttribute('download', `${fileName}.png`);
+      link.setAttribute('href', imageUrl);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Failed to capture frame', error);
+      alert('Failed to capture the current frame');
+    }
+  }
+
+  function renderCurrentVideoFrame() {
+    if (!activeVideo || !activeVideo.videoWidth || !activeVideo.videoHeight) {
+      return null;
+    }
+
+    const canvas = document.createElement('canvas');
     canvas.width = activeVideo.videoWidth;
     canvas.height = activeVideo.videoHeight;
     const canvasContext = canvas.getContext('2d');
+    if (!canvasContext) return null;
+
     canvasContext.drawImage(activeVideo, 0, 0);
-    const imageUrl = canvas
-      .toDataURL('image/png')
-      .replace('image/png', 'image/octet-stream');
+    return canvas;
+  }
 
-    const link = generateElements('<a></a>', document.body);
-    const fileName = document.title ? document.title : location.href;
-    link.setAttribute('download', `${fileName}.png`);
-    link.setAttribute('href', imageUrl);
-    link.click();
+  async function copyFrameToClipboard() {
+    if (!navigator.clipboard || typeof ClipboardItem === 'undefined') {
+      alert('Image clipboard copy is not supported in this browser');
+      return;
+    }
 
-    canvas.remove();
-    link.remove();
+    const canvas = renderCurrentVideoFrame();
+    if (!canvas) {
+      alert('Unable to capture the current frame');
+      return;
+    }
+
+    try {
+      const frameBlob = await new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) {
+            resolve(blob);
+            return;
+          }
+
+          reject(new Error('Canvas conversion failed'));
+        }, 'image/png');
+      });
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': frameBlob,
+        }),
+      ]);
+    } catch (error) {
+      console.error('Failed to copy frame to clipboard', error);
+      alert('Failed to copy frame to clipboard');
+    }
   }
 
   function addMouseEvents(event) {

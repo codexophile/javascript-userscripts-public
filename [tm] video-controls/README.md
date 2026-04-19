@@ -27,6 +27,7 @@ This approach is site-agnostic and works even when native media text tracks are 
 5. Set `Auto fast speed` (for subtitle gaps).
 6. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
 7. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
+8. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
 
 Status badge values:
 
