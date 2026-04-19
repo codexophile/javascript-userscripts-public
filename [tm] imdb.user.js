@@ -13,12 +13,25 @@
   }
 
   //* link fixes
-  let observer = new MutationObserver(() => {
-    $('a[href*="?ref"]').each(function () {
-      this.href = this.href.replace(/\?ref.*$/, '');
-    });
+  waitForEach('a[href*="ref"]', linkEl => {
+    try {
+      const url = new URL(linkEl.href, location.href);
+      let updated = false;
+
+      [...url.searchParams.keys()].forEach(paramName => {
+        if (paramName === 'ref' || paramName.startsWith('ref_')) {
+          url.searchParams.delete(paramName);
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        linkEl.href = url.toString();
+      }
+    } catch (error) {
+      console.warn('Failed to sanitize IMDb link:', linkEl.href, error);
+    }
   });
-  observer.observe(document.body, { childList: true, subtree: true });
 
   //? I'm not sure what this is 👇
   const $moreFromSectionEl = $(`[data-testid="more-from-section"]`);
