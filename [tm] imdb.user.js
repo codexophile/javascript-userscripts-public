@@ -1,6 +1,27 @@
 (function () {
   'use strict';
 
+  //* watched filter for "more like this"
+  const targetEl = document.querySelector(
+    `[data-testid="MoreLikeThis"] .ipc-title__actions`,
+  );
+  if (targetEl) {
+    const filterBtnEl = generateElements(`<button">👁️</button>`, targetEl);
+    filterBtnEl.classList = 'ipc-btn ipc-btn--secondary ipc-btn--small';
+    filterBtnEl.style = 'margin-left: 8px;';
+    let toggled = false;
+    filterBtnEl.addEventListener('click', () => {
+      const locatorEls = document.querySelectorAll('.ipc-rate-button--rated');
+      locatorEls.forEach(el => {
+        const parentEl = el.closest('.ipc-poster-card');
+        if (parentEl) {
+          parentEl.style.display = toggled ? '' : 'none';
+        }
+      });
+      toggled = !toggled;
+    });
+  }
+
   //* adding "connections" to the top nav
   const subNavbarEl = document.querySelector(
     `[data-testid="hero-subnav-bar-topic-links"]`,
