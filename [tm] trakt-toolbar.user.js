@@ -212,6 +212,12 @@
       'IMDB',
     );
     createToolbarItem(
+      // tmdb
+      `https://www.google.com/search?btnI=1&q=${query}%20site:themoviedb.org`,
+      'https://www.themoviedb.org/favicon.ico',
+      'TMDB',
+    );
+    createToolbarItem(
       // simkl
       `https://simkl.com/search/?type=movies&q=${query}`,
       'https://play-lh.googleusercontent.com/DliaDatmrt_M8drBtsafddTyhcxN5W3UAcpQRjoq7MViP3iwHBMegVmKIxDAjHrFACQ=w240-h480-rw',
