@@ -1,6 +1,12 @@
 (function () {
   'use strict';
 
+  //* tmdb banner
+  if (location.href.includes('/title/tt')) {
+    const tmdbApiKey = getSecret('TMDB API key');
+    if (!tmdbApiKey) return;
+  }
+
   //* watched filter for "more like this"
   const targetEl = document.querySelector(
     `[data-testid="MoreLikeThis"] .ipc-title__actions`,
