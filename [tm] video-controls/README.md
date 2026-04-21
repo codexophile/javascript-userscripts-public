@@ -15,6 +15,7 @@ Behavior:
 - If your subtitle selector exists in the DOM, playback is forced to normal speed (`1x`).
 - If your subtitle selector is not found, playback is forced to your configured fast speed.
 - If matched subtitle text contains common musical symbols (`♪`, `♫`, `♬`, `♩`, `🎵`, `🎶`), playback is forced to fast speed.
+- Elements matching the subtitle selector (and their descendants) are forced to `user-select: text`, so subtitle text can be selected/copied more reliably.
 
 This approach is site-agnostic and works even when native media text tracks are unavailable.
 

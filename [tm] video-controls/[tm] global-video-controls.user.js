@@ -48,6 +48,7 @@
   let subtitleSelectorInvalid = false;
   let subtitleObserver = null;
   let subtitleObserverUnsubscribe = null;
+  let subtitleSelectorUserSelectStyleEl = null;
   let lastSubtitlePresentState = null;
 
   const canUseSharedSubtitleObserver =
@@ -194,6 +195,7 @@
     fastSpeed = await loadFastSpeedSetting(fastSpeed);
     panelAutoHideEnabled = await loadPanelAutoHideSetting();
     panelPosition = await loadPanelPositionSetting();
+    applySubtitleSelectorTextSelectableStyle();
   }
 
   function getDefaultProfileShape() {
@@ -843,6 +845,35 @@
     saveTextSettingToProfile('autoSpeedSelector', selector);
   }
 
+  function clearSubtitleSelectorTextSelectableStyle() {
+    if (!subtitleSelectorUserSelectStyleEl) return;
+
+    subtitleSelectorUserSelectStyleEl.remove();
+    subtitleSelectorUserSelectStyleEl = null;
+  }
+
+  function applySubtitleSelectorTextSelectableStyle() {
+    clearSubtitleSelectorTextSelectableStyle();
+
+    const selector = (subtitleSelector || '').trim();
+    if (!selector) return;
+
+    try {
+      document.querySelector(selector);
+    } catch (error) {
+      return;
+    }
+
+    const selectableCss = `${selector}, ${selector} * {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+    }`;
+
+    subtitleSelectorUserSelectStyleEl = GM_addStyle(selectableCss);
+  }
+
   async function loadFastSpeedSetting(defaultValue) {
     return loadFastSpeedFromProfile(defaultValue);
   }
@@ -1002,6 +1033,7 @@
 
     subtitleSelector = normalizedValue;
     saveSubtitleSelectorSetting(subtitleSelector);
+    applySubtitleSelectorTextSelectableStyle();
     if (inputSubtitleSelectorEl) {
       inputSubtitleSelectorEl.value = subtitleSelector;
     }
@@ -1188,6 +1220,7 @@
       const applySelector = value => {
         subtitleSelector = (value || '').trim();
         saveSubtitleSelectorSetting(subtitleSelector);
+        applySubtitleSelectorTextSelectableStyle();
         if (subtitleAutoSpeedEnabled) {
           startSubtitlePresenceMonitoring();
         }
