@@ -62,6 +62,9 @@
   const debouncedMain = debounce(main, 150);
   const subtitleTransitionEnabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" fill="#FFD166" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" fill="#118AB2" /><circle cx="40.5" cy="19.5" r="1.5" fill="#FFFFFF" stroke="none" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" fill="#EF476F" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" fill="#EF476F" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" fill="#FF9F1C" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
   const subtitleTransitionDisabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
+  const contentChangePulseClass = 'content-change-pulse';
+  const animatedContentSelector =
+    '#frame-rate-display, #bitrate-display, .divHeight';
 
   installShadowRootTracking();
 
@@ -1478,6 +1481,25 @@
     slidVolExtEl.style.display = showExtendedSlider ? '' : 'none';
   }
 
+  function animateContentChange(element) {
+    if (!element) return;
+    if (!element.matches(animatedContentSelector)) return;
+
+    element.classList.remove(contentChangePulseClass);
+    void element.offsetWidth;
+    element.classList.add(contentChangePulseClass);
+  }
+
+  function setAnimatedTextContent(element, value) {
+    if (!element) return;
+
+    const nextValue = String(value ?? '');
+    if (element.textContent === nextValue) return;
+
+    element.textContent = nextValue;
+    animateContentChange(element);
+  }
+
   function initializeToolbar() {
     if (!activeVideo) return;
 
@@ -1488,7 +1510,10 @@
     volDispEl.value = activeVideo.volume;
     updateExtendedVolumeSliderVisibility();
     speedDispEl.value = activeVideo.playbackRate;
-    divHeightEl.textContent = `${activeVideo.videoWidth}×${activeVideo.videoHeight}`;
+    setAnimatedTextContent(
+      divHeightEl,
+      `${activeVideo.videoWidth}×${activeVideo.videoHeight}`,
+    );
     divHeightEl.title = activeVideo.videoWidth * activeVideo.videoHeight;
     updatePlaybackPercentage(activeVideo);
   }
@@ -1506,13 +1531,16 @@
       duration <= 0 ||
       !Number.isFinite(currentTime)
     ) {
-      spanPlaybackPercentage.textContent = '0%';
+      setAnimatedTextContent(spanPlaybackPercentage, '0%');
       return;
     }
 
     const percentPlayed = (currentTime / duration) * 100;
     const clampedPercent = Math.min(Math.max(percentPlayed, 0), 100);
-    spanPlaybackPercentage.textContent = `${clampedPercent.toFixed(1)}%`;
+    setAnimatedTextContent(
+      spanPlaybackPercentage,
+      `${clampedPercent.toFixed(1)}%`,
+    );
   }
 
   function titler(text) {
@@ -1567,8 +1595,7 @@
       updatePlaybackPercentage(video);
 
       const videoArea = video.videoWidth * video.videoHeight;
-      const spanVidHeight = document.querySelector(`.divHeight`);
-      spanVidHeight.style.backgroundColor =
+      divHeightEl.style.backgroundColor =
         videoArea >= 1920 * 1080 ? '#ff8080' : '#2ecc71';
 
       updateFrameRate(video);
@@ -1584,8 +1611,11 @@
 
       const remainingTime = Math.round(duration - currentTime);
       const readable = forHumans(remainingTime);
-      spanRemainingTime.textContent = readable;
-      spanCurrentTime.textContent = forHumans(Math.round(currentTime));
+      setAnimatedTextContent(spanRemainingTime, readable);
+      setAnimatedTextContent(
+        spanCurrentTime,
+        forHumans(Math.round(currentTime)),
+      );
 
       if (video.playbackRate == 1) {
         fadeOut(spanActualRemTime);
@@ -1596,7 +1626,7 @@
         (duration - currentTime) / video.playbackRate,
       );
       const readableActual = forHumans(actualRemainingTime);
-      spanActualRemTime.textContent = readableActual;
+      setAnimatedTextContent(spanActualRemTime, readableActual);
     });
 
     video.addEventListener('ratechange', event => {
@@ -1870,9 +1900,9 @@
         } else {
           displayValue = `${(bitrate / 1000).toFixed(0)} kbps`;
         }
-        spanBitrate.textContent = displayValue;
+        setAnimatedTextContent(spanBitrate, displayValue);
       } else {
-        spanBitrate.textContent = '';
+        setAnimatedTextContent(spanBitrate, '');
       }
     }
   }
@@ -1908,7 +1938,7 @@
   function displayFrameRate(frameRate) {
     const spanFrameRate = document.querySelector(`#frame-rate-display`);
     if (spanFrameRate) {
-      spanFrameRate.textContent = frameRate;
+      setAnimatedTextContent(spanFrameRate, frameRate);
       spanFrameRate.style.backgroundColor =
         frameRate >= 60 ? '#ff8080' : '#2ecc71';
     }

@@ -137,10 +137,30 @@ const styles = `
   #contPanelHeader span {
     background-color: #2ecc71;
     color: #2c3e50;
+    display: inline-block;
     padding: ${margins};
     margin: 0 ${margins};
     border-radius: 4px;
     font-weight: bold;
+  }
+
+  #contPanelHeader .content-change-pulse {
+    animation: contentChangePulse 320ms ease-out;
+  }
+
+  @keyframes contentChangePulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(236, 240, 241, 0);
+    }
+    35% {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 4px rgba(236, 240, 241, 0.18);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(236, 240, 241, 0);
+    }
   }
 
   #spanPlaybackPercentage {
