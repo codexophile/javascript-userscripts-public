@@ -965,6 +965,33 @@
     syncSubtitleAutoSpeedSoon();
   }
 
+  function isVisibleSubtitleCandidate(element) {
+    if (!(element instanceof Element) || !element.isConnected) {
+      return false;
+    }
+
+    const computedStyle = window.getComputedStyle(element);
+    if (!computedStyle) return false;
+
+    if (
+      computedStyle.display === 'none' ||
+      computedStyle.visibility === 'hidden' ||
+      computedStyle.visibility === 'collapse'
+    ) {
+      return false;
+    }
+
+    if (Number(computedStyle.opacity) === 0) {
+      return false;
+    }
+
+    if (element.closest('[hidden], [aria-hidden="true"]')) {
+      return false;
+    }
+
+    return element.getClientRects().length > 0;
+  }
+
   function getSubtitleStateBySelector() {
     if (!subtitleSelector || !subtitleSelector.trim()) {
       subtitleSelectorInvalid = false;
@@ -978,14 +1005,23 @@
         return { present: false, hasMusicalSymbols: false };
       }
 
+      let foundVisibleSubtitleText = false;
       for (const matchedSubtitle of matchedSubtitles) {
-        const subtitleText = (matchedSubtitle?.textContent || '').trim();
-        if (subtitleText && musicalSubtitlePattern.test(subtitleText)) {
+        const subtitleText = (
+          matchedSubtitle?.innerText ??
+          matchedSubtitle?.textContent ??
+          ''
+        ).trim();
+        if (!subtitleText) continue;
+        if (!isVisibleSubtitleCandidate(matchedSubtitle)) continue;
+
+        foundVisibleSubtitleText = true;
+        if (musicalSubtitlePattern.test(subtitleText)) {
           return { present: true, hasMusicalSymbols: true };
         }
       }
 
-      return { present: true, hasMusicalSymbols: false };
+      return { present: foundVisibleSubtitleText, hasMusicalSymbols: false };
     } catch (error) {
       subtitleSelectorInvalid = true;
       return { present: false, hasMusicalSymbols: false };

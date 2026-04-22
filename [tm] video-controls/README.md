@@ -12,8 +12,9 @@ Shadow DOM support:
 
 Behavior:
 
-- If your subtitle selector exists in the DOM, playback is forced to normal speed (`1x`).
+- If your subtitle selector matches visible, non-empty subtitle text, playback is forced to normal speed (`1x`).
 - If your subtitle selector is not found, playback is forced to your configured fast speed.
+- If your selector matches elements but they are empty (or only whitespace), playback stays at your configured fast speed.
 - If matched subtitle text contains common musical symbols (`♪`, `♫`, `♬`, `♩`, `🎵`, `🎶`), playback is forced to fast speed.
 - Elements matching the subtitle selector (and their descendants) are forced to `user-select: text`, so subtitle text can be selected/copied more reliably.
 
@@ -31,7 +32,7 @@ This approach is site-agnostic and works even when native media text tracks are 
 8. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
 9. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
 
-The subtitle auto-speed status badge was removed from the panel UI. The feature behavior is unchanged and still follows selector presence and music-symbol detection rules described above.
+The subtitle auto-speed status badge was removed from the panel UI. The feature behavior still follows visible-text subtitle detection and music-symbol override rules described above.
 
 ## Suggested Selectors
 
