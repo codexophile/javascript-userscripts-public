@@ -890,6 +890,9 @@
       -webkit-user-select: text !important;
       -moz-user-select: text !important;
       -ms-user-select: text !important;
+      -webkit-touch-callout: default !important;
+      pointer-events: auto !important;
+      cursor: text !important;
     }`;
 
     subtitleSelectorUserSelectStyleEl = GM_addStyle(selectableCss);

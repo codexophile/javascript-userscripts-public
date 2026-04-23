@@ -16,7 +16,7 @@ Behavior:
 - If your subtitle selector is not found, playback is forced to your configured fast speed.
 - If your selector matches elements but they are empty (or only whitespace), playback stays at your configured fast speed.
 - If matched subtitle text contains common musical symbols (`♪`, `♫`, `♬`, `♩`, `🎵`, `🎶`), playback is forced to fast speed.
-- Elements matching the subtitle selector (and their descendants) are forced to `user-select: text`, so subtitle text can be selected/copied more reliably.
+- Elements matching the subtitle selector (and their descendants) are forced to text-selection-friendly styles (`user-select: text`, pointer events enabled, text cursor), so subtitle text can be selected/copied more reliably.
 - When the userscript is running inside an iframe and a subtitle selector is set, the matched subtitle root is also repositioned toward the iframe center (`50% / 50%`) as a best-effort override.
 
 This approach is site-agnostic and works even when native media text tracks are unavailable.
