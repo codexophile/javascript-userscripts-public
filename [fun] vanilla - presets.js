@@ -85,16 +85,23 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
             bottom: ${bottom};
             left: ${left};
             display: flex;
+          overflow: hidden;
             border-radius: ${borderRadius};
             box-shadow: ${boxShadow};
             transition: ${transition};
             width: ${collapsedWidth};
+          min-width: ${collapsedWidth};
+          height: ${height};
             z-index: 10000;
             resize: both;
             border: 1px solid #404040; // Added border for better definition
         }
         .collapsible-container.expanded {
             width: ${width};
+        }
+        .collapsible-container:not(.expanded) {
+          width: ${collapsedWidth} !important;
+          min-width: ${collapsedWidth};
         }
         .collapsible-toggler {
             writing-mode: vertical-rl;
@@ -129,9 +136,9 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
             padding: 3px;
             box-sizing: border-box;
         }
-        .collapsible-container:not(.expanded) .collapsible-content {
-            width: 0;
-            padding: 0;
+        .collapsible-container:not(.expanded) .collapsible-content,
+        .collapsible-container:not(.expanded) .resize-handle {
+          display: none;
         }
         .collapsible-content > * {
             margin: 3px;
@@ -967,41 +974,41 @@ class ModalBox {
 class VanillaDialog {
   constructor(options = {}) {
     const {
-      title = "",
-      content = "",
-      mode = "modal", // modal uses showModal(); non-modal uses show()
+      title = '',
+      content = '',
+      mode = 'modal', // modal uses showModal(); non-modal uses show()
       trigger = null,
       closeOnBackdrop = true,
       closeButton = true,
-      id = "",
-      className = "",
+      id = '',
+      className = '',
     } = options;
 
-    this.mode = mode === "modal" ? "modal" : "non-modal";
+    this.mode = mode === 'modal' ? 'modal' : 'non-modal';
 
-    this.dialog = document.createElement("dialog");
+    this.dialog = document.createElement('dialog');
     if (id) this.dialog.id = id;
     if (className) this.dialog.className = className;
 
-    this.header = document.createElement("div");
-    this.header.className = "dialog-header";
+    this.header = document.createElement('div');
+    this.header.className = 'dialog-header';
 
-    this.titleEl = document.createElement("h2");
+    this.titleEl = document.createElement('h2');
     this.titleEl.textContent = title;
     this.header.appendChild(this.titleEl);
 
     if (closeButton) {
-      this.closeBtn = document.createElement("button");
-      this.closeBtn.type = "button";
-      this.closeBtn.className = "btn-icon";
-      this.closeBtn.setAttribute("aria-label", "Close dialog");
+      this.closeBtn = document.createElement('button');
+      this.closeBtn.type = 'button';
+      this.closeBtn.className = 'btn-icon';
+      this.closeBtn.setAttribute('aria-label', 'Close dialog');
       this.closeBtn.innerHTML =
         '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>';
       this.header.appendChild(this.closeBtn);
     }
 
-    this.body = document.createElement("div");
-    this.body.className = "dialog-body";
+    this.body = document.createElement('div');
+    this.body.className = 'dialog-body';
     this.setContent(content);
 
     this.dialog.appendChild(this.header);
@@ -1010,7 +1017,7 @@ class VanillaDialog {
     document.body.appendChild(this.dialog);
 
     this.boundTriggerHandler = this.show.bind(this);
-    this.boundBackdropHandler = (e) => {
+    this.boundBackdropHandler = e => {
       const rect = this.dialog.getBoundingClientRect();
       const outside =
         e.clientX < rect.left ||
@@ -1021,20 +1028,22 @@ class VanillaDialog {
     };
 
     if (trigger) this.attachTrigger(trigger);
-    if (this.closeBtn) this.closeBtn.addEventListener("click", () => this.close());
+    if (this.closeBtn)
+      this.closeBtn.addEventListener('click', () => this.close());
     if (closeOnBackdrop)
-      this.dialog.addEventListener("click", this.boundBackdropHandler);
+      this.dialog.addEventListener('click', this.boundBackdropHandler);
   }
 
   attachTrigger(trigger) {
-    const el = typeof trigger === "string" ? document.querySelector(trigger) : trigger;
+    const el =
+      typeof trigger === 'string' ? document.querySelector(trigger) : trigger;
     if (!el) return;
     this.trigger = el;
-    this.trigger.addEventListener("click", this.boundTriggerHandler);
+    this.trigger.addEventListener('click', this.boundTriggerHandler);
   }
 
   setTitle(title) {
-    if (typeof title === "string") {
+    if (typeof title === 'string') {
       this.titleEl.textContent = title;
     } else if (title instanceof Node) {
       this.titleEl.replaceChildren(title);
@@ -1042,7 +1051,7 @@ class VanillaDialog {
   }
 
   setContent(content) {
-    if (typeof content === "string") {
+    if (typeof content === 'string') {
       this.body.innerHTML = content;
     } else if (content instanceof Node) {
       this.body.replaceChildren(content);
@@ -1050,7 +1059,7 @@ class VanillaDialog {
   }
 
   show() {
-    if (this.mode === "modal") {
+    if (this.mode === 'modal') {
       this.dialog.showModal();
     } else {
       this.dialog.show();
@@ -1071,8 +1080,8 @@ class VanillaDialog {
 
   destroy() {
     if (this.trigger)
-      this.trigger.removeEventListener("click", this.boundTriggerHandler);
-    this.dialog.removeEventListener("click", this.boundBackdropHandler);
+      this.trigger.removeEventListener('click', this.boundTriggerHandler);
+    this.dialog.removeEventListener('click', this.boundBackdropHandler);
     this.dialog.remove();
   }
 }
