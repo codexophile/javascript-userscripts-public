@@ -85,7 +85,6 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
             bottom: ${bottom};
             left: ${left};
             display: flex;
-          overflow: hidden;
             border-radius: ${borderRadius};
             box-shadow: ${boxShadow};
             transition: ${transition};
@@ -98,10 +97,12 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
         }
         .collapsible-container.expanded {
             width: ${width};
+            overflow: visible;
         }
         .collapsible-container:not(.expanded) {
           width: ${collapsedWidth} !important;
           min-width: ${collapsedWidth};
+          overflow: hidden;
         }
         .collapsible-toggler {
             writing-mode: vertical-rl;
