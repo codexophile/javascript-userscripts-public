@@ -49,6 +49,7 @@
   let subtitleObserver = null;
   let subtitleObserverUnsubscribe = null;
   let subtitleSelectorUserSelectStyleEl = null;
+  let subtitleSelectorIframeCenterStyleEl = null;
   let lastSubtitlePresentState = null;
 
   const canUseSharedSubtitleObserver =
@@ -855,8 +856,25 @@
     subtitleSelectorUserSelectStyleEl = null;
   }
 
+  function clearSubtitleSelectorIframeCenterStyle() {
+    if (!subtitleSelectorIframeCenterStyleEl) return;
+
+    subtitleSelectorIframeCenterStyleEl.remove();
+    subtitleSelectorIframeCenterStyleEl = null;
+  }
+
+  function isRunningInsideIframe() {
+    try {
+      return window.self !== window.top;
+    } catch (error) {
+      // Cross-origin access to top can throw; if so, treat as iframe context.
+      return true;
+    }
+  }
+
   function applySubtitleSelectorTextSelectableStyle() {
     clearSubtitleSelectorTextSelectableStyle();
+    clearSubtitleSelectorIframeCenterStyle();
 
     const selector = (subtitleSelector || '').trim();
     if (!selector) return;
@@ -875,6 +893,24 @@
     }`;
 
     subtitleSelectorUserSelectStyleEl = GM_addStyle(selectableCss);
+
+    if (!isRunningInsideIframe()) return;
+
+    const centeredCss = `${selector} {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      margin: 0 !important;
+      transform: translate(-50%, -50%) !important;
+      text-align: center !important;
+      width: max-content !important;
+      max-width: min(95vw, 95%) !important;
+      z-index: 2147483647 !important;
+    }`;
+
+    subtitleSelectorIframeCenterStyleEl = GM_addStyle(centeredCss);
   }
 
   async function loadFastSpeedSetting(defaultValue) {
@@ -1061,7 +1097,7 @@
   function promptForSubtitleSelector() {
     const seedValue = (subtitleSelector || '').trim();
     const enteredValue = window.prompt(
-      'Enter a CSS selector for subtitle text (example: .ytp-caption-segment). Duplicate selectors across profiles are checked on startup and can be merged:',
+      'Enter a CSS selector for subtitle text (example: .ytp-caption-segment). Duplicate selectors across profiles are checked on startup and can be merged. In iframe context, matched subtitle roots will also be centered in-frame:',
       seedValue,
     );
 

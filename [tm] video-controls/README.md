@@ -17,6 +17,7 @@ Behavior:
 - If your selector matches elements but they are empty (or only whitespace), playback stays at your configured fast speed.
 - If matched subtitle text contains common musical symbols (`♪`, `♫`, `♬`, `♩`, `🎵`, `🎶`), playback is forced to fast speed.
 - Elements matching the subtitle selector (and their descendants) are forced to `user-select: text`, so subtitle text can be selected/copied more reliably.
+- When the userscript is running inside an iframe and a subtitle selector is set, the matched subtitle root is also repositioned toward the iframe center (`50% / 50%`) as a best-effort override.
 
 This approach is site-agnostic and works even when native media text tracks are unavailable.
 
@@ -65,6 +66,7 @@ Tip:
 - While auto-speed is enabled, manual speed hotkeys (`z`, `x`, `c`) are ignored to avoid conflicts.
 - Disabling subtitle auto-speed immediately resets playback to `1x`.
 - The auto-pause behavior is frame-local, so it continues to work when the userscript is running inside an iframe.
+- Subtitle centering in iframes is only attempted when you provide a non-empty subtitle selector.
 - Cross-origin iframe players may expose subtitles outside the userscript context; in that case, use a selector that is visible from the current page context.
 - Open shadow roots are supported directly; closed shadow roots are only partially discoverable by platform design.
 - The extended volume slider is shown only when the base slider is at its maximum (or effective volume is above `0.25`) and hides again when volume returns below that threshold.
