@@ -71,6 +71,8 @@ Setup now prompts only for the GitHub token (stored locally in userscript storag
 - Auto-push is debounced (about 2.5 seconds), so rapid UI edits are batched.
 - Auto-push is silent (no success alert); failures are logged to console.
 - Auto-push is intentionally skipped during startup config hydration and during `pull` imports to avoid sync loops.
+- A `GM_addValueChangeListener` / `GM.addValueChangeListener` hook listens for cross-tab config storage changes and schedules sync from those updates too.
+- A lightweight userscript-storage lock is used so multiple tabs do not spam duplicate auto-push requests at the same time.
 
 If your userscript manager does not expose menu commands, use console helpers:
 

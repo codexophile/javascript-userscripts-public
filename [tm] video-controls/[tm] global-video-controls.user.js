@@ -31,6 +31,8 @@
   const syncSettingsStorageKey = 'globalVideoControlsSync';
   const syncGistIdStorageKey = 'globalVideoControlsSyncGistId';
   const syncTokenStorageKey = 'globalVideoControlsSyncToken';
+  const syncAutoLockStorageKey = 'globalVideoControlsSyncAutoLock';
+  const syncAutoLockTtlMs = 15000;
   const hardcodedSyncGistId = 'fa95900daa3e342803a3014e4a1285e9';
   const hardcodedSyncFileName = 'video-controls.json';
   const defaultProfileId = 'default';
@@ -59,6 +61,8 @@
   let autoSyncPushInFlight = false;
   let autoSyncPushQueued = false;
   let autoSyncPushSuppressed = false;
+  const syncInstanceId = `sync-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  let syncStorageListenerRegistered = false;
 
   let subtitleAutoSpeedEnabled = false;
   let subtitleSelector = '';
@@ -462,6 +466,124 @@
     return null;
   }
 
+  function getValueChangeListenerRegisterFunction() {
+    if (typeof GM_addValueChangeListener === 'function') {
+      return GM_addValueChangeListener;
+    }
+
+    if (
+      typeof GM !== 'undefined' &&
+      typeof GM.addValueChangeListener === 'function'
+    ) {
+      return GM.addValueChangeListener.bind(GM);
+    }
+
+    return null;
+  }
+
+  async function tryAcquireAutoSyncLock() {
+    if (!hasModernGMStorage) return true;
+
+    const now = Date.now();
+    const token = `${syncInstanceId}:${now}`;
+
+    let currentLock = null;
+    try {
+      currentLock = await GM.getValue(syncAutoLockStorageKey);
+    } catch (error) {}
+
+    if (
+      currentLock &&
+      typeof currentLock === 'object' &&
+      Number(currentLock.expiresAt) > now &&
+      currentLock.owner &&
+      currentLock.owner !== syncInstanceId
+    ) {
+      return false;
+    }
+
+    const nextLock = {
+      owner: syncInstanceId,
+      token,
+      expiresAt: now + syncAutoLockTtlMs,
+    };
+
+    await Promise.resolve(GM.setValue(syncAutoLockStorageKey, nextLock)).catch(
+      () => {},
+    );
+
+    try {
+      const verifyLock = await GM.getValue(syncAutoLockStorageKey);
+      return !!(
+        verifyLock &&
+        typeof verifyLock === 'object' &&
+        verifyLock.owner === syncInstanceId &&
+        verifyLock.token === token
+      );
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async function releaseAutoSyncLock() {
+    if (!hasModernGMStorage) return;
+
+    let currentLock = null;
+    try {
+      currentLock = await GM.getValue(syncAutoLockStorageKey);
+    } catch (error) {
+      return;
+    }
+
+    if (!currentLock || typeof currentLock !== 'object') return;
+    if (currentLock.owner !== syncInstanceId) return;
+
+    if (hasModernGMDelete) {
+      await Promise.resolve(GM.deleteValue(syncAutoLockStorageKey)).catch(
+        () => {},
+      );
+      return;
+    }
+
+    await Promise.resolve(GM.setValue(syncAutoLockStorageKey, null)).catch(
+      () => {},
+    );
+  }
+
+  async function registerConfigStorageSyncListener() {
+    if (syncStorageListenerRegistered) return;
+
+    const registerListener = getValueChangeListenerRegisterFunction();
+    if (!registerListener) return;
+
+    const onConfigChanged = (name, oldValue, newValue, remote) => {
+      if (name !== settingsConfigStorageKey) return;
+      if (autoSyncPushSuppressed) return;
+
+      if (typeof remote === 'boolean' && !remote) {
+        return;
+      }
+
+      const before = parseConfigPayload(oldValue);
+      const after = parseConfigPayload(newValue);
+      if (before && after) {
+        try {
+          const beforeJson = JSON.stringify(before);
+          const afterJson = JSON.stringify(after);
+          if (beforeJson === afterJson) return;
+        } catch (error) {}
+      }
+
+      triggerAutoSyncPush();
+    };
+
+    await Promise.resolve(
+      registerListener(settingsConfigStorageKey, onConfigChanged),
+    ).catch(() => {});
+
+    syncStorageListenerRegistered = true;
+  }
+
   function sanitizeSyncSettings(rawValue) {
     const source =
       rawValue && typeof rawValue === 'object' ? rawValue : Object.create(null);
@@ -614,9 +736,17 @@
     autoSyncPushInFlight = true;
     autoSyncPushQueued = false;
 
+    let lockAcquired = false;
     try {
       await loadSyncSettingsFromStorage();
       if (!syncToken) return;
+
+      lockAcquired = await tryAcquireAutoSyncLock();
+      if (!lockAcquired) return;
+
+      const storedConfig = await readConfigFromStorage();
+      settingsConfig = normalizeSettingsConfig(storedConfig);
+      resolveActiveProfileForHostname(location.hostname);
 
       await pushConfigToGist({
         silent: true,
@@ -625,6 +755,10 @@
     } catch (error) {
       console.error('Global Video Controls auto-sync error:', error);
     } finally {
+      if (lockAcquired) {
+        await releaseAutoSyncLock();
+      }
+
       autoSyncPushInFlight = false;
 
       if (autoSyncPushQueued && !autoSyncPushSuppressed) {
@@ -899,6 +1033,7 @@
   async function initConfigSync() {
     await loadSyncSettingsFromStorage();
     registerSyncMenuCommands();
+    await registerConfigStorageSyncListener();
 
     window.globalVideoControlsSync = {
       setup: () => runSyncAction(configureGistSync),
