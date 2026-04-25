@@ -38,9 +38,56 @@
 
   //* marking items with important words
   const listEls = document.querySelectorAll(`li`);
+  const uniqueSpecialWords = [...new Set(specialWords)];
+  const wordsRegexStr = `\\b(${uniqueSpecialWords.join('|')})\\b`;
+
   listEls.forEach(listEl => {
-    const text = listEl.textContent.toLowerCase();
-    if (specialWords.some(word => text.includes(word))) {
+    const walker = document.createTreeWalker(
+      listEl,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false,
+    );
+    const nodes = [];
+    let node;
+    while ((node = walker.nextNode())) nodes.push(node);
+
+    let hasSpecialWord = false;
+    nodes.forEach(textNode => {
+      const content = textNode.nodeValue;
+      const execRegex = new RegExp(wordsRegexStr, 'gi');
+      let match;
+      let hasMatch = false;
+      const fragment = document.createDocumentFragment();
+      let lastIndex = 0;
+
+      while ((match = execRegex.exec(content)) !== null) {
+        hasMatch = true;
+        fragment.appendChild(
+          document.createTextNode(content.substring(lastIndex, match.index)),
+        );
+        const mark = document.createElement('mark');
+        mark.style.backgroundColor = 'yellow';
+        mark.style.color = 'black';
+        mark.textContent = match[0];
+        fragment.appendChild(mark);
+        lastIndex = execRegex.lastIndex;
+      }
+
+      if (hasMatch) {
+        hasSpecialWord = true;
+        fragment.appendChild(
+          document.createTextNode(content.substring(lastIndex)),
+        );
+        const parent = textNode.parentNode;
+        if (parent) {
+          parent.insertBefore(fragment, textNode);
+          parent.removeChild(textNode);
+        }
+      }
+    });
+
+    if (hasSpecialWord) {
       listEl.style.border = '2px solid orange';
       listEl.style.padding = '0.5em';
     }
