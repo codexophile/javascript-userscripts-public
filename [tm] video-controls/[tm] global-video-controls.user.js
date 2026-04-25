@@ -88,6 +88,32 @@
   const subtitleTransitionEnabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" fill="#FFD166" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" fill="#118AB2" /><circle cx="40.5" cy="19.5" r="1.5" fill="#FFFFFF" stroke="none" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" fill="#EF476F" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" fill="#EF476F" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" fill="#FF9F1C" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
   const subtitleTransitionDisabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
   const contentChangePulseClass = 'content-change-pulse';
+
+  const SUBTITLE_STYLES = {
+    selectable: selector => `${selector}, ${selector} * {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      -webkit-touch-callout: default !important;
+      pointer-events: auto !important;
+      cursor: text !important;
+    }`,
+    centered: selector => `${selector} {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      margin: 0 !important;
+      transform: translate(-50%, -50%) !important;
+      text-align: center !important;
+      width: max-content !important;
+      max-width: min(95vw, 95%) !important;
+      z-index: 2147483647 !important;
+    }`,
+  };
+
   const animatedContentSelector =
     '#frame-rate-display, #bitrate-display, .divHeight';
 
@@ -219,7 +245,6 @@
 
   async function hydrateStoredSettings() {
     await ensureSettingsConfigLoaded();
-    subtitleAutoSpeedEnabled = await loadSubtitleAutoSpeedEnabledSetting();
     autoPauseOnBlurEnabled = await loadAutoPauseOnBlurSetting();
     subtitleSelector = await loadSubtitleSelectorSetting();
     fastSpeed = await loadFastSpeedSetting(fastSpeed);
@@ -229,7 +254,6 @@
   }
 
   async function reloadRuntimeSettingsFromProfile() {
-    subtitleAutoSpeedEnabled = await loadSubtitleAutoSpeedEnabledSetting();
     autoPauseOnBlurEnabled = await loadAutoPauseOnBlurSetting();
     subtitleSelector = await loadSubtitleSelectorSetting();
     fastSpeed = await loadFastSpeedSetting(fastSpeed);
@@ -278,7 +302,6 @@
     return {
       autoHide: false,
       autoPauseOnBlur: false,
-      autoSpeedEnabled: false,
       autoSpeedSelector: '',
       autoSpeedFast: defaultFastSpeed,
     };
@@ -348,9 +371,6 @@
     }
     if (typeof source.autoPauseOnBlur === 'boolean') {
       normalized.autoPauseOnBlur = source.autoPauseOnBlur;
-    }
-    if (typeof source.autoSpeedEnabled === 'boolean') {
-      normalized.autoSpeedEnabled = source.autoSpeedEnabled;
     }
     if (source.autoSpeedSelector !== undefined) {
       normalized.autoSpeedSelector = sanitizeSelectorValue(
@@ -1131,12 +1151,6 @@
       targetProfile.autoPauseOnBlur = !!sourceProfile.autoPauseOnBlur;
     }
     if (
-      targetProfile.autoSpeedEnabled === undefined &&
-      sourceProfile.autoSpeedEnabled !== undefined
-    ) {
-      targetProfile.autoSpeedEnabled = !!sourceProfile.autoSpeedEnabled;
-    }
-    if (
       targetProfile.autoSpeedFast === undefined &&
       sourceProfile.autoSpeedFast !== undefined
     ) {
@@ -1502,14 +1516,6 @@
     }
   }
 
-  async function loadSubtitleAutoSpeedEnabledSetting() {
-    return loadBooleanSettingFromProfile('autoSpeedEnabled', false);
-  }
-
-  function saveSubtitleAutoSpeedEnabledSetting(enabled) {
-    saveBooleanSettingToProfile('autoSpeedEnabled', enabled);
-  }
-
   async function loadSubtitleSelectorSetting() {
     return loadTextSettingFromProfile('autoSpeedSelector', '');
   }
@@ -1554,35 +1560,15 @@
       return;
     }
 
-    const selectableCss = `${selector}, ${selector} * {
-      user-select: text !important;
-      -webkit-user-select: text !important;
-      -moz-user-select: text !important;
-      -ms-user-select: text !important;
-      -webkit-touch-callout: default !important;
-      pointer-events: auto !important;
-      cursor: text !important;
-    }`;
-
-    subtitleSelectorUserSelectStyleEl = GM_addStyle(selectableCss);
+    subtitleSelectorUserSelectStyleEl = GM_addStyle(
+      SUBTITLE_STYLES.selectable(selector),
+    );
 
     if (!isRunningInsideIframe()) return;
 
-    const centeredCss = `${selector} {
-      position: fixed !important;
-      top: 50% !important;
-      left: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      margin: 0 !important;
-      transform: translate(-50%, -50%) !important;
-      text-align: center !important;
-      width: max-content !important;
-      max-width: min(95vw, 95%) !important;
-      z-index: 2147483647 !important;
-    }`;
-
-    subtitleSelectorIframeCenterStyleEl = GM_addStyle(centeredCss);
+    subtitleSelectorIframeCenterStyleEl = GM_addStyle(
+      SUBTITLE_STYLES.centered(selector),
+    );
   }
 
   async function loadFastSpeedSetting(defaultValue) {
@@ -1824,8 +1810,7 @@
     return subtitleSelector;
   }
 
-  function setSubtitleAutoSpeedEnabled(enabled, options = {}) {
-    const { persist = true } = options;
+  function setSubtitleAutoSpeedEnabled(enabled) {
     const requestedEnabled = !!enabled;
 
     if (requestedEnabled && !(subtitleSelector || '').trim()) {
@@ -1835,9 +1820,6 @@
 
         if (cbSubtitleAutoSpeedEl) {
           cbSubtitleAutoSpeedEl.checked = false;
-        }
-        if (persist) {
-          saveSubtitleAutoSpeedEnabledSetting(false);
         }
 
         renderSubtitleTransitionToggle();
@@ -1850,9 +1832,6 @@
 
     if (cbSubtitleAutoSpeedEl) {
       cbSubtitleAutoSpeedEl.checked = subtitleAutoSpeedEnabled;
-    }
-    if (persist) {
-      saveSubtitleAutoSpeedEnabledSetting(subtitleAutoSpeedEnabled);
     }
 
     renderSubtitleTransitionToggle();
@@ -2169,7 +2148,7 @@
       activeVideo.volume = e.target.value;
     });
 
-    setSubtitleAutoSpeedEnabled(subtitleAutoSpeedEnabled, { persist: false });
+    setSubtitleAutoSpeedEnabled(subtitleAutoSpeedEnabled);
 
     return controlPanel;
 

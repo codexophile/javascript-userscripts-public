@@ -111,7 +111,8 @@ Tip:
 - Old per-host flat keys are no longer read or migrated. Storage is profile/rule JSON only.
 - On first run, the script seeds a default config object. If no rule matches the current hostname, the first setting write auto-creates an exact-host rule and profile (for example `auto:example.com`).
 - Wildcard rule patterns are supported (for example `vidrock.*` and `*.vidsrc.*`) so TLD/domain changes can keep using the same profile.
-- Setting changes are persisted immediately to the active profile (for example panel drag position, subtitle selector edits, auto-hide toggle, auto-speed toggle, and fast speed value).
+- Setting changes are persisted immediately to the active profile when they are meant to survive reloads (for example panel drag position, subtitle selector edits, auto-hide toggle, and fast speed value).
+- Subtitle auto-speed enabled is session-only now; it resets on reload and is not written into profile storage.
 - On startup, the script scans for duplicate subtitle selectors across profiles and can prompt to merge them into one profile.
 - Duplicate selector matching is escape-tolerant for common quote variants (for example `[data-testid=\"caption-container\"]` and `[data-testid=caption-container]` are treated as the same selector for duplicate detection).
 - Duplicate-profile merge target defaults to the active profile. If non-selector fields conflict, active profile values win and missing target fields may be filled from merged profiles.
@@ -140,19 +141,16 @@ Tip:
     "default": {
       "autoHide": false,
       "autoPauseOnBlur": false,
-      "autoSpeedEnabled": false,
       "autoSpeedSelector": "",
       "autoSpeedFast": 3
     },
     "streamingDefault": {
       "autoHide": true,
       "autoPauseOnBlur": true,
-      "autoSpeedEnabled": true,
       "panelPosition": { "left": 12, "top": 1 }
     },
     "vidrock": {
       "autoHide": true,
-      "autoSpeedEnabled": false,
       "autoSpeedSelector": "[data-testid=\"caption-container\"]",
       "panelPosition": { "left": 177, "top": 2 }
     }
