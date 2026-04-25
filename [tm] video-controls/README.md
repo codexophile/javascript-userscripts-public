@@ -26,12 +26,13 @@ This approach is site-agnostic and works even when native media text tracks are 
 1. Open the control panel on a page with video.
 2. In the header's second row, use the `💨` button for manual speed toggle and the `🚀` toggle button for subtitle speed transition mode.
 3. You can also enable the same transition mode from `Subtitle auto-speed` (checkbox); both controls stay synchronized.
-4. Enter a subtitle CSS selector in `Subtitle selector`.
-5. If you try to enable subtitle speed transition while the selector is empty, the script refuses to enable it and prompts you to enter the selector manually.
-6. Set `Auto fast speed` (for subtitle gaps).
-7. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
-8. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
-9. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
+4. When the active site profile has a subtitle CSS selector saved in userscript storage, the `🚀` button shows a tiny green corner dot.
+5. Enter a subtitle CSS selector in `Subtitle selector`.
+6. If you try to enable subtitle speed transition while the selector is empty, the script refuses to enable it and prompts you to enter the selector manually.
+7. Set `Auto fast speed` (for subtitle gaps).
+8. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
+9. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
+10. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
 
 The subtitle auto-speed status badge was removed from the panel UI. The feature behavior still follows visible-text subtitle detection and music-symbol override rules described above.
 
@@ -75,6 +76,7 @@ Tip:
 - The header now shows playback percentage (`played / duration * 100`) and updates continuously during playback.
 - Header value badges briefly pulse whenever their displayed text changes for the frame rate, bitrate, and video-dimension readouts.
 - The header now has two rows inside `contPanelHeader`; the second row contains manual speed toggle (`💨`) and subtitle transition toggle (`🚀`).
+- The subtitle transition toggle (`🚀`) now shows a tiny green corner dot when the active site profile has a stored subtitle CSS selector.
 - Internal control panel DOM updates are ignored by the page-level `MutationObserver` trigger path, which prevents self-induced refresh loops while paused.
 
 ### Storage Shape

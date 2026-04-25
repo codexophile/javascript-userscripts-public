@@ -124,8 +124,33 @@ const styles = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: visible;
     min-width: 30px;
     min-height: 30px;
+  }
+
+  #subtitleSpeedTransitionToggle::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2ecc71;
+    border: 1px solid #ecf0f1;
+    box-shadow: 0 0 0 1px rgba(44, 62, 80, 0.7);
+    z-index: 3;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+
+  #subtitleSpeedTransitionToggle.subtitle-selector-available::after {
+    opacity: 1;
+    transform: scale(1);
   }
 
   #subtitleSpeedTransitionToggle svg {
