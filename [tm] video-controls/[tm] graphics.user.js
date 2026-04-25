@@ -2,7 +2,7 @@ const speedTransitionEnabled = `
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
 <svg width="800px" height="800px" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"
-  stroke-width="3" stroke="#000000" fill="none">
+  stroke-width="0" stroke="#000000" fill="none">
   
   <!-- Rocket Hull / Body -->
   <path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" fill="#FFD166" />
