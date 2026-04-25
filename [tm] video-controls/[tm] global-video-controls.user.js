@@ -98,6 +98,8 @@
       -webkit-touch-callout: default !important;
       pointer-events: auto !important;
       cursor: text !important;
+      background: none !important;
+      background-color: transparent !important;
     }`,
     centered: selector => `${selector} {
       position: fixed !important;
@@ -111,6 +113,8 @@
       width: max-content !important;
       max-width: min(95vw, 95%) !important;
       z-index: 2147483647 !important;
+      background: none !important;
+      background-color: transparent !important;
     }`,
   };
 
