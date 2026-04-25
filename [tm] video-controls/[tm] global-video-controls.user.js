@@ -28,12 +28,19 @@
   const defaultFastSpeed = 3;
   const panelDefaultPosition = { top: 100, left: 10 };
   const settingsConfigStorageKey = 'globalVideoControls';
+  const syncSettingsStorageKey = 'globalVideoControlsSync';
+  const syncGistIdStorageKey = 'globalVideoControlsSyncGistId';
+  const syncTokenStorageKey = 'globalVideoControlsSyncToken';
+  const hardcodedSyncGistId = 'fa95900daa3e342803a3014e4a1285e9';
+  const hardcodedSyncFileName = 'video-controls.json';
   const defaultProfileId = 'default';
   const musicalSubtitlePattern = /[♪♫♬♩🎵🎶]/;
   const hasModernGMStorage =
     typeof GM !== 'undefined' &&
     typeof GM.getValue === 'function' &&
     typeof GM.setValue === 'function';
+  const hasModernGMDelete =
+    typeof GM !== 'undefined' && typeof GM.deleteValue === 'function';
   const trackedShadowRootsByHost = new WeakMap();
   let shadowRootTrackingInstalled = false;
 
@@ -42,6 +49,16 @@
   let activeProfileId = null;
   let activeHostname = '';
   let duplicateSelectorScanCompleted = false;
+  let syncSettings = {
+    fileName: hardcodedSyncFileName,
+    visibility: 'secret',
+    lastSyncAt: '',
+  };
+  let syncGistId = hardcodedSyncGistId;
+  let syncToken = '';
+  let autoSyncPushInFlight = false;
+  let autoSyncPushQueued = false;
+  let autoSyncPushSuppressed = false;
 
   let subtitleAutoSpeedEnabled = false;
   let subtitleSelector = '';
@@ -60,6 +77,9 @@
   const syncSubtitleAutoSpeedSoon = debounce(() => {
     syncSubtitleAutoSpeed();
   }, 75);
+  const autoSyncPushSoon = debounce(() => {
+    runAutoSyncPush();
+  }, 2500);
   const debouncedMain = debounce(main, 150);
   const subtitleTransitionEnabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" fill="#FFD166" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" fill="#118AB2" /><circle cx="40.5" cy="19.5" r="1.5" fill="#FFFFFF" stroke="none" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" fill="#EF476F" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" fill="#EF476F" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" fill="#FF9F1C" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
   const subtitleTransitionDisabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
@@ -70,6 +90,7 @@
   installShadowRootTracking();
 
   await hydrateStoredSettings();
+  await initConfigSync();
 
   document.addEventListener('visibilitychange', handleAutoPauseTrigger);
   document.addEventListener('visibilitychange', handleAutoResumeTrigger);
@@ -201,6 +222,52 @@
     panelAutoHideEnabled = await loadPanelAutoHideSetting();
     panelPosition = await loadPanelPositionSetting();
     applySubtitleSelectorTextSelectableStyle();
+  }
+
+  async function reloadRuntimeSettingsFromProfile() {
+    subtitleAutoSpeedEnabled = await loadSubtitleAutoSpeedEnabledSetting();
+    autoPauseOnBlurEnabled = await loadAutoPauseOnBlurSetting();
+    subtitleSelector = await loadSubtitleSelectorSetting();
+    fastSpeed = await loadFastSpeedSetting(fastSpeed);
+    panelAutoHideEnabled = await loadPanelAutoHideSetting();
+    panelPosition = await loadPanelPositionSetting();
+
+    applySubtitleSelectorTextSelectableStyle();
+
+    if (cbSubtitleAutoSpeedEl) {
+      cbSubtitleAutoSpeedEl.checked = subtitleAutoSpeedEnabled;
+    }
+    const cbAutoPauseOnBlurEl =
+      controlPanel?.querySelector('#cbAutoPauseOnBlur');
+    if (cbAutoPauseOnBlurEl) {
+      cbAutoPauseOnBlurEl.checked = autoPauseOnBlurEnabled;
+    }
+    const cbAutoHideEl = controlPanel?.querySelector('#cbAutoHide');
+    if (cbAutoHideEl) {
+      cbAutoHideEl.checked = panelAutoHideEnabled;
+    }
+    if (inputSubtitleSelectorEl) {
+      inputSubtitleSelectorEl.value = subtitleSelector;
+    }
+    if (numAutoFastSpeedEl) {
+      numAutoFastSpeedEl.value = String(fastSpeed);
+    }
+    if (controlPanel) {
+      applyStoredPanelPosition(controlPanel);
+      applyEffectivePanelUiState(controlPanel);
+    }
+
+    refreshSubtitleSelectorAvailabilityIndicator();
+    renderSubtitleTransitionToggle();
+
+    if (subtitleAutoSpeedEnabled) {
+      startSubtitlePresenceMonitoring();
+    } else {
+      stopSubtitlePresenceMonitoring();
+      setPlaybackRateIfNeeded(activeVideo, 1);
+    }
+
+    syncSubtitleAutoSpeed(activeVideo);
   }
 
   function getDefaultProfileShape() {
@@ -381,6 +448,466 @@
     return null;
   }
 
+  function getMenuCommandRegisterFunction() {
+    if (typeof GM_registerMenuCommand === 'function') {
+      return GM_registerMenuCommand;
+    }
+
+    if (typeof GM !== 'undefined') {
+      if (typeof GM.registerMenuCommand === 'function') {
+        return GM.registerMenuCommand.bind(GM);
+      }
+    }
+
+    return null;
+  }
+
+  function sanitizeSyncSettings(rawValue) {
+    const source =
+      rawValue && typeof rawValue === 'object' ? rawValue : Object.create(null);
+
+    const gistId = String(source.gistId || '').trim();
+    const fallbackFileName = 'global-video-controls.config.json';
+    const fileNameCandidate = String(
+      source.fileName || fallbackFileName,
+    ).trim();
+    const fileName = fileNameCandidate || fallbackFileName;
+
+    const visibility =
+      String(source.visibility || 'secret').toLowerCase() === 'public'
+        ? 'public'
+        : 'secret';
+
+    const lastSyncAt = String(source.lastSyncAt || '').trim();
+
+    return {
+      gistId,
+      fileName,
+      visibility,
+      lastSyncAt,
+    };
+  }
+
+  async function loadSyncSettingsFromStorage() {
+    if (!hasModernGMStorage) return;
+
+    let rawSyncSettings = null;
+    try {
+      rawSyncSettings = await GM.getValue(syncSettingsStorageKey);
+      syncSettings = sanitizeSyncSettings(rawSyncSettings);
+    } catch (error) {
+      syncSettings = sanitizeSyncSettings(null);
+    }
+
+    syncSettings.fileName = hardcodedSyncFileName;
+
+    try {
+      const rawGistId = await GM.getValue(syncGistIdStorageKey);
+      syncGistId = String(rawGistId || '').trim();
+      if (!syncGistId) {
+        const legacyGistId = String(rawSyncSettings?.gistId || '').trim();
+        syncGistId = legacyGistId;
+      }
+    } catch (error) {
+      syncGistId = '';
+    }
+
+    syncGistId = hardcodedSyncGistId;
+
+    try {
+      const rawToken = await GM.getValue(syncTokenStorageKey);
+      syncToken = String(rawToken || '').trim();
+    } catch (error) {
+      syncToken = '';
+    }
+  }
+
+  async function saveSyncSettingsToStorage() {
+    if (!hasModernGMStorage) return;
+
+    syncGistId = hardcodedSyncGistId;
+    syncSettings.fileName = hardcodedSyncFileName;
+
+    await Promise.resolve(
+      GM.setValue(syncSettingsStorageKey, sanitizeSyncSettings(syncSettings)),
+    ).catch(() => {});
+
+    await Promise.resolve(GM.setValue(syncGistIdStorageKey, syncGistId)).catch(
+      () => {},
+    );
+
+    if (syncToken) {
+      await Promise.resolve(GM.setValue(syncTokenStorageKey, syncToken)).catch(
+        () => {},
+      );
+      return;
+    }
+
+    if (hasModernGMDelete) {
+      await Promise.resolve(GM.deleteValue(syncTokenStorageKey)).catch(
+        () => {},
+      );
+      return;
+    }
+
+    await Promise.resolve(GM.setValue(syncTokenStorageKey, '')).catch(() => {});
+  }
+
+  async function getSecret(valueKey = 'apiKey', promptText = '') {
+    if (!hasModernGMStorage) return '';
+
+    try {
+      const storedValue = await GM.getValue(valueKey);
+      const normalizedStoredValue = String(storedValue || '').trim();
+      if (normalizedStoredValue) return normalizedStoredValue;
+    } catch (error) {}
+
+    const enteredValue = window.prompt(
+      promptText || `Please enter your ${valueKey} value:`,
+    );
+    if (enteredValue === null) return '';
+
+    const normalizedEnteredValue = String(enteredValue || '').trim();
+    if (!normalizedEnteredValue) return '';
+
+    await Promise.resolve(GM.setValue(valueKey, normalizedEnteredValue)).catch(
+      () => {},
+    );
+    return normalizedEnteredValue;
+  }
+
+  function getSyncStatusText() {
+    const maskedToken = syncToken
+      ? `${syncToken.slice(0, 4)}...${syncToken.slice(-4)}`
+      : '(not set)';
+    const gistText = syncGistId || '(not set)';
+    const fileText = syncSettings.fileName || '(not set)';
+    const visibilityText = syncSettings.visibility || 'secret';
+    const lastSyncText = syncSettings.lastSyncAt || '(never)';
+
+    return [
+      'GitHub Gist sync status',
+      `- Gist ID: ${gistText}`,
+      `- File: ${fileText}`,
+      `- Visibility (new gist): ${visibilityText}`,
+      `- Token: ${maskedToken}`,
+      `- Last sync: ${lastSyncText}`,
+    ].join('\n');
+  }
+
+  function alertSyncStatus() {
+    window.alert(getSyncStatusText());
+  }
+
+  function triggerAutoSyncPush() {
+    if (autoSyncPushSuppressed) return;
+
+    autoSyncPushQueued = true;
+    autoSyncPushSoon();
+  }
+
+  async function runAutoSyncPush() {
+    if (autoSyncPushSuppressed) return;
+    if (autoSyncPushInFlight) return;
+    if (!autoSyncPushQueued) return;
+
+    autoSyncPushInFlight = true;
+    autoSyncPushQueued = false;
+
+    try {
+      await loadSyncSettingsFromStorage();
+      if (!syncToken) return;
+
+      await pushConfigToGist({
+        silent: true,
+        skipEnsureLoaded: true,
+      });
+    } catch (error) {
+      console.error('Global Video Controls auto-sync error:', error);
+    } finally {
+      autoSyncPushInFlight = false;
+
+      if (autoSyncPushQueued && !autoSyncPushSuppressed) {
+        autoSyncPushSoon();
+      }
+    }
+  }
+
+  async function githubApiRequest(path, options = {}) {
+    const { method = 'GET', payload = null, allowAnonymous = false } = options;
+
+    if (!allowAnonymous && !syncToken) {
+      throw new Error('Missing GitHub token. Run sync setup first.');
+    }
+
+    const headers = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+    if (payload) {
+      headers['Content-Type'] = 'application/json';
+    }
+    if (syncToken) {
+      headers.Authorization = `Bearer ${syncToken}`;
+    }
+
+    const response = await fetch(`https://api.github.com${path}`, {
+      method,
+      headers,
+      body: payload ? JSON.stringify(payload) : undefined,
+    });
+
+    const responseText = await response.text();
+    let parsedBody = null;
+    if (responseText) {
+      try {
+        parsedBody = JSON.parse(responseText);
+      } catch (error) {
+        parsedBody = null;
+      }
+    }
+
+    if (!response.ok) {
+      const apiMessage =
+        parsedBody && typeof parsedBody.message === 'string'
+          ? parsedBody.message
+          : response.statusText;
+      throw new Error(
+        `GitHub API ${response.status} ${response.statusText}: ${apiMessage}`,
+      );
+    }
+
+    return parsedBody || Object.create(null);
+  }
+
+  async function fetchGistFileContent(fileInfo) {
+    if (!fileInfo || typeof fileInfo !== 'object') {
+      throw new Error('Selected gist file metadata is invalid.');
+    }
+
+    if (typeof fileInfo.content === 'string' && !fileInfo.truncated) {
+      return fileInfo.content;
+    }
+
+    const rawUrl = String(fileInfo.raw_url || '').trim();
+    if (!rawUrl) {
+      throw new Error('Unable to read gist file content (raw URL missing).');
+    }
+
+    const response = await fetch(rawUrl, {
+      headers: syncToken ? { Authorization: `Bearer ${syncToken}` } : undefined,
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to download gist file: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    return response.text();
+  }
+
+  async function configureGistSync() {
+    await loadSyncSettingsFromStorage();
+
+    syncToken = await getSecret(
+      syncTokenStorageKey,
+      'GitHub personal access token for Gist sync (needs gist scope)',
+    );
+    syncGistId = hardcodedSyncGistId;
+    syncSettings.fileName = hardcodedSyncFileName;
+
+    const visibilityPrompt = window.prompt(
+      'Visibility for newly created gist (secret/public):',
+      syncSettings.visibility || 'secret',
+    );
+    if (visibilityPrompt !== null) {
+      syncSettings.visibility =
+        visibilityPrompt.trim().toLowerCase() === 'public'
+          ? 'public'
+          : 'secret';
+    }
+
+    await saveSyncSettingsToStorage();
+    alertSyncStatus();
+  }
+
+  function buildConfigSyncPayload() {
+    const syncFileName = hardcodedSyncFileName;
+    const configJson = JSON.stringify(settingsConfig, null, 2);
+    return {
+      syncFileName,
+      configJson,
+    };
+  }
+
+  async function pushConfigToGist(options = {}) {
+    const { silent = false, skipEnsureLoaded = false } = options;
+
+    if (!skipEnsureLoaded) {
+      await ensureSettingsConfigLoaded();
+    }
+    await loadSyncSettingsFromStorage();
+
+    if (!syncToken) {
+      if (!silent) {
+        window.alert(
+          'No GitHub token found. Run "Video Controls: Sync Setup (GitHub Gist)" first.',
+        );
+      }
+      return false;
+    }
+
+    const { syncFileName, configJson } = buildConfigSyncPayload();
+
+    let gistResponse;
+    if (syncGistId) {
+      gistResponse = await githubApiRequest(`/gists/${syncGistId}`, {
+        method: 'PATCH',
+        payload: {
+          description: 'Global Video Controls userscript config',
+          files: {
+            [syncFileName]: {
+              content: configJson,
+            },
+          },
+        },
+      });
+    } else {
+      gistResponse = await githubApiRequest('/gists', {
+        method: 'POST',
+        payload: {
+          description: 'Global Video Controls userscript config',
+          public: syncSettings.visibility === 'public',
+          files: {
+            [syncFileName]: {
+              content: configJson,
+            },
+          },
+        },
+      });
+    }
+
+    syncGistId = String(gistResponse.id || syncGistId || '').trim();
+    syncGistId = hardcodedSyncGistId;
+    syncSettings.fileName = hardcodedSyncFileName;
+    syncSettings.lastSyncAt = new Date().toISOString();
+    await saveSyncSettingsToStorage();
+
+    const htmlUrl = String(gistResponse.html_url || '').trim();
+    if (!silent) {
+      window.alert(
+        [
+          'Config pushed to GitHub Gist.',
+          `Gist ID: ${syncGistId || '(unknown)'}`,
+          htmlUrl ? `URL: ${htmlUrl}` : 'URL: (unavailable)',
+        ].join('\n'),
+      );
+    }
+
+    return true;
+  }
+
+  async function pullConfigFromGist() {
+    await loadSyncSettingsFromStorage();
+
+    if (!syncGistId) {
+      window.alert(
+        'No gist ID configured. Run "Video Controls: Sync Setup (GitHub Gist)" first.',
+      );
+      return;
+    }
+
+    const gistResponse = await githubApiRequest(`/gists/${syncGistId}`, {
+      method: 'GET',
+      allowAnonymous: true,
+    });
+
+    const gistFiles = gistResponse.files || Object.create(null);
+    const preferredFileName = String(syncSettings.fileName || '').trim();
+    const preferredFile = preferredFileName
+      ? gistFiles[preferredFileName]
+      : null;
+
+    const fallbackFile = Object.values(gistFiles).find(file => {
+      const candidateName = String(file?.filename || '').toLowerCase();
+      return candidateName.endsWith('.json');
+    });
+
+    const selectedFile =
+      preferredFile || fallbackFile || Object.values(gistFiles)[0];
+    if (!selectedFile) {
+      throw new Error('Configured gist has no files to import.');
+    }
+
+    const rawContent = await fetchGistFileContent(selectedFile);
+    const parsedPayload = parseConfigPayload(rawContent);
+    if (!parsedPayload || typeof parsedPayload !== 'object') {
+      throw new Error('Gist file content is not valid JSON config.');
+    }
+
+    autoSyncPushSuppressed = true;
+    try {
+      settingsConfig = normalizeSettingsConfig(parsedPayload);
+      writeConfigToStorage(settingsConfig, { skipAutoSync: true });
+      resolveActiveProfileForHostname(location.hostname);
+      await reloadRuntimeSettingsFromProfile();
+    } finally {
+      autoSyncPushSuppressed = false;
+      autoSyncPushQueued = false;
+    }
+
+    syncSettings.fileName = hardcodedSyncFileName;
+    syncSettings.lastSyncAt = new Date().toISOString();
+    await saveSyncSettingsToStorage();
+
+    window.alert(
+      [
+        'Config pulled from GitHub Gist and applied.',
+        `Source file: ${syncSettings.fileName || '(unknown)'}`,
+      ].join('\n'),
+    );
+  }
+
+  async function runSyncAction(action) {
+    try {
+      await action();
+    } catch (error) {
+      const message = error?.message || String(error || 'Unknown sync error');
+      console.error('Global Video Controls sync error:', error);
+      window.alert(`Sync failed: ${message}`);
+    }
+  }
+
+  function registerSyncMenuCommands() {
+    const registerMenuCommand = getMenuCommandRegisterFunction();
+    if (!registerMenuCommand) return;
+
+    registerMenuCommand('Video Controls: Sync Setup (GitHub Gist)', () => {
+      runSyncAction(configureGistSync);
+    });
+    registerMenuCommand('Video Controls: Sync Push -> Gist', () => {
+      runSyncAction(pushConfigToGist);
+    });
+    registerMenuCommand('Video Controls: Sync Pull <- Gist', () => {
+      runSyncAction(pullConfigFromGist);
+    });
+    registerMenuCommand('Video Controls: Sync Status', () => {
+      alertSyncStatus();
+    });
+  }
+
+  async function initConfigSync() {
+    await loadSyncSettingsFromStorage();
+    registerSyncMenuCommands();
+
+    window.globalVideoControlsSync = {
+      setup: () => runSyncAction(configureGistSync),
+      push: () => runSyncAction(pushConfigToGist),
+      pull: () => runSyncAction(pullConfigFromGist),
+      status: () => alertSyncStatus(),
+    };
+  }
+
   async function readConfigFromStorage() {
     if (!hasModernGMStorage) return undefined;
 
@@ -399,12 +926,18 @@
     }
   }
 
-  function writeConfigToStorage(config) {
+  function writeConfigToStorage(config, options = {}) {
     if (!hasModernGMStorage) return;
+
+    const { skipAutoSync = false } = options;
 
     Promise.resolve(GM.setValue(settingsConfigStorageKey, config)).catch(
       () => {},
     );
+
+    if (!skipAutoSync) {
+      triggerAutoSyncPush();
+    }
   }
 
   async function ensureSettingsConfigLoaded() {
@@ -418,7 +951,7 @@
 
     const storedConfig = await readConfigFromStorage();
     settingsConfig = normalizeSettingsConfig(storedConfig);
-    writeConfigToStorage(settingsConfig);
+    writeConfigToStorage(settingsConfig, { skipAutoSync: true });
     resolveActiveProfileForHostname(location.hostname);
     await scanAndPromptDuplicateSelectorProfiles();
   }

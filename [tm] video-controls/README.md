@@ -34,6 +34,57 @@ This approach is site-agnostic and works even when native media text tracks are 
 9. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
 10. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
 
+## Sync Config Across Devices (GitHub Gist)
+
+The script now supports optional config sync using GitHub Gists.
+
+What syncs:
+
+- The canonical `globalVideoControls` JSON payload (`profiles` + `rules`).
+
+What does not sync:
+
+- Your GitHub token. The token is stored locally in userscript storage and never uploaded into the gist file.
+
+### Setup
+
+1. Open your userscript manager menu for this script.
+2. Run `Video Controls: Sync Setup (GitHub Gist)`.
+3. Provide:
+
+- A GitHub personal access token with `gist` scope.
+- Gist ID is hardcoded to `fa95900daa3e342803a3014e4a1285e9`.
+- File name is hardcoded to `video-controls.json`.
+- Visibility for newly created gists (`secret` or `public`).
+
+Setup now prompts only for the GitHub token (stored locally in userscript storage).
+
+### Manual Sync Actions
+
+- `Video Controls: Sync Push -> Gist`: uploads current local config to gist.
+- `Video Controls: Sync Pull <- Gist`: downloads gist config and applies immediately.
+- `Video Controls: Sync Status`: shows current sync setup and last sync timestamp.
+
+### Automatic Sync
+
+- Local config writes now trigger automatic sync push to gist.
+- Auto-push is debounced (about 2.5 seconds), so rapid UI edits are batched.
+- Auto-push is silent (no success alert); failures are logged to console.
+- Auto-push is intentionally skipped during startup config hydration and during `pull` imports to avoid sync loops.
+
+If your userscript manager does not expose menu commands, use console helpers:
+
+- `window.globalVideoControlsSync.setup()`
+- `window.globalVideoControlsSync.push()`
+- `window.globalVideoControlsSync.pull()`
+- `window.globalVideoControlsSync.status()`
+
+### Security Notes
+
+- Keep your gist token private and prefer `secret` gist visibility unless you intentionally want public sharing.
+- Anyone with a secret gist URL can read it.
+- `pull` replaces local config with gist content after normalization.
+
 The subtitle auto-speed status badge was removed from the panel UI. The feature behavior still follows visible-text subtitle detection and music-symbol override rules described above.
 
 ## Suggested Selectors
