@@ -34,10 +34,10 @@ const htmlStructure = `
     </div>
       
     <div class="buttonsRow important">
-      <button class="timejumpLTwo">➖</button> 
+      <button class="timejumpLTwo important">➖</button> 
       <button class="timejumpLOne important">➖</button> 
       <button class="timejumpROne important">➕</button> 
-      <button class="timejumpRTwo">➕</button>
+      <button class="timejumpRTwo important">➕</button>
       <input type="checkbox" class="important" title="Loop video" id="checkbox-loop-vid">
       <a id="copyPageUrl" title="Page" class="important button" href="${location.href}">📄</a>
       <button id="copyVidSrc" class="brsrc" title="CurrentSrc">🎞️</button>
