@@ -100,6 +100,10 @@
       cursor: text !important;
       background: none !important;
       background-color: transparent !important;
+      text-shadow: 
+        0px 2px 4px rgba(0, 0, 0, 0.9),
+        0px 4px 10px rgba(0, 0, 0, 0.7),
+        0px 0px 6px rgba(0, 0, 0, 0.8);
     }`,
     centered: selector => `${selector} {
       position: fixed !important;
