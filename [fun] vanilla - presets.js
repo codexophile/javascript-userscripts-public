@@ -72,7 +72,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     boxShadow = '0 2px 5px rgba(0,0,0,0.95)', // Darker shadow
     transition = 'all 0.3s ease-out',
     width = '300px',
-    height = '200px',
+    height = '',
     collapsedWidth = '30px',
     popupHeight = '150px',
     buttonSize = '30px',
@@ -89,8 +89,8 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
             box-shadow: ${boxShadow};
             transition: ${transition};
             width: ${collapsedWidth};
-          min-width: ${collapsedWidth};
-          height: ${height};
+            min-width: ${collapsedWidth};
+            height: ${height};
             z-index: 10000;
             resize: both;
             border: 1px solid #404040; // Added border for better definition
