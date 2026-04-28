@@ -104,6 +104,7 @@
         0px 2px 4px rgba(0, 0, 0, 0.9),
         0px 4px 10px rgba(0, 0, 0, 0.7),
         0px 0px 6px rgba(0, 0, 0, 0.8);
+      backdrop-filter: unset !important;
     }`,
     centered: selector => `${selector} {
       position: fixed !important;
