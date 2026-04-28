@@ -2181,7 +2181,6 @@
   function applyEffectivePanelUiState(controlPanelEl) {
     const effectiveState = getEffectivePanelUiState();
     applyPanelUiState(controlPanelEl, effectiveState);
-    updateExtendedVolumeSliderVisibility();
   }
 
   function getEffectivePanelUiState() {
@@ -2239,24 +2238,6 @@
     });
   }
 
-  function updateExtendedVolumeSliderVisibility() {
-    if (!slidVolExtEl) return;
-
-    if (getEffectivePanelUiState() === 2) {
-      slidVolExtEl.style.display = 'none';
-      return;
-    }
-
-    const primaryAtMax =
-      !!slidVolFinEl &&
-      Math.abs(parseFloat(slidVolFinEl.value) - parseFloat(slidVolFinEl.max)) <
-        0.0005;
-    const volumeAboveBase = !!activeVideo && activeVideo.volume > 0.25;
-    const showExtendedSlider = primaryAtMax || volumeAboveBase;
-
-    slidVolExtEl.style.display = showExtendedSlider ? '' : 'none';
-  }
-
   function animateContentChange(element) {
     if (!element) return;
     if (!element.matches(animatedContentSelector)) return;
@@ -2284,7 +2265,6 @@
       slidVolExtEl.value = activeVideo.volume;
     }
     volDispEl.value = activeVideo.volume;
-    updateExtendedVolumeSliderVisibility();
     speedDispEl.value = activeVideo.playbackRate;
     setAnimatedTextContent(
       divHeightEl,
@@ -2451,7 +2431,6 @@
       volDispEl.value = event.target.volume;
       slidVolFinEl.value = event.target.volume;
       if (slidVolExtEl) slidVolExtEl.value = event.target.volume;
-      updateExtendedVolumeSliderVisibility();
     });
 
     // Update dimensions percentage when video element size changes

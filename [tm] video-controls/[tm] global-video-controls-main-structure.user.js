@@ -63,7 +63,7 @@ const htmlStructure = `
     <fieldset id="volume-related-elements" class="important" style="display: flex;">
       <div id="volume-sliders" class="important">
         <input type="range" class="slidVolFin important vidContRange" min="0" max="0.25" step="0.001">
-        <input type="range" class="slidVolExt important vidContRange" min="0.25" max="1" step="0.001" style="display: none;" title="Extended volume (0.25 to 1)">
+    <input type="range" class="slidVolExt important vidContRange" min="0.25" max="1" step="0.001" title="Extended volume (0.25 to 1)">
       </div>
       <input type="number" title="Volume" step="0.001" class="numinp" id="volDisp">
       <button id="muteButton" for="volDisp">🔊</button>

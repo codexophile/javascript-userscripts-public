@@ -31,7 +31,7 @@ This approach is site-agnostic and works even when native media text tracks are 
 6. If you try to enable subtitle speed transition while the selector is empty, the script refuses to enable it and prompts you to enter the selector manually.
 7. Set `Auto fast speed` (for subtitle gaps).
 8. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
-9. Use the volume sliders as a two-stage control: the main slider controls `0` to `0.25`; when it reaches max, an extended slider appears for `0.25` to `1`.
+9. Use the two volume sliders to control playback volume: the main slider controls `0` to `0.25`; the extended slider controls `0.25` to `1`.
 10. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
 
 ## Sync Config Across Devices (GitHub Gist)
@@ -124,7 +124,7 @@ Tip:
 - Subtitle centering in iframes is only attempted when you provide a non-empty subtitle selector.
 - Cross-origin iframe players may expose subtitles outside the userscript context; in that case, use a selector that is visible from the current page context.
 - Open shadow roots are supported directly; closed shadow roots are only partially discoverable by platform design.
-- The extended volume slider is shown only when the base slider is at its maximum (or effective volume is above `0.25`) and hides again when volume returns below that threshold.
+- Two volume sliders provide fine-grained volume control: the base slider adjusts `0` to `0.25` (quiet range), and the extended slider adjusts `0.25` to `1` (normal to loud range). Both sliders are always visible and work independently.
 - The control panel remembers its dragged position in the active profile and respawns there on reload; if no saved position exists yet, it starts at the default location and does not write a position until you manually drag it.
 - If saved coordinates become off-screen (for example after viewport size changes), they are clamped back into view automatically.
 - The header now shows playback percentage (`played / duration * 100`) and updates continuously during playback.
