@@ -7,6 +7,9 @@ const htmlStructure = `
         <span id="frame-rate-display" class=important></span>
         <span id="bitrate-display" class=important></span>
         <span class="divHeight text important">x</span>
+        <span id=dimensions-as-a-percentage></span>
+      </div>
+      <div class="header-row">
         <span id="spanPlaybackPercentage" class="text" title="Playback progress percentage">0%</span>
         <span id="spanCurrentTime" class="text"></span>
         <span id="spanRemainingTime" class="text">x</span>

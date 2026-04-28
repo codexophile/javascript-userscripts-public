@@ -14,6 +14,7 @@
     slidVolFinEl,
     slidVolExtEl,
     divHeightEl,
+    dimensionsAsPercentageEl,
     cbSubtitleAutoSpeedEl,
     subtitleSpeedTransitionToggleEl,
     inputSubtitleSelectorEl,
@@ -1936,6 +1937,7 @@
     slidVolFinEl = controlPanel.querySelector(`.slidVolFin`);
     slidVolExtEl = controlPanel.querySelector(`.slidVolExt`);
     divHeightEl = controlPanel.querySelector('.divHeight');
+    dimensionsAsPercentageEl = controlPanel.querySelector('#dimensions-as-a-percentage');
 
     // dragElement( controlPanel, controlPanel );
     makeDraggable(controlPanel);
@@ -2288,6 +2290,7 @@
     );
     divHeightEl.title = activeVideo.videoWidth * activeVideo.videoHeight;
     updatePlaybackPercentage(activeVideo);
+    updateDimensionsAsPercentage(activeVideo);
   }
 
   function updatePlaybackPercentage(videoEl) {
@@ -2313,6 +2316,30 @@
       spanPlaybackPercentage,
       `${clampedPercent.toFixed(1)}%`,
     );
+  }
+
+  function updateDimensionsAsPercentage(videoEl) {
+    if (!dimensionsAsPercentageEl) return;
+
+    const actualWidth = Number(videoEl?.videoWidth);
+    const actualHeight = Number(videoEl?.videoHeight);
+    if (!Number.isFinite(actualWidth) || !Number.isFinite(actualHeight) || actualWidth <= 0 || actualHeight <= 0) {
+      setAnimatedTextContent(dimensionsAsPercentageEl, '');
+      return;
+    }
+
+    const displayedWidth = Number(videoEl?.clientWidth);
+    const displayedHeight = Number(videoEl?.clientHeight);
+    if (!Number.isFinite(displayedWidth) || !Number.isFinite(displayedHeight) || displayedWidth <= 0 || displayedHeight <= 0) {
+      setAnimatedTextContent(dimensionsAsPercentageEl, '');
+      return;
+    }
+
+    const actualArea = actualWidth * actualHeight;
+    const displayedArea = displayedWidth * displayedHeight;
+    const percentage = (displayedArea / actualArea) * 100;
+
+    setAnimatedTextContent(dimensionsAsPercentageEl, `${percentage.toFixed(1)}%`);
   }
 
   function titler(text) {
@@ -2365,6 +2392,7 @@
       const duration = video.duration;
       const currentTime = video.currentTime;
       updatePlaybackPercentage(video);
+      updateDimensionsAsPercentage(video);
 
       const videoArea = video.videoWidth * video.videoHeight;
       divHeightEl.style.backgroundColor =
@@ -2410,6 +2438,16 @@
       if (slidVolExtEl) slidVolExtEl.value = event.target.volume;
       updateExtendedVolumeSliderVisibility();
     });
+
+    // Update dimensions percentage when video element size changes
+    if (window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(() => {
+        if (activeVideo === video) {
+          updateDimensionsAsPercentage(video);
+        }
+      });
+      resizeObserver.observe(video);
+    }
 
     video.classList.add('video-processed');
   }
