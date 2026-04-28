@@ -3,6 +3,9 @@
 
   //* filtering shorts
   const shortsFilterList = [
+    'Good Enough',
+    "It's Okay To Be Smart",
+    'WIRED',
     'ExplosmEntertainment',
     'TylerPath',
     'First We Feast',
@@ -20,13 +23,13 @@
         .textContent.trim();
       if (shortsFilterList.includes(feedTitle)) {
         const markBtnEl = rssItemEl.querySelector(
-          '.article_btns.btns_article_unread'
+          '.article_btns.btns_article_unread',
         );
         markBtnEl.click();
         await asyncTimeout(500);
         rssItemEl.style.display = 'none';
       }
-    }
+    },
   );
 
   //*
@@ -43,7 +46,7 @@
       setTimeout(() => {
         if (
           document.querySelector(
-            `#no_more_press_space[style="visibility: visible;"]`
+            `#no_more_press_space[style="visibility: visible;"]`,
           )
         ) {
           const kbEvent = new KeyboardEvent('keydown', {
@@ -53,6 +56,6 @@
           document.dispatchEvent(kbEvent);
         }
       }, 1000);
-    }
+    },
   );
 })();
