@@ -1937,7 +1937,9 @@
     slidVolFinEl = controlPanel.querySelector(`.slidVolFin`);
     slidVolExtEl = controlPanel.querySelector(`.slidVolExt`);
     divHeightEl = controlPanel.querySelector('.divHeight');
-    dimensionsAsPercentageEl = controlPanel.querySelector('#dimensions-as-a-percentage');
+    dimensionsAsPercentageEl = controlPanel.querySelector(
+      '#dimensions-as-a-percentage',
+    );
 
     // dragElement( controlPanel, controlPanel );
     makeDraggable(controlPanel);
@@ -2323,14 +2325,24 @@
 
     const actualWidth = Number(videoEl?.videoWidth);
     const actualHeight = Number(videoEl?.videoHeight);
-    if (!Number.isFinite(actualWidth) || !Number.isFinite(actualHeight) || actualWidth <= 0 || actualHeight <= 0) {
+    if (
+      !Number.isFinite(actualWidth) ||
+      !Number.isFinite(actualHeight) ||
+      actualWidth <= 0 ||
+      actualHeight <= 0
+    ) {
       setAnimatedTextContent(dimensionsAsPercentageEl, '');
       return;
     }
 
     const displayedWidth = Number(videoEl?.clientWidth);
     const displayedHeight = Number(videoEl?.clientHeight);
-    if (!Number.isFinite(displayedWidth) || !Number.isFinite(displayedHeight) || displayedWidth <= 0 || displayedHeight <= 0) {
+    if (
+      !Number.isFinite(displayedWidth) ||
+      !Number.isFinite(displayedHeight) ||
+      displayedWidth <= 0 ||
+      displayedHeight <= 0
+    ) {
       setAnimatedTextContent(dimensionsAsPercentageEl, '');
       return;
     }
@@ -2339,7 +2351,10 @@
     const displayedArea = displayedWidth * displayedHeight;
     const percentage = (displayedArea / actualArea) * 100;
 
-    setAnimatedTextContent(dimensionsAsPercentageEl, `${percentage.toFixed(1)}%`);
+    setAnimatedTextContent(
+      dimensionsAsPercentageEl,
+      `${percentage.toFixed(1)}%`,
+    );
   }
 
   function titler(text) {
