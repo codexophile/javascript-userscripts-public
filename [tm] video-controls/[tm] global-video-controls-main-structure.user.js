@@ -3,6 +3,12 @@ const htmlStructure = `
     <div id="contPanelHeader" class=important>
       <div id="header-row-one" class="header-row">
         <button class="head important" title="Cycle panel view">⚫</button>
+        <div class="video-state-badges" aria-label="Video status indicators">
+          <span id="video-player-state" class="media-state state-neutral" title="Player state">play</span>
+          <span id="video-ready-state" class="media-state state-neutral" title="Ready state">R0</span>
+          <span id="video-network-state" class="media-state state-neutral" title="Network state">N0</span>
+          <span id="video-error-state" class="media-state state-good" title="Media error">ok</span>
+        </div>
         <input type="checkbox" title="UI Auto Hide" id="cbAutoHide">
         <span id="frame-rate-display" class=important></span>
         <span id="bitrate-display" class=important></span>
@@ -160,6 +166,44 @@ const styles = `
     width: 18px;
     height: 18px;
     display: block;
+  }
+
+  .video-state-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    margin: 0 ${margins};
+    flex-wrap: wrap;
+  }
+
+  #contPanelHeader .media-state {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    padding: 1px 4px;
+    border-radius: 999px;
+    font-size: 10px;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    background-color: #95a5a6;
+    color: #ecf0f1;
+  }
+
+  #contPanelHeader .media-state.state-good {
+    background-color: #2ecc71;
+    color: #1f2d2a;
+  }
+
+  #contPanelHeader .media-state.state-neutral {
+    background-color: #f1c40f;
+    color: #2c3e50;
+  }
+
+  #contPanelHeader .media-state.state-bad {
+    background-color: #e74c3c;
+    color: #fff;
   }
 
   #contPanelHeader span {

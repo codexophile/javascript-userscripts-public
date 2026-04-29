@@ -33,6 +33,7 @@ This approach is site-agnostic and works even when native media text tracks are 
 8. Enable `Pause on focus loss` if you want playback to stop when the tab loses focus, the browser is minimized, or you switch away.
 9. Use the two volume sliders to control playback volume: the main slider controls `0` to `0.25`; the extended slider controls `0.25` to `1`.
 10. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
+11. The header now also shows compact media-state badges next to the cycle button for player, ready, network, and error status; hover each badge to see the full code mapping.
 
 ## Sync Config Across Devices (GitHub Gist)
 
@@ -129,6 +130,7 @@ Tip:
 - If saved coordinates become off-screen (for example after viewport size changes), they are clamped back into view automatically.
 - The header now shows playback percentage (`played / duration * 100`) and updates continuously during playback.
 - Header value badges briefly pulse whenever their displayed text changes for the frame rate, bitrate, and video-dimension readouts.
+- Header status badges now cover player state, ready state, network state, and media errors, and they update from video event listeners instead of polling.
 - The header now has two rows inside `contPanelHeader`; the second row contains manual speed toggle (`💨`) and subtitle transition toggle (`🚀`).
 - The subtitle transition toggle (`🚀`) now shows a tiny green corner dot when the active site profile has a stored subtitle CSS selector.
 - Internal control panel DOM updates are ignored by the page-level `MutationObserver` trigger path, which prevents self-induced refresh loops while paused.

@@ -15,6 +15,10 @@
     slidVolExtEl,
     divHeightEl,
     dimensionsAsPercentageEl,
+    videoPlayerStateEl,
+    videoReadyStateEl,
+    videoNetworkStateEl,
+    videoErrorStateEl,
     cbSubtitleAutoSpeedEl,
     subtitleSpeedTransitionToggleEl,
     inputSubtitleSelectorEl,
@@ -125,7 +129,7 @@
   };
 
   const animatedContentSelector =
-    '#frame-rate-display, #bitrate-display, .divHeight';
+    '#frame-rate-display, #bitrate-display, .divHeight, #video-player-state, #video-ready-state, #video-network-state, #video-error-state';
 
   installShadowRootTracking();
 
@@ -1940,6 +1944,10 @@
     dimensionsAsPercentageEl = controlPanel.querySelector(
       '#dimensions-as-a-percentage',
     );
+    videoPlayerStateEl = controlPanel.querySelector('#video-player-state');
+    videoReadyStateEl = controlPanel.querySelector('#video-ready-state');
+    videoNetworkStateEl = controlPanel.querySelector('#video-network-state');
+    videoErrorStateEl = controlPanel.querySelector('#video-error-state');
 
     // dragElement( controlPanel, controlPanel );
     makeDraggable(controlPanel);
@@ -2273,6 +2281,228 @@
     divHeightEl.title = activeVideo.videoWidth * activeVideo.videoHeight;
     updatePlaybackPercentage(activeVideo);
     updateDimensionsAsPercentage(activeVideo);
+    updateMediaStateIndicators(activeVideo);
+  }
+
+  function setMediaStateBadge(element, text, title, tone) {
+    if (!element) return;
+
+    const nextText = String(text ?? '');
+    if (element.textContent !== nextText) {
+      element.textContent = nextText;
+      animateContentChange(element);
+    }
+
+    element.title = title;
+    element.classList.remove('state-good', 'state-neutral', 'state-bad');
+    element.classList.add(tone);
+  }
+
+  function getPlayerStateInfo(video) {
+    if (!video) {
+      return {
+        text: 'none',
+        title: 'Player state: no active media element.',
+        tone: 'state-neutral',
+      };
+    }
+
+    if (video.seeking) {
+      return {
+        text: 'seeking',
+        title:
+          'Player state: seeking = the media element is moving to a new playback position.',
+        tone: 'state-neutral',
+      };
+    }
+
+    if (video.ended) {
+      return {
+        text: 'ended',
+        title: 'Player state: ended = playback reached the end of the media.',
+        tone: 'state-bad',
+      };
+    }
+
+    if (video.paused) {
+      return {
+        text: 'paused',
+        title: 'Player state: paused = playback is not running.',
+        tone: 'state-neutral',
+      };
+    }
+
+    return {
+      text: 'play',
+      title: 'Player state: play = playback is actively running.',
+      tone: 'state-good',
+    };
+  }
+
+  function getReadyStateInfo(video) {
+    const readyState = Number(video?.readyState);
+    switch (readyState) {
+      case 0:
+        return {
+          text: 'R0',
+          title:
+            'Ready state: 0 / HAVE_NOTHING = no information about the media is available yet.',
+          tone: 'state-bad',
+        };
+      case 1:
+        return {
+          text: 'R1',
+          title:
+            'Ready state: 1 / HAVE_METADATA = metadata is available, but not enough data to play safely.',
+          tone: 'state-neutral',
+        };
+      case 2:
+        return {
+          text: 'R2',
+          title:
+            'Ready state: 2 / HAVE_CURRENT_DATA = the current frame is available.',
+          tone: 'state-neutral',
+        };
+      case 3:
+        return {
+          text: 'R3',
+          title:
+            'Ready state: 3 / HAVE_FUTURE_DATA = current and future playback data are available.',
+          tone: 'state-good',
+        };
+      case 4:
+        return {
+          text: 'R4',
+          title:
+            'Ready state: 4 / HAVE_ENOUGH_DATA = enough media data is available for uninterrupted playback.',
+          tone: 'state-good',
+        };
+      default:
+        return {
+          text: 'R?',
+          title: 'Ready state: unknown value.',
+          tone: 'state-neutral',
+        };
+    }
+  }
+
+  function getNetworkStateInfo(video) {
+    const networkState = Number(video?.networkState);
+    switch (networkState) {
+      case 0:
+        return {
+          text: 'N0',
+          title: 'Network state: 0 / NETWORK_EMPTY = no media is selected yet.',
+          tone: 'state-neutral',
+        };
+      case 1:
+        return {
+          text: 'N1',
+          title:
+            'Network state: 1 / NETWORK_IDLE = the media element is idle and has enough data buffered for now.',
+          tone: 'state-good',
+        };
+      case 2:
+        return {
+          text: 'N2',
+          title:
+            'Network state: 2 / NETWORK_LOADING = the browser is fetching media data.',
+          tone: 'state-neutral',
+        };
+      case 3:
+        return {
+          text: 'N3',
+          title:
+            'Network state: 3 / NETWORK_NO_SOURCE = the media element has no usable source.',
+          tone: 'state-bad',
+        };
+      default:
+        return {
+          text: 'N?',
+          title: 'Network state: unknown value.',
+          tone: 'state-neutral',
+        };
+    }
+  }
+
+  function getErrorStateInfo(video) {
+    const errorCode = Number(video?.error?.code || 0);
+    switch (errorCode) {
+      case 0:
+        return {
+          text: 'ok',
+          title: 'Error state: no media error is currently reported.',
+          tone: 'state-good',
+        };
+      case 1:
+        return {
+          text: 'E1',
+          title:
+            'Error state: 1 / MEDIA_ERR_ABORTED = media fetching was aborted by the user or browser.',
+          tone: 'state-bad',
+        };
+      case 2:
+        return {
+          text: 'E2',
+          title:
+            'Error state: 2 / MEDIA_ERR_NETWORK = a network error prevented loading or playback.',
+          tone: 'state-bad',
+        };
+      case 3:
+        return {
+          text: 'E3',
+          title:
+            'Error state: 3 / MEDIA_ERR_DECODE = the browser could not decode the media.',
+          tone: 'state-bad',
+        };
+      case 4:
+        return {
+          text: 'E4',
+          title:
+            'Error state: 4 / MEDIA_ERR_SRC_NOT_SUPPORTED = the media source is not supported.',
+          tone: 'state-bad',
+        };
+      default:
+        return {
+          text: 'E?',
+          title: 'Error state: unknown media error value.',
+          tone: 'state-bad',
+        };
+    }
+  }
+
+  function updateMediaStateIndicators(video = activeVideo) {
+    const playerState = getPlayerStateInfo(video);
+    setMediaStateBadge(
+      videoPlayerStateEl,
+      playerState.text,
+      playerState.title,
+      playerState.tone,
+    );
+
+    const readyState = getReadyStateInfo(video);
+    setMediaStateBadge(
+      videoReadyStateEl,
+      readyState.text,
+      readyState.title,
+      readyState.tone,
+    );
+
+    const networkState = getNetworkStateInfo(video);
+    setMediaStateBadge(
+      videoNetworkStateEl,
+      networkState.text,
+      networkState.title,
+      networkState.tone,
+    );
+
+    const errorState = getErrorStateInfo(video);
+    setMediaStateBadge(
+      videoErrorStateEl,
+      errorState.text,
+      errorState.title,
+      errorState.tone,
+    );
   }
 
   function updatePlaybackPercentage(videoEl) {
@@ -2347,6 +2577,37 @@
     video.addEventListener('loadedmetadata', async () => {
       const bitrate = await getBitrate(video);
       displayBitrate(bitrate);
+    });
+
+    const refreshMediaStateIndicators = () => {
+      if (activeVideo === video) {
+        updateMediaStateIndicators(video);
+      }
+    };
+
+    [
+      'loadstart',
+      'loadedmetadata',
+      'loadeddata',
+      'canplay',
+      'canplaythrough',
+      'progress',
+      'suspend',
+      'stalled',
+      'abort',
+      'emptied',
+      'error',
+      'play',
+      'playing',
+      'pause',
+      'ended',
+      'seeking',
+      'seeked',
+      'waiting',
+      'durationchange',
+      'ratechange',
+    ].forEach(eventName => {
+      video.addEventListener(eventName, refreshMediaStateIndicators);
     });
 
     if (video.readyState >= 1) {
