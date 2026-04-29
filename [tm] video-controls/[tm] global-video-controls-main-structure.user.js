@@ -112,7 +112,7 @@ const styles = `
     padding: ${margins};
     border-radius: 6px 6px 0 0;
     position: relative;
-    font-size: small;
+    font-size: 12px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -183,7 +183,7 @@ const styles = `
     min-width: 32px;
     padding: 1px 4px;
     border-radius: 999px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.1;
     letter-spacing: 0.02em;
     text-transform: uppercase;
