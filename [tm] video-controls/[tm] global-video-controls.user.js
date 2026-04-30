@@ -3508,6 +3508,12 @@
       return; // 🛑
     }
 
+    // Shift+Z toggles subtitle speed transition (selector-driven speed)
+    if (e.shiftKey && e.code === 'KeyZ') {
+      setSubtitleAutoSpeedEnabled(!subtitleAutoSpeedEnabled);
+      return;
+    }
+
     if (e.key == 'j') {
       activeVideo.currentTime = activeVideo.currentTime - timeIncrSmall;
     }
