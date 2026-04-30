@@ -32,6 +32,7 @@
     timeTrackingTotalEl,
     timeTrackingDurationEl,
     timeTrackingComparisonEl,
+    timeTrackingCurrentPositionEl,
     timeTrackingHeaderRowEl;
   let panelUiState = 0;
   let panelUiLastNonHeadState = 0;
@@ -547,6 +548,24 @@
     return `Time saved: ${formatTimeTrackingDuration(Math.abs(diffMs))}`;
   }
 
+  function getTimeTrackingCurrentPositionLabel(totalMs) {
+    if (!activeVideo) return '—';
+
+    const currentTimeMs = Math.round(activeVideo.currentTime * 1000);
+    if (currentTimeMs <= 0) return '—';
+
+    const diffMs = Math.round(totalMs - currentTimeMs);
+    if (Math.abs(diffMs) <= timeTrackingNoDifferenceThresholdMs) {
+      return 'No difference';
+    }
+
+    if (diffMs > 0) {
+      return `${formatTimeTrackingDuration(diffMs)} wasted`;
+    }
+
+    return `${formatTimeTrackingDuration(Math.abs(diffMs))} saved`;
+  }
+
   function refreshTimeTrackingPopup(now = Date.now()) {
     if (!timeTrackingPlayingEl) return;
 
@@ -579,6 +598,13 @@
     if (timeTrackingComparisonEl) {
       timeTrackingComparisonEl.textContent = comparisonLabel;
       timeTrackingComparisonEl.title = comparisonLabel;
+    }
+    if (timeTrackingCurrentPositionEl) {
+      const currentPositionLabel = getTimeTrackingCurrentPositionLabel(
+        snapshot.totalMs,
+      );
+      timeTrackingCurrentPositionEl.textContent = currentPositionLabel;
+      timeTrackingCurrentPositionEl.title = currentPositionLabel;
     }
     if (timeTrackingPopupEl) {
       timeTrackingPopupEl.hidden = !timeTrackingPopupOpen;
@@ -2474,6 +2500,9 @@
     timeTrackingDurationEl = controlPanel.querySelector('#time-spent-duration');
     timeTrackingComparisonEl = controlPanel.querySelector(
       '#time-spent-comparison',
+    );
+    timeTrackingCurrentPositionEl = controlPanel.querySelector(
+      '#time-spent-current-position',
     );
 
     // dragElement( controlPanel, controlPanel );
