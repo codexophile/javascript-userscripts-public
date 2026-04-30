@@ -20,6 +20,7 @@ const htmlStructure = `
         <span id="spanCurrentTime" class="text"></span>
         <span id="spanRemainingTime" class="text">x</span>
         <span id="spanActualRemainingTime" class="text">x</span>
+        <span id="spanTimeSavedSoFar" class="text time-saved-badge" title="Time saved so far vs current position">—</span>
       </div>
       <div id="time-related-popup" class="time-related-popup" hidden aria-live="polite">
         <div class="time-related-popup-title">Video time summary</div>
@@ -327,6 +328,11 @@ const styles = `
   #spanPlaybackPercentage {
     background-color: #f1c40f !important;
     color: #2c3e50 !important;
+  }
+
+  #spanTimeSavedSoFar.time-saved-badge {
+    background-color: #3498db !important;
+    color: #ecf0f1 !important;
   }
 
   .controlRow, .buttonsRow {

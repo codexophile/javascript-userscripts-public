@@ -33,7 +33,8 @@
     timeTrackingDurationEl,
     timeTrackingComparisonEl,
     timeTrackingCurrentPositionEl,
-    timeTrackingHeaderRowEl;
+    timeTrackingHeaderRowEl,
+    spanTimeSavedSoFarEl;
   let panelUiState = 0;
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
@@ -605,6 +606,13 @@
       );
       timeTrackingCurrentPositionEl.textContent = currentPositionLabel;
       timeTrackingCurrentPositionEl.title = currentPositionLabel;
+    }
+    if (spanTimeSavedSoFarEl) {
+      const currentPositionLabel = getTimeTrackingCurrentPositionLabel(
+        snapshot.totalMs,
+      );
+      spanTimeSavedSoFarEl.textContent = currentPositionLabel;
+      spanTimeSavedSoFarEl.title = currentPositionLabel;
     }
     if (timeTrackingPopupEl) {
       timeTrackingPopupEl.hidden = !timeTrackingPopupOpen;
@@ -2504,6 +2512,7 @@
     timeTrackingCurrentPositionEl = controlPanel.querySelector(
       '#time-spent-current-position',
     );
+    spanTimeSavedSoFarEl = controlPanel.querySelector('#spanTimeSavedSoFar');
 
     // dragElement( controlPanel, controlPanel );
     makeDraggable(controlPanel);
