@@ -265,7 +265,10 @@ const styles = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 32px;
+    width: 42px;
+    min-width: 42px;
+    flex: 0 0 42px;
+    box-sizing: border-box;
     padding: 1px 4px;
     border-radius: 999px;
     font-size: 12px;
