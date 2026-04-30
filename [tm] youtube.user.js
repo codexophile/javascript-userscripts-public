@@ -3,11 +3,6 @@
 
   // markAndFilter( 'ytd-rich-item-renderer', 'a[href^="/watch?v="]', 'href', /\?v=(...........)/ );
 
-  waitFor(`#video-controlPanel`).then(el => {
-    el.style.top = '0px';
-    el.style.left = '260px';
-  });
-
   fixUrl();
   for (const s of [
     'yt-navigate',
