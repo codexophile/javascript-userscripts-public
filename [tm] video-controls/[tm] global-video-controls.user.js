@@ -2582,31 +2582,40 @@
   }
 
   function updateTrackIndicators(video) {
-    // Update textTracks indicator - show dot if 1 or more
+    // Update textTracks indicator - show badge if 1 or more
     if (trackIndicatorTextEl) {
-      if (video.textTracks && video.textTracks.length >= 1) {
+      const textTrackCount = video.textTracks ? video.textTracks.length : 0;
+      if (textTrackCount >= 1) {
+        trackIndicatorTextEl.setAttribute('data-track-count', textTrackCount);
         trackIndicatorTextEl.classList.add('track-indicator-text-available');
       } else {
+        trackIndicatorTextEl.removeAttribute('data-track-count');
         trackIndicatorTextEl.classList.remove('track-indicator-text-available');
       }
     }
 
-    // Update audioTracks indicator - show dot if 2 or more
+    // Update audioTracks indicator - show badge if 2 or more
     if (trackIndicatorAudioEl) {
-      if (video.audioTracks && video.audioTracks.length >= 2) {
+      const audioTrackCount = video.audioTracks ? video.audioTracks.length : 0;
+      if (audioTrackCount >= 2) {
+        trackIndicatorAudioEl.setAttribute('data-track-count', audioTrackCount);
         trackIndicatorAudioEl.classList.add('track-indicator-audio-available');
       } else {
+        trackIndicatorAudioEl.removeAttribute('data-track-count');
         trackIndicatorAudioEl.classList.remove(
           'track-indicator-audio-available',
         );
       }
     }
 
-    // Update videoTracks indicator - show dot if 2 or more
+    // Update videoTracks indicator - show badge if 2 or more
     if (trackIndicatorVideoEl) {
-      if (video.videoTracks && video.videoTracks.length >= 2) {
+      const videoTrackCount = video.videoTracks ? video.videoTracks.length : 0;
+      if (videoTrackCount >= 2) {
+        trackIndicatorVideoEl.setAttribute('data-track-count', videoTrackCount);
         trackIndicatorVideoEl.classList.add('track-indicator-video-available');
       } else {
+        trackIndicatorVideoEl.removeAttribute('data-track-count');
         trackIndicatorVideoEl.classList.remove(
           'track-indicator-video-available',
         );

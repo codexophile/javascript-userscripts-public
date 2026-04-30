@@ -327,12 +327,13 @@ const styles = `
   }
 
   .track-indicator::after {
-    content: '';
+    content: attr(data-track-count);
     position: absolute;
-    top: -1px;
-    right: -1px;
-    width: 8px;
-    height: 8px;
+    top: -4px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
     border-radius: 50%;
     background: #2ecc71;
     border: 1px solid #ecf0f1;
@@ -342,6 +343,13 @@ const styles = `
     transform: scale(0.6);
     transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    color: #1f2d2a;
+    line-height: 1;
   }
 
   #track-indicator-text.track-indicator-text-available::after,
