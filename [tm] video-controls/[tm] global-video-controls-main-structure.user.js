@@ -317,7 +317,7 @@ const styles = `
   }
 
   .track-indicator {
-    display: inline-flex;
+    display: none;
     align-items: center;
     justify-content: center;
     position: relative;
@@ -357,5 +357,12 @@ const styles = `
   #track-indicator-video.track-indicator-video-available::after {
     opacity: 1;
     transform: scale(1);
+  }
+
+  /* Show the whole button only when availability threshold is met */
+  #track-indicator-text.track-indicator-text-available,
+  #track-indicator-audio.track-indicator-audio-available,
+  #track-indicator-video.track-indicator-video-available {
+    display: inline-flex;
   }
 `;
