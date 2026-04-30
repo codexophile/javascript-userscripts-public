@@ -34,6 +34,7 @@ This approach is site-agnostic and works even when native media text tracks are 
 9. Use the two volume sliders to control playback volume: the main slider controls `0` to `0.25`; the extended slider controls `0.25` to `1`.
 10. Use `📷` to download a PNG snapshot, or `📋` to copy the current frame image to your clipboard.
 11. The header now also shows compact media-state badges next to the cycle button for player, ready, network, and error status; hover each badge to see the full code mapping.
+12. Click the `Time progress` row in the header to open a small summary popup that shows real time spent playing, time spent waiting, total tracked time, the current video duration, and a waste/save comparison.
 
 ## Sync Config Across Devices (GitHub Gist)
 
@@ -122,6 +123,8 @@ Tip:
 - While auto-speed is enabled, manual speed hotkeys (`z`, `x`, `c`) are ignored to avoid conflicts.
 - Disabling subtitle auto-speed immediately resets playback to `1x`.
 - The auto-pause behavior is frame-local, so it continues to work when the userscript is running inside an iframe.
+- Time tracking is stored separately in local userscript storage under `globalVideoControlsTimeTracking` and is not included in the GitHub Gist sync payload.
+- Time tracking is keyed by a normalized top-level page URL when it can be read (hash and volatile playback query params are ignored); when the script runs inside a cross-origin iframe, it falls back to the current frame URL.
 - Subtitle centering in iframes is only attempted when you provide a non-empty subtitle selector.
 - Cross-origin iframe players may expose subtitles outside the userscript context; in that case, use a selector that is visible from the current page context.
 - Open shadow roots are supported directly; closed shadow roots are only partially discoverable by platform design.

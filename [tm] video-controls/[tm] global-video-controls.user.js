@@ -26,6 +26,13 @@
     trackIndicatorVideoEl,
     inputSubtitleSelectorEl,
     numAutoFastSpeedEl;
+  let timeTrackingPopupEl,
+    timeTrackingPlayingEl,
+    timeTrackingWaitingEl,
+    timeTrackingTotalEl,
+    timeTrackingDurationEl,
+    timeTrackingComparisonEl,
+    timeTrackingHeaderRowEl;
   let panelUiState = 0;
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
@@ -80,6 +87,17 @@
   let subtitleSelectorUserSelectStyleEl = null;
   let subtitleSelectorIframeCenterStyleEl = null;
   let lastSubtitlePresentState = null;
+  let timeTrackingStorageLoaded = false;
+  let timeTrackingCurrentPageKey = '';
+  let timeTrackingCurrentMode = 'idle';
+  let timeTrackingCurrentModeStartedAt = 0;
+  let timeTrackingLastPersistAt = 0;
+  let timeTrackingHeartbeatId = null;
+  let timeTrackingPopupOpen = false;
+  let timeTrackingStatsByPage = {};
+  const trackedTimeMediaElements = new Set();
+  const trackedTimeMediaAttached = new WeakSet();
+  const trackedTimeMediaState = new WeakMap();
 
   const canUseSharedSubtitleObserver =
     typeof waitForEach === 'function' &&
@@ -96,6 +114,491 @@
   const subtitleTransitionEnabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" fill="#FFD166" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" fill="#118AB2" /><circle cx="40.5" cy="19.5" r="1.5" fill="#FFFFFF" stroke="none" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" fill="#EF476F" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" fill="#EF476F" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" fill="#FF9F1C" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
   const subtitleTransitionDisabledSvgFallback = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke-width="3" stroke="#000000" fill="none"><path d="M28.79,44l-9.4-9.4S31.76,5.41,56.77,7C56.77,7,60.25,30.12,28.79,44Z" /><path d="M56,16.82a10.87,10.87,0,0,1-6-3.08,11,11,0,0,1-3.11-6.15" /><circle cx="42.32" cy="21.44" r="5.48" /><path d="M30.61,43.16,30,47.84a.24.24,0,0,0,.33.25l8-3.47A2.32,2.32,0,0,0,39.63,43l1.22-5.83" /><path d="M20,33.29l-4.69.6a.23.23,0,0,1-.24-.32l3.46-7.95a2.33,2.33,0,0,1,1.67-1.35l5.82-1.22" /><path d="M21.49,36.68c-6.55,2.1-6.88,12.47-6.88,12.47s10.08.11,12.59-6.76" /><line x1="10.88" y1="52.82" x2="7.12" y2="56.59" stroke-linecap="round" /><line x1="10.6" y1="45.63" x2="7.41" y2="48.81" stroke-linecap="round" /><line x1="17.94" y1="53.11" x2="14.76" y2="56.3" stroke-linecap="round" /></svg>`;
   const contentChangePulseClass = 'content-change-pulse';
+  const timeTrackingStorageKey = 'globalVideoControlsTimeTracking';
+  const timeTrackingHeartbeatMs = 1000;
+  const timeTrackingPersistEveryMs = 10000;
+  const timeTrackingNoDifferenceThresholdMs = 500;
+  const timeTrackingPersistSoon = debounce(() => {
+    persistTimeTrackingStore();
+  }, 750);
+
+  async function initializeTimeTracking() {
+    if (!hasModernGMStorage) {
+      timeTrackingStorageLoaded = true;
+      return;
+    }
+
+    if (!timeTrackingStorageLoaded) {
+      const storedValue = await GM.getValue(timeTrackingStorageKey);
+      timeTrackingStatsByPage = normalizeTimeTrackingStore(storedValue);
+      timeTrackingStorageLoaded = true;
+    }
+
+    syncKnownTimeTrackingMediaElements();
+    reconcileTimeTrackingState();
+  }
+
+  function normalizeTimeTrackingStore(rawValue) {
+    const normalizedStore = {};
+    const sourceStore =
+      rawValue && typeof rawValue === 'object' && !Array.isArray(rawValue)
+        ? rawValue.pages && typeof rawValue.pages === 'object'
+          ? rawValue.pages
+          : rawValue
+        : {};
+
+    for (const [pageKey, rawEntry] of Object.entries(sourceStore)) {
+      normalizedStore[pageKey] = normalizeTimeTrackingEntry(rawEntry);
+    }
+
+    return normalizedStore;
+  }
+
+  function normalizeTimeTrackingEntry(rawEntry) {
+    return {
+      playedMs: normalizeTrackedDuration(rawEntry?.playedMs),
+      waitingMs: normalizeTrackedDuration(rawEntry?.waitingMs),
+      lastDurationMs: normalizeTrackedDuration(rawEntry?.lastDurationMs),
+      lastUpdatedAt: normalizeTrackedDuration(rawEntry?.lastUpdatedAt),
+    };
+  }
+
+  function normalizeTrackedDuration(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0) return 0;
+    return Math.round(parsed);
+  }
+
+  function getSafeTopLevelUrl() {
+    try {
+      return window.top?.location?.href || location.href;
+    } catch (error) {
+      return location.href;
+    }
+  }
+
+  function normalizeTimeTrackingPageUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return location.href;
+
+    try {
+      const parsedUrl = new URL(rawUrl, location.href);
+      parsedUrl.hash = '';
+
+      // Playback/state query params often change frequently and should not split stats.
+      [
+        't',
+        'time',
+        'start',
+        'end',
+        'currentTime',
+        'current_time',
+        'seek',
+        'position',
+        'playhead',
+      ].forEach(paramName => {
+        parsedUrl.searchParams.delete(paramName);
+      });
+
+      return parsedUrl.toString();
+    } catch (error) {
+      return rawUrl.split('#')[0];
+    }
+  }
+
+  function getTimeTrackingPageKey() {
+    return normalizeTimeTrackingPageUrl(getSafeTopLevelUrl());
+  }
+
+  function getTimeTrackingEntry(pageKey = getTimeTrackingPageKey()) {
+    if (!timeTrackingStatsByPage[pageKey]) {
+      timeTrackingStatsByPage[pageKey] = normalizeTimeTrackingEntry();
+    }
+
+    return timeTrackingStatsByPage[pageKey];
+  }
+
+  function getCurrentTimeTrackingDurationMs(
+    pageKey = getTimeTrackingPageKey(),
+  ) {
+    const activeDuration = Number(activeVideo?.duration);
+    if (Number.isFinite(activeDuration) && activeDuration > 0) {
+      return Math.round(activeDuration * 1000);
+    }
+
+    const entry = getTimeTrackingEntry(pageKey);
+    return normalizeTrackedDuration(entry.lastDurationMs);
+  }
+
+  function formatTimeTrackingDuration(ms) {
+    const safeMs = Math.max(0, Math.round(Number(ms) || 0));
+    const totalSeconds = Math.floor(safeMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, '0')}:${String(
+        seconds,
+      ).padStart(2, '0')}`;
+    }
+
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  function getTimeTrackingSnapshot(now = Date.now()) {
+    const pageKey = getTimeTrackingPageKey();
+    const entry = getTimeTrackingEntry(pageKey);
+    let playedMs = normalizeTrackedDuration(entry.playedMs);
+    let waitingMs = normalizeTrackedDuration(entry.waitingMs);
+
+    if (
+      pageKey === timeTrackingCurrentPageKey &&
+      timeTrackingCurrentMode !== 'idle' &&
+      timeTrackingCurrentModeStartedAt > 0
+    ) {
+      const elapsedMs = Math.max(0, now - timeTrackingCurrentModeStartedAt);
+      if (timeTrackingCurrentMode === 'playing') {
+        playedMs += elapsedMs;
+      } else if (timeTrackingCurrentMode === 'waiting') {
+        waitingMs += elapsedMs;
+      }
+    }
+
+    const totalMs = playedMs + waitingMs;
+    const durationMs = getCurrentTimeTrackingDurationMs(pageKey);
+    return { pageKey, playedMs, waitingMs, totalMs, durationMs };
+  }
+
+  function flushTimeTrackingSegment(now = Date.now()) {
+    if (!timeTrackingCurrentPageKey || timeTrackingCurrentMode === 'idle') {
+      return;
+    }
+
+    if (!timeTrackingCurrentModeStartedAt) {
+      timeTrackingCurrentModeStartedAt = now;
+      return;
+    }
+
+    const elapsedMs = Math.max(0, now - timeTrackingCurrentModeStartedAt);
+    if (elapsedMs <= 0) return;
+
+    const entry = getTimeTrackingEntry(timeTrackingCurrentPageKey);
+    if (timeTrackingCurrentMode === 'playing') {
+      entry.playedMs += elapsedMs;
+    } else if (timeTrackingCurrentMode === 'waiting') {
+      entry.waitingMs += elapsedMs;
+    }
+    entry.lastUpdatedAt = now;
+    timeTrackingCurrentModeStartedAt = now;
+  }
+
+  function recordObservedDuration(mediaEl) {
+    const durationSeconds = Number(mediaEl?.duration);
+    if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+      return false;
+    }
+
+    const durationMs = Math.round(durationSeconds * 1000);
+    const entry = getTimeTrackingEntry();
+    if (entry.lastDurationMs === durationMs) return false;
+
+    entry.lastDurationMs = durationMs;
+    entry.lastUpdatedAt = Date.now();
+    return true;
+  }
+
+  function applyTimeTrackingMediaEvent(mediaEl, eventName) {
+    if (!mediaEl) return false;
+
+    const currentState = trackedTimeMediaState.get(mediaEl) || {
+      playing: false,
+      waiting: false,
+    };
+    let stateChanged = false;
+
+    if (eventName === 'loadedmetadata' || eventName === 'durationchange') {
+      stateChanged = recordObservedDuration(mediaEl) || stateChanged;
+    }
+
+    if (
+      eventName === 'pause' ||
+      eventName === 'ended' ||
+      eventName === 'emptied' ||
+      eventName === 'abort' ||
+      eventName === 'error'
+    ) {
+      if (currentState.playing || currentState.waiting) stateChanged = true;
+      currentState.playing = false;
+      currentState.waiting = false;
+    } else if (
+      eventName === 'waiting' ||
+      eventName === 'stalled' ||
+      eventName === 'seeking' ||
+      eventName === 'loadstart'
+    ) {
+      if (!mediaEl.paused && !currentState.waiting) stateChanged = true;
+      if (!mediaEl.paused) {
+        currentState.playing = false;
+        currentState.waiting = true;
+      }
+    } else if (
+      eventName === 'play' ||
+      eventName === 'playing' ||
+      eventName === 'canplay' ||
+      eventName === 'canplaythrough'
+    ) {
+      if (!mediaEl.paused && (!currentState.playing || currentState.waiting)) {
+        stateChanged = true;
+      }
+      if (!mediaEl.paused) {
+        currentState.playing = true;
+        currentState.waiting = false;
+      }
+    } else if (eventName === 'seeked' && !mediaEl.paused) {
+      if (!currentState.playing && !currentState.waiting) {
+        stateChanged = true;
+      }
+      if (mediaEl.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+        currentState.playing = true;
+        currentState.waiting = false;
+      }
+    }
+
+    trackedTimeMediaState.set(mediaEl, currentState);
+    return stateChanged;
+  }
+
+  function syncKnownTimeTrackingMediaElements() {
+    const mediaElements = querySelectorAllDeep('video, audio');
+    mediaElements.forEach(mediaEl => registerTimeTrackingMediaElement(mediaEl));
+  }
+
+  function registerTimeTrackingMediaElement(mediaEl) {
+    if (!mediaEl || trackedTimeMediaAttached.has(mediaEl)) return;
+
+    trackedTimeMediaAttached.add(mediaEl);
+    trackedTimeMediaElements.add(mediaEl);
+
+    const initialState = {
+      playing: !mediaEl.paused && !mediaEl.ended,
+      waiting:
+        !mediaEl.paused &&
+        !mediaEl.ended &&
+        mediaEl.readyState < HTMLMediaElement.HAVE_FUTURE_DATA,
+    };
+    trackedTimeMediaState.set(mediaEl, initialState);
+
+    const handleMediaEvent = event => {
+      const changed = applyTimeTrackingMediaEvent(mediaEl, event.type);
+      if (changed) {
+        reconcileTimeTrackingState();
+      } else if (
+        event.type === 'loadedmetadata' ||
+        event.type === 'durationchange'
+      ) {
+        refreshTimeTrackingPopup();
+        scheduleTimeTrackingPersist();
+      }
+    };
+
+    [
+      'loadstart',
+      'loadedmetadata',
+      'canplay',
+      'canplaythrough',
+      'play',
+      'playing',
+      'pause',
+      'waiting',
+      'stalled',
+      'seeking',
+      'seeked',
+      'ended',
+      'emptied',
+      'abort',
+      'error',
+      'durationchange',
+    ].forEach(eventName => {
+      mediaEl.addEventListener(eventName, handleMediaEvent);
+    });
+  }
+
+  function getTrackedMediaPlaybackMode() {
+    let hasWaitingMedia = false;
+
+    for (const mediaEl of trackedTimeMediaElements) {
+      if (!mediaEl || !mediaEl.isConnected) {
+        trackedTimeMediaElements.delete(mediaEl);
+        continue;
+      }
+
+      const mediaState = trackedTimeMediaState.get(mediaEl);
+      if (!mediaState) continue;
+      if (mediaEl.paused || mediaEl.ended) continue;
+
+      if (mediaState.playing) {
+        return 'playing';
+      }
+
+      if (mediaState.waiting) {
+        hasWaitingMedia = true;
+      }
+    }
+
+    return hasWaitingMedia ? 'waiting' : 'idle';
+  }
+
+  function scheduleTimeTrackingPersist() {
+    if (!timeTrackingStorageLoaded || !hasModernGMStorage) return;
+
+    timeTrackingPersistSoon();
+  }
+
+  async function persistTimeTrackingStore() {
+    if (!timeTrackingStorageLoaded || !hasModernGMStorage) return;
+
+    flushTimeTrackingSegment();
+    const payload = normalizeTimeTrackingStore(timeTrackingStatsByPage);
+    timeTrackingLastPersistAt = Date.now();
+
+    await Promise.resolve(GM.setValue(timeTrackingStorageKey, payload)).catch(
+      () => {},
+    );
+  }
+
+  function reconcileTimeTrackingState() {
+    if (!timeTrackingStorageLoaded) return;
+
+    const now = Date.now();
+    const nextPageKey = getTimeTrackingPageKey();
+    let stateChanged = false;
+
+    if (!timeTrackingCurrentPageKey) {
+      timeTrackingCurrentPageKey = nextPageKey;
+      stateChanged = true;
+    } else if (timeTrackingCurrentPageKey !== nextPageKey) {
+      flushTimeTrackingSegment(now);
+      timeTrackingCurrentPageKey = nextPageKey;
+      timeTrackingCurrentModeStartedAt = 0;
+      stateChanged = true;
+    }
+
+    const nextMode = getTrackedMediaPlaybackMode();
+    if (nextMode !== timeTrackingCurrentMode) {
+      flushTimeTrackingSegment(now);
+      timeTrackingCurrentMode = nextMode;
+      timeTrackingCurrentModeStartedAt = nextMode === 'idle' ? 0 : now;
+      stateChanged = true;
+    } else if (
+      timeTrackingCurrentMode !== 'idle' &&
+      !timeTrackingCurrentModeStartedAt
+    ) {
+      timeTrackingCurrentModeStartedAt = now;
+    }
+
+    if (timeTrackingCurrentMode === 'idle') {
+      stopTimeTrackingHeartbeat();
+    } else {
+      startTimeTrackingHeartbeat();
+    }
+
+    if (stateChanged) {
+      scheduleTimeTrackingPersist();
+    }
+
+    refreshTimeTrackingPopup(now);
+  }
+
+  function startTimeTrackingHeartbeat() {
+    if (timeTrackingHeartbeatId) return;
+
+    timeTrackingHeartbeatId = window.setInterval(() => {
+      if (!timeTrackingStorageLoaded) return;
+
+      syncKnownTimeTrackingMediaElements();
+      reconcileTimeTrackingState();
+
+      const now = Date.now();
+      if (now - timeTrackingLastPersistAt >= timeTrackingPersistEveryMs) {
+        persistTimeTrackingStore();
+      }
+    }, timeTrackingHeartbeatMs);
+  }
+
+  function stopTimeTrackingHeartbeat() {
+    if (!timeTrackingHeartbeatId) return;
+
+    window.clearInterval(timeTrackingHeartbeatId);
+    timeTrackingHeartbeatId = null;
+  }
+
+  function getTimeTrackingComparisonLabel(totalMs, durationMs) {
+    if (!durationMs) return 'No video duration yet';
+
+    const diffMs = Math.round(totalMs - durationMs);
+    if (Math.abs(diffMs) <= timeTrackingNoDifferenceThresholdMs) {
+      return 'No difference';
+    }
+
+    if (diffMs > 0) {
+      return `Time wasted: ${formatTimeTrackingDuration(diffMs)}`;
+    }
+
+    return `Time saved: ${formatTimeTrackingDuration(Math.abs(diffMs))}`;
+  }
+
+  function refreshTimeTrackingPopup(now = Date.now()) {
+    if (!timeTrackingPlayingEl) return;
+
+    const snapshot = getTimeTrackingSnapshot(now);
+    const comparisonLabel = getTimeTrackingComparisonLabel(
+      snapshot.totalMs,
+      snapshot.durationMs,
+    );
+
+    if (timeTrackingPlayingEl) {
+      timeTrackingPlayingEl.textContent = formatTimeTrackingDuration(
+        snapshot.playedMs,
+      );
+    }
+    if (timeTrackingWaitingEl) {
+      timeTrackingWaitingEl.textContent = formatTimeTrackingDuration(
+        snapshot.waitingMs,
+      );
+    }
+    if (timeTrackingTotalEl) {
+      timeTrackingTotalEl.textContent = formatTimeTrackingDuration(
+        snapshot.totalMs,
+      );
+    }
+    if (timeTrackingDurationEl) {
+      timeTrackingDurationEl.textContent = snapshot.durationMs
+        ? formatTimeTrackingDuration(snapshot.durationMs)
+        : '0:00';
+    }
+    if (timeTrackingComparisonEl) {
+      timeTrackingComparisonEl.textContent = comparisonLabel;
+      timeTrackingComparisonEl.title = comparisonLabel;
+    }
+    if (timeTrackingPopupEl) {
+      timeTrackingPopupEl.hidden = !timeTrackingPopupOpen;
+    }
+  }
+
+  function toggleTimeTrackingPopup(forceOpen) {
+    timeTrackingPopupOpen =
+      typeof forceOpen === 'boolean' ? forceOpen : !timeTrackingPopupOpen;
+    refreshTimeTrackingPopup();
+  }
+
+  function handleTimeTrackingBeforeUnload() {
+    if (!timeTrackingStorageLoaded) return;
+
+    flushTimeTrackingSegment();
+    if (timeTrackingCurrentMode !== 'idle') {
+      persistTimeTrackingStore();
+    }
+  }
 
   const SUBTITLE_STYLES = {
     selectable: selector => `${selector}, ${selector} * {
@@ -138,6 +641,7 @@
 
   await hydrateStoredSettings();
   await initConfigSync();
+  await initializeTimeTracking();
 
   document.addEventListener('visibilitychange', handleAutoPauseTrigger);
   document.addEventListener('visibilitychange', handleAutoResumeTrigger);
@@ -159,6 +663,7 @@
   document.addEventListener('keyup', keyboardEvent, false);
   document.addEventListener('mousedown', addMouseEvents);
   window.addEventListener('beforeunload', stopSubtitlePresenceMonitoring);
+  window.addEventListener('beforeunload', handleTimeTrackingBeforeUnload);
 
   function installShadowRootTracking() {
     if (shadowRootTrackingInstalled) return;
@@ -258,6 +763,9 @@
       refreshSubtitleSelectorAvailabilityIndicator();
       syncSubtitleAutoSpeed(activeVideo);
     }
+
+    syncKnownTimeTrackingMediaElements();
+    reconcileTimeTrackingState();
   }
 
   async function hydrateStoredSettings() {
@@ -1958,6 +2466,15 @@
     videoReadyStateEl = controlPanel.querySelector('#video-ready-state');
     videoNetworkStateEl = controlPanel.querySelector('#video-network-state');
     videoErrorStateEl = controlPanel.querySelector('#video-error-state');
+    timeTrackingHeaderRowEl = controlPanel.querySelector('#time-related');
+    timeTrackingPopupEl = controlPanel.querySelector('#time-related-popup');
+    timeTrackingPlayingEl = controlPanel.querySelector('#time-spent-playing');
+    timeTrackingWaitingEl = controlPanel.querySelector('#time-spent-waiting');
+    timeTrackingTotalEl = controlPanel.querySelector('#time-spent-total');
+    timeTrackingDurationEl = controlPanel.querySelector('#time-spent-duration');
+    timeTrackingComparisonEl = controlPanel.querySelector(
+      '#time-spent-comparison',
+    );
 
     // dragElement( controlPanel, controlPanel );
     makeDraggable(controlPanel);
@@ -1982,6 +2499,11 @@
       panelMouseInside = false;
       applyEffectivePanelUiState(controlPanel);
     });
+    if (timeTrackingHeaderRowEl) {
+      timeTrackingHeaderRowEl.addEventListener('click', () => {
+        toggleTimeTrackingPopup();
+      });
+    }
     controlPanel.querySelector('.head').addEventListener('click', () => {
       panelUiState = (panelUiState + 1) % 3;
       if (panelUiState !== 2) panelUiLastNonHeadState = panelUiState;

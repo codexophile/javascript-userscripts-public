@@ -15,11 +15,34 @@ const htmlStructure = `
         <span class="divHeight text important">x</span>
         <span id=dimensions-as-a-percentage></span>
       </div>
-      <div class="header-row">
+      <div id=time-related class="header-row">
         <span id="spanPlaybackPercentage" class="text" title="Playback progress percentage">0%</span>
         <span id="spanCurrentTime" class="text"></span>
         <span id="spanRemainingTime" class="text">x</span>
         <span id="spanActualRemainingTime" class="text">x</span>
+      </div>
+      <div id="time-related-popup" class="time-related-popup" hidden aria-live="polite">
+        <div class="time-related-popup-title">Video time summary</div>
+        <div class="time-related-popup-row">
+          <div class="time-related-popup-label">Time spent playing</div>
+          <div id="time-spent-playing" class="time-related-popup-value">0:00</div>
+        </div>
+        <div class="time-related-popup-row">
+          <div class="time-related-popup-label">Time spent waiting</div>
+          <div id="time-spent-waiting" class="time-related-popup-value">0:00</div>
+        </div>
+        <div class="time-related-popup-row">
+          <div class="time-related-popup-label">Total time spent</div>
+          <div id="time-spent-total" class="time-related-popup-value">0:00</div>
+        </div>
+        <div class="time-related-popup-row">
+          <div class="time-related-popup-label">Video duration</div>
+          <div id="time-spent-duration" class="time-related-popup-value">0:00</div>
+        </div>
+        <div class="time-related-popup-row">
+          <div class="time-related-popup-label">Comparison</div>
+          <div id="time-spent-comparison" class="time-related-popup-value">No difference</div>
+        </div>
       </div>
       <div id="header-row-two" class="header-row">
         <button class="important" id="buttonPlay">▶</button> 
@@ -130,6 +153,60 @@ const styles = `
 
   #header-row-two {
     justify-content: flex-start;
+  }
+
+  #time-related {
+    cursor: pointer;
+  }
+
+  #time-related-popup {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 220px;
+    max-width: min(92vw, 360px);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(236, 240, 241, 0.18);
+    background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.28);
+    z-index: 4;
+  }
+
+  #time-related-popup[hidden] {
+    display: none;
+  }
+
+  .time-related-popup-title {
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ecf0f1;
+    letter-spacing: 0.02em;
+  }
+
+  .time-related-popup-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+  }
+
+  .time-related-popup-label {
+    font-size: 11px;
+    color: #d6eaf8;
+    line-height: 1.2;
+  }
+
+  .time-related-popup-value {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ecf0f1;
+    line-height: 1.2;
+    text-align: right;
+    white-space: nowrap;
   }
 
   #subtitleSpeedTransitionToggle {
