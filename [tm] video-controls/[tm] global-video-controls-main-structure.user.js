@@ -27,6 +27,9 @@ const htmlStructure = `
         <button class="important" id="speedToggle" title="Toggle speed between 1x and fast speed">💨</button>
         <button class="important" id="subtitleSpeedTransitionToggle" title="Toggle subtitle speed transition">🚀</button>
         <input type="checkbox" title="Auto Pause on Blur" id="cbAutoPauseOnBlur">
+        <button id="track-indicator-text" class="track-indicator" title="Text tracks">📝</button>
+        <button id="track-indicator-audio" class="track-indicator" title="Audio tracks">🎵</button>
+        <button id="track-indicator-video" class="track-indicator" title="Video tracks">📹</button>
       </div>
     </div>
     
@@ -311,5 +314,40 @@ const styles = `
 
   .vidContRange:focus::-webkit-slider-runnable-track {
     background: #2980b9;
+  }
+
+  .track-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: visible;
+    min-width: 30px;
+    min-height: 30px;
+  }
+
+  .track-indicator::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2ecc71;
+    border: 1px solid #ecf0f1;
+    box-shadow: 0 0 0 1px rgba(44, 62, 80, 0.7);
+    z-index: 3;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+
+  #track-indicator-text.track-indicator-text-available::after,
+  #track-indicator-audio.track-indicator-audio-available::after,
+  #track-indicator-video.track-indicator-video-available::after {
+    opacity: 1;
+    transform: scale(1);
   }
 `;

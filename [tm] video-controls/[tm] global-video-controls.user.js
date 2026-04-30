@@ -21,6 +21,9 @@
     videoErrorStateEl,
     cbSubtitleAutoSpeedEl,
     subtitleSpeedTransitionToggleEl,
+    trackIndicatorTextEl,
+    trackIndicatorAudioEl,
+    trackIndicatorVideoEl,
     inputSubtitleSelectorEl,
     numAutoFastSpeedEl;
   let panelUiState = 0;
@@ -1914,6 +1917,13 @@
     subtitleSpeedTransitionToggleEl = controlPanel.querySelector(
       '#subtitleSpeedTransitionToggle',
     );
+    trackIndicatorTextEl = controlPanel.querySelector('#track-indicator-text');
+    trackIndicatorAudioEl = controlPanel.querySelector(
+      '#track-indicator-audio',
+    );
+    trackIndicatorVideoEl = controlPanel.querySelector(
+      '#track-indicator-video',
+    );
     inputSubtitleSelectorEl = controlPanel.querySelector(
       '#inputSubtitleSelector',
     );
@@ -2571,6 +2581,39 @@
     if (document.getElementById('cbAutoSwitch')?.checked) document.title = text;
   }
 
+  function updateTrackIndicators(video) {
+    // Update textTracks indicator - show dot if 1 or more
+    if (trackIndicatorTextEl) {
+      if (video.textTracks && video.textTracks.length >= 1) {
+        trackIndicatorTextEl.classList.add('track-indicator-text-available');
+      } else {
+        trackIndicatorTextEl.classList.remove('track-indicator-text-available');
+      }
+    }
+
+    // Update audioTracks indicator - show dot if 2 or more
+    if (trackIndicatorAudioEl) {
+      if (video.audioTracks && video.audioTracks.length >= 2) {
+        trackIndicatorAudioEl.classList.add('track-indicator-audio-available');
+      } else {
+        trackIndicatorAudioEl.classList.remove(
+          'track-indicator-audio-available',
+        );
+      }
+    }
+
+    // Update videoTracks indicator - show dot if 2 or more
+    if (trackIndicatorVideoEl) {
+      if (video.videoTracks && video.videoTracks.length >= 2) {
+        trackIndicatorVideoEl.classList.add('track-indicator-video-available');
+      } else {
+        trackIndicatorVideoEl.classList.remove(
+          'track-indicator-video-available',
+        );
+      }
+    }
+  }
+
   function videoEventListeners(video) {
     if (video.classList.contains('video-processed')) return; // 🛑
 
@@ -2703,6 +2746,29 @@
       });
       resizeObserver.observe(video);
     }
+
+    // Track change listeners
+    const handleTrackChange = () => {
+      if (activeVideo === video) {
+        updateTrackIndicators(video);
+      }
+    };
+
+    if (video.textTracks) {
+      video.textTracks.addEventListener('addtrack', handleTrackChange);
+      video.textTracks.addEventListener('removetrack', handleTrackChange);
+    }
+    if (video.audioTracks) {
+      video.audioTracks.addEventListener('addtrack', handleTrackChange);
+      video.audioTracks.addEventListener('removetrack', handleTrackChange);
+    }
+    if (video.videoTracks) {
+      video.videoTracks.addEventListener('addtrack', handleTrackChange);
+      video.videoTracks.addEventListener('removetrack', handleTrackChange);
+    }
+
+    // Initial update of track indicators
+    updateTrackIndicators(video);
 
     video.classList.add('video-processed');
   }
