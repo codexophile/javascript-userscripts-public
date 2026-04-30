@@ -296,6 +296,11 @@ const styles = `
     font-weight: bold;
   }
 
+  /* Show dimensions as blue when the displayed area is less than or equal to 100% */
+  #video-controlPanel #dimensions-as-a-percentage.within-100 {
+    background-color: #3498db;
+  }
+
   #contPanelHeader .content-change-pulse {
     animation: contentChangePulse 320ms ease-out;
   }

@@ -3093,6 +3093,13 @@
     const displayedArea = displayedWidth * displayedHeight;
     const percentage = (displayedArea / actualArea) * 100;
 
+    // Toggle a class when percentage is less than or equal to 100%
+    if (percentage <= 100) {
+      dimensionsAsPercentageEl.classList.add('within-100');
+    } else {
+      dimensionsAsPercentageEl.classList.remove('within-100');
+    }
+
     setAnimatedTextContent(
       dimensionsAsPercentageEl,
       `${percentage.toFixed(1)}%`,
