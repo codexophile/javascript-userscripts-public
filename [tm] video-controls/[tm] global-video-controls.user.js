@@ -557,14 +557,28 @@
 
     const diffMs = Math.round(totalMs - currentTimeMs);
     if (Math.abs(diffMs) <= timeTrackingNoDifferenceThresholdMs) {
-      return 'No difference';
+      return '—';
+    }
+
+    return formatTimeTrackingDuration(Math.abs(diffMs));
+  }
+
+  function getTimeTrackingCurrentPositionType(totalMs) {
+    if (!activeVideo) return 'neutral';
+
+    const currentTimeMs = Math.round(activeVideo.currentTime * 1000);
+    if (currentTimeMs <= 0) return 'neutral';
+
+    const diffMs = Math.round(totalMs - currentTimeMs);
+    if (Math.abs(diffMs) <= timeTrackingNoDifferenceThresholdMs) {
+      return 'neutral';
     }
 
     if (diffMs > 0) {
-      return `${formatTimeTrackingDuration(diffMs)} wasted`;
+      return 'wasted';
     }
 
-    return `${formatTimeTrackingDuration(Math.abs(diffMs))} saved`;
+    return 'saved';
   }
 
   function refreshTimeTrackingPopup(now = Date.now()) {
@@ -611,8 +625,12 @@
       const currentPositionLabel = getTimeTrackingCurrentPositionLabel(
         snapshot.totalMs,
       );
+      const currentPositionType = getTimeTrackingCurrentPositionType(
+        snapshot.totalMs,
+      );
       spanTimeSavedSoFarEl.textContent = currentPositionLabel;
       spanTimeSavedSoFarEl.title = currentPositionLabel;
+      spanTimeSavedSoFarEl.className = `text time-saved-badge ${currentPositionType}`;
     }
     if (timeTrackingPopupEl) {
       timeTrackingPopupEl.hidden = !timeTrackingPopupOpen;

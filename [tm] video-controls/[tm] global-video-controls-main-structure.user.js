@@ -331,8 +331,25 @@ const styles = `
   }
 
   #spanTimeSavedSoFar.time-saved-badge {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+  }
+
+  #spanTimeSavedSoFar.time-saved-badge.saved {
     background-color: #3498db !important;
     color: #ecf0f1 !important;
+  }
+
+  #spanTimeSavedSoFar.time-saved-badge.wasted {
+    background-color: #8b5a2b !important;
+    color: #ecf0f1 !important;
+  }
+
+  #spanTimeSavedSoFar.time-saved-badge.neutral {
+    background-color: transparent !important;
+    color: inherit !important;
   }
 
   .controlRow, .buttonsRow {
