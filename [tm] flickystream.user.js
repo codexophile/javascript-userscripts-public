@@ -2,6 +2,15 @@
   'use strict';
   if (window.top != window.self) return; //don't run on frames or iframes
 
+  //* set favicon
+  let linkEl = document.querySelector("link[rel*='icon']");
+  if (!linkEl) {
+    linkEl = document.createElement('link');
+    linkEl.rel = 'icon';
+    document.head.appendChild(linkEl);
+  }
+  linkEl.href = 'https://cdn-icons-png.flaticon.com/512/18423/18423283.png';
+
   waitForEach('h1', headerEl => {
     if (!location.href.includes('/player/')) return;
     let observer = new MutationObserver(() => {
