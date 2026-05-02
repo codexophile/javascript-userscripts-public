@@ -176,7 +176,7 @@
     try {
       return window.top?.location?.href || location.href;
     } catch (error) {
-      return location.href;
+      return document.referrer || location.href;
     }
   }
 
