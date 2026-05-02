@@ -966,6 +966,13 @@
       normalized.panelPosition = position;
     }
 
+    const iframePosition = normalizePanelPositionValue(
+      source.panelPositionIframe,
+    );
+    if (iframePosition) {
+      normalized.panelPositionIframe = iframePosition;
+    }
+
     return normalized;
   }
 
@@ -1744,6 +1751,14 @@
         sourceProfile.panelPosition,
       );
     }
+    if (
+      targetProfile.panelPositionIframe === undefined &&
+      normalizePanelPositionValue(sourceProfile.panelPositionIframe)
+    ) {
+      targetProfile.panelPositionIframe = normalizePanelPositionValue(
+        sourceProfile.panelPositionIframe,
+      );
+    }
   }
 
   function mergeDuplicateSelectorGroup(group, root = getSettingsRoot()) {
@@ -1994,6 +2009,13 @@
     const activeProfile = getActiveProfileForRead();
     if (!activeProfile) return null;
 
+    if (isRunningInsideIframe()) {
+      return (
+        normalizePanelPositionValue(activeProfile.panelPositionIframe) ||
+        normalizePanelPositionValue(activeProfile.panelPosition)
+      );
+    }
+
     return normalizePanelPositionValue(activeProfile.panelPosition);
   }
 
@@ -2006,7 +2028,11 @@
     const writableProfile = ensureWritableProfile();
     if (!writableProfile) return;
 
-    writableProfile.panelPosition = normalizedPosition;
+    if (isRunningInsideIframe()) {
+      writableProfile.panelPositionIframe = normalizedPosition;
+    } else {
+      writableProfile.panelPosition = normalizedPosition;
+    }
     writeConfigToStorage(settingsConfig);
   }
 

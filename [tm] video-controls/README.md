@@ -114,6 +114,7 @@ Tip:
 - On first run, the script seeds a default config object. If no rule matches the current hostname, the first setting write auto-creates an exact-host rule and profile (for example `auto:example.com`).
 - Wildcard rule patterns are supported (for example `vidrock.*` and `*.vidsrc.*`) so TLD/domain changes can keep using the same profile.
 - Setting changes are persisted immediately to the active profile when they are meant to survive reloads (for example panel drag position, subtitle selector edits, auto-hide toggle, and fast speed value).
+- Panel drag position is stored per context: top-level pages use `panelPosition`, and iframe runs use `panelPositionIframe` with a fallback to the top-level position when no iframe-specific value exists yet.
 - Subtitle auto-speed enabled is session-only now; it resets on reload and is not written into profile storage.
 - On startup, the script scans for duplicate subtitle selectors across profiles and can prompt to merge them into one profile.
 - Duplicate selector matching is escape-tolerant for common quote variants (for example `[data-testid=\"caption-container\"]` and `[data-testid=caption-container]` are treated as the same selector for duplicate detection).
@@ -152,7 +153,8 @@ Tip:
     "streamingDefault": {
       "autoHide": true,
       "autoPauseOnBlur": true,
-      "panelPosition": { "left": 12, "top": 1 }
+      "panelPosition": { "left": 12, "top": 1 },
+      "panelPositionIframe": { "left": 24, "top": 18 }
     },
     "vidrock": {
       "autoHide": true,
