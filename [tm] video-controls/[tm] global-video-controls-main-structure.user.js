@@ -48,6 +48,10 @@ const htmlStructure = `
           <div class="time-related-popup-label">Time saved so far</div>
           <div id="time-spent-current-position" class="time-related-popup-value">—</div>
         </div>
+        <div class="time-related-popup-row">
+          <div class="time-related-popup-label">Storage URL</div>
+          <div id="time-spent-storage-url" class="time-related-popup-value">—</div>
+        </div>
       </div>
       <div id="header-row-two" class="header-row">
         <button class="important" id="buttonPlay">▶</button> 

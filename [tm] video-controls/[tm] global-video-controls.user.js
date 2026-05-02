@@ -34,7 +34,8 @@
     timeTrackingComparisonEl,
     timeTrackingCurrentPositionEl,
     timeTrackingHeaderRowEl,
-    spanTimeSavedSoFarEl;
+    spanTimeSavedSoFarEl,
+    timeTrackingStorageUrlEl;
   let panelUiState = 0;
   let panelUiLastNonHeadState = 0;
   let panelAutoHideEnabled = false;
@@ -631,6 +632,9 @@
       spanTimeSavedSoFarEl.textContent = currentPositionLabel;
       spanTimeSavedSoFarEl.title = currentPositionLabel;
       spanTimeSavedSoFarEl.className = `text time-saved-badge ${currentPositionType}`;
+    }
+    if (timeTrackingStorageUrlEl) {
+      timeTrackingStorageUrlEl.textContent = snapshot.pageKey;
     }
     if (timeTrackingPopupEl) {
       timeTrackingPopupEl.hidden = !timeTrackingPopupOpen;
@@ -2557,6 +2561,9 @@
       '#time-spent-current-position',
     );
     spanTimeSavedSoFarEl = controlPanel.querySelector('#spanTimeSavedSoFar');
+    timeTrackingStorageUrlEl = controlPanel.querySelector(
+      '#time-spent-storage-url',
+    );
 
     // dragElement( controlPanel, controlPanel );
     makeDraggable(controlPanel);
