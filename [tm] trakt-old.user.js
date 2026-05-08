@@ -1,9 +1,12 @@
 (async function () {
   'use strict';
 
-  waitForEach('#recommendations-wrapper [href^="/movies/"]', movieLinkEl => {
-    movieLinkEl.href += '#redirectIMDb';
-  });
+  waitForEach(
+    ':is([itemtype="http://schema.org/ItemList"], #recommendations-wrapper) [href^="/movies/"]',
+    movieLinkEl => {
+      movieLinkEl.href += '#redirectIMDb';
+    },
+  );
   const urlHash = window.location.hash;
   if (urlHash === '#redirectIMDb') {
     const imdbLinkEl = await waitFor('#external-link-imdb');
