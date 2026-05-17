@@ -29,12 +29,12 @@
       const messageElsArr2 = contains(
         'div',
         "Let's review the exercises you missed!",
-        el.parentElement
+        el.parentElement,
       );
       const messageElsArr3 = contains(
         'h2',
         'Daily Quests update!',
-        el.parentElement
+        el.parentElement,
       );
       if (
         !messageElsArr.length &&
@@ -67,14 +67,14 @@
     });
 
     //* auto skipping
-    const noListeningLanguages = ['es'];
+    const noListeningLanguages = ['es', 'id'];
     waitForEach('[data-test="player-skip"]', skipBtnEl => {
       if (skipBtnEl.textContent === "Can't speak now") {
         skipBtnEl.click();
       }
       const isAListeningExercise = skipBtnEl.textContent === "Can't listen now";
       const language = document.querySelector(
-        `[data-test="challenge-translate-input"], [data-test*="challenge-tap-token"]:has([data-test="challenge-tap-token-text"])`
+        `[data-test="challenge-translate-input"], [data-test*="challenge-tap-token"]:has([data-test="challenge-tap-token-text"])`,
       ).lang;
       const isANoListeningLanguage = noListeningLanguages.includes(language);
 
@@ -128,7 +128,7 @@
         (e.key.charCodeAt(0) >= 97 && e.key.charCodeAt(0) <= 122)) &&
       document.getElementsByTagName('textarea')[0]
     ) {
-      var textEl = document.getElementsByTagName('textarea')[0];
+      var textEl = document.querySelector('textarea:not(#puter-input)');
       textEl.focus();
       // textEl.value += e.key;
       // textEl.value = e.key;
