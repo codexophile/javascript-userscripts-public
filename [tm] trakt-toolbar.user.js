@@ -174,12 +174,32 @@
     Any fan theories or debates that add depth to the movie’s interpretation.
     Other interesting details, like Easter eggs, hidden clues, or references to other works.
   `);
+    let episodeCode = '';
+    if (episode) {
+      const seasonNumber = url.match(/seasons\/(\d+)/)?.[1]?.padStart(2, '0');
+      const episodeNumber = url
+        .match(/episodes\/(\d+)$/)?.[1]
+        ?.padStart(2, '0');
+      if (seasonNumber && episodeNumber) {
+        episodeCode = ` S${seasonNumber}E${episodeNumber}`;
+      }
+    }
+    const ppxQueryTvEpisode = encodeURI(`
+    I just watched the ${episode ? 'episode' : 'season'} of ${movieShowTitle}${episodeCode}, and I want to fully understand it. Please provide me with a detailed breakdown, including:
+    A summary of the plot with key events, making sure to highlight any important details that might be easy to miss.
+    Don't spoil future episodes, but feel free to include relevant information from previous episodes or seasons.`);
 
     createToolbarItem(
       // wikipedia
       `https://www.google.com/search?btnI=1&q=${query}%20site:wikipedia.org`,
       'https://cdn-icons-png.flaticon.com/512/49/49360.png',
       'Wikipedia',
+    );
+    createToolbarItem(
+      // AI - perplexity tv episode
+      `https://www.perplexity.ai/search?q=${ppxQueryTvEpisode}&copilot=false&s=d`,
+      'https://www.perplexity.ai/favicon.ico',
+      'PPX Ep',
     );
     createToolbarItem(
       // AI - perplexity
