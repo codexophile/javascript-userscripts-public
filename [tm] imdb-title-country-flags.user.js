@@ -11,7 +11,7 @@
     const locatorEl = document.querySelector(`[data-testid="hero__pageTitle"]`);
     const newParent = generateElements(
       `<ul id=new-parent></ul>`,
-      locatorEl.parentElement
+      locatorEl.parentElement,
     );
 
     countries.forEach(({ countryName, countryCode }, idx) => {
@@ -21,7 +21,12 @@
       flagImg.alt = countryName;
       flagImg.title = countryName;
       flagImg.style.marginRight = '8px';
-      newParent.appendChild(flagImg);
+
+      const countryLink = document.createElement('a');
+      countryLink.href = `/search/title/?country_of_origin=${countryCode}`;
+      countryLink.appendChild(flagImg);
+      newParent.appendChild(countryLink);
+
       if (idx < countries.length - 1) {
         generateElements(`<span> </span>`, newParent); // space between flags
       }
@@ -31,9 +36,16 @@
 
     const languages = getLanguages();
     if (languages.length) {
-      const langSpan = document.createElement('span');
-      langSpan.textContent = languages.join(', ');
-      newParent.appendChild(langSpan);
+      languages.forEach((lang, idx) => {
+        const langLink = document.createElement('a');
+        langLink.href = `/search/title/?primary_language=${lang.code}`;
+        langLink.textContent = lang.name;
+        newParent.appendChild(langLink);
+
+        if (idx < languages.length - 1) {
+          generateElements(`<span>, </span>`, newParent);
+        }
+      });
     }
   }
 
@@ -53,6 +65,13 @@
   function getLanguages() {
     const languageEls = document.querySelectorAll(`[href*="primary_language"]`);
     if (!languageEls.length) return [];
-    return Array.from(languageEls).map(el => el.innerText.trim());
+    return Array.from(languageEls)
+      .map(el => {
+        const name = el.innerText.trim();
+        const matches = el.href.match(/primary_language=([a-z]+)/);
+        const code = matches ? matches[1] : null;
+        return code ? { name, code } : null;
+      })
+      .filter(Boolean);
   }
 })();
