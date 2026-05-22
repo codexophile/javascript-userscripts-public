@@ -2,6 +2,10 @@
   'use strict';
   if (window.top != window.self) return; //don't run on frames or iframes
 
+  //* currently active host
+  // Select by the unique 'border-accent' class
+  // const activeButton = document.querySelector('button.border-accent');
+
   //* set favicon
   let linkEl = document.querySelector("link[rel*='icon']");
   if (!linkEl) {
