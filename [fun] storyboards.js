@@ -31,7 +31,13 @@ function setSlotSize(sbParent, newWidth) {
   });
 }
 
-async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
+async function sbControls(
+  video,
+  trueNoOfSlots,
+  sbParent,
+  imgUrls,
+  setSbHash = true,
+) {
   const collapsible = await Collapsible();
   const getTotalSlots = () => {
     const slotCount = sbParent.querySelectorAll('.storyboardItem').length;
@@ -106,7 +112,9 @@ async function sbControls(video, trueNoOfSlots, sbParent, imgUrls) {
         Math.round((video.currentTime * totalSlots) / duration),
       );
       const storyboardItems = sbParent.querySelectorAll('.storyboardItem');
-      setHash(`slot=${currentSlotNo}`);
+      if (setSbHash) {
+        setHash(`slot=${currentSlotNo}`);
+      }
 
       storyboardItems.forEach((item, index) => {
         if (index <= currentSlotNo) {
@@ -174,6 +182,7 @@ async function storyboard({
   imgUrls = [],
   offset = 0,
   slotWidth = null,
+  setSbHash = true,
 }) {
   const slotsDiv = document.createElement('div');
   storyboardParent.append(slotsDiv);
@@ -239,7 +248,7 @@ async function storyboard({
   if (slotWidth) setSlotSize(storyboardParent, slotWidth);
   else if (storyboardParent.querySelector('canvas').width < 200)
     setSlotSize(storyboardParent, 200);
-  sbControls(vidOnPage, totalSlots, storyboardParent, imgUrls);
+  sbControls(vidOnPage, totalSlots, storyboardParent, imgUrls, setSbHash);
   return slotsDiv;
 }
 
