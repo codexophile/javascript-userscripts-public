@@ -3428,6 +3428,7 @@ function getStreamwishQuery() {
 
 function getDoodHostsQuery() {
   const doodHosts = [
+    'playmogo',
     'myvidplay',
     'dsvplay',
     'd-s',
@@ -3466,7 +3467,7 @@ async function getDoodImageSrc(url, pathType = 'slides') {
     throw new Error(`Could not find ${pathType} image ID in meta content`);
   }
   const imgId = matches[2];
-  return `https://postercdn.net/${pathType}/${imgId}.jpg`;
+  return `https://ticdn.net/${pathType}/${imgId}.jpg`;
 }
 
 async function getDoodStoryboardSrc(url, linkEl = null) {
