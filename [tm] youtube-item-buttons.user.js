@@ -7,17 +7,40 @@
     'ytd-video-renderer',
     'ytd-compact-video-renderer',
     'ytd-rich-item-renderer',
-    'ytd-playlist-video-renderer > #content',
+    'ytd-playlist-video-renderer',
     'a.ytp-videowall-still',
     // 'yt-lockup-view-model .yt-lockup-view-model-wiz',
     'yt-lockup-view-model .yt-lockup-view-model__content-image',
   ];
   const queryForThumbEls = thumbElSelectorsArr.join(', ');
+  const menuSelectorArr = ['ytd-menu-popup-renderer'];
+  const queryForMenuEls = menuSelectorArr.join(', ');
+  const menuTriggerSelectorArr = ['.dropdown-trigger'];
+  const queryForMenuTriggerEls = menuTriggerSelectorArr.join(', ');
 
+  //* youtube menu actions
+  waitForEach(queryForMenuTriggerEls, menuTriggerEl => {
+    menuTriggerEl.addEventListener('click', async () => {
+      const menuEl = document.querySelector(queryForMenuEls);
+      const menuActionsCntEl = insertOrUpdateElement(
+        '#menuActionsContainer',
+        `<div id=menuActionsContainer>test</div>`,
+        menuEl,
+        true,
+      );
+      const thumbEl = menuTriggerEl.closest(queryForThumbEls);
+      const videosLinkEl = await addLinkToVideos(thumbEl, menuActionsCntEl);
+      console.log(videosLinkEl);
+      videosLinkEl.style = `
+      font-size: 20px;`;
+    });
+  });
+
+  //* thumbnail actions
   waitForEach(queryForThumbEls, thumbEl => {
     const buttonsContainerEl = createButtonsContainer(thumbEl);
     if (!location.href.match(/\/@|\/channel\//))
-      addVideosButton(thumbEl, buttonsContainerEl);
+      addLinkToVideos(thumbEl, buttonsContainerEl);
     addHighResThumbButton(thumbEl, buttonsContainerEl);
 
     thumbEl.addEventListener('mouseover', () => {
@@ -46,7 +69,7 @@
     btnEl.textContent = '🖼️';
   }
 
-  async function addVideosButton(thumbEl, parentEl) {
+  async function addLinkToVideos(thumbEl, parentEl) {
     const newEl = generateElements(`<a>Vid</a>`, parentEl);
     newEl.target = '_blank';
     newEl.id = 'linkToVids';
@@ -66,7 +89,7 @@
 
   async function getLinkToChannel(thumbEl) {
     const linkToChannelEl = thumbEl.querySelector(
-      '[href^="https://www.youtube.com/@"]'
+      '[href^="https://www.youtube.com/@"]',
     );
     if (linkToChannelEl) {
       const matches = linkToChannelEl.href.match(/@(.+?)(\/|$)/);
@@ -82,7 +105,7 @@
 
   function createButtonsContainer(parent) {
     const buttonsContainer = generateElements(
-      `<div id=buttonsContainer></div>`
+      `<div id=buttonsContainer></div>`,
     );
     parent.append(buttonsContainer);
     buttonsContainer.style = 'position: absolute; left: 5px; top: 5px;';
