@@ -1,6 +1,7 @@
 (function () {
   'use strict';
 
+  //* auto skipping certain pages
   waitForEach('[data-testid="plans-page"]', async () => {
     const closeBtnEl = await waitFor(`[aria-label="Close"]`);
     closeBtnEl.click();
@@ -19,6 +20,13 @@
   console.log(
     `[Memrise Volume Limiter] Initializing... Target volume: ${TARGET_VOLUME}`,
   );
+
+  //* normal elements
+  waitForEach('audio, video', mediaEl => {
+    mediaEl.volume = TARGET_VOLUME;
+  });
+
+  //*
 
   // ====================================================================
   // METHOD 1: Intercept HTML5 Audio (new Audio())
@@ -96,4 +104,20 @@
     // If it's connecting to anything else (like an analyzer or filter), behave normally
     return originalConnect.apply(this, args);
   };
+})();
+
+//* keyboard shortcuts
+(function () {
+  'use strict';
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      const btnEl = document.querySelector(
+        `[data-testid="scenarios-EndOfSession"] [data-testid="button"]`,
+      );
+      if (btnEl) {
+        btnEl.click();
+      }
+    }
+  });
 })();
