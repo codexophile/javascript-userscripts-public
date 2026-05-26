@@ -1,44 +1,39 @@
-//* download button (yt-dlp)
-const { addButton } = await Collapsible();
-addButton('⬇️', null, () => {
-  let postLink = '';
+(async function () {
+  'use strict';
 
-  if (location.href.includes('/video/')) {
-    postLink = location.href;
-  } else {
-    return;
+  const FAST_PLAYBACK_RATE = 3;
+
+  //* auto speedup preview videos
+  waitForEach('a video', previewVidEl => {
+    previewVidEl.addEventListener('play', () => {
+      setPlaybackRate(previewVidEl, FAST_PLAYBACK_RATE);
+    });
+    previewVidEl.addEventListener('ratechange', () => {
+      setPlaybackRate(previewVidEl, FAST_PLAYBACK_RATE);
+    });
+  });
+
+  function setPlaybackRate(vidEl, rate = 3) {
+    if (vidEl.playbackRate === rate) return;
+    vidEl.playbackRate = rate;
   }
 
-  const urlSegment = `url:${postLink}::`;
-  const destinationSegment = `dest:x:\\tiktok::`;
-  const modeSegment = `mode:noprompt::`;
-  GM_setClipboard(
-    `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`
-  );
-});
+  //* download button (yt-dlp)
+  const { addButton } = await Collapsible();
+  addButton('⬇️', null, () => {
+    let postLink = '';
 
-//*
-// if (location.href.includes('#saved')) {
-//   waitFor(`[class*=PFavorite]`).then(el => {
-//     el.click();
-//   });
-// }
+    if (location.href.includes('/video/')) {
+      postLink = location.href;
+    } else {
+      return;
+    }
 
-// waitFor('#collapsibleContent').then(el => {
-//   generateToolbarButton('↔️', el, null, () => {
-//     $(`#main-content-others_homepage`).css(`max-width`, `unset`);
-//     $('[class*=DivSideNavContainer]').toggle();
-//   });
-// });
-
-// let observer = new MutationObserver(() => {
-//   $('[class*=SpanUniqueId]:not([data-e2e])').each(function () {
-//     const $this = $(this);
-//     if ($this.parent().prop('tagName') === 'A') return; // 🛑
-//     $this.wrap(
-//       `<a href="https://www.tiktok.com/@${$this.text()}/" target=_blank></a>`
-//     );
-//   });
-// });
-
-// observer.observe(document.body, { childList: true, subtree: true });
+    const urlSegment = `url:${postLink}::`;
+    const destinationSegment = `dest:x:\\tiktok::`;
+    const modeSegment = `mode:noprompt::`;
+    GM_setClipboard(
+      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
+    );
+  });
+})();
