@@ -79,14 +79,16 @@
   if (rssLinks.length) {
     const rssFeedsContainer = collapsible.addPopup();
     collapsible.addButton('📶', rssFeedsContainer);
-
-    const addFeedBtnEl = generateElements(
-      `<a>➕ Inoreader</a>`,
+    addLinkToFeedReader(
+      'Inoreader',
+      'https://www.inoreader.com/search/feeds/',
       rssFeedsContainer,
     );
-    var encodedURI = encodeURIComponent(window.location);
-    addFeedBtnEl.href = `https://www.inoreader.com/search/feeds/${encodedURI}`;
-    addFeedBtnEl.target = '_blank';
+    addLinkToFeedReader(
+      'Feedly',
+      'https://feedly.com/i/discover?query=suggesto%2F',
+      rssFeedsContainer,
+    );
 
     rssLinks.forEach(link => {
       generateElements(
@@ -98,6 +100,17 @@
         rssFeedsContainer,
       );
     });
+  }
+
+  function addLinkToFeedReader(readerName, baseUrl, parentEl) {
+    const addFeedBtnEl = generateElements(`<a>➕ ${readerName}</a>`, parentEl);
+    var encodedURI = encodeURIComponent(window.location);
+    addFeedBtnEl.href = `${baseUrl}${encodedURI}`;
+    addFeedBtnEl.target = '_blank';
+    addFeedBtnEl.style = `
+        display: block;
+        font-size: 14px;
+      `;
   }
 
   //* scraping meta elements
