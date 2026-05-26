@@ -70,7 +70,14 @@
             const response = await GMXmlHttpReqResponse(allVideoLinks[i]);
             const storyboardObj = generateAllYouTubeSbUrls(response);
             storyboardObj.href = allVideoLinks[i];
-            await createStoryboardGalleryItem(storyboardObj, newWindow);
+            const horizontal = storyboardObj.horizontal || 5;
+            const vertical = storyboardObj.vertical || 5;
+            await createStoryboardGalleryItem(
+              storyboardObj,
+              newWindow,
+              horizontal,
+              vertical,
+            );
 
             loadedVideos++;
             updateProgress(loadedVideos, totalVideos);
@@ -108,7 +115,12 @@
     progressElement.textContent = `Loaded: ${current}/${total} storyboards`;
   }
 
-  async function createStoryboardGalleryItem(item, window) {
+  async function createStoryboardGalleryItem(
+    item,
+    window,
+    horizontal,
+    vertical,
+  ) {
     const galleryItemEl = generateElements(`<div class="gallery-item"></div>`);
     style(
       galleryItemEl,
@@ -126,13 +138,13 @@
     const storyboardContainer = generateElements(`<div></div>`, galleryItemEl);
     await storyboard({
       storyboardParent: storyboardContainer,
-      horizontal: 5,
-      vertical: 5,
+      horizontal: horizontal,
+      vertical: vertical,
       linkToVid: item.href,
       samplingFq: item.samplingFq,
       trueNoOfSlots: item.trueNoOfSlots,
       imgUrls: item.allUrls,
-      maxHeight: 'unset',
+      // maxHeight: 'unset',
     });
     window.document.body.append(galleryItemEl);
   }
