@@ -1,3 +1,74 @@
+//* download images
+waitForEach('div:has(>[data-visualcompletion][alt])', imgCntEl => {
+  const toolsCntEl = generateElements(`<div class=toolsCnt></div>`, imgCntEl);
+  style(
+    toolsCntEl,
+    `
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  `,
+  );
+  const dlBtnEl = generateElements(
+    `<button class=dlBtn>⬇️</button>`,
+    toolsCntEl,
+  );
+  dlBtnEl.addEventListener('click', () => handleDownload(imgCntEl));
+});
+
+function handleDownload(parentEl) {
+  const imgEl = parentEl.querySelector('[data-visualcompletion][alt]');
+  const tempImg = GM_addElement('img', {
+    src: imgEl.src,
+    crossorigin: 'anonymous',
+  });
+  tempImg.addEventListener('load', () => {
+    const c = generateElements(`<canvas></canvas>`);
+    c.width = tempImg.naturalWidth;
+    c.height = tempImg.naturalHeight;
+    var ctx = c.getContext('2d');
+    ctx.drawImage(tempImg, 0, 0);
+    const uri = c.toDataURL();
+
+    const linkEl = generateElements(`<a></a>`, document.body);
+    console.log(linkEl);
+    let fileName = `${getUserId()} - (facebook)${getPostId()} - (${getTagged()})`;
+    linkEl.setAttribute('download', `${fileName}.png`);
+    linkEl.setAttribute('href', uri);
+    linkEl.click();
+  });
+}
+
+function getUserId() {
+  try {
+    const profileLinkEl = document.querySelector('a[href*="/profile.php?id="]');
+    const userId = profileLinkEl.href.match(/\/profile.php\?id=(.+?)[$&]/)[1];
+    return userId;
+  } catch (error) {
+    alert('Error getting user ID: ' + error.message);
+    return null;
+  }
+}
+
+function getPostId() {
+  try {
+    const postLinkEl = document.querySelector(
+      '[href*="/permalink.php?story_fbid="]',
+    );
+    const postId = postLinkEl.href.match(
+      /\/permalink.php\?story_fbid=(.+?)[$&]/,
+    )[1];
+    return postId;
+  } catch (error) {
+    alert('Error getting post ID: ' + error.message);
+    return null;
+  }
+}
+
+function getTagged() {
+  return '';
+}
+
 //* new yt-dlp button
 const { addButton } = await Collapsible();
 addButton('tiktok', null, () => {
@@ -8,14 +79,14 @@ addButton('tiktok', null, () => {
   const destinationSegment = `dest:x:\\tiktok::`;
   const modeSegment = `mode:noprompt::`;
   GM_setClipboard(
-    `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`
+    `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
   );
 });
 
 //* follow button
 addButton('➕', null, () => {
   const followBtn = document.querySelector(
-    'div[aria-label="Follow"][role="button"]'
+    'div[aria-label="Follow"][role="button"]',
   );
   if (followBtn) followBtn.click();
 });
@@ -36,7 +107,7 @@ waitForEach(`[aria-label="See Owner Profile"]`, locatorEl => {
     `
     position: fixed;
     bottom: 100px;
-  `
+  `,
   );
 });
 
@@ -56,7 +127,7 @@ if (location.href === 'https://www.facebook.com/') {
     .prependTo(document.body)
     .on('click', () => {
       const $storiesParent = $storiesDiv.find(
-        '[aria-label="stories tray"] > div > div'
+        '[aria-label="stories tray"] > div > div',
       );
       if ($storiesParent.css(`flex-wrap`) === 'wrap')
         $storiesParent.css(`flex-wrap`, ``);
