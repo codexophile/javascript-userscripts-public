@@ -17,6 +17,133 @@
     const CLIENT_ID = getSecret('redditClientId');
     const CLIENT_SECRET = getSecret('redditClientSecret');
     const USER_AGENT = 'MainScript/1.0 (by /u/codexophile)';
+    const ARCTIC_SHIFT_BASE = 'https://arctic-shift.photon-reddit.com';
+    const ARCTIC_SHIFT_TIMEOUT = 5000; // 5 second timeout for Arctic Shift requests
+
+    // Arctic Shift API helper function
+    async function arcticShiftFetch(endpoint, params = {}) {
+      return new Promise((resolve, reject) => {
+        const queryParams = new URLSearchParams(params);
+        const fullUrl = `${ARCTIC_SHIFT_BASE}${endpoint}?${queryParams.toString()}`;
+
+        GM_xmlhttpRequest({
+          method: 'GET',
+          url: fullUrl,
+          timeout: ARCTIC_SHIFT_TIMEOUT,
+          headers: {
+            'User-Agent': USER_AGENT,
+          },
+          onload: function (response) {
+            try {
+              if (response.status === 200 || response.status === 0) {
+                const data = JSON.parse(response.responseText);
+                resolve(data);
+              } else {
+                reject(new Error(`Arctic Shift HTTP ${response.status}`));
+              }
+            } catch (error) {
+              reject(new Error(`Arctic Shift parse error: ${error.message}`));
+            }
+          },
+          onerror: function (error) {
+            reject(new Error(`Arctic Shift request failed: ${error}`));
+          },
+          ontimeout: function () {
+            reject(new Error('Arctic Shift request timed out'));
+          },
+        });
+      });
+    }
+
+    // Get post data from Arctic Shift (for deleted or inaccessible posts)
+    async function getPostDataFromArcticShift(postId) {
+      try {
+        const cleanId = postId.replace(/^t3_/, '');
+        const response = await arcticShiftFetch('/api/posts/ids', {
+          ids: cleanId,
+          md2html: 'true',
+        });
+
+        if (response.data && response.data.length > 0) {
+          return {
+            ...response.data[0],
+            _source: 'arctic_shift',
+            _archived: true,
+          };
+        }
+        return null;
+      } catch (error) {
+        console.warn('Arctic Shift post lookup failed:', error);
+        return null;
+      }
+    }
+
+    // Get user posts from Arctic Shift (for deleted or archived user content)
+    async function getUserPostsFromArcticShift(username, limit = 20) {
+      try {
+        const response = await arcticShiftFetch('/api/posts/search', {
+          author: username,
+          limit: Math.min(limit, 100),
+          sort: 'desc',
+        });
+
+        if (response.data && response.data.length > 0) {
+          return response.data.map(post => ({
+            ...post,
+            _source: 'arctic_shift',
+            _archived: true,
+          }));
+        }
+        return [];
+      } catch (error) {
+        console.warn('Arctic Shift user posts lookup failed:', error);
+        return [];
+      }
+    }
+
+    // Get comments from Arctic Shift (for deleted or archived comments)
+    async function getCommentsFromArcticShift(postId, limit = 3) {
+      try {
+        const cleanPostId = postId.replace(/^t3_/, '');
+        const response = await arcticShiftFetch('/api/comments/search', {
+          link_id: cleanPostId,
+          limit: Math.min(limit + 10, 100),
+          sort: 'desc',
+        });
+
+        if (response.data && response.data.length > 0) {
+          return response.data
+            .filter(
+              comment =>
+                comment.author &&
+                comment.author !== 'AutoModerator' &&
+                comment.body &&
+                comment.body !== '[deleted]' &&
+                comment.body !== '[removed]',
+            )
+            .slice(0, limit)
+            .map(comment => ({
+              ...comment,
+              _source: 'arctic_shift',
+              _archived: true,
+            }));
+        }
+        return [];
+      } catch (error) {
+        console.warn('Arctic Shift comments lookup failed:', error);
+        return [];
+      }
+    }
+
+    // Helper to check if data is deleted/removed
+    function isContentDeleted(data) {
+      if (!data) return true;
+      if (data.author === '[deleted]' || data.author === null) return true;
+      if (data.selftext === '[deleted]' || data.selftext === '[removed]')
+        return true;
+      if (data.body === '[deleted]' || data.body === '[removed]') return true;
+      return false;
+    }
 
     waitForEach('shreddit-post', async postEl => {
       const postId = getPostId(postEl);
@@ -27,14 +154,27 @@
       if (
         postData.selftext &&
         postData.selftext.trim() !== '' &&
+        postData.selftext !== '[deleted]' &&
+        postData.selftext !== '[removed]' &&
         !location.href.includes('/comments/')
       ) {
         const selfTextEl = generateElements(
           `<div class="shreddit-post-selftext userscript-code"></div>`,
-          postEl
+          postEl,
         );
-        // selfTextEl.textContent = postData.selftext;
-        selfTextEl.innerHTML = marked.parse(postData.selftext);
+        const headerText = postData._archived
+          ? '📦 Archived from Arctic Shift'
+          : '';
+        if (headerText) {
+          const headerEl = generateElements(
+            `<div style="font-size: 0.8em; color: #4a90e2; margin-bottom: 5px;"><em>${headerText}</em></div>`,
+            selfTextEl,
+          );
+        }
+        selfTextEl.innerHTML =
+          (postData._archived
+            ? `<div style="font-size: 0.8em; color: #4a90e2; margin-bottom: 5px;"><em>📦 Archived from Arctic Shift</em></div>`
+            : '') + marked.parse(postData.selftext);
         selfTextEl.querySelectorAll('a').forEach(aEl => {
           aEl.target = '_blank';
         });
@@ -42,11 +182,13 @@
           selfTextEl,
           `
           max-height: 500px;
-          overflow-y: auto;`
+          overflow-y: auto;
+          ${postData._archived ? 'border-left: 2px solid #4a90e2; padding-left: 8px;' : ''}
+        `,
         );
 
         const originalSelfTextEl = postEl.querySelector(
-          'shreddit-post-text-body'
+          'shreddit-post-text-body',
         );
         if (originalSelfTextEl) {
           originalSelfTextEl.style.display = 'none';
@@ -66,12 +208,12 @@
       const upvotesDispEl = createVotesDispEl(
         'up',
         upvotes,
-        secondaryToolbarEl
+        secondaryToolbarEl,
       );
       const downvotesDispEl = createVotesDispEl(
         'down',
         downvotes,
-        secondaryToolbarEl
+        secondaryToolbarEl,
       );
       postEl.querySelector('a[data-ks-id]')?.remove();
       const opDispEl = createOpDispEl(author, secondaryToolbarEl);
@@ -80,7 +222,7 @@
       const loadCommentsBtn = createSecondaryToolbarElement(
         '💬 Load Top 3 Comments',
         null,
-        secondaryToolbarEl
+        secondaryToolbarEl,
       );
       loadCommentsBtn.addEventListener('click', async () => {
         loadCommentsBtn.disabled = true;
@@ -99,7 +241,7 @@
       const galleryBtn = createSecondaryToolbarElement(
         '🖼️ Gallery View',
         null,
-        secondaryToolbarEl
+        secondaryToolbarEl,
       );
       galleryBtn.addEventListener('click', async () => {
         galleryBtn.disabled = true;
@@ -117,7 +259,7 @@
     });
 
     async function getTopComments(postId, token, limit = 3) {
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
         GM_xmlhttpRequest({
           method: 'GET',
           url: `https://oauth.reddit.com/comments/${postId}?limit=${
@@ -127,7 +269,7 @@
             Authorization: `Bearer ${token}`,
             'User-Agent': USER_AGENT,
           },
-          onload: function (response) {
+          onload: async function (response) {
             try {
               const data = JSON.parse(response.responseText);
               if (data && data.length > 1 && data[1].data.children) {
@@ -137,19 +279,82 @@
                       child.kind === 't1' &&
                       child.data.author !== 'AutoModerator' &&
                       child.data.stickied !== true &&
-                      child.data.distinguished !== 'moderator'
+                      child.data.distinguished !== 'moderator' &&
+                      !isContentDeleted(child.data),
                   )
                   .slice(0, limit)
                   .map(child => child.data);
-                resolve(comments);
+
+                // If we got comments, return them
+                if (comments.length > 0) {
+                  resolve(comments);
+                  return;
+                }
+
+                // All comments were deleted, try Arctic Shift
+                console.log(
+                  'Top comments are deleted, attempting Arctic Shift...',
+                );
+                try {
+                  const archivedComments = await getCommentsFromArcticShift(
+                    postId,
+                    limit,
+                  );
+                  if (archivedComments.length > 0) {
+                    console.log(
+                      `✓ Retrieved ${archivedComments.length} archived comments from Arctic Shift`,
+                    );
+                    resolve(archivedComments);
+                    return;
+                  }
+                } catch (error) {
+                  console.warn('Arctic Shift comment fallback failed:', error);
+                }
+
+                resolve(comments); // Return empty array
               } else {
+                // Comments endpoint failed, try Arctic Shift
+                console.log(
+                  'Comments endpoint unavailable, trying Arctic Shift...',
+                );
+                try {
+                  const archivedComments = await getCommentsFromArcticShift(
+                    postId,
+                    limit,
+                  );
+                  if (archivedComments.length > 0) {
+                    console.log(
+                      `✓ Retrieved ${archivedComments.length} archived comments from Arctic Shift`,
+                    );
+                    resolve(archivedComments);
+                    return;
+                  }
+                } catch (error) {
+                  console.warn('Arctic Shift comment fallback failed:', error);
+                }
                 reject(new Error('Comments not found'));
               }
             } catch (error) {
               reject(error);
             }
           },
-          onerror: function (error) {
+          onerror: async function (error) {
+            console.log('Reddit comments API error, trying Arctic Shift...');
+            try {
+              const archivedComments = await getCommentsFromArcticShift(
+                postId,
+                limit,
+              );
+              if (archivedComments.length > 0) {
+                console.log(
+                  `✓ Retrieved ${archivedComments.length} archived comments from Arctic Shift (API error)`,
+                );
+                resolve(archivedComments);
+                return;
+              }
+            } catch (arcticError) {
+              console.warn('Arctic Shift fallback failed:', arcticError);
+            }
             reject(error);
           },
         });
@@ -159,7 +364,7 @@
     function displayComments(comments, postEl, buttonEl) {
       // Remove existing comments container if it exists
       const existingContainer = postEl.querySelector(
-        '.userscript-comments-container'
+        '.userscript-comments-container',
       );
       if (existingContainer) {
         existingContainer.remove();
@@ -168,8 +373,14 @@
       // Create container for comments
       const commentsContainer = generateElements(
         '<div class="userscript-comments-container"></div>',
-        postEl
+        postEl,
       );
+
+      // Check if any comments are from Arctic Shift
+      const isArchivedData = comments.some(c => c._archived);
+      const archiveIndicator = isArchivedData
+        ? ' 📦 (Archived from Arctic Shift)'
+        : '';
 
       style(
         commentsContainer,
@@ -178,14 +389,14 @@
         padding: 10px;
         background: rgba(0, 0, 0, 0.05);
         border-radius: 5px;
-        border-left: 3px solid #ff4500;
-      `
+        border-left: 3px solid ${isArchivedData ? '#4a90e2' : '#ff4500'};
+      `,
       );
 
       comments.forEach((comment, index) => {
         const commentEl = generateElements(
           '<div class="userscript-comment"></div>',
-          commentsContainer
+          commentsContainer,
         );
 
         style(
@@ -195,24 +406,27 @@
           padding: 10px;
           background: rgba(255, 255, 255, 0.5);
           border-radius: 3px;
-        `
+          ${comment._archived ? 'border-left: 2px solid #4a90e2;' : ''}
+        `,
         );
 
         const authorEl = generateElements(
-          `<div><strong>👤 ${comment.author}</strong> • 👍 ${comment.score}</div>`,
-          commentEl
+          `<div><strong>👤 ${comment.author}</strong> • 👍 ${
+            comment.score || '?'
+          }${comment._archived ? ' • 📦 Archived' : ''}</div>`,
+          commentEl,
         );
         style(
           authorEl,
           `
           margin-bottom: 5px;
           font-size: 0.9em;
-          color: #666;
-        `
+          color: ${comment._archived ? '#4a90e2' : '#666'};
+        `,
         );
 
         const bodyEl = generateElements('<div></div>', commentEl);
-        bodyEl.innerHTML = marked.parse(comment.body);
+        bodyEl.innerHTML = marked.parse(comment.body || '');
         bodyEl.querySelectorAll('a').forEach(aEl => {
           aEl.target = '_blank';
         });
@@ -220,16 +434,16 @@
           bodyEl,
           `
           line-height: 1.5;
-        `
+        `,
         );
       });
 
-      buttonEl.textContent = `💬 Loaded ${comments.length} comments`;
+      buttonEl.textContent = `💬 Loaded ${comments.length} comments${archiveIndicator}`;
       buttonEl.disabled = false;
     }
 
     async function getUserImagePosts(username, token, limit = 20) {
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
         GM_xmlhttpRequest({
           method: 'GET',
           url: `https://oauth.reddit.com/user/${username}/submitted?limit=${limit}&sort=new`,
@@ -237,7 +451,7 @@
             Authorization: `Bearer ${token}`,
             'User-Agent': USER_AGENT,
           },
-          onload: function (response) {
+          onload: async function (response) {
             try {
               const data = JSON.parse(response.responseText);
               if (data && data.data && data.data.children) {
@@ -251,15 +465,101 @@
                       post.is_gallery
                     );
                   });
-                resolve(imagePosts);
+
+                if (imagePosts.length > 0) {
+                  resolve(imagePosts);
+                  return;
+                }
+
+                // User exists but no image posts, try Arctic Shift
+                console.log(
+                  'User has no accessible image posts, trying Arctic Shift...',
+                );
+                try {
+                  const archivedPosts = await getUserPostsFromArcticShift(
+                    username,
+                    limit,
+                  );
+                  const archivedImagePosts = archivedPosts.filter(post => {
+                    return (
+                      post.post_hint === 'image' ||
+                      post.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+                      post.is_gallery
+                    );
+                  });
+                  if (archivedImagePosts.length > 0) {
+                    console.log(
+                      `✓ Retrieved ${archivedImagePosts.length} archived image posts from Arctic Shift`,
+                    );
+                    resolve(archivedImagePosts);
+                    return;
+                  }
+                } catch (error) {
+                  console.warn(
+                    'Arctic Shift image posts fallback failed:',
+                    error,
+                  );
+                }
+
+                resolve(imagePosts); // Return empty array
               } else {
+                // User page not accessible, try Arctic Shift
+                console.log('User profile unavailable, trying Arctic Shift...');
+                try {
+                  const archivedPosts = await getUserPostsFromArcticShift(
+                    username,
+                    limit,
+                  );
+                  const archivedImagePosts = archivedPosts.filter(post => {
+                    return (
+                      post.post_hint === 'image' ||
+                      post.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+                      post.is_gallery
+                    );
+                  });
+                  if (archivedImagePosts.length > 0) {
+                    console.log(
+                      `✓ Retrieved ${archivedImagePosts.length} archived image posts from Arctic Shift (user unavailable)`,
+                    );
+                    resolve(archivedImagePosts);
+                    return;
+                  }
+                } catch (error) {
+                  console.warn(
+                    'Arctic Shift image posts fallback failed:',
+                    error,
+                  );
+                }
                 reject(new Error('User posts not found'));
               }
             } catch (error) {
               reject(error);
             }
           },
-          onerror: function (error) {
+          onerror: async function (error) {
+            console.log('Reddit user API error, trying Arctic Shift...');
+            try {
+              const archivedPosts = await getUserPostsFromArcticShift(
+                username,
+                limit,
+              );
+              const archivedImagePosts = archivedPosts.filter(post => {
+                return (
+                  post.post_hint === 'image' ||
+                  post.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+                  post.is_gallery
+                );
+              });
+              if (archivedImagePosts.length > 0) {
+                console.log(
+                  `✓ Retrieved ${archivedImagePosts.length} archived image posts from Arctic Shift (API error)`,
+                );
+                resolve(archivedImagePosts);
+                return;
+              }
+            } catch (arcticError) {
+              console.warn('Arctic Shift fallback failed:', arcticError);
+            }
             reject(error);
           },
         });
@@ -321,7 +621,7 @@
     function displayGallery(posts, postEl, buttonEl) {
       // Remove existing gallery container if it exists
       const existingContainer = postEl.querySelector(
-        '.userscript-gallery-container'
+        '.userscript-gallery-container',
       );
       if (existingContainer) {
         existingContainer.remove();
@@ -333,10 +633,13 @@
         return;
       }
 
+      // Check if any posts are from Arctic Shift
+      const isArchivedData = posts.some(p => p._archived);
+
       // Create container for gallery
       const galleryContainer = generateElements(
         '<div class="userscript-gallery-container"></div>',
-        postEl
+        postEl,
       );
 
       style(
@@ -346,11 +649,11 @@
         padding: 10px;
         background: rgba(0, 0, 0, 0.05);
         border-radius: 5px;
-        border-left: 3px solid #ff4500;
+        border-left: 3px solid ${isArchivedData ? '#4a90e2' : '#ff4500'};
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
-      `
+      `,
       );
 
       posts.forEach((post, index) => {
@@ -385,7 +688,7 @@
         // Create a container for the post (may contain multiple images)
         const postContainer = generateElements(
           '<div class="userscript-gallery-post"></div>',
-          galleryContainer
+          galleryContainer,
         );
 
         style(
@@ -397,13 +700,14 @@
           background: rgba(255, 255, 255, 0.5);
           border-radius: 5px;
           overflow: hidden;
-        `
+          ${post._archived ? 'border: 2px solid #4a90e2;' : ''}
+        `,
         );
 
         // Create images container for gallery posts
         const imagesContainer = generateElements(
           '<div class="userscript-images-container"></div>',
-          postContainer
+          postContainer,
         );
 
         style(
@@ -413,13 +717,13 @@
           flex-wrap: ${isGallery ? 'wrap' : 'nowrap'};
           gap: ${isGallery ? '5px' : '0'};
           padding: ${isGallery ? '5px' : '0'};
-        `
+        `,
         );
 
         imageData.forEach((imgData, imgIndex) => {
           const galleryItem = generateElements(
             '<div class="userscript-gallery-item"></div>',
-            imagesContainer
+            imagesContainer,
           );
 
           style(
@@ -431,7 +735,7 @@
             transition: transform 0.2s;
             cursor: pointer;
             position: relative;
-          `
+          `,
           );
 
           // Add hover effect
@@ -446,7 +750,7 @@
 
           const linkEl = generateElements(
             `<a href="https://reddit.com${post.permalink}" target="_blank"></a>`,
-            galleryItem
+            galleryItem,
           );
           style(linkEl, 'text-decoration: none; color: inherit;');
 
@@ -467,7 +771,7 @@
             width: 100%;
             height: 200px;
             object-fit: cover;
-          `
+          `,
           );
 
           // Add to lazy load queue
@@ -476,8 +780,8 @@
           // Add badge for multi-image posts
           if (isGallery && imgIndex === 0) {
             const badgeEl = generateElements(
-              `<div>📸 ${imageData.length}</div>`,
-              galleryItem
+              `<div>📸 ${imageData.length}${post._archived ? ' 📦' : ''}</div>`,
+              galleryItem,
             );
             style(
               badgeEl,
@@ -486,12 +790,12 @@
               top: 5px;
               right: 5px;
               background: rgba(0, 0, 0, 0.7);
-              color: white;
+              color: ${post._archived ? '#4a90e2' : 'white'};
               padding: 3px 8px;
               border-radius: 3px;
               font-size: 0.75em;
               font-weight: bold;
-            `
+            `,
             );
           }
         });
@@ -502,7 +806,7 @@
           infoEl,
           `
           padding: 8px;
-        `
+        `,
         );
 
         const titleEl = generateElements(`<div>${post.title}</div>`, infoEl);
@@ -515,21 +819,21 @@
           overflow: hidden;
           text-overflow: ellipsis;
           margin-bottom: 5px;
-        `
+        `,
         );
 
         const scoreEl = generateElements(
-          `<div>👍 ${post.score} • 💬 ${post.num_comments}${
+          `<div>👍 ${post.score || '?'} • 💬 ${post.num_comments || '?'}${
             isGallery ? ' • 📸 ' + imageData.length : ''
-          }</div>`,
-          infoEl
+          }${post._archived ? ' • 📦 Archived' : ''}</div>`,
+          infoEl,
         );
         style(
           scoreEl,
           `
           font-size: 0.75em;
-          color: #666;
-        `
+          color: ${post._archived ? '#4a90e2' : '#666'};
+        `,
         );
       });
 
@@ -541,6 +845,10 @@
         }
         return count + 1;
       }, 0);
+
+      const archiveIndicator = isArchivedData
+        ? ' 📦 (Archived from Arctic Shift)'
+        : '';
 
       // Set up lazy loading with Intersection Observer
       const lazyImages = galleryContainer.querySelectorAll('.lazy-load-image');
@@ -562,19 +870,19 @@
         },
         {
           rootMargin: '50px', // Start loading 50px before image enters viewport
-        }
+        },
       );
 
       lazyImages.forEach(img => imageObserver.observe(img));
 
-      buttonEl.textContent = `🖼️ Loaded ${totalImages} images from ${posts.length} posts`;
+      buttonEl.textContent = `🖼️ Loaded ${totalImages} images from ${posts.length} posts${archiveIndicator}`;
       buttonEl.disabled = false;
     }
 
     function createSecondaryToolbarElement(text, childEl, parentEl) {
       const secondaryToolbarEl = generateElements(
         `<button>${text}</button>`,
-        parentEl
+        parentEl,
       );
       style(
         secondaryToolbarEl,
@@ -582,7 +890,7 @@
         margin: 10px;
         padding: 5px;
         line-height: unset;
-      `
+      `,
       );
       if (childEl) secondaryToolbarEl.appendChild(childEl);
       return secondaryToolbarEl;
@@ -593,7 +901,7 @@
       const percentageDispEl = createSecondaryToolbarElement(
         `${percentage}% 💹`,
         null,
-        parentEl
+        parentEl,
       );
       // const percentageDispEl = generateElements( `<button>${ percentage } 💹</button>`, parentEl );
       return percentageDispEl;
@@ -612,14 +920,14 @@
         const dispEl = createSecondaryToolbarElement(
           `☝🏻 ${value}`,
           null,
-          parent
+          parent,
         );
         return dispEl;
       } else if (direction === 'down') {
         const dispEl = createSecondaryToolbarElement(
           `👇🏻 ${value}`,
           null,
-          parent
+          parent,
         );
         return dispEl;
       } else {
@@ -644,13 +952,13 @@
       if (upvoteRatio === 0.5) return Math.abs(score); // Score should be 0 in this case, but taking abs for safety
 
       const downvotes = Math.round(
-        (score * (1 - upvoteRatio)) / (2 * upvoteRatio - 1)
+        (score * (1 - upvoteRatio)) / (2 * upvoteRatio - 1),
       );
       return downvotes;
     }
 
     function getPostData(postId, token) {
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
         GM_xmlhttpRequest({
           method: 'GET',
           url: `https://oauth.reddit.com/api/info?id=t3_${postId}`,
@@ -658,7 +966,7 @@
             Authorization: `Bearer ${token}`,
             'User-Agent': USER_AGENT,
           },
-          onload: function (response) {
+          onload: async function (response) {
             try {
               const data = JSON.parse(response.responseText);
               if (
@@ -666,15 +974,64 @@
                 data.data.children &&
                 data.data.children.length > 0
               ) {
-                resolve(data.data.children[0].data);
+                const postData = data.data.children[0].data;
+
+                // Check if post is deleted/removed
+                if (isContentDeleted(postData)) {
+                  console.log(
+                    'Post is deleted/removed, attempting Arctic Shift...',
+                  );
+                  try {
+                    const archivedData =
+                      await getPostDataFromArcticShift(postId);
+                    if (archivedData) {
+                      console.log(
+                        '✓ Retrieved archived post from Arctic Shift',
+                      );
+                      resolve(archivedData);
+                      return;
+                    }
+                  } catch (error) {
+                    console.warn('Arctic Shift fallback failed:', error);
+                  }
+                }
+
+                resolve(postData);
               } else {
+                // Post not found via Reddit API, try Arctic Shift
+                console.log('Post not found on Reddit, trying Arctic Shift...');
+                try {
+                  const archivedData = await getPostDataFromArcticShift(postId);
+                  if (archivedData) {
+                    console.log(
+                      '✓ Retrieved archived post from Arctic Shift (not found on Reddit)',
+                    );
+                    resolve(archivedData);
+                    return;
+                  }
+                } catch (error) {
+                  console.warn('Arctic Shift fallback failed:', error);
+                }
                 reject(new Error('Post data not found'));
               }
             } catch (error) {
               reject(error);
             }
           },
-          onerror: function (error) {
+          onerror: async function (error) {
+            console.log('Reddit API error, trying Arctic Shift...');
+            try {
+              const archivedData = await getPostDataFromArcticShift(postId);
+              if (archivedData) {
+                console.log(
+                  '✓ Retrieved archived post from Arctic Shift (Reddit API error)',
+                );
+                resolve(archivedData);
+                return;
+              }
+            } catch (arcticError) {
+              console.warn('Arctic Shift fallback failed:', arcticError);
+            }
             reject(error);
           },
         });
@@ -720,7 +1077,7 @@
 
                 console.log(
                   'New token cached until:',
-                  new Date(expiresAt).toLocaleString()
+                  new Date(expiresAt).toLocaleString(),
                 );
                 resolve(data.access_token);
               } else {
@@ -753,7 +1110,7 @@
     'id',
     /t3_(.+)$/,
     null,
-    false
+    false,
     // 'https://sh.reddit.com'
   );
 
@@ -775,7 +1132,7 @@
     function blockAnchor(href, text) {
       generateElements(
         `<a href=${href}>${text}</a>`,
-        redditPopup
+        redditPopup,
       ).style.display = 'block';
     }
     blockAnchor(newLink, 'New');
@@ -809,7 +1166,7 @@
       top: 0;
       left: -30px;
       margin: 5px;
-    `
+    `,
     );
 
     const generateButton = (icon, container, commentEl, direction) => {
