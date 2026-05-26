@@ -3079,6 +3079,21 @@ function empty(element) {
   });
 }
 
+function insertOrUpdateElement(selector, html, parent, prepend = false) {
+  const alreadyExists = parent.querySelector(selector);
+  if (alreadyExists) {
+    empty(alreadyExists);
+    return alreadyExists;
+  }
+  const newEl = generateElements(html);
+  if (prepend) {
+    parent.prepend(newEl);
+  } else {
+    parent.append(newEl);
+  }
+  return newEl;
+}
+
 // MARK: JQ Alternatives
 //# JQ Alternatives
 
