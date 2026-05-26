@@ -31,7 +31,6 @@ function handleDownload(parentEl) {
     const uri = c.toDataURL();
 
     const linkEl = generateElements(`<a></a>`, document.body);
-    console.log(linkEl);
     let fileName = `${getUserId()} - (facebook)${getPostId()} - (${getTagged()})`;
     linkEl.setAttribute('download', `${fileName}.png`);
     linkEl.setAttribute('href', uri);
@@ -52,17 +51,31 @@ function getUserId() {
 
 function getPostId() {
   try {
-    const postLinkEl = document.querySelector(
-      '[href*="/permalink.php?story_fbid="]',
-    );
-    const postId = postLinkEl.href.match(
-      /\/permalink.php\?story_fbid=(.+?)[$&]/,
-    )[1];
-    return postId;
+    const postLink = getPostLink();
+    const urlObject = new URL(postLink);
+    const storyFbid = urlObject.searchParams.get('story_fbid');
+    const id = urlObject.searchParams.get('id');
+    return `story_fbid=${storyFbid}&id=${id}`;
   } catch (error) {
     alert('Error getting post ID: ' + error.message);
     return null;
   }
+}
+
+function getPostLink() {
+  const scriptEl = contains(
+    'script',
+    '"CometFeedStoryLongerTimestampStrategy"',
+  );
+  if (!scriptEl.length) {
+    alert('script element not found');
+    return null;
+  }
+  const matches = scriptEl[0].textContent.match(
+    /"url":"(https:\\\/\\\/www\.facebook\.com\\\/permalink\.php.+?)"/,
+  );
+  const postUrl = matches ? matches[1].replace(/\\\//g, '/') : null;
+  return postUrl;
 }
 
 function getTagged() {
