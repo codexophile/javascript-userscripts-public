@@ -93,10 +93,10 @@
     rssLinks.forEach(link => {
       generateElements(
         `<a
-                        href='${link.href}'
-                        target=_blank
-                        style='display: block;'
-                >${link.title}</a>`,
+          href='${link.href}'
+          target=_blank
+          style='display: block;'
+        >${link.title}</a>`,
         rssFeedsContainer,
       );
     });
