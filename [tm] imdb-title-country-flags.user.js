@@ -38,6 +38,8 @@
     if (languages.length) {
       languages.forEach((lang, idx) => {
         const langLink = document.createElement('a');
+        langLink.className =
+          'ipc-link ipc-link--baseAlt ipc-link--inherit-color';
         langLink.href = `/search/title/?primary_language=${lang.code}`;
         langLink.textContent = lang.name;
         newParent.appendChild(langLink);
