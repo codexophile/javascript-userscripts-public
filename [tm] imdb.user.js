@@ -57,8 +57,11 @@
       if (!titleId) return;
       generateElements(
         `<li role="presentation" class="ipc-inline-list__item">
-        <a href=/title/${titleId}/movieconnections/>Connections</a>
-      </li>`,
+          <a
+            class="ipc-link ipc-link--baseAlt ipc-link--inherit-color"
+            href=/title/${titleId}/movieconnections/>Connections
+          </a>
+        </li>`,
         subNavbarEl,
       );
     }
