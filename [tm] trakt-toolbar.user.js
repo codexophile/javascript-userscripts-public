@@ -225,9 +225,17 @@
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAohJREFUWEdjNHBN/s8wgIBx1AGkhMDJquPgyJp6QZVh0TYRqkQcUVEAsxhkI7MWP9jik1e4GbI75Cl2BF4H5Ds/YIgyfw63BGY5TODvXwYG83gtihyB0wHIvmZgY2JgVuHFaZFJDPmOwHAAIwMDwwloXCMHOSFvkusIFAdoSX1hmJ9wGWeQE3LEip2CDD2LJQkpQ5GHO0BX+jPDnPgrKJLocU6syaSEBtwBKHGOZBO5jvj/j4HBNI5w2qCZA4gNBbgD7FTfM3SH3sAayqSGgm2iGsP33yxExRhKIqRGNPjnKjI8fc9JlOUgRUQ5gNjsSGywI7sOoxwgNxTIsRwjBMBlPFIhhOxSJnEOBkZhdqxBS67lJDkAWzR0TxNiWHlMguj4xqYQa11ATDS8/Lcer8W/fv9hCEyuR1GzdVErnO8dVw1mk+QARhF2hi9c+QzfuTywWg4yFJslIMUrplUz8PJwgfUtWbuHYfnG/aQ7oPFEPkN2gj/c8sAUVB/++vUHpwNwOYyoEDBvs2TYsrCFoX3Kcoaq3CiMYEQODmSLdh88yzBh7jqwNEkOEOf7xcDI+J/hxUdEqkc2AGYhLB7R4wPdsrayJAZ9HWWwssa+xQynLiBKXKKaZCCNoBBYu/UwQ4iPHd4QwOZbXL7HmQixpbANcxsZ6nsXMbRVJBF0gJaqPEN3bRpY3Y79pxk8HE1x6iE6BLBFwerNBxkWrN6FNUcQG2VEO2DLwlaGY2euMpy/cpshJzEAZzaESVDdAatm1DJUts9huPvwOUqKRnYJeqJEdkRgcgPDr9+/MRxOdAig69TVUGToqEqBC5c0z2S4fvsRirK6ghg4v2nCEqyhRrYDsJpGhuCoAwD+1w0QP8dOSgAAAABJRU5ErkJggg==',
       'TVTropes',
     );
+
+    const directLinkToImdbEl = document.querySelector(`#external-link-imdb`);
+    let imdbUrl = '';
+    if (directLinkToImdbEl && directLinkToImdbEl.href.includes('/title/')) {
+      imdbUrl = directLinkToImdbEl.href;
+    } else {
+      imdbUrl = `https://www.google.com/search?btnI=1&q=${query}%20site:imdb.com/title`;
+    }
     createToolbarItem(
       // imdb
-      `https://www.google.com/search?btnI=1&q=${query}%20site:imdb.com/title`,
+      imdbUrl,
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJBSURBVFiF7ZXNS1RhFMZ/733fOzPOR8ykM5PN+JEtwkVRTAuNgmyh4EZbSSgErY3+AlduwlWL3LQoIQsSWkREuYoIcRF9SbSxRSUoLrJmdOI6Xu/b4pZjXWcaJKag+a0u5zyc57nnHrhQo0aN/x2x+KjpFMIYBR2urrNeRYgRhWASdHNVzQG0AJg0QFTffCsELerX2tx8gelZC8PQnOsJM3F/DYBIUDA8sIfLE1m0drUX+sJcv7eGYUA0IohFJCeP+kklFONTObJrmp7OAJl2f8kMngBv3hW4cjuLqQRdx+sYn8q5QglnzwS5eie3pe07Xez/IBoxmL3RyM0HeRaWbVIJWTaAUW5D27E3YebVesn+2KUYphJ8WXWYmy/81FtYtvmUdXYfQH5XPXlhAWAq4dHEo5KAz61/tfRW/drdVTrOL5EZXGTmtbW7AMl6iakET19axGMSv+kNsB3bKQbo7qwjnVBs2JrnbwsebUUBTCVIJyUrWYeWRs/ZlKV1vyIec202NrWnX1EAAbSlTICyAbR3/m+p+AgPpFzjln1yx37ecshb7qGFAsWxjqOxN91nuYNbZfsU0NroGjeX2MDFsRW0BiGgKVnU3HqY58OSDUByrze8Z9rBJpOB7hBKChqiBkO9YRqiko7DAYZ6wxw75GOgJ8R6QRMLS4Z6i78Qv09w4oiftrSivyvI55xDpt3H42cWyXpJf1fI+26L0827+HJ/DgP0x7/o/15hiEG0HkWLSJXNc1owUmXPGjVq/IN8A/EMm7iAAlAEAAAAAElFTkSuQmCC',
       'IMDB',
     );
