@@ -4,15 +4,18 @@
 
   //* media type to title
   let mediaType = '';
+  setMediaType(location.href);
   navigation.addEventListener('navigate', event => {
-    if (event.destination.url) {
-      if (event.destination.url.includes('/movie/')) {
-        mediaType = 'Movie';
-      } else if (event.destination.url.includes('/tv/')) {
-        mediaType = 'TV';
-      }
-    }
+    setMediaType(event.destination.url);
   });
+
+  function setMediaType(url) {
+    if (url.includes('/movie/')) {
+      mediaType = 'Movie';
+    } else if (url.includes('/tv/')) {
+      mediaType = 'TV';
+    }
+  }
 
   //* currently active host
   // Select by the unique 'border-accent' class
