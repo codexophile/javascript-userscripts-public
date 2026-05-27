@@ -1,6 +1,31 @@
 (function () {
   'use strict';
 
+  //* tooltips for genre/interests pill elements
+  const genrePillEls = document.querySelectorAll(
+    '[data-testid="interests"] .ipc-chip',
+  );
+  genrePillEls.forEach(async pillEl => {
+    pillEl.addEventListener('click', async event => {
+      event.preventDefault();
+      const url = pillEl.href;
+      const loaderEl = generateElements(`<div>🔃</div>`, pillEl);
+      const doc = await fetchDoc(url);
+      const descriptionSectionEl = doc.querySelector(
+        '[data-testid="interest-description-and-chips"]',
+      );
+      const enrollDialog = new VanillaDialog({
+        content: descriptionSectionEl,
+        mode: 'modal',
+        closeOnBackdrop: true,
+      });
+      enrollDialog.show();
+      loaderEl.remove();
+    });
+    style(pillEl, `outline: 1px solid #ceb55d; `);
+    return;
+  });
+
   //* watched filter for "more like this"
   const targetEl = document.querySelector(
     `[data-testid="MoreLikeThis"] .ipc-title__actions`,
