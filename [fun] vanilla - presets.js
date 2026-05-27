@@ -453,9 +453,9 @@ function addTooltip(tooltipParent, tooltipContent) {
     `);
 
   tooltipParent.classList.add('tooltipParent');
-  const toolTip = generateElements('<span class=tooltip></span>', null, true);
-  tooltipParent.after(toolTip);
-  const wrapper = wrap('<div class=wrapper></div>', tooltipParent, toolTip);
+  const toolTipEl = generateElements('<span class=tooltip></span>', null, true);
+  tooltipParent.after(toolTipEl);
+  const wrapper = wrap('<div class=wrapper></div>', tooltipParent, toolTipEl);
   style(
     wrapper,
     `
@@ -463,7 +463,8 @@ function addTooltip(tooltipParent, tooltipContent) {
         width:    fit-content;
     `,
   );
-  toolTip.append(tooltipContent);
+  toolTipEl.append(tooltipContent);
+  return toolTipEl;
 }
 
 function slideshowGallery() {
