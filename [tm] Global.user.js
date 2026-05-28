@@ -69,10 +69,7 @@
     GM_setClipboard(`initiate-ytdlp:url:${location.href}::`);
   });
   ytdlpBtn.id = 'yt-dlp-Btn';
-  generateElements(
-    `<img src="${YT_DLP_LOGO_URL}" alt="ytdlp" style="width: 20px; height: 20px;">`,
-    ytdlpBtn,
-  );
+  generateElements(`<img src="${YT_DLP_LOGO_URL}" alt="ytdlp logo">`, ytdlpBtn);
 
   const rssLinks = document.querySelectorAll(
     'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
