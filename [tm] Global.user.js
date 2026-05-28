@@ -2,11 +2,8 @@
   ('use strict');
   if (window.top != window.self) return; //don't run on frames or iframes
 
-  // const config = getPlayerConfig({
-  //   functionNames: ['renderVideoPlayerV3', 'renderVideoPlayer'],
-  // });
-  // // config.thumbnailFallback.urlBase should now be available
-  // console.log(location.href, config);
+  const YT_DLP_LOGO_URL =
+    'https://raw.githubusercontent.com/codexophile/javascript-userscripts-public/refs/heads/new-branch/%5Btm%5D%20Global.user.js-ytdlp.png';
 
   //* Beep
   beep();
@@ -68,10 +65,14 @@
     location.href = `edge-tts:${text}`;
   });
 
-  const ytdlpBtn = collapsible.addButton('ytdlp', null, () => {
+  const ytdlpBtn = collapsible.addButton('', null, () => {
     GM_setClipboard(`initiate-ytdlp:url:${location.href}::`);
   });
   ytdlpBtn.id = 'yt-dlp-Btn';
+  generateElements(
+    `<img src="${YT_DLP_LOGO_URL}" alt="ytdlp" style="width: 20px; height: 20px;">`,
+    ytdlpBtn,
+  );
 
   const rssLinks = document.querySelectorAll(
     'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
