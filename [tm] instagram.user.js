@@ -12,6 +12,33 @@
     ``,
   );
 
+  //* filtering posts from same account in 'reposts' and 'tagged' sections
+  (function () {
+    'use strict';
+    const igPostTypesArr = ['p', 'reel'];
+    const sectionsToTestForArr = ['reposts', 'tagged'];
+    const igPostTypesSelector = igPostTypesArr
+      .map(type => `[href*="/${type}/"]`)
+      .join(', ');
+    waitForEach(`div:has(>:is(${igPostTypesSelector}))`, igPostEl => {
+      const shouldTest = sectionsToTestForArr.some(section =>
+        location.href.includes(`/${section}/`),
+      );
+      console.log(shouldTest);
+      if (!shouldTest) return;
+      const userIdEl = document.querySelector(`section [href="#"]:has(>h2)`);
+      if (!userIdEl) return;
+      const userId = userIdEl.textContent;
+      const postAuthorId = igPostEl
+        .querySelector(`a`)
+        ?.href.match(/\.com\/(.+?)\//)?.[1];
+      console.log(userId, postAuthorId, userId === postAuthorId);
+      if (userId === postAuthorId) {
+        igPostEl.style.display = 'none';
+      }
+    });
+  })();
+
   //* peeking tags
   waitForEach('div:has(>button title)', mediaItemBtnContainer => {
     const peekTagsBtnEl = generateElements(
