@@ -55,7 +55,7 @@ async function sbControls(
         const targetEl = [...sbParent.querySelectorAll('.wentPast')].pop();
         targetEl.scrollIntoView({ behavior: 'instant', block: 'center' });
         await asyncTimeout(250);
-        await blink(targetEl, 250, 2);
+        await blink(targetEl, 250, 3);
         // @ts-ignore
       })
       .classList.add('storyboardControl');
