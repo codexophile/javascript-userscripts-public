@@ -34,9 +34,9 @@ function disableConsoleClear() {
   console.clear = () => {};
 }
 
-function repeat(times, repeatWhat) {
+async function repeat(times, repeatWhat) {
   for (let index = 0; index < times; index++) {
-    repeatWhat(index);
+    await repeatWhat(index);
   }
 }
 
