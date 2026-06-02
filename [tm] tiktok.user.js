@@ -18,6 +18,19 @@
     vidEl.playbackRate = rate;
   }
 
+  //* download item button
+  waitForEach('[data-e2e="user-post-item"]', postItemEl => {
+    const downloadBtnEl = generateElements('<button>⬇️</button>', postItemEl);
+    downloadBtnEl.style.position = 'absolute';
+    downloadBtnEl.style.top = '5px';
+    downloadBtnEl.style.right = '5px';
+    downloadBtnEl.style.zIndex = 9999;
+    downloadBtnEl.addEventListener('click', () => {
+      const linkToVid = postItemEl.querySelector('a').href;
+      invokeYtdlp(linkToVid);
+    });
+  });
+
   //* download button (yt-dlp)
   const { addButton } = await Collapsible();
   addButton('⬇️', null, () => {
@@ -29,11 +42,16 @@
       return;
     }
 
-    const urlSegment = `url:${postLink}::`;
+    invokeYtdlp(postLink);
+  });
+
+  function invokeYtdlp(link) {
+    const urlSegment = `url:${link}::`;
     const destinationSegment = `dest:x:\\tiktok::`;
     const modeSegment = `mode:noprompt::`;
     GM_setClipboard(
       `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
     );
-  });
+    addHistoryEntry(link);
+  }
 })();
