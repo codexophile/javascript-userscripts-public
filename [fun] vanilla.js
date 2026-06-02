@@ -2178,6 +2178,38 @@ function getSecret(valueKey = 'apiKey') {
   return secretValue;
 }
 
+async function addUniqueStoredValue(key, newData) {
+  if (newData === undefined || newData === null || newData === '') {
+    alert('Please provide a value to store.');
+    return false;
+  }
+
+  if (
+    !GM ||
+    typeof GM.getValue !== 'function' ||
+    typeof GM.setValue !== 'function'
+  ) {
+    alert('Async GM storage is not available in this userscript environment.');
+    return false;
+  }
+
+  const storedValue = await GM.getValue(key, []);
+  const storedList = Array.isArray(storedValue)
+    ? storedValue
+    : storedValue === undefined || storedValue === null || storedValue === ''
+      ? []
+      : [storedValue];
+
+  if (storedList.includes(newData)) {
+    alert('This value already exists. Duplicate entries are not allowed.');
+    return false;
+  }
+
+  const nextValue = [...storedList, newData];
+  await GM.setValue(key, nextValue);
+  return nextValue;
+}
+
 function scrollElementToCursor(element, event = null, options = {}) {
   // Default options
   const settings = {
