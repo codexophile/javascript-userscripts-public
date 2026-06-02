@@ -1075,6 +1075,18 @@ function makeMarkable({
 
 // MARK: Mutation Observer
 
+async function waitForThenObserve(selector, callback) {
+  const element = await waitFor(selector);
+  const observer = new MutationObserver(() => {
+    callback(element);
+  });
+  observer.observe(element, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+  });
+}
+
 function markAndFilter(
   itemSelector,
   uidSelector = 'a',
