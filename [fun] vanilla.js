@@ -1764,6 +1764,11 @@ function getVideoInfo(url, options = {}) {
 
 // MARK: Rest
 
+function clearThenLog(logWhat) {
+  console.clear();
+  console.log(logWhat);
+}
+
 function getPlayerConfig(options = {}) {
   const {
     getAll = false,
