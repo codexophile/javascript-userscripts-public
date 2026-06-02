@@ -2773,14 +2773,24 @@ function dragElement(targetEl, dragHandleEl) {
 
 function blink(element, interval, numberOfTimes) {
   return new Promise(async resolve => {
-    element.style.transform = 'scale(1.3,1.3)';
-    await asyncTimeout(interval);
-    element.style.transform = '';
-    await asyncTimeout(interval);
-    element.style.transform = 'scale(1.3,1.3)';
-    await asyncTimeout(interval);
-    element.style.transform = '';
-    resolve;
+    if (!element) {
+      resolve();
+      return;
+    }
+
+    const waitMs = Number.isFinite(interval) ? Math.max(0, interval) : 0;
+    const totalBlinks = Number.isFinite(numberOfTimes)
+      ? Math.max(0, Math.floor(numberOfTimes))
+      : 2;
+
+    for (let i = 0; i < totalBlinks; i++) {
+      element.style.transform = 'scale(1.3,1.3)';
+      await asyncTimeout(waitMs);
+      element.style.transform = '';
+      await asyncTimeout(waitMs);
+    }
+
+    resolve();
   });
 }
 
