@@ -1,6 +1,13 @@
 (async function () {
   'use strict';
 
+  //* auto click "show more" toggle buttons
+  waitForEach('.expand-collapse-button', showMoreBtnEl => {
+    if (showMoreBtnEl.innerText.toLowerCase().includes('show more')) {
+      showMoreBtnEl.click();
+    }
+  });
+
   //* moving closed captions
   (async function () {
     'use strict';
