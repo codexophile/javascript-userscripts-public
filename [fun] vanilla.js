@@ -2783,12 +2783,12 @@ function blink(element, interval, numberOfTimes) {
       ? Math.max(0, Math.floor(numberOfTimes))
       : 2;
 
-    for (let i = 0; i < totalBlinks; i++) {
+    repeat(totalBlinks, async () => {
       element.style.transform = 'scale(1.3,1.3)';
       await asyncTimeout(waitMs);
       element.style.transform = '';
       await asyncTimeout(waitMs);
-    }
+    });
 
     resolve();
   });
