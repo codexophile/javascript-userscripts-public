@@ -91,6 +91,10 @@ function pipeline(input, ...functions) {
 
 // MARK: Text functions
 
+function includesSome(string, array) {
+  return array.some(item => string.includes(item));
+}
+
 function markdownToPlainText(markdownText) {
   // 1. Check if marked is loaded
   if (typeof marked === 'undefined') {
