@@ -12,12 +12,40 @@
   ];
   const skipBtnSelector = skipBtnSelectors.join(', ');
 
+  //* hard mode
+  const hardModePhrases = ['use keyboard', 'make harder'];
+  waitForEach('[data-test="player-toggle-keyboard"]', buttonEl => {
+    if (includesSome(buttonEl.innerText.toLowerCase(), hardModePhrases)) {
+      buttonEl.click();
+    }
+  });
+
   //* auto advancing
   (function () {
     'use strict';
 
+    //*
+    const queries = [
+      '[data-test="stories-player-continue"]',
+      '[data-test="stories-player-done"]',
+    ];
+    const selector = queries.join(', ');
+    const buttonTexts = ['claim rewards', 'high five'];
+    waitForEach(selector, btnEl => {
+      if (includesSome(btnEl.innerText, buttonTexts)) {
+        clickWithADelay(btnEl);
+      }
+    });
+
+    //*
+    waitForEach('h2', h2El => {
+      if (h2El.innerText.toLowerCase().includes('you found an xp boost')) {
+        clickContinue();
+      }
+    });
+
     waitForEach(skipBtnSelector, el => {
-      el.click();
+      clickWithADelay(el);
     });
 
     waitForEach('[data-test="session-complete-slide"]', () => {
@@ -57,50 +85,74 @@
       const maybeLaterBtnsArr = contains('button', 'Maybe later');
       const isAFriendQuestReminder = contains('span', 'Friends Quest update!');
       if (isAFriendQuestReminder.length && maybeLaterBtnsArr.length) {
-        maybeLaterBtnsArr[0].click();
+        clickWithADelay(maybeLaterBtnsArr[0]);
       }
     });
 
     //* skipping ads
     waitForEach('[data-test="plus-close-x"]', skipBtnEl => {
-      skipBtnEl.click();
+      clickWithADelay(skipBtnEl);
     });
 
     //* auto skipping
     const noListeningLanguages = ['es', 'id'];
     waitForEach('[data-test="player-skip"]', skipBtnEl => {
       if (skipBtnEl.textContent === "Can't speak now") {
-        skipBtnEl.click();
+        clickWithADelay(skipBtnEl);
       }
       const isAListeningExercise = skipBtnEl.textContent === "Can't listen now";
-      const language = document.querySelector(
+      const languageEl = document.querySelector(
         `[data-test="challenge-translate-input"], [data-test*="challenge-tap-token"]:has([data-test="challenge-tap-token-text"])`,
-      ).lang;
+      );
+      if (!languageEl) return;
+      const language = languageEl.lang;
       const isANoListeningLanguage = noListeningLanguages.includes(language);
 
       if (isAListeningExercise && isANoListeningLanguage) {
-        skipBtnEl.click();
+        clickWithADelay(skipBtnEl);
       }
     });
 
     function clickContinue() {
+      if (hasATypo() || wrongAccent()) return;
       const continueBtn = document.querySelector('[data-test="player-next"]');
       if (continueBtn) continueBtn.click();
     }
   })();
 
-  //* auto click "use keyboard"
-  waitForEach('[data-test="player-toggle-keyboard"]', buttonEl => {
-    if (buttonEl.innerText === 'USE KEYBOARD') buttonEl.click();
-  });
-
   document.addEventListener('keydown', doc_keyDown, false);
   document.addEventListener('keyup', doc_keyUp, false);
   // had to use keyup variation because a certain key combination didn't work in the other
 
+  //*
   waitForEach('[spellcheck="false"]', el => {
     el.setAttribute('spellcheck', 'true');
   });
+
+  function wrongAccent() {
+    const headerEl = document.querySelector(`[data-test*="blame"] h2`);
+    if (
+      headerEl &&
+      headerEl.innerText.toLowerCase().includes('pay attention to the accents')
+    ) {
+      return true;
+    }
+  }
+
+  function hasATypo() {
+    const headerEl = document.querySelector(`[data-test*="blame"] h2`);
+    if (
+      headerEl &&
+      headerEl.innerText.toLowerCase().includes('you have a typo')
+    ) {
+      return true;
+    }
+  }
+
+  async function clickWithADelay(el, delay = 1000) {
+    await asyncTimeout(delay);
+    el.click();
+  }
 
   function handleNumericKeyPresses(event) {
     const keyCode = +event.key;
