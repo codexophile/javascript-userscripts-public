@@ -44,7 +44,7 @@
       }
     });
 
-    //* xp boost, daily quests update
+    //* xp boosts, daily quests updates
     waitForEach('h2', h2El => {
       const h2text = h2El.innerText.toLowerCase();
       if (
