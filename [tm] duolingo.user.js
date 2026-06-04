@@ -46,10 +46,9 @@
 
     //* xp boos, daily quests update
     waitForEach('h2', h2El => {
+      const h2text = h2El.innerText.toLowerCase();
       if (
-        h2El.innerText
-          .toLowerCase()
-          .includesSome(['you found an xp boost'], ['daily quests update'])
+        includesSome(h2text, ['you found an xp boost', 'daily quests update'])
       ) {
         clickContinue();
       }
