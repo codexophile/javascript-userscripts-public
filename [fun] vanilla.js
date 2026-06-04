@@ -92,7 +92,11 @@ function pipeline(input, ...functions) {
 // MARK: Text functions
 
 function includesSome(string, array) {
-  return array.some(item => string.includes(item));
+  return array.some(item =>
+    item instanceof RegExp
+      ? new RegExp(item).test(string)
+      : string.includes(item),
+  );
 }
 
 function markdownToPlainText(markdownText) {
