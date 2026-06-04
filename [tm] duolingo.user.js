@@ -12,6 +12,13 @@
   ];
   const skipBtnSelector = skipBtnSelectors.join(', ');
 
+  //* notification button
+  waitForEach('[data-test="notification-button"]', buttonEl => {
+    if (buttonEl.innerText.toLowerCase().includes('send congrats')) {
+      clickWithADelay(buttonEl);
+    }
+  });
+
   //* hard mode
   const hardModePhrases = ['use keyboard', 'make harder'];
   waitForEach('[data-test="player-toggle-keyboard"]', buttonEl => {
@@ -37,9 +44,13 @@
       }
     });
 
-    //*
+    //* xp boos, daily quests update
     waitForEach('h2', h2El => {
-      if (h2El.innerText.toLowerCase().includes('you found an xp boost')) {
+      if (
+        h2El.innerText
+          .toLowerCase()
+          .includesSome(['you found an xp boost'], ['daily quests update'])
+      ) {
         clickContinue();
       }
     });
