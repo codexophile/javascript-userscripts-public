@@ -49,7 +49,8 @@
       const h2text = h2El.innerText.toLowerCase();
       if (
         includesSome(h2text, [
-          /you (found|earned) an xp boost/,
+          /you earned \d+ gems/i,
+          /you (found|earned) an xp boost/i,
           /\d* daily quests? (update|complete)/i,
         ])
       ) {
