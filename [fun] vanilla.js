@@ -91,10 +91,13 @@ function pipeline(input, ...functions) {
 
 // MARK: Text functions
 
-function includesSome(string, array) {
+function includesSome(string, array, regexFlags = '') {
   return array.some(item =>
     item instanceof RegExp
-      ? new RegExp(item).test(string)
+      ? new RegExp(
+          item.source,
+          [...new Set((item.flags + regexFlags).split(''))].join(''),
+        ).test(string)
       : string.includes(item),
   );
 }
