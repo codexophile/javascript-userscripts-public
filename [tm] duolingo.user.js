@@ -48,11 +48,15 @@
     waitForEach('h2', h2El => {
       const h2text = h2El.innerText.toLowerCase();
       if (
-        includesSome(h2text, [
-          /you earned \d+ gems/i,
-          /you (found|earned) an xp boost/i,
-          /\d* daily quests? (update|complete)/i,
-        ])
+        includesSome(
+          h2text,
+          [
+            /you earned \d+ gems/,
+            /you (found|earned) an xp boost/,
+            /\d* daily quests? (update|complete)/,
+          ],
+          'i',
+        )
       ) {
         clickContinue();
       }
