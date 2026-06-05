@@ -49,10 +49,8 @@
       const h2text = h2El.innerText.toLowerCase();
       if (
         includesSome(h2text, [
-          'you earned an xp boost',
-          'you found an xp boost',
-          'daily quests update',
-          'daily quests complete',
+          /you (found|earned) an xp boost/,
+          /\d* daily quests? (update|complete)/i,
         ])
       ) {
         clickContinue();
