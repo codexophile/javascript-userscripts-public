@@ -53,7 +53,7 @@
           [
             /you earned \d+ gems/,
             /you (found|earned) an xp boost/,
-            /\d* daily quests? (update|complete)/,
+            /(\d+ )?daily quests? (update|complete)/,
           ],
           'i',
         )
