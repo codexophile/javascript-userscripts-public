@@ -73,18 +73,17 @@
       if (!visiblePostEl) return;
       style(visiblePostEl, `outline: solid red;`);
       postLink = visiblePostEl.querySelector('[href*="/p/"]').href;
-    } else if (
-      location.href.includes('/p/') ||
-      location.href.includes('/reel/')
-    ) {
+    } else if (location.href.match(/\/(p|reels?)\//)) {
       postLink = location.href;
     }
 
+    const browserSegment = `browser:firefox::`;
+    const profileSegment = `profile:3vm341ho.default-release::`;
     const urlSegment = `url:${postLink}::`;
     const destinationSegment = `dest:x:\\tiktok::`;
     const modeSegment = `mode:noprompt::`;
     GM_setClipboard(
-      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
+      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
     );
   });
 
