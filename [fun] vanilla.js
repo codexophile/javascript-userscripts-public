@@ -1787,6 +1787,17 @@ function getVideoInfo(url, options = {}) {
 
 // MARK: Rest
 
+function invokeYtdlp({ url, destination, mode, browser, profile }) {
+  const urlSegment = `url:${url}::`;
+  const destinationSegment = `dest:${destination}::`;
+  const modeSegment = mode ? `mode:${mode}::` : '';
+  const browserSegment = browser ? `browser:${browser}::` : ``;
+  const profileSegment = profile ? `profile:${profile}::` : ``;
+  GM_setClipboard(
+    `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
+  );
+}
+
 function clearThenLog(logWhat) {
   console.clear();
   console.log(logWhat);
