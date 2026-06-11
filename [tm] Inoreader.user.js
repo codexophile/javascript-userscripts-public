@@ -1,6 +1,23 @@
 (function () {
   'use strict';
 
+  //* removing items with duplicate links
+  const duplicateLinks = new Set();
+  waitForEach(`.article_title_link`, async articleLinkEl => {
+    const link = articleLinkEl.href;
+    if (duplicateLinks.has(link)) {
+      const linkElsOnPage = document.querySelectorAll(
+        `.article_title_link[href="${link}"]`,
+      );
+      if (linkElsOnPage.length > 1) {
+        const rssItemEl = articleLinkEl.closest('.ar');
+        await markReadAndHide(rssItemEl);
+      }
+    } else {
+      duplicateLinks.add(link);
+    }
+  });
+
   //* filtering shorts
   const shortsFilterList = [
     'Good Enough',
@@ -22,15 +39,19 @@
         .querySelector(`.article_tile_footer_feed_title`)
         .textContent.trim();
       if (shortsFilterList.includes(feedTitle)) {
-        const markBtnEl = rssItemEl.querySelector(
-          '.article_btns.btns_article_unread',
-        );
-        markBtnEl.click();
-        await asyncTimeout(500);
-        rssItemEl.style.display = 'none';
+        await markReadAndHide(rssItemEl);
       }
     },
   );
+
+  async function markReadAndHide(rssItemEl) {
+    const markBtnEl = rssItemEl.querySelector(
+      '.article_btns.btns_article_unread',
+    );
+    markBtnEl.click();
+    await asyncTimeout(500);
+    rssItemEl.style.display = 'none';
+  }
 
   //*
   // waitFor(`#show_articles_menu`).then((unreadIndicator) => {
