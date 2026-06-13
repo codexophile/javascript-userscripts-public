@@ -1,6 +1,20 @@
 (async function () {
   'use strict';
 
+  //*
+  window.addEventListener('urlchange', urlChangeInfo => {
+    const matches = urlChangeInfo.url.match(
+      /\/seasons\/(\d+)\/episodes\/(\d+)/,
+    );
+    if (matches) {
+      const seasonNumber = matches[1];
+      const episodeNumber = matches[2];
+      GM_setValue('seasonNumber', seasonNumber);
+      GM_setValue('episodeNumber', episodeNumber);
+    }
+  });
+
+  //*
   waitForEach(
     ':is([itemtype="http://schema.org/ItemList"], #recommendations-wrapper) [href^="/movies/"]',
     movieLinkEl => {
