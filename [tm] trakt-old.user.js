@@ -1,6 +1,24 @@
 (async function () {
   'use strict';
 
+  if (location.href.includes('https://www.ratingraph.com/tv-shows/')) {
+    const seasonNumber = +GM_getValue('seasonNumber');
+    const episodeNumber = +GM_getValue('episodeNumber');
+    if (!(seasonNumber && episodeNumber)) return;
+    await waitFor('#graph_show_episodes_average_rating .highcharts-series');
+    const seasonEl = document.querySelectorAll(
+      '#graph_show_episodes_average_rating .highcharts-markers.highcharts-scatter-series',
+    )[seasonNumber - 1];
+    const episodeEl = seasonEl.children[episodeNumber - 1];
+    style(
+      episodeEl,
+      `
+      outline: 2px solid red;
+    `,
+    );
+    return;
+  }
+
   //*
   window.addEventListener('urlchange', urlChangeInfo => {
     const matches = urlChangeInfo.url.match(
