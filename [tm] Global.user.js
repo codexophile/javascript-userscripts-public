@@ -5,6 +5,20 @@
   const YT_DLP_LOGO_URL =
     'https://raw.githubusercontent.com/codexophile/javascript-userscripts-public/refs/heads/new-branch/%5Btm%5D%20Global.user.js-ytdlp.png';
 
+  //* title
+  setSuffix();
+  let observer = new MutationObserver(setSuffix);
+  observer.observe(document.querySelector(`title`), {
+    childList: true,
+    subtree: true,
+  });
+
+  function setSuffix() {
+    const suffix = ` - [${location.hostname}]`;
+    if (document.title.includes(suffix)) return;
+    document.title += suffix;
+  }
+
   //* Beep
   beep();
   function beep() {
