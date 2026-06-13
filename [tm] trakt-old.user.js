@@ -1,22 +1,40 @@
 (async function () {
   'use strict';
 
-  if (location.href.includes('https://www.ratingraph.com/tv-shows/')) {
+  if (
+    location.hostname === 'www.ratingraph.com' &&
+    location.pathname.startsWith('/tv-shows/')
+  ) {
+    let highlightRunId = 0;
+
     GM_addValueChangeListener('seasonNumber', highlightEpisode);
     GM_addValueChangeListener('episodeNumber', highlightEpisode);
     highlightEpisode();
     return;
 
     async function highlightEpisode() {
-      const seasonNumber = +GM_getValue('seasonNumber');
-      const episodeNumber = +GM_getValue('episodeNumber');
+      const runId = ++highlightRunId;
+      const seasonNumber = Number(GM_getValue('seasonNumber'));
+      const episodeNumber = Number(GM_getValue('episodeNumber'));
       if (!(seasonNumber && episodeNumber)) return;
       await waitFor('#graph_show_episodes_average_rating .highcharts-series');
+      if (runId !== highlightRunId) return;
+
+      document
+        .querySelectorAll(
+          '#graph_show_episodes_average_rating .highcharts-markers.highcharts-scatter-series [style*="outline"]',
+        )
+        .forEach(episodeEl => {
+          episodeEl.style.outline = '';
+        });
+
       const seasonEl = document.querySelectorAll(
         '#graph_show_episodes_average_rating .highcharts-markers.highcharts-scatter-series',
       )[seasonNumber - 1];
-      const episodeEl = seasonEl.children[episodeNumber - 1];
-      style(episodeEl, `outline: 2px solid red;`);
+      const episodeEl = seasonEl?.children?.[episodeNumber - 1];
+      if (!episodeEl) return;
+
+      style(episodeEl, 'outline: 2px solid red;');
       return;
     }
   }
