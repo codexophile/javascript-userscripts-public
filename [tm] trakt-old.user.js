@@ -5,6 +5,7 @@
     GM_addValueChangeListener('seasonNumber', highlightEpisode);
     GM_addValueChangeListener('episodeNumber', highlightEpisode);
     highlightEpisode();
+    return;
 
     async function highlightEpisode() {
       const seasonNumber = +GM_getValue('seasonNumber');
