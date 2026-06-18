@@ -79,24 +79,10 @@
   }
 
   //* link fixes
+  history.pushState({ state: 1 }, 'new state', sanitizeLink(location.href));
   waitForEach('a[href*="ref"]', linkEl => {
-    try {
-      const url = new URL(linkEl.href, location.href);
-      let updated = false;
-
-      [...url.searchParams.keys()].forEach(paramName => {
-        if (paramName === 'ref' || paramName.startsWith('ref_')) {
-          url.searchParams.delete(paramName);
-          updated = true;
-        }
-      });
-
-      if (updated) {
-        linkEl.href = url.toString();
-      }
-    } catch (error) {
-      console.warn('Failed to sanitize IMDb link:', linkEl.href, error);
-    }
+    const newUrl = sanitizeLink(linkEl.href);
+    linkEl.href = newUrl ? newUrl : linkEl.href;
   });
 
   //? I'm not sure what this is 👇
@@ -112,5 +98,25 @@
   function getImdbId() {
     const matches = location.href.match(/\/(tt.+?)(\/|$)/);
     return matches ? matches[1] : null;
+  }
+  function sanitizeLink(originalUrl) {
+    try {
+      const newUrl = new URL(originalUrl, location.href);
+      let updated = false;
+
+      [...newUrl.searchParams.keys()].forEach(paramName => {
+        if (paramName === 'ref' || paramName.startsWith('ref_')) {
+          newUrl.searchParams.delete(paramName);
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        return newUrl.toString();
+      }
+      return originalUrl;
+    } catch (error) {
+      console.warn('Failed to sanitize IMDb link:', originalUrl, error);
+    }
   }
 })();
