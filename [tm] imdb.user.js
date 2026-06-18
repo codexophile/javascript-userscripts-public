@@ -78,7 +78,7 @@
     );
   }
 
-  //* link fixes
+  //* location.href/link fixes
   history.pushState({ state: 1 }, 'new state', sanitizeLink(location.href));
   waitForEach('a[href*="ref"]', linkEl => {
     const newUrl = sanitizeLink(linkEl.href);
