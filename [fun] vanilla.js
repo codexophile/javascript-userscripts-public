@@ -1787,8 +1787,8 @@ function getVideoInfo(url, options = {}) {
 
 // MARK: Rest
 
-function invokeYtdlp({ url, destination, mode, browser, profile }) {
-  const urlSegment = `url:${url}::`;
+function invokeYtdlp({ urlToDownload, destination, mode, browser, profile }) {
+  const urlSegment = `url:${urlToDownload}::`;
   const destinationSegment = `dest:${destination}::`;
   const modeSegment = mode ? `mode:${mode}::` : '';
   const browserSegment = browser ? `browser:${browser}::` : ``;
@@ -2193,7 +2193,12 @@ function addFaviconToLink(linkEl, faviconUrl = null, position = 'before') {
     faviconUrl = `${googleUserContHref}domain_url=${completeDomain}`;
   }
   const faviconImgEl = generateElements(`<img src=${faviconUrl}>`);
-  style(faviconImgEl, `margin: 0 3px;`);
+  faviconImgEl.style = `
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    margin: 0 3px;
+  `;
   if (position === 'before') {
     linkEl.prepend(faviconImgEl);
   } else {
@@ -3418,7 +3423,7 @@ async function getDoodImageSrc(url, pathType = 'slides') {
     throw new Error(`Could not find ${pathType} image ID in meta content`);
   }
   const imgId = matches[2];
-  return `https://ticdn.net/${pathType}/${imgId}.jpg`;
+  return `https://doimg.net/${pathType}/${imgId}.jpg`;
 }
 
 async function getDoodStoryboardSrc(url, linkEl = null) {
