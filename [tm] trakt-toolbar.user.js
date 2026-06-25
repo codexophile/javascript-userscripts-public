@@ -239,9 +239,17 @@
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJBSURBVFiF7ZXNS1RhFMZ/733fOzPOR8ykM5PN+JEtwkVRTAuNgmyh4EZbSSgErY3+AlduwlWL3LQoIQsSWkREuYoIcRF9SbSxRSUoLrJmdOI6Xu/b4pZjXWcaJKag+a0u5zyc57nnHrhQo0aN/x2x+KjpFMIYBR2urrNeRYgRhWASdHNVzQG0AJg0QFTffCsELerX2tx8gelZC8PQnOsJM3F/DYBIUDA8sIfLE1m0drUX+sJcv7eGYUA0IohFJCeP+kklFONTObJrmp7OAJl2f8kMngBv3hW4cjuLqQRdx+sYn8q5QglnzwS5eie3pe07Xez/IBoxmL3RyM0HeRaWbVIJWTaAUW5D27E3YebVesn+2KUYphJ8WXWYmy/81FtYtvmUdXYfQH5XPXlhAWAq4dHEo5KAz61/tfRW/drdVTrOL5EZXGTmtbW7AMl6iakET19axGMSv+kNsB3bKQbo7qwjnVBs2JrnbwsebUUBTCVIJyUrWYeWRs/ZlKV1vyIec202NrWnX1EAAbSlTICyAbR3/m+p+AgPpFzjln1yx37ecshb7qGFAsWxjqOxN91nuYNbZfsU0NroGjeX2MDFsRW0BiGgKVnU3HqY58OSDUByrze8Z9rBJpOB7hBKChqiBkO9YRqiko7DAYZ6wxw75GOgJ8R6QRMLS4Z6i78Qv09w4oiftrSivyvI55xDpt3H42cWyXpJf1fI+26L0827+HJ/DgP0x7/o/15hiEG0HkWLSJXNc1owUmXPGjVq/IN8A/EMm7iAAlAEAAAAAElFTkSuQmCC',
       'IMDB',
     );
+    const directLinkToTmdbEl = document.querySelector(`#external-link-tmdb`);
+    let tmdbUrl = '';
+    // if (directLinkToTmdbEl && directLinkToTmdbEl.href.includes('/title/')) {
+    //   tmdbUrl = directLinkToTmdbEl.href;
+    // } else {
+    //   tmdbUrl = `https://www.google.com/search?btnI=1&q=${query}%20site:themoviedb.org`;
+    // }
+    tmdbUrl = directLinkToTmdbEl.href;
     createToolbarItem(
       // tmdb
-      `https://www.google.com/search?btnI=1&q=${query}%20site:themoviedb.org`,
+      tmdbUrl,
       'https://www.themoviedb.org/favicon.ico',
       'TMDB',
     );
