@@ -5,9 +5,10 @@
   const headerEls = document.querySelectorAll(
     '.entry-content span[style*="font-size: 20px;"]',
   );
+  console.log(headerEls);
   headerEls.forEach(headerEl => {
     const headerText = headerEl.textContent.trim();
-    const matches = headerText.match(/\d\d\. (.+?) \((\d{4})\)/);
+    const matches = headerText.match(/\d+\. (.+?) \((\d{4})\)/);
     if (!matches) return;
     const title = matches[1];
     const year = matches[2];
