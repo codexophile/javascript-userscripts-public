@@ -1,20 +1,23 @@
 (function () {
   'use strict';
 
-  //* removing items with duplicate links
-  const duplicateLinks = new Set();
   waitForEach(`.article_title_link`, async articleLinkEl => {
+    const rssItemEl = articleLinkEl.closest('.ar');
+
+    //* load tags from valnet sources
+    if (location.href.includes('/folder/Valnet')) {
+      const doc = await fetchDoc(articleLinkEl.href);
+      const tagEls = doc.querySelectorAll('.article-tags div');
+      rssItemEl.append(...tagEls);
+    }
+
+    //* removing items with duplicate links
     const link = articleLinkEl.href;
-    if (duplicateLinks.has(link)) {
-      const linkElsOnPage = document.querySelectorAll(
-        `.article_title_link[href="${link}"]`,
-      );
-      if (linkElsOnPage.length > 1) {
-        const rssItemEl = articleLinkEl.closest('.ar');
-        await markReadAndHide(rssItemEl);
-      }
-    } else {
-      duplicateLinks.add(link);
+    const linkElsOnPage = document.querySelectorAll(
+      `.article_title_link[href="${CSS.escape(link)}"]`,
+    );
+    if (linkElsOnPage.length > 1 && linkElsOnPage[0] !== articleLinkEl) {
+      await markReadAndHide(rssItemEl);
     }
   });
 
