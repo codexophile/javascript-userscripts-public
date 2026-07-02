@@ -4,7 +4,8 @@
 (async function () {
   'use strict';
 
-  const targetUrl = '';
+  const targetUrl =
+    'https://www.xda-developers.com/plexs-249-99-plan-is-back-but-only-if-youre-willing-to-pay-it-again-in-5-years/';
   const result = await two();
   GM_setClipboard(result);
 
