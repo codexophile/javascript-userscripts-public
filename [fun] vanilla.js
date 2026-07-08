@@ -738,7 +738,7 @@ const CentralObserverManager = (function () {
     if (mainObserver) return; // Already initialized
 
     mainObserver = new MutationObserver(processMutations);
-    mainObserver.observe(document.body, {
+    mainObserver.observe(document.documentElement, {
       childList: true,
       subtree: true,
     });
