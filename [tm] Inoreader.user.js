@@ -8,7 +8,11 @@
     if (location.href.includes('/folder/Valnet')) {
       const doc = await fetchDoc(articleLinkEl.href);
       const tagEls = doc.querySelectorAll('.article-tags div');
-      rssItemEl.append(...tagEls);
+      const tagsContainerEl = generateElements(
+        `<div class="article-tags"></div>`,
+      );
+      tagsContainerEl.append(...tagEls);
+      rssItemEl.append(tagsContainerEl);
     }
 
     //* removing items with duplicate links
