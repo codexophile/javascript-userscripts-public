@@ -3435,11 +3435,11 @@ async function getDoodStoryboardSrc(url, linkEl = null) {
       linkEl.href = url; // Update the link element's href if provided
     }
   }
-  return getDoodImageSrc(url, 'slides');
+  return await getDoodImageSrc(url, 'slides');
 }
 
 async function getDoodPosterSrc(url) {
-  return getDoodImageSrc(url, 'splash');
+  return await getDoodImageSrc(url, 'splash');
 }
 
 async function getVoeStoryboardImg(voeUrl) {
