@@ -7,12 +7,8 @@
     //* load tags from valnet sources
     if (location.href.includes('/folder/Valnet')) {
       const doc = await fetchDoc(articleLinkEl.href);
-      const tagEls = doc.querySelectorAll('.article-tags div');
-      const tagsContainerEl = generateElements(
-        `<div class="article-tags"></div>`,
-      );
-      tagsContainerEl.append(...tagEls);
-      rssItemEl.append(tagsContainerEl);
+      const tagEls = doc.querySelector('.article-tags');
+      rssItemEl.append(tagEls);
     }
 
     //* removing items with duplicate links
