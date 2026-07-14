@@ -1,7 +1,33 @@
 (function () {
   ('use strict');
-  if (window.top != window.self) return; //don't run on frames or iframes
 
+  //* external services that reveal deleted/private content
+  waitForEach(
+    '[data-testid="profile-details-wrapper"] .flex.items-baseline.justify-start',
+    parentEl => {
+      const matches = location.href.match(/\/u(?:ser)?\/(.+?)(?:[\/?]|$)/);
+      if (!matches) return;
+      const userId = matches[1];
+      generateElements(
+        `<a
+          target="_blank"
+          class="external-service-links"
+          href="https://arctic-shift.photon-reddit.com/search?fun=posts_search&author=${userId}&limit=10&sort=desc"
+        >arctic-shift</a>`,
+        parentEl,
+      );
+      generateElements(
+        `<a
+          target="_blank"
+          class="external-service-links"
+          href="https://search.pullpush.io/?author=${userId}&type=submission&sort_type=created_utc&sort=desc"
+        >pullpush</a>`,
+        parentEl,
+      );
+    },
+  );
+
+  //*
   const REDDIT_TITLE_SUFFIX = '- [Reddit]';
   function ensureRedditTitleSuffix() {
     if (!document.title.includes(REDDIT_TITLE_SUFFIX)) {
