@@ -3,7 +3,8 @@
 
   //* setting document.title to chat title
   (function () {
-    'use strict';
+    return;
+    ('use strict');
 
     const targetSelector = 'h1.mode-title';
 
