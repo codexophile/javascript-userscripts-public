@@ -113,14 +113,13 @@
   waitForEach(`[href*='/@']`, linkToChannelEl => {
     linkToChannelEl.href += '/videos/';
   });
+  //* short links
+  waitForEach(`[href*='/shorts/']`, linkToShortEl => {
+    linkToShortEl.href = linkToShortEl.href.replace('/shorts/', '/watch?v=');
+  });
 
   let observer = new MutationObserver(() => {
     //* fixing hrefs
-
-    const shortLinks = document.querySelectorAll(`[href*='/shorts/']`);
-    shortLinks.forEach(item => {
-      item.href = item.href.replace('/shorts/', '/watch?v=');
-    });
 
     const videoLinks = document.querySelectorAll(
       `:not(#storyboard) :is([href*="&list="],[href*="&index="],[href*="&pp="],[href*="&t="])`,
