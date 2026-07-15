@@ -54,9 +54,6 @@
 
   return;
 
-  let lastUrl = location.href;
-  let initTimer;
-
   function cleanupExistingToolbar() {
     document
       .querySelectorAll('[data-trakt-toolbar-root="true"]')
