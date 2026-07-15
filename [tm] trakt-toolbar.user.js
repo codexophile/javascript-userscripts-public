@@ -45,40 +45,6 @@
       .forEach(el => el.remove());
   }
 
-  function scheduleToolbarInit() {
-    clearTimeout(initTimer);
-    initTimer = setTimeout(() => {
-      if (location.href === lastUrl) return;
-      lastUrl = location.href;
-      initToolbar();
-    }, 250);
-  }
-
-  function installUrlChangeListeners() {
-    if (window.__traktToolbarUrlChangeInstalled) return;
-    window.__traktToolbarUrlChangeInstalled = true;
-
-    const notifyUrlChange = () => {
-      window.dispatchEvent(new Event('tm:urlchange'));
-    };
-
-    const wrapHistoryMethod = methodName => {
-      const originalMethod = history[methodName];
-      history[methodName] = function (...args) {
-        const result = originalMethod.apply(this, args);
-        notifyUrlChange();
-        return result;
-      };
-    };
-
-    wrapHistoryMethod('pushState');
-    wrapHistoryMethod('replaceState');
-
-    window.addEventListener('popstate', notifyUrlChange);
-    window.addEventListener('hashchange', notifyUrlChange);
-    window.addEventListener('tm:urlchange', scheduleToolbarInit);
-  }
-
   function initToolbar() {
     let query = '';
     let queryClean = '';
