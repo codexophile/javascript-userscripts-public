@@ -4,6 +4,33 @@
   console.log(
     'Turn off ad blocker when this script fails to function properly',
   );
+  function parseTraktPage(url = location.href) {
+    const u = new URL(url);
+    const segments = u.pathname.split('/').filter(Boolean); // e.g. ['shows', 'house-of-the-dragon']
+    const params = u.searchParams;
+
+    const [section, slug] = segments;
+
+    if (section === 'movies') {
+      return { type: 'movie', slug };
+    }
+
+    if (section === 'shows') {
+      const season = params.get('season');
+      const view = params.get('view');
+      const episode = params.get('episode');
+
+      if (view === 'episode') {
+        return { type: 'episode', slug, season, episode };
+      }
+      if (view === 'seasons') {
+        return { type: 'season', slug, season };
+      }
+      return { type: 'show', slug, season }; // no `view` param = show overview
+    }
+
+    return { type: 'unknown' };
+  }
 
   let lastUrl = location.href;
   let initTimer;
