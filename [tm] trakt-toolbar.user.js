@@ -4,6 +4,7 @@
   console.log(
     'Turn off ad blocker when this script fails to function properly',
   );
+
   window.addEventListener('urlchange', urlChangeInfo => {
     main(urlChangeInfo.url);
   });
@@ -50,6 +51,8 @@
 
     return { type: 'unknown' };
   }
+
+  return;
 
   let lastUrl = location.href;
   let initTimer;
