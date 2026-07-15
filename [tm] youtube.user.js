@@ -8,18 +8,6 @@
     }
   });
 
-  //* moving closed captions
-  (async function () {
-    'use strict';
-
-    if (!location.href.match(/\/watch\?v=/)) return;
-
-    const { addButton } = await Collapsible();
-    addButton('➕', null, () => {
-      addUniqueStoredValue('closedCaptionChannels', getChannelId());
-    });
-  })();
-
   async function getChannelId() {
     const authorEl = await waitFor('[itemprop=author] > [itemprop=url]');
     const channelId = authorEl.href
