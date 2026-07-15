@@ -4,6 +4,10 @@
   console.log(
     'Turn off ad blocker when this script fails to function properly',
   );
+  window.addEventListener('urlchange', urlChangeInfo => {
+    main(urlChangeInfo.url);
+  });
+  main(location.href);
   function parseTraktPageV3(url = location.href) {
     const u = new URL(url);
     const segments = u.pathname.split('/').filter(Boolean); // e.g. ['shows', 'house-of-the-dragon']
