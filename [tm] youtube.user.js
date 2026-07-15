@@ -109,13 +109,12 @@
     element.style.maxWidth = 'unset !important';
   });
 
-  let observer = new MutationObserver(() => {
-    //* @channelName links -> @channelName/videos/
-    document.querySelectorAll(`[href*='/@']`).forEach(link => {
-      if (link.href.match(/\/videos\/?$/)) return;
-      link.href += '/videos/';
-    });
+  //* @channelName links -> @channelName/videos/
+  waitForEach(`[href*='/@']`, linkToChannelEl => {
+    linkToChannelEl.href += '/videos/';
+  });
 
+  let observer = new MutationObserver(() => {
     //* fixing hrefs
 
     const shortLinks = document.querySelectorAll(`[href*='/shorts/']`);
