@@ -117,23 +117,16 @@
   waitForEach(`[href*='/shorts/']`, linkToShortEl => {
     linkToShortEl.href = linkToShortEl.href.replace('/shorts/', '/watch?v=');
   });
-
-  let observer = new MutationObserver(() => {
-    //* fixing hrefs
-
-    const videoLinks = document.querySelectorAll(
-      `:not(#storyboard) :is([href*="&list="],[href*="&index="],[href*="&pp="],[href*="&t="])`,
-    );
-    videoLinks.forEach(function (link) {
-      if (!link.href) return; // 🛑
-      const matches = link.href.match(/\?v=(.{11})/);
-      if (!matches) return; // 🛑
+  //* cleaning tracking params from links
+  waitForEach(
+    `:not(#storyboard) :is([href*="&list="],[href*="&index="],[href*="&pp="],[href*="&t="])`,
+    videoLinkEl => {
+      const matches = videoLinkEl.href.match(/\?v=(.{11})/);
+      if (!matches) return;
       const videoID = matches[1];
-      link.href = `https://www.youtube.com/watch?v=${videoID}`;
-    });
-  });
-  // const peekParentQuery = `ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer, #thumbnail`
-  observer.observe(document.body, { childList: true, subtree: true });
+      videoLinkEl.href = `https://www.youtube.com/watch?v=${videoID}`;
+    },
+  );
 
   function stopAndChangeUrl(url) {
     window.stop();
