@@ -59,7 +59,7 @@
 
     const url = location.href;
 
-    let movieShowTitle = url.match(/(shows|movies)\/([^\/]+)/)?.[2];
+    let movieShowTitle = url.match(/(shows|movies)\/([^\/\?]+)/)?.[2];
     if (movieShowTitle) {
       movieShowTitle = movieShowTitle.replaceAll('(', '').replaceAll(')', '');
     }
