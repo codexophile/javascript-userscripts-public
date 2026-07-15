@@ -46,6 +46,8 @@
           return;
         }
 
+        newWindow.document.body.style.backgroundColor = 'black';
+
         // Add progress indicator to new window
         const newWindowProgress = newWindow.document.createElement('div');
         style(
