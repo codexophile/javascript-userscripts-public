@@ -8,6 +8,21 @@
     main(urlChangeInfo.url);
   });
   main(location.href);
+
+  function main(url) {
+    const urlObj = new URL(url);
+    let parsed = null;
+
+    switch (urlObj.hostname) {
+      case 'app.trakt.tv':
+        parsed = parseTraktPageV3(url);
+        break;
+
+      default:
+        break;
+    }
+  }
+
   function parseTraktPageV3(url = location.href) {
     const u = new URL(url);
     const segments = u.pathname.split('/').filter(Boolean); // e.g. ['shows', 'house-of-the-dragon']
