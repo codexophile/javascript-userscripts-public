@@ -77,14 +77,13 @@
       postLink = location.href;
     }
 
-    const browserSegment = `browser:firefox::`;
-    const profileSegment = `profile:3vm341ho.default-release::`;
-    const urlSegment = `url:${postLink}::`;
-    const destinationSegment = `dest:x:\\tiktok::`;
-    const modeSegment = `mode:noprompt::`;
-    GM_setClipboard(
-      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
-    );
+    invokeYtdlp({
+      urlToDownload: postLink,
+      destination: 'x:\\tiktok',
+      mode: 'noprompt',
+      browser: 'firefox',
+      profile: '3vm341ho.default-release',
+    });
   });
 
   //* Shortcuts
