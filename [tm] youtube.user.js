@@ -8,16 +8,6 @@
     }
   });
 
-  async function getChannelId() {
-    const authorEl = await waitFor('[itemprop=author] > [itemprop=url]');
-    const channelId = authorEl.href
-      .match(/\/\/www\.youtube\.com\/(.+?)(\/|$)/)[1]
-      .slice(1);
-    return channelId;
-  }
-
-  // markAndFilter( 'ytd-rich-item-renderer', 'a[href^="/watch?v="]', 'href', /\?v=(...........)/ );
-
   fixUrl();
   for (const s of [
     'yt-navigate',
