@@ -53,70 +53,73 @@
     });
   }
 
-  waitForEach('#buttonsContainer', async btnsContainerEl => {
-    const peekButton = generateElements(`<a class=peekButton>🫣</a>`);
-    btnsContainerEl.append(peekButton);
+  waitForEach(
+    '#buttonsContainer, #menuActionsContainer',
+    async btnsContainerEl => {
+      const peekButton = generateElements(`<a class=peekButton>🫣</a>`);
+      btnsContainerEl.append(peekButton);
 
-    peekButton.addEventListener('click', async event => {
-      event.preventDefault();
+      peekButton.addEventListener('click', async event => {
+        event.preventDefault();
 
-      peekButton.textContent = '🔄';
+        peekButton.textContent = '🔄';
 
-      try {
-        const videoLinkEl =
-          btnsContainerEl.parentElement.querySelector("a[href*='/watch']");
-        const videoUrl = videoLinkEl.href;
+        try {
+          const videoLinkEl =
+            btnsContainerEl.parentElement.querySelector("a[href*='/watch']");
+          const videoUrl = videoLinkEl.href;
 
-        const ytHtml = await GMXmlHttpReqResponse(videoUrl);
-        const { allUrls, trueNoOfSlots, samplingFq, horizontal, vertical } =
-          generateAllYouTubeSbUrls(ytHtml);
+          const ytHtml = await GMXmlHttpReqResponse(videoUrl);
+          const { allUrls, trueNoOfSlots, samplingFq, horizontal, vertical } =
+            generateAllYouTubeSbUrls(ytHtml);
 
-        // Validate storyboard data
-        if (!allUrls || allUrls.length === 0) {
+          // Validate storyboard data
+          if (!allUrls || allUrls.length === 0) {
+            peekButton.textContent = '❌';
+            alert('Storyboard not available for this video');
+            setTimeout(() => {
+              peekButton.textContent = '🫣';
+            }, 2000);
+            return;
+          }
+
+          const headerLink = generateElements(
+            `<a href=${videoUrl} target=_blank> ${videoLinkEl.textContent} </a>`,
+          );
+          const modalBody = generateElements('<div></div>');
+
+          const modal = new ModalBox({
+            width: '95vw',
+            backgroundColor: '#f0f0f0',
+            headerColor: '#3498db',
+            animation: true,
+            closeOnEscape: true,
+            closeOnOutsideClick: true,
+          });
+
+          modal.setTitle(headerLink);
+          modal.setContent(modalBody);
+
+          await storyboard({
+            storyboardParent: modalBody,
+            horizontal: horizontal || 5,
+            vertical: vertical || 5,
+            linkToVid: videoUrl,
+            samplingFq: samplingFq,
+            trueNoOfSlots: trueNoOfSlots,
+            imgUrls: [...allUrls],
+          });
+
+          peekButton.textContent = '🫣';
+          modal.show();
+        } catch (error) {
+          console.error('[YT-Storyboard] Peek error:', error);
           peekButton.textContent = '❌';
-          alert('Storyboard not available for this video');
           setTimeout(() => {
             peekButton.textContent = '🫣';
           }, 2000);
-          return;
         }
-
-        const headerLink = generateElements(
-          `<a href=${videoUrl} target=_blank> ${videoLinkEl.textContent} </a>`
-        );
-        const modalBody = generateElements('<div></div>');
-
-        const modal = new ModalBox({
-          width: '95vw',
-          backgroundColor: '#f0f0f0',
-          headerColor: '#3498db',
-          animation: true,
-          closeOnEscape: true,
-          closeOnOutsideClick: true,
-        });
-
-        modal.setTitle(headerLink);
-        modal.setContent(modalBody);
-
-        await storyboard({
-          storyboardParent: modalBody,
-          horizontal: horizontal || 5,
-          vertical: vertical || 5,
-          linkToVid: videoUrl,
-          samplingFq: samplingFq,
-          trueNoOfSlots: trueNoOfSlots,
-          imgUrls: [...allUrls],
-        });
-
-        peekButton.textContent = '🫣';
-        modal.show();
-      } catch (error) {
-        console.error('[YT-Storyboard] Peek error:', error);
-        peekButton.textContent = '❌';
-        setTimeout(() => {
-          peekButton.textContent = '🫣';
-        }, 2000);
-      }
-    });
-  });
+      });
+    },
+  );
 })();
