@@ -25,10 +25,6 @@
     ratingraph: 'https://cdn.ratingraph.com/assets/images/icon-180.png',
   };
 
-  console.log(
-    'Turn off ad blocker when this script fails to function properly',
-  );
-
   window.addEventListener('urlchange', event => {
     renderForUrl(event?.url ?? location.href);
   });
