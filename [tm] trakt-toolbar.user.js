@@ -493,12 +493,12 @@
       [${ROOT_ATTR}="true"] {
         position: fixed;
         top: 12px;
-        right: 12px;
+        left: 930px;
         z-index: 2147483647;
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        max-width: min(92vw, 760px);
+        max-width: 470px;
         padding: 8px;
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 14px;
