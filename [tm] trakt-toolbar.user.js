@@ -436,8 +436,7 @@
     link.title = title || label || href;
 
     if (iconUrl) {
-      const img = document.createElement('img');
-      img.src = iconUrl;
+      const img = GM_addElement('img', { src: iconUrl });
       img.alt = label || '';
       img.className = 'trakt-toolbar-icon';
       link.appendChild(img);
