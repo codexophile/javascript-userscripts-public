@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   'use strict';
 
   const ROOT_ATTR = 'data-trakt-toolbar-root';
@@ -28,10 +28,10 @@
   window.addEventListener('urlchange', event => {
     renderForUrl(event?.url ?? location.href);
   });
-
+  await waitFor('.trakt-summary-ratings');
   renderForUrl(location.href);
 
-  function renderForUrl(url) {
+  async function renderForUrl(url) {
     cleanupExistingToolbar();
 
     const context = parseTraktPageV3(url);
@@ -40,7 +40,7 @@
     ensureToolbarStyles();
 
     const toolbarRoot = createToolbarRoot();
-    const items = buildToolbarItems(context);
+    const items = await buildToolbarItems(context);
 
     if (!items.length) return;
 
@@ -120,7 +120,7 @@
     return { type: 'unknown' };
   }
 
-  function buildToolbarItems(context) {
+  async function buildToolbarItems(context) {
     const searchQuery = buildSearchQuery(context);
     const torrentQuery = buildTorrentQuery(context);
     const ppxQuery = buildGeneralPpxPrompt(context);
@@ -184,7 +184,7 @@
       },
       {
         kind: 'link',
-        href: buildImdbUrl(searchQuery),
+        href: await buildImdbUrl(searchQuery),
         icon: ICONS.imdb,
         label: 'IMDB',
         title: 'Open IMDb',
@@ -392,8 +392,8 @@
     }).toString()}`;
   }
 
-  function buildImdbUrl(query) {
-    const directLink = document.querySelector('#external-link-imdb');
+  async function buildImdbUrl(query) {
+    const directLink = await waitFor('[href*="imdb.com/title/"]');
 
     if (directLink?.href && directLink.href.includes('/title/')) {
       return directLink.href;
