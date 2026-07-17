@@ -1,6 +1,35 @@
 (function () {
   'use strict';
 
+  //* bring review title up
+  (function () {
+    const targetParentEl = document.querySelectorAll(
+      '[data-testid="hero-parent"] > div > div:first-child',
+    )[2];
+    const reviewTitleLinkEls = document.querySelectorAll(
+      '.ipc-title-link-wrapper[href*="/reviews/?featured="]',
+    );
+    const contEl = generateElements(`<div></div>`, targetParentEl);
+    style(
+      contEl,
+      `
+      max-width: 500px;
+      margin: 20px;
+    `,
+    );
+    reviewTitleLinkEls.forEach(linkEl => {
+      style(
+        linkEl,
+        `
+        font-size: 1.2rem;
+        display: block;
+        margin-bottom: 10px;
+      `,
+      );
+      contEl.appendChild(linkEl.cloneNode(true));
+    });
+  })();
+
   //* external links
   (async function () {
     'use strict';
