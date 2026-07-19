@@ -244,7 +244,7 @@
         kind: 'link',
         href: buildExtToUrl(torrentQuery),
         icon: ICONS.extTo,
-        label: '',
+        label: 'Ext',
         title: 'Search Ext.to',
       },
       {
