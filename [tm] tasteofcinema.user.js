@@ -5,7 +5,6 @@
   const headerEls = document.querySelectorAll(
     '.entry-content span[style*="font-size: 20px;"]',
   );
-  console.log(headerEls);
   headerEls.forEach(headerEl => {
     const headerText = headerEl.textContent.trim();
     const matches = headerText.match(/\d+\. (.+?) \((\d{4})\)/);
