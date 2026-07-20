@@ -122,7 +122,7 @@
 
   async function buildToolbarItems(context) {
     const searchQuery = buildSearchQuery(context);
-    const torrentQuery = buildTorrentQuery(context);
+    const torrentQuery = buildTorrentQuery(context) + ' 1080p';
     const ppxQuery = buildGeneralPpxPrompt(context);
     const ppxEpisodeQuery = buildEpisodePpxPrompt(context);
 
