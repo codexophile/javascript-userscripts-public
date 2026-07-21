@@ -263,9 +263,7 @@
       },
       {
         kind: 'link',
-        href: buildGoogleLuckySearchUrl(
-          `${context.title} site:ratingraph.com#${searchQuery}`,
-        ),
+        href: buildGoogleLuckySearchUrl(`${context.title} site:ratingraph.com`),
         icon: ICONS.ratingraph,
         label: 'Ratingraph',
         title: 'Search Ratingraph',
@@ -419,6 +417,7 @@
     const root = document.createElement('div');
     root.setAttribute(ROOT_ATTR, 'true');
     root.className = 'trakt-toolbar-root';
+    makeDraggable(root);
     return root;
   }
 
