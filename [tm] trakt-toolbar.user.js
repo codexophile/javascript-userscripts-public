@@ -391,7 +391,7 @@
   }
 
   async function buildImdbUrl(query) {
-    const directLink = await waitFor('[href*="imdb.com/title/"]');
+    const directLink = document.querySelector('[href*="imdb.com/title/"]');
 
     if (directLink?.href && directLink.href.includes('/title/')) {
       return directLink.href;
