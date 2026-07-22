@@ -42,7 +42,7 @@
   collapsible.addButton('🔝', null, () => window.scrollTo(0, 0));
   const headersPopover = collapsible.addPopup('headers-popover');
   collapsible.addButton('🇭', headersPopover);
-  let iframesPopup;
+  let iframesPopover;
 
   waitForEach('h,h1,h2,iframe', element => {
     switch (element.tagName) {
@@ -57,13 +57,13 @@
         });
         break;
       case 'IFRAME':
-        if (!iframesPopup) {
-          iframesPopup = collapsible.addPopup();
-          collapsible.addButton('ℹ️', iframesPopup);
+        if (!iframesPopover) {
+          iframesPopover = collapsible.addPopup('iframes-popover');
+          collapsible.addButton('ℹ️', iframesPopover);
         }
         const iframeLinkEl = generateElements(
           `<a href=${element.src} target=_blank>${element.src}</a>`,
-          iframesPopup,
+          iframesPopover,
         );
         iframeLinkEl.style.display = 'block';
         break;
@@ -89,17 +89,17 @@
     'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
   );
   if (rssLinks.length) {
-    const rssFeedsContainer = collapsible.addPopup();
-    collapsible.addButton('📶', rssFeedsContainer);
+    const rssFeedsPopover = collapsible.addPopup('rss-feeds-popover');
+    collapsible.addButton('📶', rssFeedsPopover);
     addLinkToFeedReader(
       'Inoreader',
       'https://www.inoreader.com/search/feeds/',
-      rssFeedsContainer,
+      rssFeedsPopover,
     );
     addLinkToFeedReader(
       'Feedly',
       'https://feedly.com/i/discover?query=suggesto%2F',
-      rssFeedsContainer,
+      rssFeedsPopover,
     );
 
     rssLinks.forEach(link => {
@@ -109,7 +109,7 @@
           target=_blank
           style='display: block;'
         >${link.title}</a>`,
-        rssFeedsContainer,
+        rssFeedsPopover,
       );
     });
   }
