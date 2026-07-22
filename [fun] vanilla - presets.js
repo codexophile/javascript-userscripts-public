@@ -2,7 +2,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
   await waitFor('body');
 
   //* Methods for adding elements and handling popups
-  function addButton(text, popupEl = null, onclick) {
+  function addButton(text, popoverEl = null, onclick) {
     const button = generateElements(`<button></button>`);
     button.className = 'collapsible-button button-like';
     button.textContent = text;
@@ -12,15 +12,16 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
       button.addEventListener('click', onclick);
     }
 
-    if (popupEl) {
+    if (popoverEl) {
+      button.setAttribute('popovertarget', popoverEl.id);
       button.addEventListener('click', e => {
         e.stopPropagation();
-        popupEl.classList.toggle('visible');
+        popoverEl.classList.toggle('visible');
       });
 
       document.addEventListener('click', e => {
         if (!button.contains(e.target)) {
-          popupEl.classList.remove('visible');
+          popoverEl.classList.remove('visible');
         }
       });
     }
@@ -28,10 +29,11 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     return button;
   }
 
-  function addPopup() {
+  function addPopup(id) {
     const popoverEl = generateElements(`<div></div>`, collapsibleContent);
     popoverEl.className = 'collapsible-popover';
     popoverEl.setAttribute('popover', '');
+    popoverEl.id = id;
     return popoverEl;
   }
 
