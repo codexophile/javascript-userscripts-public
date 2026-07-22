@@ -13,6 +13,12 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     }
 
     if (popoverEl) {
+      if (!popoverEl.id) {
+        console.log({ button, popoverEl });
+        alert(
+          'Popover element must have an ID before being passed to addButton.',
+        );
+      }
       button.setAttribute('popovertarget', popoverEl.id);
     }
 
