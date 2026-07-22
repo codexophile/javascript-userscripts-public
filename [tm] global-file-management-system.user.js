@@ -2,21 +2,18 @@
   'use strict';
 
   const collapsible = await Collapsible();
-  const fileManagementSystemPopupEl = collapsible.addPopup();
-  const fileManagementSystemBtnEl = collapsible.addButton(
-    '',
-    fileManagementSystemPopupEl,
-  );
+  const fmsPopoverEl = collapsible.addPopup('fms-popover');
+  const fmsBtnEl = collapsible.addButton('', fmsPopoverEl);
   generateElements(
     `<img src="https://www.voidtools.com/favicon.ico" />`,
-    fileManagementSystemBtnEl,
+    fmsBtnEl,
   );
   const lookupUserIdBtnEl = generateElements(
     `<button id="lookupUserIdBtn">User</button>`,
-    fileManagementSystemPopupEl,
+    fmsPopoverEl,
   );
   const lookupPostIdBtnEl = generateElements(
     `<button id="lookupPostIdBtn">Post</button>`,
-    fileManagementSystemPopupEl,
+    fmsPopoverEl,
   );
 })();
