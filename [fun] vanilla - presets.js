@@ -14,16 +14,6 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
 
     if (popoverEl) {
       button.setAttribute('popovertarget', popoverEl.id);
-      button.addEventListener('click', e => {
-        e.stopPropagation();
-        popoverEl.classList.toggle('visible');
-      });
-
-      document.addEventListener('click', e => {
-        if (!button.contains(e.target)) {
-          popoverEl.classList.remove('visible');
-        }
-      });
     }
 
     return button;
