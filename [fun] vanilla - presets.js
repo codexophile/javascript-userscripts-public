@@ -30,6 +30,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     popoverEl.className = 'collapsible-popover';
     popoverEl.setAttribute('popover', '');
     popoverEl.id = id;
+    popoverEl.style = `padding: 1rem; border-radius: 4px;`;
     return popoverEl;
   }
 
