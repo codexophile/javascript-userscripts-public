@@ -40,8 +40,8 @@
   collapsible.collapsibleToggler.click();
 
   collapsible.addButton('🔝', null, () => window.scrollTo(0, 0));
-  const headersPopup = collapsible.addPopup();
-  collapsible.addButton('🇭', headersPopup);
+  const headersPopover = collapsible.addPopup('headers-popover');
+  collapsible.addButton('🇭', headersPopover);
   let iframesPopup;
 
   waitForEach('h,h1,h2,iframe', element => {
@@ -51,7 +51,7 @@
       case 'H2':
         generateElements(
           `<div>${element.textContent}</div>`,
-          headersPopup,
+          headersPopover,
         ).addEventListener('click', () => {
           element.scrollIntoView();
         });
