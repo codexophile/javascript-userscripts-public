@@ -33,9 +33,9 @@
 
   //* toolbar and toolbar buttons
   const collapsible = await Collapsible('', {
-    width: '300px',
-    height: '50px',
-    collapsedWidth: '40px',
+    // width: '300px',
+    // height: '50px',
+    // collapsedWidth: '40px',
   });
   collapsible.collapsibleToggler.click();
 
