@@ -29,9 +29,8 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
   }
 
   function addPopup() {
-    const popup = document.createElement('div');
+    const popup = generateElements(`<div></div>`, collapsibleContent);
     popup.className = 'popup';
-    collapsibleContent.appendChild(popup);
     return popup;
   }
 
