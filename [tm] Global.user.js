@@ -44,11 +44,15 @@
   collapsible.addButton('🇭', headersPopover);
   let iframesPopover;
 
-  waitForEach('h,h1,h2,iframe', element => {
+  waitForEach('h,h1,h2,h3,h4,h5,h6,iframe', element => {
     switch (element.tagName) {
       case 'H':
       case 'H1':
       case 'H2':
+      case 'H3':
+      case 'H4':
+      case 'H5':
+      case 'H6':
         generateElements(
           `<div>${element.textContent}</div>`,
           headersPopover,
