@@ -207,9 +207,11 @@
       const uri = c.toDataURL();
 
       const link = $(`<a></a>`)[0];
+      const matches = location.href.match(/[?&]img_index=(\d+)/);
+      const imgIndex = matches ? parseInt(matches[1]) : 0;
       let fileName = `${getUserId(image)} - (instagram)${getPostId(
         image,
-      )} - (${getTagged(image)})`;
+      )} - (${getTagged(image)}) _${imgIndex}`;
       link.setAttribute('download', `${fileName}.png`);
       link.setAttribute('href', uri);
       link.click();
