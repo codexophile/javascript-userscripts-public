@@ -1,6 +1,28 @@
 (function () {
   ('use strict');
 
+  //* copy button for code blocks
+  waitForEach('pre', preEl => {
+    const copyBtn = generateElements(
+      `<button class="copy-btn">📋</button>`,
+      preEl,
+    );
+    copyBtn.addEventListener('click', () => {
+      const code = preEl.textContent;
+      GM_setClipboard(code);
+    });
+
+    preEl.style.position = 'relative';
+    style(
+      copyBtn,
+      `
+      position: absolute;
+      top: 5px;
+      right: 5px;
+    `,
+    );
+  });
+
   //* external services that reveal deleted/private content
   waitForEach(
     '[data-testid="profile-details-wrapper"] .flex.items-baseline.justify-start',
