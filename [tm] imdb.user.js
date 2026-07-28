@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  //* bring review title up
+  //* bring review titles up
   (function () {
     const targetParentEl = document.querySelectorAll(
       '[data-testid="hero-parent"] > div > div:first-child',
