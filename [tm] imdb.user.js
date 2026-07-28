@@ -1,6 +1,25 @@
 (function () {
   'use strict';
 
+  //* average rating button for seasons pages
+  (async function () {
+    if (!location.href.includes('/episodes/')) return;
+    const { addButton } = await Collapsible();
+    addButton('⭐', null, () => {
+      const ratingEls = document.querySelectorAll(
+        '.episode-item-wrapper .ipc-rating-star--currentUser .ipc-rating-star--rating',
+      );
+      const noOfEpisodes = ratingEls.length;
+      const valuesArr = Array.from(ratingEls).map(el =>
+        parseFloat(el.textContent.trim()),
+      );
+      const average = valuesArr.reduce((sum, n) => sum + n, 0) / noOfEpisodes;
+      alert(
+        `Average rating for ${noOfEpisodes} episodes: ${average.toFixed(2)}`,
+      );
+    });
+  })();
+
   //* bring review titles up
   (function () {
     const targetParentEl = document.querySelectorAll(
