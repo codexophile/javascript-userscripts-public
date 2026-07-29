@@ -6,6 +6,9 @@
     'https://raw.githubusercontent.com/codexophile/javascript-userscripts-public/refs/heads/new-branch/%5Btm%5D%20Global.user.js-ytdlp.png';
 
   //* title
+
+  const BLACKLIST = ['www.temu.com'];
+
   setSuffix();
   let observer = new MutationObserver(setSuffix);
   observer.observe(document.querySelector(`title`), {
@@ -14,6 +17,8 @@
   });
 
   function setSuffix() {
+    const hostname = location.hostname;
+    if (BLACKLIST.includes(hostname)) return;
     const suffix = ` - [${location.hostname}]`;
     if (document.title.includes(suffix)) return;
     document.title += suffix;
