@@ -7,6 +7,22 @@
     );
     switchEl.title = 'Toggle watched items';
     filterButtonEl.before(switchEl);
+
+    switchEl.addEventListener('change', () => {
+      const isChecked = switchEl.checked;
+      const watchedItemEls = document.querySelectorAll(
+        'svelte-css-wrapper:has(>.trakt-gesture-container):has([data-variant="full"])',
+      );
+      if (isChecked) {
+        watchedItemEls.forEach(watchedItemEl => {
+          fadeOut(watchedItemEl);
+        });
+      } else {
+        watchedItemEls.forEach(watchedItemEl => {
+          fadeIn(watchedItemEl);
+        });
+      }
+    });
   });
 
   waitForEach('.trakt-user-rating', ratingEl => {
