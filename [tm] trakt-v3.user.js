@@ -1,6 +1,14 @@
 (function () {
   'use strict';
 
+  waitForEach('.trakt-filter-button', filterButtonEl => {
+    const switchEl = generateElements(
+      '<input type="checkbox" class="trakt-filter-switch">',
+    );
+    switchEl.title = 'Toggle watched items';
+    filterButtonEl.before(switchEl);
+  });
+
   waitForEach('.trakt-user-rating', ratingEl => {
     const ratingOutOfFive = parseFloat(ratingEl.textContent.trim());
     const ratingOutOfTen = (Number(ratingOutOfFive) / 5) * 10;
