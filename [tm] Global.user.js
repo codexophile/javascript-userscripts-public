@@ -17,9 +17,9 @@
   });
 
   function setSuffix() {
-    const hostname = location.hostname;
-    if (BLACKLIST.includes(hostname)) return;
-    const suffix = ` - [${location.hostname}]`;
+    const locationHost = location.host;
+    if (BLACKLIST.includes(locationHost)) return;
+    const suffix = ` - [${locationHost}]`;
     if (document.title.includes(suffix)) return;
     document.title += suffix;
   }
