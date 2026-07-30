@@ -28,6 +28,7 @@
     const reviewTitleLinkEls = document.querySelectorAll(
       '.ipc-title-link-wrapper[href*="/reviews/?featured="]',
     );
+
     const contEl = generateElements(`<div></div>`, targetParentEl);
     style(
       contEl,
@@ -36,17 +37,23 @@
       margin: 20px;
     `,
     );
-    reviewTitleLinkEls.forEach(linkEl => {
-      style(
-        linkEl,
-        `
-        font-size: 1.2rem;
-        display: block;
-        margin-bottom: 10px;
-      `,
-      );
-      contEl.appendChild(linkEl.cloneNode(true));
-    });
+    waitForEach(
+      '[data-testid="user-reviews-summary-shoveler"] .ipc-list-card--span',
+      reviewEl => {
+        const clonedEl = reviewEl.cloneNode(true);
+        clonedEl.querySelector('.ipc-html-content').remove();
+        style(
+          clonedEl,
+          `
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 10px;
+          `,
+        );
+        console.log(clonedEl);
+        contEl.appendChild(clonedEl);
+      },
+    );
   })();
 
   //* external links
