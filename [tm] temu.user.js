@@ -120,7 +120,7 @@
         style: 'currency',
         currency: 'LKR',
       });
-      totalPriceEl.textContent = `Total Price: ${totalPricePresentable}`;
+      totalPriceEl.textContent = `${totalPricePresentable}`;
     });
   }
 
