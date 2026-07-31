@@ -27,7 +27,7 @@
     downloadBtnEl.style.zIndex = 9999;
     downloadBtnEl.addEventListener('click', () => {
       const linkToVid = postItemEl.querySelector('a').href;
-      invokeYtdlp(linkToVid);
+      initiateYtdlp(linkToVid);
     });
   });
 
@@ -42,16 +42,27 @@
       return;
     }
 
-    invokeYtdlp(postLink);
+    initiateYtdlp(postLink);
   });
 
-  function invokeYtdlp(link) {
-    const urlSegment = `url:${link}::`;
-    const destinationSegment = `dest:x:\\tiktok::`;
-    const modeSegment = `mode:noprompt::`;
-    GM_setClipboard(
-      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
-    );
-    addHistoryEntry(link);
+  function initiateYtdlp(url) {
+    invokeYtdlp({
+      urlToDownload: url,
+      destination: 'x:\\tiktok',
+      mode: 'noprompt',
+      browser: 'firefox',
+      profile: '3vm341ho.default-release',
+    });
+    addHistoryEntry(url);
   }
+
+  // function invokeYtdlp(link) {
+  //   const urlSegment = `url:${link}::`;
+  //   const destinationSegment = `dest:x:\\tiktok::`;
+  //   const modeSegment = `mode:noprompt::`;
+  //   GM_setClipboard(
+  //     `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
+  //   );
+  //   addHistoryEntry(link);
+  // }
 })();
