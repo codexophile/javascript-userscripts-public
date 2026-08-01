@@ -32,7 +32,10 @@
       'https://mail.google.com',
     ];
     if (blackListUrls.some(url => location.href.includes(url))) return; // 🛑
+    //? 👇🏻 tab is in background
     if (document.hidden) return;
+    //? 👇🏻 browser window is either not focused or minimized
+    if (document.hasFocus()) return;
     GM_setClipboard(`global-document-ready-${document.title}`);
   }
 
