@@ -22,12 +22,11 @@
 
   //* bring review titles up
   (function () {
+    const processedReviewsIds = new Set();
+
     const targetParentEl = document.querySelectorAll(
       '[data-testid="hero-parent"] > div > div:first-child',
     )[2];
-    const reviewTitleLinkEls = document.querySelectorAll(
-      '.ipc-title-link-wrapper[href*="/reviews/?featured="]',
-    );
 
     const contEl = generateElements(`<div></div>`, targetParentEl);
     style(
@@ -40,6 +39,12 @@
     waitForEach(
       '[data-testid="user-reviews-summary-shoveler"] .ipc-list-card--span',
       reviewEl => {
+        const reviewLinkEl = reviewEl.querySelector(
+          '[href*="/reviews/?featured="]',
+        );
+        const urlObj = new URL(reviewLinkEl.href);
+        const reviewId = urlObj.searchParams.get('featured');
+        if (processedReviewsIds.has(reviewId)) return;
         const clonedEl = reviewEl.cloneNode(true);
         clonedEl.querySelector('.ipc-html-content').remove();
         style(
@@ -52,6 +57,8 @@
         );
         console.log(clonedEl);
         contEl.appendChild(clonedEl);
+
+        processedReviewsIds.add(reviewId);
       },
     );
   })();
