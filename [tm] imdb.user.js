@@ -68,8 +68,8 @@
     'use strict';
 
     const titleMatch = location.href.match(/\/title\/(tt\d+)/);
-
     if (!titleMatch) return;
+    const titleId = titleMatch[1];
 
     const el = await waitFor(`[data-testid="hero__pageTitle"] ~ ul`);
     const titleEl = await waitFor(`[data-testid="hero__pageTitle"]`);
@@ -78,9 +78,7 @@
     const year = yearEl.textContent;
 
     //* YTS
-    const titleId = titleMatch[1];
     addExtLink('https://yts.gg/', 'browse-movies/' + titleId);
-
     //* Leet
     addExtLink('https://1337x.to/', `search/${title}+${year}/1/`);
 
