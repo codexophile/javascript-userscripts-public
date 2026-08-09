@@ -1,6 +1,14 @@
 (async function () {
   ('use strict');
-  if (window.top != window.self) return; //don't run on frames or iframes
+
+  //* related searches
+  waitForEach('.splide__slide > div', async relatedSearchEl => {
+    const searchQuery = relatedSearchEl.textContent.trim();
+    const searchUrl = `https://www.temu.com/search_result.html?search_key=${encodeURIComponent(
+      searchQuery,
+    )}`;
+    wrap(`<a href="${searchUrl}" target="_blank"></a>`, relatedSearchEl);
+  });
 
   //* focus search input
   const searchInputEl = document.querySelector(`#searchInput`);
