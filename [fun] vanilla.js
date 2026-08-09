@@ -1785,6 +1785,8 @@ function getVideoInfo(url, options = {}) {
   });
 }
 
+//  MARK: Userscript helpers
+
 // MARK: Rest
 
 function invokeYtdlp({ urlToDownload, destination, mode, browser, profile }) {
