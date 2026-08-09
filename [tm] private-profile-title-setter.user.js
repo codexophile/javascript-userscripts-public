@@ -13,6 +13,10 @@
     GM_setValue('enabled', true);
   }
 
+  GM_audio.setMute({ isMuted: true }, function (err) {
+    if (err) alert('mute failed:', err);
+  });
+
   const string = '[Browser:Private-profile]';
   let titleObserver = new MutationObserver(() => {
     if (document.title.includes(string)) return; // 🛑
