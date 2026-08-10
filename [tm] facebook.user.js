@@ -16,6 +16,38 @@ waitForEach('div:has(>[data-visualcompletion][alt])', imgCntEl => {
   dlBtnEl.addEventListener('click', () => handleDownload(imgCntEl));
 });
 
+//* download buttons for reel thumbnails
+waitForEach('div:has(>[aria-label="Reel tile preview"])', reelCntEl => {
+  const toolsCntEl = generateElements(`<div class=toolsCnt></div>`, reelCntEl);
+  style(
+    toolsCntEl,
+    `
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  `,
+  );
+  const dlBtnEl = generateElements(
+    `<button class=dlBtn>⬇️</button>`,
+    toolsCntEl,
+  );
+  dlBtnEl.addEventListener('click', () => {
+    const urlToDownload = reelCntEl.querySelector('[href*="/reel/"]')?.href;
+    if (!urlToDownload) {
+      alert('Reel URL not found');
+      return;
+    }
+    invokeYtdlp({
+      browser: 'firefox',
+      profile: '3vm341ho.default-release',
+      urlToDownload,
+      destination: 'x:\\tiktok',
+      mode: 'noprompt',
+    });
+    addHistoryEntry(urlToDownload);
+  });
+});
+
 function handleDownload(parentEl) {
   const imgEl = parentEl.querySelector('[data-visualcompletion][alt]');
   const tempImg = GM_addElement('img', {
