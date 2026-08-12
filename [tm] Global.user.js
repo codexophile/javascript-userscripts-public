@@ -85,11 +85,11 @@
     }
   });
 
-  collapsible.addButton('🔊', null, () => {
-    const text = window.getSelection().toString().replaceAll('\n', '. ');
-    if (!text) return; // 🛑
-    location.href = `edge-tts:${text}`;
-  });
+  // collapsible.addButton('🔊', null, () => {
+  //   const text = window.getSelection().toString().replaceAll('\n', '. ');
+  //   if (!text) return; // 🛑
+  //   location.href = `edge-tts:${text}`;
+  // });
 
   //* ytdlp
   const ytDlpPopover = collapsible.addPopup('yt-dlp-popover');
