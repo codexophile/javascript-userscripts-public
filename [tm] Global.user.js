@@ -91,6 +91,76 @@
   //   location.href = `edge-tts:${text}`;
   // });
 
+  //* toggle mute
+  const BTN_ID = 'tab-audio-toggle-btn';
+  GM_addStyle(`
+    #${BTN_ID} {
+      background: #2b2b2b;
+      color: #fff;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      opacity: 0.85;
+      transition: opacity 0.15s ease, transform 0.1s ease;
+      user-select: none;
+    }
+    #${BTN_ID}:hover {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    #${BTN_ID}.muted {
+      background: #b23a3a;
+    }
+  `);
+  const toggleMuteBtn = collapsible.addButton('', null);
+  toggleMuteBtn.id = BTN_ID;
+  toggleMuteBtn.type = 'button';
+
+  function render(isMuted) {
+    toggleMuteBtn.textContent = isMuted ? '🔇' : '🔊';
+    toggleMuteBtn.classList.toggle('muted', !!isMuted);
+    toggleMuteBtn.title = isMuted
+      ? 'Tab muted — click to unmute'
+      : 'Tab audible — click to mute';
+  }
+
+  function refreshState() {
+    GM_audio.getState(function (state) {
+      if (!state) {
+        console.error('[Tab Audio Toggle] failed to read audio state');
+        return;
+      }
+      render(!!state.isMuted);
+    });
+  }
+
+  toggleMuteBtn.addEventListener('click', function () {
+    const currentlyMuted = toggleMuteBtn.classList.contains('muted');
+    GM_audio.setMute({ isMuted: !currentlyMuted }, function (err) {
+      if (err) {
+        console.error('[Tab Audio Toggle] setMute failed:', err);
+        return;
+      }
+      // Trust the state-change listener to update UI, but refresh
+      // immediately too in case the listener is slow/unavailable.
+      refreshState();
+    });
+  });
+
+  // Keep the button in sync if muted/unmuted from elsewhere
+  // (browser mute button, another extension, tab capture, etc.)
+  GM_audio.addStateChangeListener(function (e) {
+    if ('muted' in e) {
+      render(!!e.muted);
+    }
+  });
+
+  refreshState();
+
   //* ytdlp
   const ytDlpPopover = collapsible.addPopup('yt-dlp-popover');
   const ytdlpBtn = collapsible.addButton('', ytDlpPopover);
