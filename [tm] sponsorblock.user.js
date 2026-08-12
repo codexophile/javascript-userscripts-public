@@ -12,7 +12,7 @@
   `);
 
   waitForEach(SELECTOR, el => {
-    const videoId = el.href.match(/\/video\/(.+)/)[1];
+    const videoId = el.href.match(/\/video\/(.{11})/)[1];
     if (!videoId) return;
     const thumbSrc = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
     generateElements(
