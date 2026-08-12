@@ -6,13 +6,18 @@
   const THUMB_El_SELECTORS = ['.ytLockupViewModelContentImage'].join(',');
 
   const css = `
+    .new-item {
+      position: relative;
+      overflow: visible;
+    }
+
     .new-item::before {
       content: "";
       position: absolute;
       inset: 0;
       padding: 2.5px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #ff0033, #ff2d78, #ff4dd2, #cc33ff, #ff0033);
+      background: linear-gradient(135deg, #ff0033, #ff2d78, #ff4dd2, #cc33ff00, #ff0033);
       background-size: 300% 300%;
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
