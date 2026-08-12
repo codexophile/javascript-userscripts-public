@@ -91,11 +91,35 @@
     location.href = `edge-tts:${text}`;
   });
 
-  const ytdlpBtn = collapsible.addButton('', null, () => {
-    GM_setClipboard(`initiate-ytdlp:url:${location.href}::`);
-  });
+  //* ytdlp
+  const ytDlpPopover = collapsible.addPopup('yt-dlp-popover');
+  const ytdlpBtn = collapsible.addButton('', ytDlpPopover);
   ytdlpBtn.id = 'yt-dlp-Btn';
-  generateElements(`<img src="${YT_DLP_LOGO_URL}" alt="ytdlp logo">`, ytdlpBtn);
+  GM_addElement(ytdlpBtn, 'img', {
+    src: YT_DLP_LOGO_URL,
+    alt: 'ytdlp logo',
+  });
+
+  GM_addElement(ytDlpPopover, 'button', {
+    textContent: '⬇️',
+    onclick: () => {
+      GM_setClipboard(`initiate-ytdlp:url:${location.href}::`);
+    },
+  });
+  GM_addElement(ytDlpPopover, 'button', {
+    textContent: 'List',
+    onclick: () => {
+      invokeYtdlp({
+        urlToDownload: location.href,
+        mode: 'list',
+        browser: 'firefox',
+        profile: '3vm341ho.default-release',
+      });
+    },
+  });
+
+  //* gallery-dl
+  const gallerydlBtn = collapsible.addButton('🖼️⬇️', null, () => {});
 
   const rssLinks = document.querySelectorAll(
     'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
