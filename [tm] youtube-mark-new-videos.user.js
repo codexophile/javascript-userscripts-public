@@ -2,6 +2,8 @@
   'use strict';
 
   const BADGE_SELECTORS = ['.ytBadgeShapeText'].join(',');
+  const MAIN_El_SELECTORS = ['yt-lockup-view-model'].join(',');
+  const THUMB_El_SELECTORS = ['.ytLockupViewModelContentImage'].join(',');
 
   const css = `
     .new-item::before {
@@ -36,8 +38,8 @@
 
   waitForEach(BADGE_SELECTORS, el => {
     if (!isNewBadge(el)) return;
-    const mainEl = el.closest('yt-lockup-view-model');
-    const thumbEl = mainEl.querySelector('.ytLockupViewModelContentImage');
+    const mainEl = el.closest(MAIN_El_SELECTORS);
+    const thumbEl = mainEl.querySelector(THUMB_El_SELECTORS);
     if (!thumbEl) return;
     thumbEl.classList.add('new-item');
   });
