@@ -1,11 +1,8 @@
 (function () {
   'use strict';
 
-  const STYLE_ID = 'yt-new-gradient-style';
-  const MARK_ATTR = 'data-new-gradient';
   const BADGE_SELECTORS = ['.ytBadgeShapeText'].join(',');
 
-  // YouTube-themed gradient: red -> pink -> magenta/purple, animated shift.
   const css = `
     .new-item::before {
       content: "";
@@ -30,24 +27,11 @@
       100% { background-position: 0% 50%; }
     }
   `;
-
-  function injectStyle() {
-    GM_addStyle(css);
-  }
+  GM_addStyle(css);
 
   function isNewBadge(el) {
     const text = el.textContent && el.textContent.trim().toLowerCase();
     return text === 'new';
-  }
-
-  function findThumbnailContainer(badgeEl) {
-    return (
-      badgeEl.closest('.ytLockupViewModelHost') ||
-      badgeEl.closest('ytd-thumbnail') ||
-      badgeEl.closest('ytd-rich-grid-media') ||
-      badgeEl.closest('yt-thumbnail-view-model') ||
-      badgeEl.closest('ytd-grid-video-renderer')
-    );
   }
 
   waitForEach(BADGE_SELECTORS, el => {
@@ -59,55 +43,4 @@
       thumbEl.classList.add('new-item');
     }
   });
-
-  function markNewThumbnails(root = document) {
-    const badges = root.querySelectorAll(BADGE_SELECTORS);
-    badges.forEach(badge => {
-      if (!isNewBadge(badge)) return;
-      const container = findThumbnailContainer(badge);
-      if (container && !container.hasAttribute(MARK_ATTR)) {
-        container.setAttribute(MARK_ATTR, '');
-      }
-    });
-  }
-
-  let scheduled = false;
-  function scheduleScan() {
-    if (scheduled) return;
-    scheduled = true;
-    requestAnimationFrame(() => {
-      scheduled = false;
-      markNewThumbnails();
-    });
-  }
-
-  function init() {
-    injectStyle();
-    markNewThumbnails();
-
-    const observer = new MutationObserver(mutations => {
-      for (const m of mutations) {
-        if (m.addedNodes.length) {
-          scheduleScan();
-          break;
-        }
-      }
-    });
-
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-
-    // YouTube is an SPA — re-scan after client-side navigations.
-    document.addEventListener('yt-navigate-finish', () => {
-      setTimeout(() => markNewThumbnails(), 600);
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
 })();
