@@ -36,7 +36,6 @@
 
   waitForEach(BADGE_SELECTORS, el => {
     if (!isNewBadge(el)) return;
-    console.log(el);
     const mainEl = el.closest('yt-lockup-view-model');
     const thumbEl = mainEl.querySelector('.ytLockupViewModelContentImage');
     if (thumbEl) {
