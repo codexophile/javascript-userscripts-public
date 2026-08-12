@@ -14,7 +14,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
 
     if (popoverEl) {
       if (!popoverEl.id) {
-        console.log({ button, popoverEl });
+        console.log('Popover error: ', { button, popoverEl });
         alert(
           'Popover element must have an ID before being passed to addButton.',
         );
