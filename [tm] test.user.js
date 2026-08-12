@@ -4,8 +4,8 @@
 (async function () {
   'use strict';
 
-  const targetUrl = 'https://www.temu.com/g-601101958890222.html';
-  const result = await three();
+  const targetUrl = 'https://www.imdb.com/title/tt0844471/ratings/';
+  const result = await two();
   GM_setClipboard(result);
 
   function one() {
