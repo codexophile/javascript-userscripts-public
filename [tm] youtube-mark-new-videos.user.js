@@ -38,8 +38,7 @@
     if (!isNewBadge(el)) return;
     const mainEl = el.closest('yt-lockup-view-model');
     const thumbEl = mainEl.querySelector('.ytLockupViewModelContentImage');
-    if (thumbEl) {
-      thumbEl.classList.add('new-item');
-    }
+    if (!thumbEl) return;
+    thumbEl.classList.add('new-item');
   });
 })();
