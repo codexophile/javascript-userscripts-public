@@ -192,7 +192,7 @@
   const gallerydlBtn = collapsible.addButton('🖼️⬇️', null, () => {
     invokeDownloader('gallerydl', {
       urlToDownload: location.href,
-      destination: 'X:\\Pic',
+      destination: 'X:\\Pic\\gallery-dl',
     });
   });
 
