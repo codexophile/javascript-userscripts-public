@@ -8,17 +8,25 @@
     
       z-index: 9999;
       display: flex;
+      align-items: center;
       position: fixed;
       bottom: 0;
       right: 0;
+      padding: 0.5rem;
       
       #content {
+        padding: 0.5rem;
         max-width: 40vw;
         line-clamp: 2;
       }
       
       #btns-cnt {
         display: flex;
+
+        button {
+          margin-right: 0.1rem;
+          max-height: 2rem;
+        }
       }
 
     }
