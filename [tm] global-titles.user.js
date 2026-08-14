@@ -17,9 +17,10 @@
         line-clamp: 2;
       }
       
-    }
-    #btns-cnt {
-      display: flex;
+      #btns-cnt {
+        display: flex;
+      }
+
     }
   `);
 
