@@ -77,7 +77,7 @@
       postLink = location.href;
     }
 
-    invokeYtdlp({
+    invokeDownloader('ytdlp', {
       urlToDownload: postLink,
       destination: 'x:\\tiktok',
       mode: 'noprompt',
