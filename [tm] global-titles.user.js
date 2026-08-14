@@ -16,7 +16,6 @@
         max-width: 40vw;
         line-clamp: 2;
       }
-
       
     }
     #btns-cnt {
