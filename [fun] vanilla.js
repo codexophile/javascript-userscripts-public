@@ -1789,14 +1789,28 @@ function getVideoInfo(url, options = {}) {
 
 // MARK: Rest
 
-function invokeYtdlp({ urlToDownload, destination, mode, browser, profile }) {
-  const urlSegment = `url:${urlToDownload}::`;
-  const destinationSegment = `dest:${destination}::`;
+/** @typedef {'ytdlp' | 'gallerydl'} Downloader */
+const DOWNLOADERS = /** @type {const} */ (['ytdlp', 'gallerydl']);
+/**
+ * @param {Downloader} downloader
+ */
+function invokeDownloader(
+  downloader,
+  { urlToDownload, destination, mode, browser, profile },
+) {
+  if (!DOWNLOADERS.includes(downloader)) {
+    throw new Error(
+      `Invalid downloader: "${downloader}".
+      Expected one of: ${DOWNLOADERS.join(', ')}`,
+    );
+  }
+  const urlSegment = urlToDownload ? `url:${urlToDownload}::` : '';
+  const destinationSegment = destination ? `dest:${destination}::` : '';
   const modeSegment = mode ? `mode:${mode}::` : '';
   const browserSegment = browser ? `browser:${browser}::` : ``;
   const profileSegment = profile ? `profile:${profile}::` : ``;
   GM_setClipboard(
-    `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
+    `initiate-${downloader}:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
   );
 }
 

@@ -189,7 +189,12 @@
   });
 
   //* gallery-dl
-  const gallerydlBtn = collapsible.addButton('🖼️⬇️', null, () => {});
+  const gallerydlBtn = collapsible.addButton('🖼️⬇️', null, () => {
+    invokeDownloader('gallerydl', {
+      urlToDownload: location.href,
+      destination: 'X:\\Pic',
+    });
+  });
 
   const rssLinks = document.querySelectorAll(
     'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
