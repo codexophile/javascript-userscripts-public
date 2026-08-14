@@ -5,10 +5,19 @@
 
   GM_addStyle(`
     #main-cnt {
+    
+      z-index: 9999;
       display: flex;
       position: fixed;
       bottom: 0;
       right: 0;
+      
+      #content {
+        max-width: 40vw;
+        line-clamp: 2;
+      }
+
+      
     }
     #btns-cnt {
       display: flex;
