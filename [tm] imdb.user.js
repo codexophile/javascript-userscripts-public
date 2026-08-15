@@ -166,6 +166,11 @@
     }
   })();
 
+  //* gallery/mediaindex flex-wrap fix
+  waitForEach('[data-testid="sub-section-images"] > section > div', rowEl => {
+    unwrapItself(rowEl);
+  });
+
   //* link to gallery fix
   const photosLinkEl = document.querySelector(
     `[data-testid="Photos"] > [data-testid="photos-title"] a`,
