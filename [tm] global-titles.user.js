@@ -25,7 +25,7 @@
         padding: 0 0.5rem;
         max-width: 35vw;
         line-clamp: 2;
-        font-size: 0.95rem;
+        font-size: 20px;
         color: rgba(255, 255, 255, 0.9);
         font-weight: 500;
         letter-spacing: 0.3px;
