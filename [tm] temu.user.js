@@ -3,6 +3,7 @@
 
   //* related searches
   waitForEach('.splide__slide > div', async relatedSearchEl => {
+    if (!location.href.includes('/search_result.html')) return;
     const searchQuery = relatedSearchEl.textContent.trim();
     const searchUrl = `https://www.temu.com/search_result.html?search_key=${encodeURIComponent(
       searchQuery,
