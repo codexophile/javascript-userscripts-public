@@ -1391,6 +1391,7 @@
         alert(
           'Could not determine the Instagram User ID for this page. The script cannot continue.',
         );
+        location.reload();
         return;
       }
     }
