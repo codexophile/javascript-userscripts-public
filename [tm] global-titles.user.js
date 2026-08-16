@@ -109,5 +109,6 @@
     const title = document.title;
     if (!titleCntEl) return;
     titleCntEl.innerHTML = title;
+    titleCntEl.title = title;
   }
 })();
