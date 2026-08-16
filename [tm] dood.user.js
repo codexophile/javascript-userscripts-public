@@ -7,8 +7,8 @@
   window.close = null;
 
   if (location.href.includes('/d/') && !location.href.includes('#noRedirect')) {
-    window.stop();
     const iframeSrc = document.querySelector('iframe').src;
+    window.stop();
     location.href = iframeSrc;
     // location.href = location.href.replace( '/d/', '/e/' )
   }
