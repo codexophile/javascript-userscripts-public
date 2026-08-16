@@ -2538,6 +2538,44 @@ async function load(url, selector, parent) {
   return selected;
 }
 
+async function fetchDocInIframe(url, returnHtml = false) {
+  return new Promise((resolve, reject) => {
+    const iframe = generateElements(`<iframe></iframe>`);
+    iframe.style.cssText =
+      'position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; border:0;';
+
+    const finish = () => {
+      try {
+        const targetDoc =
+          iframe.contentDocument || iframe.contentWindow?.document;
+        iframe.remove();
+
+        if (!targetDoc) {
+          reject(new Error(`Failed to access iframe document for ${url}`));
+          return;
+        }
+
+        resolve(returnHtml ? targetDoc.documentElement.outerHTML : targetDoc);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    iframe.addEventListener('load', finish, { once: true });
+    iframe.addEventListener(
+      'error',
+      () => {
+        iframe.remove();
+        reject(new Error(`Failed to load iframe for ${url}`));
+      },
+      { once: true },
+    );
+
+    iframe.src = url;
+    document.body.appendChild(iframe);
+  });
+}
+
 function fetchDoc(url, headers = '', returnHtml) {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
