@@ -193,6 +193,7 @@
     invokeDownloader('gallerydl', {
       urlToDownload: location.href,
       destination: 'X:\\Pic\\gallery-dl',
+      mode: 'auto-start',
     });
   });
 
