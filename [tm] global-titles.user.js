@@ -22,6 +22,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       
       #content {
+        text-align: right;
         padding: 0 0.5rem;
         max-width: 35vw;
         line-clamp: 2;
