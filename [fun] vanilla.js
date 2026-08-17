@@ -2336,46 +2336,51 @@ function getAccentColorFromFavicon() {
     img.src = faviconUrl;
 
     img.onload = function () {
-      // Create a canvas to draw the image
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0, img.width, img.height);
+      try {
+        // Create a canvas to draw the image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0, img.width, img.height);
 
-      // Get image data
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
+        // Get image data
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
 
-      // Analyze colors
-      const colors = [];
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const a = data[i + 3];
+        // Analyze colors
+        const colors = [];
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const a = data[i + 3];
 
-        // Skip fully transparent pixels
-        if (a === 0) continue;
+          // Skip fully transparent pixels
+          if (a === 0) continue;
 
-        colors.push({ r, g, b });
-      }
-
-      // Find the most vibrant color
-      let accentColor = { r: 0, g: 0, b: 0 };
-      let maxSaturation = 0;
-
-      for (let color of colors) {
-        const [h, s, l] = rgbToHsl(color.r, color.g, color.b);
-
-        // Choose the color with highest saturation, avoiding too dark or too light colors
-        if (s > maxSaturation && l > 0.3 && l < 0.7) {
-          maxSaturation = s;
-          accentColor = color;
+          colors.push({ r, g, b });
         }
-      }
 
-      resolve(`rgb(${accentColor.r}, ${accentColor.g}, ${accentColor.b})`);
+        // Find the most vibrant color
+        let accentColor = { r: 0, g: 0, b: 0 };
+        let maxSaturation = 0;
+
+        for (let color of colors) {
+          const [h, s, l] = rgbToHsl(color.r, color.g, color.b);
+
+          // Choose the color with highest saturation, avoiding too dark or too light colors
+          if (s > maxSaturation && l > 0.3 && l < 0.7) {
+            maxSaturation = s;
+            accentColor = color;
+          }
+        }
+
+        resolve(`rgb(${accentColor.r}, ${accentColor.g}, ${accentColor.b})`);
+      } catch (error) {
+        // Canvas access can fail due to cross-origin favicon restrictions.
+        resolve('#000000');
+      }
     };
 
     img.onerror = function () {
@@ -2409,7 +2414,10 @@ function getAccentColor() {
   let maxSaturation = 0;
 
   for (let color of uniqueColors) {
-    const [r, g, b] = color.match(/\d+/g).map(Number);
+    const match = color.match(/\d+/g);
+    if (!match || match.length < 3) continue;
+
+    const [r, g, b] = match.map(Number);
 
     const [h, s, l] = rgbToHsl(r, g, b);
 
