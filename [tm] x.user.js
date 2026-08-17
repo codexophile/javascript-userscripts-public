@@ -1,6 +1,15 @@
 (function () {
   'use strict';
 
+  //* gallery-dl
+  const ARTICLE_SELECTOR = 'article[data-testid="tweet"]';
+  const LOCATOR_SELECTOR = '[aria-label="More"]';
+  waitForEach(`${ARTICLE_SELECTOR} ${LOCATOR_SELECTOR}`, locatorEl => {
+    const parentEl = grandParent(locatorEl, 4);
+    const galleryDlBtnEl = generateElements(`<button>🖼️⬇️</button>`);
+    parentEl.prepend(galleryDlBtnEl);
+  });
+
   //* Auto click 'show more'
   waitForEach('[data-testid="tweet-text-show-more-link"]', showMoreLink => {
     showMoreLink.click();
