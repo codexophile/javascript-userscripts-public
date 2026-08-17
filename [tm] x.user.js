@@ -8,6 +8,21 @@
     const parentEl = grandParent(locatorEl, 4);
     const galleryDlBtnEl = generateElements(`<button>🖼️⬇️</button>`);
     parentEl.prepend(galleryDlBtnEl);
+    galleryDlBtnEl.addEventListener('click', () => {
+      const grandParentEl = grandParent(parentEl, 2);
+      const tweetLinkEl = grandParentEl.querySelector('time')?.closest('a');
+      let tweetUrl;
+      if (tweetLinkEl) {
+        tweetUrl = tweetLinkEl.href;
+      } else {
+        tweetUrl = location.href;
+      }
+      invokeDownloader('gallerydl', {
+        urlToDownload: tweetUrl,
+        destination: 'X:\\Pic\\gallery-dl',
+        mode: 'auto-start',
+      });
+    });
   });
 
   //* Auto click 'show more'
