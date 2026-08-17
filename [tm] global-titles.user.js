@@ -164,6 +164,22 @@
       transition: max-width 180ms ease, opacity 180ms ease, padding 180ms ease;
     }
 
+    #main-cnt #content.is-updating {
+      animation: content-refresh 240ms ease;
+    }
+
+    @keyframes content-refresh {
+      0% {
+        opacity: 0.45;
+        transform: translateY(2px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     #main-cnt #btns-cnt {
       display: flex;
       align-items: center;
@@ -304,13 +320,22 @@
 
   setCollapseState(false);
 
+  const triggerContentUpdateAnimation = () => {
+    titleCntEl.classList.remove('is-updating');
+    // Force a reflow so the animation reliably re-triggers on rapid updates.
+    void titleCntEl.offsetWidth;
+    titleCntEl.classList.add('is-updating');
+  };
+
   let observer = new MutationObserver(main);
   observer.observe(titleEl, { childList: true, subtree: true });
+  main();
 
   function main() {
     const title = document.title;
     if (!titleCntEl) return;
-    titleCntEl.innerHTML = title;
+    titleCntEl.textContent = title;
     titleCntEl.title = title;
+    triggerContentUpdateAnimation();
   }
 })();
