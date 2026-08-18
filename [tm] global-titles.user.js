@@ -118,6 +118,7 @@
     #main-cnt {
       --shadow-1: rgba(0, 0, 0, 0.32);
       --shadow-2: rgba(var(--global-title-accent-rgb), 0.28);
+
       z-index: 2147483647;
       position: fixed;
       right: ${LengthVal};
@@ -138,34 +139,97 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
       user-select: none;
-    }
 
-    #main-cnt:hover {
-      box-shadow:
-        0 18px 42px var(--shadow-1),
-        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-        0 0 28px var(--shadow-2);
-      transform: translateY(-1px);
-    }
+      &:hover {
+        box-shadow:
+          0 18px 42px var(--shadow-1),
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+          0 0 28px var(--shadow-2);
+        transform: translateY(-1px);
+      }
 
-    #main-cnt #content {
-      min-width: 0;
-      max-width: min(34vw, 420px);
-      padding: 0.2rem 0.35rem 0.2rem 0.1rem;
-      color: rgba(255, 255, 255, 0.92);
-      font-size: clamp(0.95rem, 0.8rem + 0.42vw, 1.15rem);
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      line-height: 1.3;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
-      transition: max-width 180ms ease, opacity 180ms ease, padding 180ms ease;
-    }
+      &.is-collapsed #content {
+        max-width: 0;
+        opacity: 0;
+        padding-left: 0;
+        padding-right: 0;
+        margin-right: -0.15rem;
+      }
 
-    #main-cnt #content.is-updating {
-      animation: content-refresh 240ms ease;
+      #content {
+        min-width: 0;
+        max-width: min(34vw, 420px);
+        padding: 0.2rem 0.35rem 0.2rem 0.1rem;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: clamp(0.95rem, 0.8rem + 0.42vw, 1.15rem);
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+        transition: max-width 180ms ease, opacity 180ms ease, padding 180ms ease;
+
+        &.is-updating {
+          animation: content-refresh 240ms ease;
+        }
+      }
+
+      #btns-cnt {
+        display: flex;
+        align-items: center;
+        gap: 0.28rem;
+        flex-shrink: 0;
+      }
+
+      .btn {
+        width: ${btnLengthVal};
+        height: ${btnLengthVal};
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0;
+        background: linear-gradient(135deg, rgba(var(--global-title-accent-rgb), 0.92) 0%, rgba(var(--global-title-accent-rgb), 0.7) 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px rgba(var(--global-title-accent-rgb), 0.25);
+        color: var(--global-title-accent-ink);
+        font-weight: 700;
+        font-size: 0.78rem;
+        line-height: 1;
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+
+        &:hover {
+          transform: translateY(-1px) scale(1.02);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 18px rgba(var(--global-title-accent-rgb), 0.32);
+          filter: brightness(1.05);
+        }
+
+        &:active {
+          transform: translateY(0) scale(0.98);
+        }
+
+        &:focus-visible {
+          outline: 2px solid rgba(var(--global-title-accent-rgb), 0.9);
+          outline-offset: 2px;
+        }
+      }
+
+      #btn-toggle {
+        background: linear-gradient(135deg, rgba(120, 128, 144, 0.96) 0%, rgba(86, 92, 107, 0.9) 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 6px 16px rgba(0, 0, 0, 0.2);
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      @media (max-width: 640px) {
+        max-width: calc(100vw - 1rem);
+
+        #content {
+          max-width: min(52vw, 260px);
+        }
+      }
     }
 
     @keyframes content-refresh {
@@ -178,72 +242,7 @@
         opacity: 1;
         transform: translateY(0);
       }
-    }
-
-    #main-cnt #btns-cnt {
-      display: flex;
-      align-items: center;
-      gap: 0.28rem;
-      flex-shrink: 0;
-    }
-
-    #main-cnt .btn {
-      width: ${btnLengthVal};
-      height: ${btnLengthVal};
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      padding: 0;
-      background: linear-gradient(135deg, rgba(var(--global-title-accent-rgb), 0.92) 0%, rgba(var(--global-title-accent-rgb), 0.7) 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px rgba(var(--global-title-accent-rgb), 0.25);
-      color: var(--global-title-accent-ink);
-      font-weight: 700;
-      font-size: 0.78rem;
-      line-height: 1;
-      cursor: pointer;
-      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
-    }
-
-    #main-cnt .btn:hover {
-      transform: translateY(-1px) scale(1.02);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 18px rgba(var(--global-title-accent-rgb), 0.32);
-      filter: brightness(1.05);
-    }
-
-    #main-cnt .btn:active {
-      transform: translateY(0) scale(0.98);
-    }
-
-    #main-cnt .btn:focus-visible {
-      outline: 2px solid rgba(var(--global-title-accent-rgb), 0.9);
-      outline-offset: 2px;
-    }
-
-    #main-cnt #btn-toggle {
-      background: linear-gradient(135deg, rgba(120, 128, 144, 0.96) 0%, rgba(86, 92, 107, 0.9) 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 6px 16px rgba(0, 0, 0, 0.2);
-      color: rgba(255, 255, 255, 0.94);
-    }
-
-    #main-cnt.is-collapsed #content {
-      max-width: 0;
-      opacity: 0;
-      padding-left: 0;
-      padding-right: 0;
-      margin-right: -0.15rem;
-    }
-
-    @media (max-width: 640px) {
-      #main-cnt {
-        max-width: calc(100vw - 1rem);
-      }
-
-      #main-cnt #content {
-        max-width: min(52vw, 260px);
-      }
-    }
+    }  
   `);
 
   await waitFor('body');
