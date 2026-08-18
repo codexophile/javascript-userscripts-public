@@ -189,11 +189,24 @@
   });
 
   //* gallery-dl
-  const gallerydlBtn = collapsible.addButton('🖼️⬇️', null, () => {
-    invokeDownloader('gallerydl', {
-      urlToDownload: location.href,
-      destination: 'X:\\Pic\\gallery-dl',
-      mode: 'auto-start',
+  collapsible.addButton('🖼️⬇️', null, () => {
+    const gallerydlCheckboxEls =
+      document.querySelectorAll(`.gallery-dl-checkbox`);
+
+    if (gallerydlCheckboxEls.length < 1) {
+      invokeDownloader('gallerydl', {
+        urlToDownload: location.href,
+        destination: 'X:\\Pic\\gallery-dl',
+        // mode: 'auto-start',
+      });
+      return;
+    }
+
+    const selectedLinksSet = new Set();
+    gallerydlCheckboxEls.forEach(checkboxEl => {
+      const linkEl = checkboxEl.parentElement.querySelector('a');
+      const url = linkEl.href;
+      selectedLinksSet.add(url);
     });
   });
 

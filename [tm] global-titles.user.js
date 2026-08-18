@@ -106,7 +106,7 @@
 
   applyAccentColor(accentColor);
 
-  GM_addStyle(`
+  GM_addStyle(/* css */ `
     :root {
       --global-title-accent-rgb: 118, 136, 255;
       --global-title-accent-color: rgb(var(--global-title-accent-rgb));
@@ -129,15 +129,24 @@
       padding: 0.25rem 0.35rem 0.25rem 0.5rem;
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.12);
-      background: linear-gradient(135deg, rgba(12, 15, 22, 0.82) 0%, rgba(20, 22, 30, 0.9) 100%);
+      background: linear-gradient(
+        135deg,
+        rgba(12, 15, 22, 0.82) 0%,
+        rgba(20, 22, 30, 0.9) 100%
+      );
       box-shadow:
         0 16px 40px var(--shadow-1),
         0 0 0 1px rgba(255, 255, 255, 0.06) inset,
         0 0 24px var(--shadow-2);
       backdrop-filter: blur(16px) saturate(1.2);
       -webkit-backdrop-filter: blur(16px) saturate(1.2);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+      font-family:
+        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+        Cantarell, sans-serif;
+      transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        opacity 180ms ease;
       user-select: none;
 
       &:hover {
@@ -169,7 +178,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
-        transition: max-width 180ms ease, opacity 180ms ease, padding 180ms ease;
+        transition:
+          max-width 180ms ease,
+          opacity 180ms ease,
+          padding 180ms ease;
 
         &.is-updating {
           animation: content-refresh 240ms ease;
@@ -183,7 +195,7 @@
         flex-shrink: 0;
       }
 
-      .btn {
+      .button {
         width: ${btnLengthVal};
         height: ${btnLengthVal};
         display: inline-flex;
@@ -192,18 +204,29 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 10px;
         padding: 0;
-        background: linear-gradient(135deg, rgba(var(--global-title-accent-rgb), 0.92) 0%, rgba(var(--global-title-accent-rgb), 0.7) 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 16px rgba(var(--global-title-accent-rgb), 0.25);
+        background: linear-gradient(
+          135deg,
+          rgba(var(--global-title-accent-rgb), 0.92) 0%,
+          rgba(var(--global-title-accent-rgb), 0.7) 100%
+        );
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.18),
+          0 6px 16px rgba(var(--global-title-accent-rgb), 0.25);
         color: var(--global-title-accent-ink);
         font-weight: 700;
         font-size: 0.78rem;
         line-height: 1;
         cursor: pointer;
-        transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease,
+          filter 160ms ease;
 
         &:hover {
           transform: translateY(-1px) scale(1.02);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 18px rgba(var(--global-title-accent-rgb), 0.32);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.22),
+            0 10px 18px rgba(var(--global-title-accent-rgb), 0.32);
           filter: brightness(1.05);
         }
 
@@ -218,8 +241,14 @@
       }
 
       #btn-toggle {
-        background: linear-gradient(135deg, rgba(120, 128, 144, 0.96) 0%, rgba(86, 92, 107, 0.9) 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 6px 16px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(
+          135deg,
+          rgba(120, 128, 144, 0.96) 0%,
+          rgba(86, 92, 107, 0.9) 100%
+        );
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.14),
+          0 6px 16px rgba(0, 0, 0, 0.2);
         color: rgba(255, 255, 255, 0.94);
       }
 
@@ -242,7 +271,7 @@
         opacity: 1;
         transform: translateY(0);
       }
-    }  
+    }
   `);
 
   await waitFor('body');
@@ -250,10 +279,10 @@
     `
     <div id="main-cnt" aria-live="polite">
       <div id="btns-cnt">
-        <button id="btn-toggle" class="btn" type="button" aria-label="Toggle title panel">⇰</button>
-        <button id="btn-copy-title" class="btn" type="button" aria-label="Copy page title">T</button>
-        <button id="btn-copy-url" class="btn" type="button" aria-label="Copy page URL">U</button>
-        <button id="btn-open-in-new" class="btn" type="button" aria-label="Open page in new tab">↗</button>
+        <button id="btn-toggle" class="button" type="button" aria-label="Toggle title panel">⇰</button>
+        <button id="btn-copy-title" class="button" type="button" aria-label="Copy page title">T</button>
+        <button id="btn-copy-url" class="button" type="button" aria-label="Copy page URL">U</button>
+        <button id="btn-open-in-new" class="button" type="button" aria-label="Open page in new tab">↗</button>
       </div>
       <div id="content"></div>
     </div>
