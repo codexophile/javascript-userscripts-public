@@ -3,8 +3,9 @@
 
   const titleEl = await waitFor(`title`);
 
-  const LengthVal = '0.8rem';
-  const btnLengthVal = '1.7rem';
+  const LengthVal = '10px';
+  const btnLengthVal = '30px';
+  const fontSize = '12px';
 
   function colorToRgbValues(color) {
     const value = (color || '').trim();
@@ -125,8 +126,8 @@
       bottom: ${LengthVal};
       display: flex;
       align-items: center;
-      gap: 0.45rem;
-      padding: 0.25rem 0.35rem 0.25rem 0.5rem;
+      gap: 7px;
+      padding: 4px;
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       background: linear-gradient(
@@ -162,17 +163,17 @@
         opacity: 0;
         padding-left: 0;
         padding-right: 0;
-        margin-right: -0.15rem;
+        margin-right: -2px;
       }
 
       #content {
         min-width: 0;
         max-width: min(34vw, 420px);
-        padding: 0.2rem 0.35rem 0.2rem 0.1rem;
+        padding: 3px 6px 3px 2px;
         color: rgba(255, 255, 255, 0.92);
-        font-size: clamp(0.95rem, 0.8rem + 0.42vw, 1.15rem);
+        font-size: ${fontSize};
         font-weight: 600;
-        letter-spacing: 0.01em;
+        letter-spacing: 0.12px;
         line-height: 1.3;
         white-space: nowrap;
         overflow: hidden;
@@ -191,7 +192,7 @@
       #btns-cnt {
         display: flex;
         align-items: center;
-        gap: 0.28rem;
+        gap: 4px;
         flex-shrink: 0;
       }
 
@@ -214,7 +215,7 @@
           0 6px 16px rgba(var(--global-title-accent-rgb), 0.25);
         color: var(--global-title-accent-ink);
         font-weight: 700;
-        font-size: 0.78rem;
+        font-size: ${fontSize};
         line-height: 1;
         cursor: pointer;
         transition:
@@ -253,7 +254,7 @@
       }
 
       @media (max-width: 640px) {
-        max-width: calc(100vw - 1rem);
+        max-width: calc(100vw - 16px);
 
         #content {
           max-width: min(52vw, 260px);
