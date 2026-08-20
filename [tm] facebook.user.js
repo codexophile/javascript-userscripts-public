@@ -37,7 +37,7 @@ waitForEach('div:has(>[aria-label="Reel tile preview"])', reelCntEl => {
       alert('Reel URL not found');
       return;
     }
-    invokeYtdlp({
+    invokeDownloader('ytdlp', {
       browser: 'firefox',
       profile: '3vm341ho.default-release',
       urlToDownload,
