@@ -9,7 +9,9 @@
     }
   `);
 
-  waitForEach('[href*="/photo.php?"]', el => {
+  const SELECTORS = ['/photo.php?', '/stories/'];
+  const selector = SELECTORS.map(s => `[href*="${s}"]`).join(',');
+  waitForEach(selector, el => {
     const checkboxEl = generateElements(
       `<input type="checkbox">`,
       el.parentElement,
