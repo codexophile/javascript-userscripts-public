@@ -1,6 +1,29 @@
 (async function () {
   ('use strict');
 
+  //* category sidebar
+  (async function () {
+    const CATEGORY_LINK_SELECTOR = 'div:has(>[href*="/lk-en/"])';
+    if (!location.href.includes('/sitemap.html')) return;
+    waitForEach('#main h2', () => {
+      const mainEl = document.querySelector('#main');
+      style(mainEl, `display: flex;`);
+      const iframeEl = generateElements(`<iframe></iframe>`, mainEl);
+      mainEl.appendChild(iframeEl);
+      iframeEl.src = 'about:blank';
+
+      const categoryLinkEls = document.querySelectorAll(CATEGORY_LINK_SELECTOR);
+      categoryLinkEls.forEach(categoryLinkEl => {
+        const clonedEl = removeListenersByCloning(categoryLinkEl);
+        clonedEl.addEventListener('click', event => {
+          event.preventDefault();
+          const categoryUrl = clonedEl.querySelector('a').href;
+          iframeEl.src = categoryUrl + '#embed';
+        });
+      });
+    });
+  })();
+
   //* related searches
   waitForEach('.splide__slide > div', async relatedSearchEl => {
     if (!location.href.includes('/search_result.html')) return;
@@ -21,11 +44,14 @@
   });
 
   //* product previews
-  const queryForProductItems = '[data-tooltip*=goodContainer]';
-  const productItemEls = document.querySelectorAll(queryForProductItems);
+  (function () {
+    return;
 
-  // 1. Add Tippy.js default styles
-  GM_addStyle(`
+    const queryForProductItems = '[data-tooltip*=goodContainer]';
+    const productItemEls = document.querySelectorAll(queryForProductItems);
+
+    // 1. Add Tippy.js default styles
+    GM_addStyle(`
     .tippy-box[data-theme~='light-border'] {
         border: 1px solid #dadada;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -33,84 +59,85 @@
     }
   `);
 
-  lazyLoad(
-    async productItemEl => {
-      const productLink = productItemEl.querySelector('a').href;
-      const productDoc = await fetchDoc(productLink);
+    lazyLoad(
+      async productItemEl => {
+        const productLink = productItemEl.querySelector('a').href;
+        const productDoc = await fetchDoc(productLink);
 
-      const imgContainerEl = generateElements(
-        `<div class="img-container"></div>`,
-      );
-
-      const locatorImgEls = productDoc.querySelectorAll(
-        '[aria-label="Goods image"] img',
-      );
-      locatorImgEls.forEach(locatorImgEl => {
-        const locatorEl = locatorImgEl.parentElement;
-        console.log(locatorEl.style.backgroundImage);
-        const matches =
-          locatorEl.style.backgroundImage.match(/url\(["'](.+?)["']\)/);
-        if (!matches) {
-          console.warn('No image found for locator element:', locatorEl);
-          return;
-        }
-        const ImgSrc = matches[1].replace(/\?.+/, '');
-        const newImgEl = generateElements(
-          `<img src="${ImgSrc}" alt="Product Image" />`,
+        const imgContainerEl = generateElements(
+          `<div class="img-container"></div>`,
         );
-        imgContainerEl.appendChild(newImgEl);
-      });
 
-      style(
-        imgContainerEl,
-        `
+        const locatorImgEls = productDoc.querySelectorAll(
+          '[aria-label="Goods image"] img',
+        );
+        locatorImgEls.forEach(locatorImgEl => {
+          const locatorEl = locatorImgEl.parentElement;
+          console.log(locatorEl.style.backgroundImage);
+          const matches =
+            locatorEl.style.backgroundImage.match(/url\(["'](.+?)["']\)/);
+          if (!matches) {
+            console.warn('No image found for locator element:', locatorEl);
+            return;
+          }
+          const ImgSrc = matches[1].replace(/\?.+/, '');
+          const newImgEl = generateElements(
+            `<img src="${ImgSrc}" alt="Product Image" />`,
+          );
+          imgContainerEl.appendChild(newImgEl);
+        });
+
+        style(
+          imgContainerEl,
+          `
       display: flex;
       flex-wrap: wrap;
       width: 500px;`,
-      );
+        );
 
-      imgContainerEl.querySelectorAll('img').forEach(imgEl => {
-        style(
-          imgEl,
-          `
+        imgContainerEl.querySelectorAll('img').forEach(imgEl => {
+          style(
+            imgEl,
+            `
         margin: 3px;
         max-width: 150px;`,
-        );
-      });
+          );
+        });
 
-      // give productItemEl a card-like appearance
-      // prettify the product item element
-      style(
-        productItemEl,
-        `
+        // give productItemEl a card-like appearance
+        // prettify the product item element
+        style(
+          productItemEl,
+          `
       border: 1px solid #ccc;
       border-radius: 8px;
       background-color: #fff;`,
-      );
+        );
 
-      //* tippy.js configurations
+        //* tippy.js configurations
 
-      // 2. Find the trigger and its content element
-      const triggerElement = productItemEl;
-      const contentElement = imgContainerEl;
+        // 2. Find the trigger and its content element
+        const triggerElement = productItemEl;
+        const contentElement = imgContainerEl;
 
-      if (triggerElement && contentElement) {
-        // 3. Initialize Tippy
-        tippy(triggerElement, {
-          content: contentElement, // Pass the DOM element directly
-          allowHTML: true, // Necessary to render the HTML
-          interactive: true, // Allows you to hover over the tippy itself
-          placement: 'right', // Preferred placement, will adjust automatically
-          theme: 'light-border', // Use a pre-defined or custom theme
-          animation: 'fade', // A little flair
-          trigger: 'mouseenter', // Show on hover
-          arrow: false,
-          // hideOnClick: false,  // Keep it open even if you click inside
-        });
-      }
-    },
-    ...productItemEls,
-  );
+        if (triggerElement && contentElement) {
+          // 3. Initialize Tippy
+          tippy(triggerElement, {
+            content: contentElement, // Pass the DOM element directly
+            allowHTML: true, // Necessary to render the HTML
+            interactive: true, // Allows you to hover over the tippy itself
+            placement: 'right', // Preferred placement, will adjust automatically
+            theme: 'light-border', // Use a pre-defined or custom theme
+            animation: 'fade', // A little flair
+            trigger: 'mouseenter', // Show on hover
+            arrow: false,
+            // hideOnClick: false,  // Keep it open even if you click inside
+          });
+        }
+      },
+      ...productItemEls,
+    );
+  })();
 
   //* Wishlist page
   if (location.href.includes('/wishlist.html')) {
