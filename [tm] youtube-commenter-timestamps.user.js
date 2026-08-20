@@ -1,5 +1,5 @@
 (function () {
-  'use strict';
+  ('use strict');
 
   const CONFIG = {
     API_KEY: getYoutubeAPI(),
@@ -184,7 +184,6 @@
   }
 
   function showPopup(comment) {
-    injectStyles();
     const stack = ensureStack();
 
     const card = document.createElement('div');
@@ -247,6 +246,7 @@
     watchVideo(video, comments);
   }
 
+  injectStyles();
   init();
   document.addEventListener('yt-navigate-finish', init);
 })();
