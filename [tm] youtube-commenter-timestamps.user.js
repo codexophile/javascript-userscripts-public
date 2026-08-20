@@ -138,10 +138,7 @@
   }
 
   function injectStyles() {
-    if (document.getElementById('yt-ts-popup-style')) return;
-    const style = document.createElement('style');
-    style.id = 'yt-ts-popup-style';
-    style.textContent = `
+    const styleText = `
       @keyframes yt-ts-slide-in {
         from { transform: translateX(120%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
@@ -183,7 +180,7 @@
       }
       .yt-ts-close:hover { color: #fff; }
     `;
-    document.head.appendChild(style);
+    GM_addStyle(styleText);
   }
 
   function showPopup(comment) {
@@ -235,21 +232,6 @@
     });
   }
 
-  function waitForVideo() {
-    return new Promise(resolve => {
-      const existing = document.querySelector('video');
-      if (existing) return resolve(existing);
-      const obs = new MutationObserver(() => {
-        const v = document.querySelector('video');
-        if (v) {
-          obs.disconnect();
-          resolve(v);
-        }
-      });
-      obs.observe(document.body, { childList: true, subtree: true });
-    });
-  }
-
   let currentVideoId = null;
 
   async function init() {
@@ -257,7 +239,7 @@
     if (!videoId || videoId === currentVideoId) return;
     currentVideoId = videoId;
 
-    const video = await waitForVideo();
+    const video = await waitFor('video');
     const comments = await fetchTimestampComments(videoId);
     console.log(
       `[TimestampComments] ${comments.length} timestamp mentions found`,
