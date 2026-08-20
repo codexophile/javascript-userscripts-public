@@ -179,7 +179,7 @@
   GM_addElement(ytDlpPopover, 'button', {
     textContent: 'List',
     onclick: () => {
-      invokeYtdlp({
+      invokeDownloader('ytdlp', {
         urlToDownload: location.href,
         mode: 'list',
         browser: 'firefox',
@@ -187,9 +187,10 @@
       });
     },
   });
+  generateElements(`<button>`);
 
   //* gallery-dl
-  collapsible.addButton('🖼️⬇️', null, () => {
+  collapsible.addButton('🖼️', null, () => {
     const gallerydlCheckboxEls =
       document.querySelectorAll(`.gallery-dl-checkbox`);
 
@@ -197,7 +198,7 @@
       invokeDownloader('gallerydl', {
         urlToDownload: location.href,
         destination: 'X:\\Pic\\gallery-dl',
-        // mode: 'auto-start',
+        mode: 'regular',
       });
       return;
     }
