@@ -191,8 +191,9 @@
 
   //* gallery-dl
   collapsible.addButton('🖼️', null, () => {
-    const gallerydlCheckboxEls =
-      document.querySelectorAll(`.gallery-dl-checkbox`);
+    const gallerydlCheckboxEls = document.querySelectorAll(
+      `.gallery-dl-checkbox:checked`,
+    );
 
     if (gallerydlCheckboxEls.length < 1) {
       invokeDownloader('gallerydl', {
