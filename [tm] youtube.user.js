@@ -100,7 +100,7 @@
   });
 
   //* @channelName links -> @channelName/videos/
-  waitForEach(`[href*='/@']`, linkToChannelEl => {
+  waitForEach(`[href*='/@'], [href*='/channel/']`, linkToChannelEl => {
     linkToChannelEl.href += '/videos/';
   });
   //* short links
