@@ -125,7 +125,7 @@
       Object.assign(stack.style, {
         position: 'fixed',
         top: '80px',
-        right: '20px',
+        left: '20px',
         zIndex: '99999',
         display: 'flex',
         flexDirection: 'column',
@@ -186,26 +186,30 @@
   function showPopup(comment) {
     const stack = ensureStack();
 
-    const card = document.createElement('div');
+    const card = generateElements(`
+      <div>
+        <div class="yt-ts-header">
+          <img class="yt-ts-avatar" src="${comment.authorProfileImageUrl}" alt="">
+          <div style="min-width:0;">
+            <a class="yt-ts-name" href="${comment.authorChannelUrl}" target="_blank" rel="noopener">${comment.author}</a>
+            <div class="yt-ts-meta">${formatDate(comment.publishedAt)}</div>
+          </div>
+          <span class="yt-ts-badge">@${comment.raw}</span>
+          <button class="yt-ts-close" title="Close">&times;</button>
+        </div>
+        <div class="yt-ts-text"></div>
+        <div class="yt-ts-footer">
+          <div class="yt-ts-likes">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#aaa">
+              <path
+                d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z" />
+            </svg>
+            <span>${(comment.likeCount || 0).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+      `);
     card.className = 'yt-ts-card';
-    card.innerHTML = `
-      <div class="yt-ts-header">
-        <img class="yt-ts-avatar" src="${comment.authorProfileImageUrl}" alt="">
-        <div style="min-width:0;">
-          <a class="yt-ts-name" href="${comment.authorChannelUrl}" target="_blank" rel="noopener">${comment.author}</a>
-          <div class="yt-ts-meta">${formatDate(comment.publishedAt)}</div>
-        </div>
-        <span class="yt-ts-badge">@${comment.raw}</span>
-        <button class="yt-ts-close" title="Close">&times;</button>
-      </div>
-      <div class="yt-ts-text"></div>
-      <div class="yt-ts-footer">
-        <div class="yt-ts-likes">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="#aaa"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
-          <span>${(comment.likeCount || 0).toLocaleString()}</span>
-        </div>
-      </div>
-    `;
     card.querySelector('.yt-ts-text').textContent = comment.text;
 
     const close = () => {
