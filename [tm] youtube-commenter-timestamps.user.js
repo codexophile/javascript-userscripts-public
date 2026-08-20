@@ -130,7 +130,7 @@
       Object.assign(stack.style, {
         position: 'fixed',
         top: '80px',
-        left: '20px',
+        right: '20px',
         zIndex: '99999',
         display: 'flex',
         flexDirection: 'column',
@@ -251,6 +251,7 @@
     const comments = await fetchTimestampComments(videoId);
     console.log(
       `[TimestampComments] ${comments.length} timestamp mentions found`,
+      comments,
     );
     watchVideo(video, comments);
   }
