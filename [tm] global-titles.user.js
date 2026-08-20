@@ -3,9 +3,22 @@
 
   const titleEl = await waitFor(`title`);
 
-  const LengthVal = '10px';
-  const btnLengthVal = '30px';
-  const fontSize = '12px';
+  const LENGTH_VAL = '10px';
+  const BTN_LENGTH_VAL = '30px';
+  const FONT_SIZE = '12px';
+  const LINE_CLAMP_N = 3;
+
+  const CONTENT_LINE_CLAMP_CSS =
+    LINE_CLAMP_N > 0
+      ? `
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: ${LINE_CLAMP_N};
+        line-clamp: ${LINE_CLAMP_N};
+      `
+      : `
+        display: block;
+      `;
 
   function colorToRgbValues(color) {
     const value = (color || '').trim();
@@ -122,8 +135,8 @@
 
       z-index: 2147483647;
       position: fixed;
-      right: ${LengthVal};
-      bottom: ${LengthVal};
+      right: ${LENGTH_VAL};
+      bottom: ${LENGTH_VAL};
       display: flex;
       align-items: center;
       gap: 7px;
@@ -171,13 +184,15 @@
         max-width: min(34vw, 420px);
         padding: 3px 6px 3px 2px;
         color: rgba(255, 255, 255, 0.92);
-        font-size: ${fontSize};
+        font-size: ${FONT_SIZE};
         font-weight: 600;
         letter-spacing: 0.12px;
         line-height: 1.3;
-        white-space: nowrap;
+        white-space: normal;
+        word-break: break-word;
         overflow: hidden;
         text-overflow: ellipsis;
+        ${CONTENT_LINE_CLAMP_CSS}
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
         transition:
           max-width 180ms ease,
@@ -197,8 +212,8 @@
       }
 
       .button {
-        width: ${btnLengthVal};
-        height: ${btnLengthVal};
+        width: ${BTN_LENGTH_VAL};
+        height: ${BTN_LENGTH_VAL};
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -215,7 +230,7 @@
           0 6px 16px rgba(var(--global-title-accent-rgb), 0.25);
         color: var(--global-title-accent-ink);
         font-weight: 700;
-        font-size: ${fontSize};
+        font-size: ${FONT_SIZE};
         line-height: 1;
         cursor: pointer;
         transition:
