@@ -210,6 +210,11 @@
       const url = linkEl.href;
       selectedLinksSet.add(url);
     });
+    invokeDownloader('gallerydl', {
+      urlToDownload: [...selectedLinksSet].join(','),
+      destination: 'X:\\Pic\\gallery-dl',
+      mode: 'regular',
+    });
   });
 
   const rssLinks = document.querySelectorAll(
