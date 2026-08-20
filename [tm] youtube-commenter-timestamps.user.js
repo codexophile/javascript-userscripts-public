@@ -221,7 +221,17 @@
       card.classList.add('closing');
       setTimeout(() => card.remove(), 250);
     };
+
     card.querySelector('.yt-ts-close').addEventListener('click', close);
+    card.addEventListener('click', e => {
+      if (e.target.closest('.yt-ts-close')) return;
+      const video = document.querySelector('video');
+      if (video) {
+        video.currentTime = comment.seconds;
+        video.play();
+      }
+    });
+
     if (CONFIG.AUTO_DISMISS_MS > 0) setTimeout(close, CONFIG.AUTO_DISMISS_MS);
 
     stack.appendChild(card);
