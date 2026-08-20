@@ -6,8 +6,13 @@
     MAX_PAGES: 10, // 10 pages * 100 = up to 1000 comments scanned
     ORDER: 'relevance', // 'relevance' or 'time'
     TRIGGER_WINDOW: 1.2, // seconds tolerance around the timestamp
-    AUTO_DISMISS_MS: 8000, // auto-close popups after this long
+    AUTO_DISMISS_MS: 16000, // auto-close popups after this long
   };
+
+  BASE_FONT_SIZE = 20;
+  FONT_SIZE_L1 = BASE_FONT_SIZE + 1;
+  FONT_SIZE_L2 = BASE_FONT_SIZE + 2;
+  FONT_SIZE_L3 = BASE_FONT_SIZE + 5;
 
   const TIMESTAMP_RE = /(?<![\d:])(\d{1,2}(?::[0-5]\d){1,2})(?![\d:])/g;
 
@@ -130,7 +135,7 @@
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
-        maxWidth: '340px',
+        maxWidth: '600px',
       });
       document.body.appendChild(stack);
     }
@@ -161,22 +166,22 @@
       .yt-ts-card.closing { animation: yt-ts-slide-out 0.25s ease-in forwards; }
       .yt-ts-header { display: flex; align-items: center; gap: 8px; }
       .yt-ts-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
-      .yt-ts-name { font-size: 13px; font-weight: 500; color: #fff; text-decoration: none; }
+      .yt-ts-name { font-size: ${FONT_SIZE_L1}px; font-weight: 500; color: #fff; text-decoration: none; }
       .yt-ts-name:hover { text-decoration: underline; color: #ff4444; }
-      .yt-ts-meta { font-size: 11px; color: #aaa; margin-top: 1px; }
+      .yt-ts-meta { font-size: ${FONT_SIZE_L2}px; color: #aaa; margin-top: 1px; }
       .yt-ts-badge {
-        margin-left: auto; background: #ff0000; color: #fff; font-size: 11px;
+        margin-left: auto; background: #ff0000; color: #fff; font-size: ${FONT_SIZE_L3}px;
         font-weight: 600; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
       }
       .yt-ts-text {
-        font-size: 13px; line-height: 1.4; margin: 8px 0 6px; color: #ddd;
+        font-size: ${FONT_SIZE_L2}px; line-height: 1.4; margin: 8px 0 6px; color: #ddd;
         max-height: 90px; overflow-y: auto;
       }
       .yt-ts-footer { display: flex; align-items: center; justify-content: space-between; }
-      .yt-ts-likes { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #aaa; }
+      .yt-ts-likes { display: flex; align-items: center; gap: 4px; font-size: ${FONT_SIZE_L2}px; color: #aaa; }
       .yt-ts-close {
         background: none; border: none; color: #888; cursor: pointer;
-        font-size: 16px; line-height: 1; padding: 2px 6px;
+        font-size: ${FONT_SIZE_L3}px; line-height: 1; padding: 2px 6px;
       }
       .yt-ts-close:hover { color: #fff; }
     `;
