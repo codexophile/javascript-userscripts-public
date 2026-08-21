@@ -47,6 +47,18 @@
   });
   collapsible.collapsibleToggler.click();
 
+  //* crt.name
+  const crtNameBtn = collapsible.addButton();
+  generateElements(
+    `
+    <a href="https://crt.name/v1/search?apex=${location.host}" target="_blank">
+      <img src="https://www.google.com/s2/favicons?domain=crt.name&sz=64">
+    </a>
+    `,
+    crtNameBtn,
+  );
+
+  //*
   collapsible.addButton('🔝', null, () => window.scrollTo(0, 0));
   const headersPopover = collapsible.addPopup('headers-popover');
   collapsible.addButton('🇭', headersPopover);
