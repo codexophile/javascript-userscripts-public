@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  const AUOTO_ADVANCE_GRACE_PERIOD_MS = 500;
+
   waitForEach(`.article_title_link`, async articleLinkEl => {
     const rssItemEl = articleLinkEl.closest('.ar');
 
@@ -79,7 +81,7 @@
           });
           document.dispatchEvent(kbEvent);
         }
-      }, 1000);
+      }, AUOTO_ADVANCE_GRACE_PERIOD_MS);
     },
   );
 })();
