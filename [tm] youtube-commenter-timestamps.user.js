@@ -164,6 +164,8 @@
         animation: yt-ts-slide-in 0.25s ease-out;
       }
       .yt-ts-card.closing { animation: yt-ts-slide-out 0.25s ease-in forwards; }
+      .yt-ts-progress { height: 2px; margin: 0 -14px -12px; background: #303030; }
+      .yt-ts-progress-bar { height: 100%; width: 100%; background: #ff0000; transform-origin: left; }
       .yt-ts-header { display: flex; align-items: center; gap: 8px; }
       .yt-ts-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
       .yt-ts-name { font-size: ${FONT_SIZE_L1}px; font-weight: 500; color: #fff; text-decoration: none; }
@@ -188,7 +190,7 @@
     GM_addStyle(styleText);
   }
 
-  function showPopup(comment) {
+  function showPopup(comment, video) {
     const stack = ensureStack();
 
     const card = generateElements(`
@@ -212,16 +214,73 @@
             <span>${(comment.likeCount || 0).toLocaleString()}</span>
           </div>
         </div>
+        <div class="yt-ts-progress"><div class="yt-ts-progress-bar"></div></div>
       </div>
       `);
     card.className = 'yt-ts-card';
     card.querySelector('.yt-ts-text').textContent = comment.text;
 
+    const progressBar = card.querySelector('.yt-ts-progress-bar');
+    let remainingMs = CONFIG.AUTO_DISMISS_MS;
+    let lastFrameTime = null;
+    let animationFrameId = null;
+    let isHovered = false;
+    let isClosed = false;
+
+    const updateProgress = timestamp => {
+      if (isClosed) return;
+      if (lastFrameTime === null) lastFrameTime = timestamp;
+      if (!isHovered && !video.paused) {
+        remainingMs -= timestamp - lastFrameTime;
+        progressBar.style.transform = `scaleX(${Math.max(remainingMs, 0) / CONFIG.AUTO_DISMISS_MS})`;
+      }
+      lastFrameTime = timestamp;
+      if (remainingMs <= 0) {
+        close();
+        return;
+      }
+      animationFrameId = requestAnimationFrame(updateProgress);
+    };
+
+    const resetProgress = () => {
+      remainingMs = CONFIG.AUTO_DISMISS_MS;
+      lastFrameTime = null;
+      progressBar.style.transform = 'scaleX(1)';
+    };
+
+    const pauseProgress = () => {
+      resetProgress();
+      if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    };
+
+    const resumeProgress = () => {
+      if (isClosed || isHovered || video.paused || CONFIG.AUTO_DISMISS_MS <= 0)
+        return;
+      if (animationFrameId === null) {
+        lastFrameTime = null;
+        animationFrameId = requestAnimationFrame(updateProgress);
+      }
+    };
+
     const close = () => {
+      if (isClosed) return;
+      isClosed = true;
+      if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+      video.removeEventListener('pause', pauseProgress);
+      video.removeEventListener('play', resumeProgress);
       card.classList.add('closing');
       setTimeout(() => card.remove(), 250);
     };
 
+    card.addEventListener('mouseenter', () => {
+      isHovered = true;
+      pauseProgress();
+    });
+    card.addEventListener('mouseleave', () => {
+      isHovered = false;
+      resumeProgress();
+    });
     card.querySelector('.yt-ts-close').addEventListener('click', close);
     card.addEventListener('click', e => {
       if (e.target.closest('.yt-ts-close')) return;
@@ -232,9 +291,12 @@
       }
     });
 
-    if (CONFIG.AUTO_DISMISS_MS > 0) setTimeout(close, CONFIG.AUTO_DISMISS_MS);
-
     stack.appendChild(card);
+    if (CONFIG.AUTO_DISMISS_MS > 0) {
+      video.addEventListener('pause', pauseProgress);
+      video.addEventListener('play', resumeProgress);
+      resumeProgress();
+    }
   }
 
   function watchVideo(video, comments) {
@@ -244,7 +306,7 @@
         if (c.shown) continue;
         if (Math.abs(t - c.seconds) <= CONFIG.TRIGGER_WINDOW) {
           c.shown = true;
-          showPopup(c);
+          showPopup(c, video);
         }
       }
     });
