@@ -1,8 +1,10 @@
 (async function () {
   'use strict';
 
-  const lb = await waitFor(`select.custom-select-sm`);
-  sortOptions(lb);
+  const SELECTOR = 'select.custom-select-sm';
+  waitForEach(SELECTOR, listboxEl => {
+    sortOptions(listboxEl);
+  });
 
   function sortOptions(selectEl) {
     const optionsArr = Array.from(selectEl.options);
