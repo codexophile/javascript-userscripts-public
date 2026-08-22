@@ -1,8 +1,9 @@
 (async function () {
   'use strict';
 
-  const SELECTOR = 'select.custom-select-sm';
-  waitForEach(SELECTOR, listboxEl => {
+  //* sort listbox
+  const LIST_BOX_SELECTOR = 'select.custom-select-sm';
+  waitForEach(LIST_BOX_SELECTOR, listboxEl => {
     sortOptions(listboxEl);
   });
 
