@@ -66,22 +66,19 @@
   // });
 
   //* auto advancing
-  waitForEach(
-    `#no_more_press_space[style="visibility: visible;"]`,
-    noMoreIndicatorEl => {
-      setTimeout(() => {
-        if (
-          document.querySelector(
-            `#no_more_press_space[style="visibility: visible;"]`,
-          )
-        ) {
-          const kbEvent = new KeyboardEvent('keydown', {
-            keyCode: 32,
-            which: 32,
-          });
-          document.dispatchEvent(kbEvent);
-        }
-      }, AUOTO_ADVANCE_GRACE_PERIOD_MS);
-    },
-  );
+  waitForEach(`#no_more_press_space[style="visibility: visible;"]`, () => {
+    setTimeout(() => {
+      if (
+        document.querySelector(
+          `#no_more_press_space[style="visibility: visible;"]`,
+        )
+      ) {
+        const kbEvent = new KeyboardEvent('keydown', {
+          keyCode: 32,
+          which: 32,
+        });
+        document.dispatchEvent(kbEvent);
+      }
+    }, AUOTO_ADVANCE_GRACE_PERIOD_MS);
+  });
 })();
