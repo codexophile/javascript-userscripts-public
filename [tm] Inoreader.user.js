@@ -2,6 +2,26 @@
   'use strict';
 
   const AUOTO_ADVANCE_GRACE_PERIOD_MS = 500;
+  const CONFIG = {
+    filters: [
+      {
+        id: 'youtube-shorts',
+        feedNamesPatterns: [
+          'Good Enough',
+          "It's Okay To Be Smart",
+          'WIRED',
+          'ExplosmEntertainment',
+          'TylerPath',
+          'First We Feast',
+          'Have You Been Paying Attention?',
+          'Jimmy Kimmel Live',
+          'Late Night with Seth Meyers',
+          'Vsauce',
+        ],
+        urlPatterns: ['https://www.youtube.com/shorts/'],
+      },
+    ],
+  };
 
   waitForEach(`.article_title_link`, async articleLinkEl => {
     const rssItemEl = articleLinkEl.closest('.ar');
