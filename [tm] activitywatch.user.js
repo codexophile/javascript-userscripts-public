@@ -7,6 +7,14 @@
     sortOptions(listboxEl);
   });
 
+  //* category copy
+  waitForEach('[id^="summary_"]', categoryEl => {
+    categoryEl.addEventListener('click', () => {
+      const titleEl = categoryEl.querySelector('title');
+      GM_setClipboard(titleEl.textContent);
+    });
+  });
+
   function sortOptions(selectEl) {
     const optionsArr = Array.from(selectEl.options);
     optionsArr.sort((a, b) => a.text.localeCompare(b.text));
