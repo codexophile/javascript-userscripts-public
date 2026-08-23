@@ -218,6 +218,7 @@
       </div>
       `);
     card.className = 'yt-ts-card';
+    card.dataset.likeCount = String(comment.likeCount || 0);
     card.querySelector('.yt-ts-text').textContent = comment.text;
 
     const progressBar = card.querySelector('.yt-ts-progress-bar');
@@ -292,6 +293,9 @@
     });
 
     stack.appendChild(card);
+    [...stack.children]
+      .sort((a, b) => Number(b.dataset.likeCount) - Number(a.dataset.likeCount))
+      .forEach(sortedCard => stack.appendChild(sortedCard));
     if (CONFIG.AUTO_DISMISS_MS > 0) {
       video.addEventListener('pause', pauseProgress);
       video.addEventListener('play', resumeProgress);
