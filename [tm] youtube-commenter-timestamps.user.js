@@ -9,7 +9,7 @@
     AUTO_DISMISS_MS: 16000, // auto-close popups after this long
   };
 
-  BASE_FONT_SIZE = 20;
+  BASE_FONT_SIZE = 15;
   FONT_SIZE_L1 = BASE_FONT_SIZE + 1;
   FONT_SIZE_L2 = BASE_FONT_SIZE + 2;
   FONT_SIZE_L3 = BASE_FONT_SIZE + 5;
@@ -168,11 +168,11 @@
       .yt-ts-progress-bar { height: 100%; width: 100%; background: #ff0000; transform-origin: left; }
       .yt-ts-header { display: flex; align-items: center; gap: 8px; }
       .yt-ts-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
-      .yt-ts-name { font-size: ${FONT_SIZE_L1}px; font-weight: 500; color: #fff; text-decoration: none; }
+      .yt-ts-name { font-size: ${BASE_FONT_SIZE}px; font-weight: 500; color: #fff; text-decoration: none; }
       .yt-ts-name:hover { text-decoration: underline; color: #ff4444; }
-      .yt-ts-meta { font-size: ${FONT_SIZE_L2}px; color: #aaa; margin-top: 1px; }
+      .yt-ts-meta { font-size: ${BASE_FONT_SIZE}px; color: #aaa; margin-top: 1px; }
       .yt-ts-badge {
-        margin-left: auto; background: #ff0000; color: #fff; font-size: ${FONT_SIZE_L3}px;
+        margin-left: auto; background: #ff0000; color: #fff; font-size: ${BASE_FONT_SIZE}px;
         font-weight: 600; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
       }
       .yt-ts-text {
