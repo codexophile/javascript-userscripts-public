@@ -14,6 +14,7 @@
   });
 
   function setPlaybackRate(vidEl, rate = 3) {
+    if (location.href.includes('/video/')) return;
     if (vidEl.playbackRate === rate) return;
     vidEl.playbackRate = rate;
   }
