@@ -3321,14 +3321,24 @@ function parents(el, selector) {
   return parents;
 }
 
-function grandParent(child, iterations) {
+function grandParent(child, iterations, debug = false) {
+  if (debug)
+    console.log(
+      'grandparent function:',
+      child,
+      child.parentNode,
+      child.parentElement,
+    );
   if (!child) return null;
   let currentIteration = iterations;
   let parent = child.parentNode;
 
   if (currentIteration === 1) return parent;
 
-  return grandParent(parent, currentIteration - 1);
+  if (debug) {
+    console.log(`grandParent: ${currentIteration} iterations left`);
+  }
+  return grandParent(parent, currentIteration - 1, debug);
 }
 
 function generateDoc(html, returnTrusted) {
