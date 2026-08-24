@@ -161,8 +161,9 @@
         color: #f1f1f1;
         font-family: "Roboto", Arial, sans-serif;
         box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-        animation: yt-ts-slide-in 0.25s ease-out;
+        animation: none;
       }
+      .yt-ts-card.entering { animation: yt-ts-slide-in 0.25s ease-out; }
       .yt-ts-card.closing { animation: yt-ts-slide-out 0.25s ease-in forwards; }
       .yt-ts-progress { height: 2px; margin: 0 -14px -12px; background: #303030; }
       .yt-ts-progress-bar { height: 100%; width: 100%; background: #ff0000; transform-origin: left; }
@@ -218,6 +219,12 @@
       </div>
       `);
     card.className = 'yt-ts-card';
+    card.classList.add('entering');
+    card.addEventListener(
+      'animationend',
+      () => card.classList.remove('entering'),
+      { once: true },
+    );
     card.dataset.likeCount = String(comment.likeCount || 0);
     card.querySelector('.yt-ts-text').textContent = comment.text;
 
