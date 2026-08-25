@@ -96,6 +96,7 @@
             seconds: ts.seconds,
             raw: ts.raw,
             shown: false,
+            dismissed: false,
           });
         }
       }
@@ -193,6 +194,11 @@
 
   function showPopup(comment, video) {
     const stack = ensureStack();
+    const existingPopup = activePopups.get(comment.id);
+    if (existingPopup) {
+      existingPopup.refresh();
+      return;
+    }
 
     const card = generateElements(`
       <div>
@@ -271,9 +277,16 @@
       }
     };
 
-    const close = () => {
+    const refresh = () => {
+      resetProgress();
+      if (!isHovered) resumeProgress();
+    };
+
+    const close = permanently => {
       if (isClosed) return;
       isClosed = true;
+      if (permanently) comment.dismissed = true;
+      activePopups.delete(comment.id);
       if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
       video.removeEventListener('pause', pauseProgress);
       video.removeEventListener('play', resumeProgress);
@@ -289,7 +302,9 @@
       isHovered = false;
       resumeProgress();
     });
-    card.querySelector('.yt-ts-close').addEventListener('click', close);
+    card
+      .querySelector('.yt-ts-close')
+      .addEventListener('click', () => close(true));
     card.addEventListener('click', e => {
       if (e.target.closest('.yt-ts-close')) return;
       const video = document.querySelector('video');
@@ -300,6 +315,7 @@
     });
 
     stack.appendChild(card);
+    activePopups.set(comment.id, { refresh });
     [...stack.children]
       .sort((a, b) => Number(b.dataset.likeCount) - Number(a.dataset.likeCount))
       .forEach(sortedCard => stack.appendChild(sortedCard));
@@ -310,11 +326,27 @@
     }
   }
 
+  const activePopups = new Map();
+
   function watchVideo(video, comments) {
+    let previousTime = video.currentTime;
+
     video.addEventListener('timeupdate', () => {
       const t = video.currentTime;
+      if (t < previousTime) {
+        for (const comment of comments) {
+          if (
+            !comment.dismissed &&
+            comment.seconds >= t - CONFIG.TRIGGER_WINDOW
+          ) {
+            comment.shown = false;
+          }
+        }
+      }
+      previousTime = t;
+
       for (const c of comments) {
-        if (c.shown) continue;
+        if (c.shown || c.dismissed) continue;
         if (Math.abs(t - c.seconds) <= CONFIG.TRIGGER_WINDOW) {
           c.shown = true;
           showPopup(c, video);
