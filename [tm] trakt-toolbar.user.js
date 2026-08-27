@@ -198,7 +198,7 @@
       },
       {
         kind: 'link',
-        href: buildSimklUrl(searchQuery),
+        href: buildSimklUrl(context),
         icon: ICONS.simkl,
         label: 'Simkl',
         title: 'Search Simkl',
@@ -352,6 +352,12 @@
     return `https://www.google.com/search?${new URLSearchParams({ btnI: '1', q: query }).toString()}`;
   }
 
+  function buildSimklQuery(context) {
+    return context.type === 'movie'
+      ? getDisplayTitle(context)
+      : context.title || getDisplayTitle(context);
+  }
+
   function buildPerplexityUrl(query) {
     return `https://www.perplexity.ai/search?${new URLSearchParams({
       q: query,
@@ -366,11 +372,21 @@
     }).toString()}`;
   }
 
-  function buildSimklUrl(query) {
-    return `https://simkl.com/search/?${new URLSearchParams({
-      type: 'movies',
-      q: query,
-    }).toString()}`;
+  function buildSimklUrl(context) {
+    const title = buildSimklQuery(context);
+    const season = padTwo(context.season);
+    const episode = padTwo(context.episode);
+    const hash =
+      context.type === 'episode' && season && episode
+        ? `#s${season}e${episode}`
+        : context.type === 'season' && season
+          ? `#s${season}`
+          : '';
+
+    const params = new URLSearchParams({ type: 'movies' });
+    params.set('q', title);
+
+    return `https://simkl.com/search/?${params.toString()}${hash}`;
   }
 
   function buildExtToUrl(query) {
