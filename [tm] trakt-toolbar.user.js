@@ -383,7 +383,9 @@
           ? `#s${season}`
           : '';
 
-    const params = new URLSearchParams({ type: 'movies' });
+    const params = new URLSearchParams({
+      type: context.type === 'movie' ? 'movies' : 'tv',
+    });
     params.set('q', title);
 
     return `https://simkl.com/search/?${params.toString()}${hash}`;
