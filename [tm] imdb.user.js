@@ -28,7 +28,12 @@
       '[data-testid="hero-parent"] > div > div:first-child',
     )[2];
 
-    style(targetParentEl, `flex-wrap: wrap;`);
+    style(
+      targetParentEl,
+      `
+      flex-wrap: wrap;
+    `,
+    );
 
     const contEl = generateElements(`<div></div>`, targetParentEl);
     style(
