@@ -47,12 +47,13 @@
   });
 
   function initiateYtdlp(url) {
-    invokeYtdlp({
+    invokeDownloader('ytdlp', {
       urlToDownload: url,
       destination: 'x:\\tiktok',
       mode: 'noprompt',
-      browser: 'firefox',
-      profile: '3vm341ho.default-release',
+      //? 👇🏻
+      // browser: 'firefox',
+      // profile: '3vm341ho.default-release',
     });
     addHistoryEntry(url);
   }
