@@ -32,10 +32,10 @@
 
   function openPopover(triggerEl) {
     clearTimeout(closeTimer);
-    if (!mainPopoverEl.matches(':popover-open')) {
-      mainPopoverEl.showPopover();
-      positionPopover(triggerEl);
-    }
+    // if (!mainPopoverEl.matches(':popover-open')) {
+    mainPopoverEl.showPopover();
+    positionPopover(triggerEl);
+    // }
   }
 
   function scheduleClose() {
