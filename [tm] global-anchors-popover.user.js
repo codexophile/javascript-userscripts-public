@@ -78,7 +78,6 @@
 
   function renderActions(anchorEl) {
     const href = anchorEl.href;
-    // Replace with your real action buttons (foreground/background/new window/copy)
     popoverEl.textContent = ''; // clear previous
     const label = generateElements(
       `<div style="font: 12px monospace; word-break: break-all;">${href}</div>`,
