@@ -62,7 +62,6 @@
             margin-bottom: 10px;
           `,
         );
-        console.log(clonedEl);
         contEl.appendChild(clonedEl);
 
         processedReviewsIds.add(reviewId);
