@@ -7,16 +7,10 @@
     // Set this to 4 for the "Forward" button
     const triggerButton = 4;
 
-    // Check if the clicked button matches your chosen XButton
     if (event.button === triggerButton) {
-      // Find the link (handles clicking text or images inside the link)
       const link = event.target.closest('a');
-
       if (link && link.href) {
-        // Stop the browser from doing the default action (like going back a page)
         event.preventDefault();
-
-        // Add the URL to history
         history.pushState(null, '', link.href);
       }
     }
@@ -24,12 +18,10 @@
 
   //*
   ('use strict');
-  if (window.top != window.self) return; //don't run on frames or iframes
-  if (location.href.includes('laterList-view.html')) return;
 
   const collapsibleEl = await Collapsible();
   const checkboxEl = generateElements(
-    `<input type="checkbox" id="myUniqueCheckbox" class="my-custom-checkbox" checked>`
+    `<input type="checkbox" id="myUniqueCheckbox" class="my-custom-checkbox" checked>`,
   );
   collapsibleEl.addElement(checkboxEl);
 
