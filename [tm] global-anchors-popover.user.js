@@ -25,7 +25,8 @@
       padding: 0.75rem 1rem;
       border: 1px solid #ccc;
       border-radius: 8px;
-      /* background: white; */
+      background-color: #121212;
+      color: #f5f5f5;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 
       button {
