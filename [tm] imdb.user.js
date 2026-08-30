@@ -27,11 +27,12 @@
     const targetParentEl = document.querySelectorAll(
       '[data-testid="hero-parent"] > div > div:first-child',
     )[2];
-
+    console.log(targetParentEl);
     style(
       targetParentEl,
       `
       flex-wrap: wrap;
+      width: stretch;
     `,
     );
 
