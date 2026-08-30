@@ -44,19 +44,35 @@
   }
 
   function initializeFetchingAndDisplayingCountryFlags() {
+    // yt-navigate-finish can fire more than once for a single navigation.
+    // Use a generation counter so any stale/duplicate invocation bails out
+    // instead of appending a second flag.
+    let currentRequestId = 0;
+
     window.addEventListener('yt-navigate-finish', async () => {
+      const requestId = ++currentRequestId;
+
       const titleEl = await waitFor(`#title.style-scope.ytd-watch-metadata`);
       if (!titleEl) return;
-      titleEl.querySelector(`#country-flag`)?.remove();
+      if (requestId !== currentRequestId) return; // a newer nav superseded this one
 
       const videoId = getVideoId();
+
       const channelId = await getChannelId(videoId, API_KEY);
+      if (requestId !== currentRequestId) return;
+
       const countryOfOrigin = await getChannelCountryOfOrigin(
         channelId,
         API_KEY,
       );
+      if (requestId !== currentRequestId) return;
+
       const countryFullName = getCountryName(countryOfOrigin);
       const flagEmojiChar = countryCodeToFlag(countryOfOrigin);
+
+      // Remove any existing flag(s) right before inserting, not just at the
+      // top of the handler — this cleans up leftovers from a stale run too.
+      titleEl.querySelectorAll(`#country-flag`).forEach(el => el.remove());
 
       const flagEl = generateElements(`<span id=country-flag></span>`);
       titleEl.prepend(flagEl);
