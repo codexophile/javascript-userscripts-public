@@ -109,6 +109,12 @@
       }
       location.replace(location.href + seasonSegment);
     }
+
+    if (location.href.startsWith('https://www.rottentomatoes.com/tv/')) {
+      if (location.href.match(/\/s\d\d\/e\d\d/)) return;
+      const segment = `/s${seasonNumber.toString().padStart(2, '0')}/e${episodeNumber.toString().padStart(2, '0')}`;
+      location.replace(location.href + segment);
+    }
   }
 
   async function metacriticGoToEpisode(episodeNumber) {
