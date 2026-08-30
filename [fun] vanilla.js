@@ -583,18 +583,19 @@ function addStyle(css) {
 
 function style(targetEl, css, debug) {
   css
-    .replaceAll(/\s{2,}/g, '') // gets rid of white spaces
     .split(';')
-    .filter(line => line) // gets rid of empty lines
+    .map(d => d.trim())
+    .filter(Boolean)
     .forEach(declaration => {
-      if (debug) console.log(declaration);
-      const [property, value] = declaration.split(':');
-      const propertySplit = property.split('-');
-      const propertyLhs = propertySplit[0].toLowerCase();
-      const propertyRhs = propertySplit[1]
-        ? capitalizeFirstLetter(propertySplit[1])
-        : '';
-      targetEl.style[`${propertyLhs}${propertyRhs}`] = value;
+      const idx = declaration.indexOf(':');
+      if (idx === -1) return;
+      const property = declaration.slice(0, idx).trim();
+      const value = declaration.slice(idx + 1).trim();
+      if (debug) console.log(property, value);
+      const camelProp = property.replace(/-([a-z])/g, (_, c) =>
+        c.toUpperCase(),
+      );
+      targetEl.style[camelProp] = value;
     });
 }
 
