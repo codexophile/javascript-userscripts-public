@@ -9,38 +9,79 @@
   initializeTitleSetter();
 
   async function initializeTitleSetter() {
+    let cachedContent = null;
+    let cachedVideoId = null;
+    let settingTitleInternally = false; // guards against our own title mutations re-triggering main()
+
+    const video = await waitFor('video');
+    const titleEl = await waitFor('title');
+
+    video.addEventListener('play', updateTitle);
+    video.addEventListener('pause', updateTitle);
+    video.addEventListener('ended', updateTitle);
+
+    const titleObserver = new MutationObserver(() => {
+      if (settingTitleInternally) return;
+      main();
+    });
+    titleObserver.observe(titleEl, { childList: true, subtree: true });
+
     main();
 
     async function main() {
       const videoId = getVideoId();
       if (!videoId) return;
-      if (document.title.includes('{category:')) return;
+
+      if (videoId !== cachedVideoId) {
+        cachedContent = null; // new video, invalidate cache
+      }
+
+      await updateTitle();
+    }
+
+    function isVideoPlaying() {
+      return video && !video.paused && !video.ended && video.readyState > 2;
+    }
+
+    async function updateTitle() {
+      const videoId = getVideoId();
+      if (!videoId) return;
 
       try {
-        const categories = await fetchCategories(regionCode, API_KEY);
-        const categoryAndTags = await getVideoCategoryAndTags(
-          videoId,
-          categories,
-          API_KEY,
-        );
-        const newContent = JSON.stringify(categoryAndTags).replaceAll('"', '');
         const videoTitleEl = await waitFor(
           '#title.ytd-watch-metadata yt-formatted-string',
         );
         const videoTitle = videoTitleEl.innerText;
+
+        let newContent;
+        if (!isVideoPlaying()) {
+          newContent = '[afk]';
+        } else {
+          if (!cachedContent || videoId !== cachedVideoId) {
+            const categories = await fetchCategories(regionCode, API_KEY);
+            const categoryAndTags = await getVideoCategoryAndTags(
+              videoId,
+              categories,
+              API_KEY,
+            );
+            cachedContent = JSON.stringify(categoryAndTags).replaceAll('"', '');
+            cachedVideoId = videoId;
+          }
+          newContent = cachedContent;
+        }
+
         const newTitle = `${videoTitle} | ${newContent}`;
+        if (document.title === newTitle) return;
+
+        settingTitleInternally = true;
         document.title = newTitle;
+        setTimeout(() => {
+          settingTitleInternally = false;
+        }, 0);
       } catch (error) {
         alert(error);
       }
     }
-
-    const titleEl = await waitFor('title');
-    let titleObserver = new MutationObserver(main);
-    titleObserver.observe(titleEl, {
-      childList: true,
-      subtree: true,
-    });
   }
 
   function initializeFetchingAndDisplayingCountryFlags() {
