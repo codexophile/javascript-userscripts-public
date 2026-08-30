@@ -51,8 +51,8 @@
       }
     }
   } else {
-    const seasonNumber = Number(GM_getValue('seasonNumber'));
-    const episodeNumber = Number(GM_getValue('episodeNumber'));
+    let seasonNumber = Number(GM_getValue('seasonNumber'));
+    let episodeNumber = Number(GM_getValue('episodeNumber'));
 
     if (
       location.hostname === 'www.ratingraph.com' &&
