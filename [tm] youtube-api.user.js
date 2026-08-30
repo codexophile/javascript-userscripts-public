@@ -132,6 +132,13 @@
         border-radius: 5px;
       `,
       );
+      style(
+        titleEl,
+        `
+        display: flex;
+        flex-wrap: wrap;
+      `,
+      );
       titleEl.style.justifyContent = 'unset';
     });
   }
