@@ -1,6 +1,40 @@
 (async function () {
   'use strict';
 
+  //* pause video upon load/reload
+  (function () {
+    let autoPauseDone = false;
+    waitFor('video').then(videoEl => {
+      videoEl.addEventListener('play', () => {
+        setPause(videoEl);
+      });
+      videoEl.addEventListener('click', () => {
+        restorePlayback(videoEl);
+      });
+      videoEl.addEventListener('auxclick', event => {
+        if (event.button === 1) {
+          restorePlayback(videoEl);
+        }
+      });
+      waitFor('.ytp-play-button').then(playBtnEl => {
+        playBtnEl.addEventListener('click', () => {
+          restorePlayback(videoEl);
+        });
+      });
+    });
+
+    function restorePlayback(videoEl) {
+      autoPauseDone = true;
+      videoEl.muted = false;
+    }
+
+    function setPause(vidEl) {
+      if (autoPauseDone) return;
+      vidEl.muted = true;
+      vidEl.pause();
+    }
+  })();
+
   //* auto click "show more" toggle buttons
   waitForEach('.expand-collapse-button', showMoreBtnEl => {
     if (showMoreBtnEl.innerText.toLowerCase().includes('show more')) {
