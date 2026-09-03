@@ -1,16 +1,42 @@
 (async function () {
-  'use strict';
-  if (window.top != window.self) return; //don't run on frames or iframes
+  ('use strict');
 
-  const ratingEl = await waitFor('.averagerating');
-  const parentEl = ratingEl.parentElement;
-  const ratingOutOfFive = parseFloat(ratingEl.textContent.trim());
-  const ratingOutOfTen = ratingOutOfFive * 2;
-  const ratingOutOfTenEl = generateElements(
-    `<a class=averagerating>${ratingOutOfTen}</a>`,
-    parentEl,
-  );
-  ratingOutOfTenEl.title = 'Out of 10';
+  waitForEach('.inline-rating', ratingEl => {
+    const titleEl = ratingEl.querySelector('title');
+    if (!titleEl) return;
+    const starString = titleEl.textContent.trim();
+    const ratingOutOfTen = parseRatingOutOfTen(starString);
+    const ratingOutOfTenEl = generateElements(
+      `<a class=inline-rating>${ratingOutOfTen}/10</a>`,
+      ratingEl,
+    );
+    style(
+      ratingOutOfTenEl,
+      `
+      margin-left: 10px;
+    `,
+    );
+  });
+
+  function parseRatingOutOfTen(str) {
+    const fullStars = (str.match(/★/g) || []).length;
+    const halfStars = (str.match(/½/g) || []).length;
+    const rating = fullStars * 2 + halfStars * 1;
+    return Math.min(rating, 10);
+  }
+
+  (async function () {
+    'use strict';
+    const ratingEl = await waitFor('.averagerating');
+    const parentEl = ratingEl.parentElement;
+    const ratingOutOfFive = parseFloat(ratingEl.textContent.trim());
+    const ratingOutOfTen = ratingOutOfFive * 2;
+    const ratingOutOfTenEl = generateElements(
+      `<a class=averagerating>${ratingOutOfTen}</a>`,
+      parentEl,
+    );
+    ratingOutOfTenEl.title = 'Out of 10';
+  })();
 
   GM_addStyle(`
   /* 1. Modify the existing grid to add a 4th column */
