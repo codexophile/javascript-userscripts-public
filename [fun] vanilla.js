@@ -3518,12 +3518,8 @@ async function getDoodPosterSrc(url) {
 async function getVoeStoryboardImg(voeUrl) {
   const levelOneHtml = await fetchDoc(voeUrl, null, true);
   const levelTwoUrl = levelOneHtml.match(/window\.location\.href = '(.+?)'/)[1];
-  const levelTwoDoc = await fetchDoc(levelTwoUrl);
-  const posterImgUrl = levelTwoDoc.querySelector('[name="og:image"]').content;
-  const storyboardUrl = posterImgUrl.replace(
-    /_storyboard_L\d+/,
-    '_storyboard_L0',
-  );
+  const videoId = levelTwoUrl.match(/\/e\/(.+)/)[1];
+  const storyboardUrl = `https://i.voe.sx/cache/${videoId}_storyboard_L0.jpg`;
   return storyboardUrl;
 }
 
