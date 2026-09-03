@@ -2,36 +2,43 @@
   'use strict';
 
   //* pause video upon load/reload
+  // @run-at document-start   <-- important, so we patch play() before YT's player script runs
+
   (function () {
     let autoPauseDone = false;
+
+    // Patch play() globally so any call is intercepted at the source
+    const origPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function (...args) {
+      if (this.tagName === 'VIDEO' && !autoPauseDone) {
+        this.muted = true;
+        const result = origPlay.apply(this, args);
+        this.pause();
+        return result;
+      }
+      return origPlay.apply(this, args);
+    };
+
     waitFor('video').then(videoEl => {
-      videoEl.addEventListener('play', () => {
-        setPause(videoEl);
-      });
-      videoEl.addEventListener('click', () => {
-        restorePlayback(videoEl);
-      });
+      // Mute immediately in case it's already playing by the time we get here
+      if (!autoPauseDone) {
+        videoEl.muted = true;
+        if (!videoEl.paused) videoEl.pause();
+      }
+
+      videoEl.addEventListener('click', () => restorePlayback(videoEl));
       videoEl.addEventListener('auxclick', event => {
-        if (event.button === 1) {
-          restorePlayback(videoEl);
-        }
+        if (event.button === 1) restorePlayback(videoEl);
       });
+
       waitFor('.ytp-play-button').then(playBtnEl => {
-        playBtnEl.addEventListener('click', () => {
-          restorePlayback(videoEl);
-        });
+        playBtnEl.addEventListener('click', () => restorePlayback(videoEl));
       });
     });
 
     function restorePlayback(videoEl) {
       autoPauseDone = true;
       videoEl.muted = false;
-    }
-
-    function setPause(vidEl) {
-      if (autoPauseDone) return;
-      vidEl.muted = true;
-      vidEl.pause();
     }
   })();
 
