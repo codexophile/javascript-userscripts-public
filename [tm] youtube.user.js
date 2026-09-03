@@ -4,10 +4,11 @@
   //* pause video upon load/reload
   // @run-at document-start   <-- important, so we patch play() before YT's player script runs
 
+  // @run-at document-start
   (function () {
     let autoPauseDone = false;
+    let videoEl = null;
 
-    // Patch play() globally so any call is intercepted at the source
     const origPlay = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function (...args) {
       if (this.tagName === 'VIDEO' && !autoPauseDone) {
@@ -19,27 +20,28 @@
       return origPlay.apply(this, args);
     };
 
-    waitFor('video').then(videoEl => {
-      // Mute immediately in case it's already playing by the time we get here
+    // Capture phase on document fires before ANY listener on the target itself,
+    // regardless of when YouTube registered theirs.
+    document.addEventListener('click', maybeRestore, true);
+    document.addEventListener('auxclick', maybeRestore, true);
+
+    function maybeRestore(event) {
+      if (!videoEl) return;
+      if (event.type === 'auxclick' && event.button !== 1) return;
+      const isVideo = event.target === videoEl;
+      const isPlayBtn =
+        event.target.closest && event.target.closest('.ytp-play-button');
+      if (isVideo || isPlayBtn)
+        ((autoPauseDone = true), (videoEl.muted = false));
+    }
+
+    waitFor('video').then(el => {
+      videoEl = el;
       if (!autoPauseDone) {
         videoEl.muted = true;
         if (!videoEl.paused) videoEl.pause();
       }
-
-      videoEl.addEventListener('click', () => restorePlayback(videoEl));
-      videoEl.addEventListener('auxclick', event => {
-        if (event.button === 1) restorePlayback(videoEl);
-      });
-
-      waitFor('.ytp-play-button').then(playBtnEl => {
-        playBtnEl.addEventListener('click', () => restorePlayback(videoEl));
-      });
     });
-
-    function restorePlayback(videoEl) {
-      autoPauseDone = true;
-      videoEl.muted = false;
-    }
   })();
 
   //* auto click "show more" toggle buttons
