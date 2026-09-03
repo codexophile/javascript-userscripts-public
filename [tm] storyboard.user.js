@@ -15,7 +15,7 @@
         document,
         null,
         videoElement,
-        'flex'
+        'flex',
       );
       storyboard.scrollIntoView();
 
@@ -26,12 +26,11 @@
     $('.block-video').after($storyBoard);
 
     //* Related videos
-
     function loadRelatedVideos() {
       document.querySelectorAll(`.list-videos .item`).forEach(async item => {
         const itemLink = item.querySelector('a').href;
         const $relatedItemSbParent = $(`<div id=relItemSbP></div>`).insertAfter(
-          item
+          item,
         );
         const tempDoc = await fetchDoc(itemLink);
         try {
@@ -41,7 +40,7 @@
             itemLink,
             null,
             'toggleable',
-            item
+            item,
           );
         } catch (error) {
           console.log(error);
@@ -52,7 +51,7 @@
     document.querySelectorAll(`.list-videos .item`).forEach(async item => {
       const itemLink = item.querySelector('a').href;
       const $relatedItemSbParent = $(`<div id=relItemSbP></div>`).insertAfter(
-        item
+        item,
       );
       const tempDoc = await fetchDoc(itemLink);
       prepareStoryboard(
@@ -61,22 +60,22 @@
         itemLink,
         null,
         'toggleable',
-        item
+        item,
       );
     });
   }
 
-  function prepareStoryboard(
+  async function prepareStoryboard(
     storyboardParent,
     scriptSource,
     linkToVid,
     vidOnPage,
     sbFunction,
-    thisEl
+    thisEl,
   ) {
     let correctScriptEl;
     const allScriptEls = scriptSource.querySelectorAll(
-      'script[type="text/javascript"]'
+      'script[type="text/javascript"]',
     );
     allScriptEls.forEach(scriptEl => {
       if (scriptEl.innerHTML.match(/timeline_screens_interval: '(\d+)'/)) {
@@ -85,11 +84,11 @@
     });
 
     let samplingFq = correctScriptEl.innerHTML.match(
-      /timeline_screens_interval: '(\d+)'/
+      /timeline_screens_interval: '(\d+)'/,
     )[1];
 
     const nOfSlotMatch = correctScriptEl.innerHTML.match(
-      /timeline_screens_count: '(\d+)'/
+      /timeline_screens_count: '(\d+)'/,
     );
     let trueNoOfSlots;
     if (nOfSlotMatch) trueNoOfSlots = nOfSlotMatch[1];
@@ -100,11 +99,11 @@
       trueNoOfSlots = duration / samplingFq;
     }
     const urlTemplate = correctScriptEl.innerHTML.match(
-      /timeline_screens_url: '(.+?)'/
+      /timeline_screens_url: '(.+?)'/,
     )[1];
 
     let imgUrls = [];
-    repeat(+trueNoOfSlots, j => {
+    await repeat(+trueNoOfSlots, j => {
       const thisUrl = urlTemplate.replace('{time}', +j + 1);
       imgUrls.push(thisUrl);
     });
