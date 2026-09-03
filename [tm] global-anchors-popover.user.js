@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const OPEN_DELAY = 100;
+  const OPEN_DELAY = 500;
   const CLOSE_DELAY = 200;
   const POPOVER_ID = 'cdx-main-popover';
   const ELEMENT_WIDTH = '20px';
