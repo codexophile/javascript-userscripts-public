@@ -1,5 +1,5 @@
 (function () {
-  ('use strict');
+  'use strict';
 
   if (location.host === 'app.trakt.tv') {
     waitForEach('.trakt-filter-button', filterButtonEl => {
@@ -14,21 +14,21 @@
         const watchedItemEls = document.querySelectorAll(
           'svelte-css-wrapper:has(>.trakt-gesture-container):has([data-variant="full"])',
         );
-        if (isChecked) {
-          watchedItemEls.forEach(watchedItemEl => {
+        watchedItemEls.forEach(watchedItemEl => {
+          if (isChecked) {
             fadeOut(watchedItemEl);
-          });
-        } else {
-          watchedItemEls.forEach(watchedItemEl => {
+          } else {
             fadeIn(watchedItemEl);
-          });
-        }
+          }
+        });
       });
     });
 
     waitForEach('.trakt-user-rating', ratingEl => {
       const ratingOutOfFive = parseFloat(ratingEl.textContent.trim());
-      const ratingOutOfTen = (Number(ratingOutOfFive) / 5) * 10;
+      if (Number.isNaN(ratingOutOfFive)) return;
+
+      const ratingOutOfTen = ((ratingOutOfFive / 5) * 10).toFixed(1);
       const ratingOutOfTenEl = generateElements(
         `<span class="trakt-user-rating-out-of-ten">${ratingOutOfTen}/10</span>`,
         ratingEl,
@@ -41,18 +41,34 @@
       setSeasonAndEpisode(urlChangeInfo.url);
     });
 
+    // Reads season/episode independently via URLSearchParams instead of a
+    // combined regex, so a season-only URL (no episode param) still updates
+    // the stored season number.
     function setSeasonAndEpisode(url) {
-      const matches = url.match(/[\?&]season=(\d+).*?[\?&]episode=(\d+)/);
-      if (matches) {
-        const seasonNumber = matches[1];
-        const episodeNumber = matches[2];
-        GM_setValue('seasonNumber', seasonNumber);
-        GM_setValue('episodeNumber', episodeNumber);
+      let params;
+      try {
+        params = new URL(url).searchParams;
+      } catch {
+        return;
+      }
+
+      const seasonParam = params.get('season');
+      const episodeParam = params.get('episode');
+
+      if (seasonParam !== null) {
+        GM_setValue('seasonNumber', seasonParam);
+      }
+      if (episodeParam !== null) {
+        GM_setValue('episodeNumber', episodeParam);
       }
     }
   } else {
-    let seasonNumber = Number(GM_getValue('seasonNumber'));
-    let episodeNumber = Number(GM_getValue('episodeNumber'));
+    const getStoredSeasonEpisode = () => ({
+      seasonNumber: Number(GM_getValue('seasonNumber')),
+      episodeNumber: Number(GM_getValue('episodeNumber')),
+    });
+
+    let { seasonNumber, episodeNumber } = getStoredSeasonEpisode();
 
     if (
       location.hostname === 'www.ratingraph.com' &&
@@ -67,8 +83,7 @@
 
       async function highlightEpisode() {
         const runId = ++highlightRunId;
-        seasonNumber = Number(GM_getValue('seasonNumber'));
-        episodeNumber = Number(GM_getValue('episodeNumber'));
+        ({ seasonNumber, episodeNumber } = getStoredSeasonEpisode());
         if (!(seasonNumber && episodeNumber)) return;
         await waitFor('#graph_show_episodes_average_rating .highcharts-series');
         if (runId !== highlightRunId) return;
@@ -92,6 +107,10 @@
       }
     }
 
+    // Guard: bail out if we never got a usable season number, rather than
+    // building a "/season-NaN" URL and redirecting to it.
+    if (!seasonNumber || Number.isNaN(seasonNumber)) return;
+
     if (
       location.href.match(/www\.justwatch\.com\/.+?\/tv-series\//) &&
       !location.href.includes(`/season-${seasonNumber}`)
@@ -104,7 +123,9 @@
       const seasonSegment = `/season-${seasonNumber}`;
       if (location.href.includes(seasonSegment)) {
         if (location.href.includes('/episode-')) return;
-        metacriticGoToEpisode(episodeNumber);
+        if (episodeNumber && !Number.isNaN(episodeNumber)) {
+          metacriticGoToEpisode(episodeNumber);
+        }
         return;
       }
       location.replace(location.href + seasonSegment);
@@ -112,6 +133,7 @@
 
     if (location.href.startsWith('https://www.rottentomatoes.com/tv/')) {
       if (location.href.match(/\/s\d\d\/e\d\d/)) return;
+      if (!episodeNumber || Number.isNaN(episodeNumber)) return;
       const segment = `/s${seasonNumber.toString().padStart(2, '0')}/e${episodeNumber.toString().padStart(2, '0')}`;
       location.replace(location.href + segment);
     }
@@ -122,7 +144,6 @@
     const episodeLinkEls = document.querySelectorAll(
       'a.tv-all-episodes_episode_card',
     );
-    console.log(episodeLinkEls);
     episodeLinkEls[episodeNumber - 1]?.click();
   }
 })();
