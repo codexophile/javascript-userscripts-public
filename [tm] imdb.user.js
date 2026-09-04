@@ -1,6 +1,186 @@
 (function () {
   'use strict';
 
+  if (location.href.includes('/mediaindex/')) {
+    //* gallery/mediaindex flex-wrap fix
+    waitForEach('[data-testid="sub-section-images"] > section > div', rowEl => {
+      console.log('xxx', rowEl);
+      unwrapItself(rowEl);
+    });
+  } else if (location.href.includes('/title/')) {
+    //* bring review titles up
+    (function () {
+      const processedReviewsIds = new Set();
+
+      const targetParentEl = document.querySelectorAll(
+        '[data-testid="hero-parent"] > div > div:first-child',
+      )[2];
+      console.log(targetParentEl);
+      style(
+        targetParentEl,
+        `
+      flex-wrap: wrap;
+      width: stretch;
+    `,
+      );
+
+      const contEl = generateElements(`<div></div>`, targetParentEl);
+      style(
+        contEl,
+        `
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      max-height: 500px;
+      max-width: 500px;
+      margin: 20px;
+    `,
+      );
+      waitForEach(
+        '[data-testid="user-reviews-summary-shoveler"] .ipc-list-card--span',
+        reviewEl => {
+          const reviewLinkEl = reviewEl.querySelector(
+            '[href*="/reviews/?featured="]',
+          );
+          const urlObj = new URL(reviewLinkEl.href);
+          const reviewId = urlObj.searchParams.get('featured');
+          if (processedReviewsIds.has(reviewId)) return;
+          const clonedEl = reviewEl.cloneNode(true);
+          clonedEl.querySelector('.ipc-html-content').remove();
+          style(
+            clonedEl,
+            `
+            max-width: fit-content;
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 10px;
+          `,
+          );
+          contEl.appendChild(clonedEl);
+
+          processedReviewsIds.add(reviewId);
+        },
+      );
+    })();
+    //* external links
+    (async function () {
+      'use strict';
+
+      const titleMatch = location.href.match(/\/title\/(tt\d+)/);
+      if (!titleMatch) return;
+      const titleId = titleMatch[1];
+
+      const el = await waitFor(`[data-testid="hero__pageTitle"] ~ ul`);
+      const titleEl = await waitFor(`[data-testid="hero__pageTitle"]`);
+      const title = encodeURIComponent(titleEl.textContent);
+      const yearEl = await waitFor(`[href*="/releaseinfo"]`);
+      const year = yearEl.textContent;
+
+      //* YTS
+      addExtLink('https://yts.gg/', 'browse-movies/' + titleId);
+      //* Leet
+      addExtLink('https://1337x.to/', `search/${title}+${year}/1/`);
+      //* criticker
+      addExtLink('https://www.criticker.com/', `?search=${titleId}`);
+      function addExtLink(
+        urlBase,
+        urlRest,
+        imgSrc = `https://www.google.com/s2/favicons?sz=64&domain=${urlBase}`,
+      ) {
+        generateElements(
+          `
+            <li class=ipc-inline-list__item>
+                <a target=_blank href=${urlBase}${urlRest}>
+                    <img style='width: 32px' src='${imgSrc}'>
+                </a>
+            </li>`,
+          el,
+        );
+      }
+    })();
+    //* tooltips for genre/interests pill elements
+    (function () {
+      const genrePillEls = document.querySelectorAll(
+        '[data-testid="interests"] .ipc-chip',
+      );
+      genrePillEls.forEach(async pillEl => {
+        pillEl.addEventListener('click', async event => {
+          event.preventDefault();
+          const url = pillEl.href;
+          const loaderEl = generateElements(`<div>🔃</div>`, pillEl);
+          const doc = await fetchDoc(url);
+          const descriptionSectionEl = doc.querySelector(
+            '[data-testid="interest-description-and-chips"]',
+          );
+          const enrollDialog = new VanillaDialog({
+            content: descriptionSectionEl,
+            mode: 'modal',
+            closeOnBackdrop: true,
+          });
+          enrollDialog.show();
+          loaderEl.remove();
+        });
+        style(pillEl, `outline: 1px solid #ceb55d; `);
+        return;
+      });
+    })();
+    //* watched filter for "more like this"
+    (function () {
+      const targetEl = document.querySelector(
+        `[data-testid="MoreLikeThis"] .ipc-title__actions`,
+      );
+      if (targetEl) {
+        const filterBtnEl = generateElements(`<button">👁️</button>`, targetEl);
+        filterBtnEl.classList = 'ipc-btn ipc-btn--secondary ipc-btn--small';
+        filterBtnEl.style = 'margin-left: 8px;';
+        let toggled = false;
+        filterBtnEl.addEventListener('click', () => {
+          const locatorEls = document.querySelectorAll(
+            '.ipc-rate-button--rated',
+          );
+          locatorEls.forEach(el => {
+            const parentEl = el.closest('.ipc-poster-card');
+            if (parentEl) {
+              parentEl.style.display = toggled ? '' : 'none';
+            }
+          });
+          toggled = !toggled;
+        });
+      }
+    })();
+    //* adding "connections" to the top nav
+    (function () {
+      const subNavbarEl = document.querySelector(
+        `[data-testid="hero-subnav-bar-topic-links"]`,
+      );
+      if (subNavbarEl) {
+        const titleId = getImdbId();
+        if (!titleId) return;
+        generateElements(
+          `<li role="presentation" class="ipc-inline-list__item">
+          <a
+            class="ipc-link ipc-link--baseAlt ipc-link--inherit-color"
+            href=/title/${titleId}/movieconnections/>Connections
+          </a>
+        </li>`,
+          subNavbarEl,
+        );
+      }
+    })();
+    //* link to gallery fix
+    (function () {
+      const photosLinkEl = document.querySelector(
+        `[data-testid="Photos"] > [data-testid="photos-title"] a`,
+      );
+      if (photosLinkEl) {
+        photosLinkEl.href = photosLinkEl.href.replace(
+          /\/mediaviewer\/.+/,
+          '/mediaindex/',
+        );
+      }
+    })();
+  }
+
   //* average rating button for seasons pages
   (async function () {
     if (!location.href.includes('/episodes/')) return;
@@ -19,175 +199,6 @@
       );
     });
   })();
-
-  //* bring review titles up
-  (function () {
-    const processedReviewsIds = new Set();
-
-    const targetParentEl = document.querySelectorAll(
-      '[data-testid="hero-parent"] > div > div:first-child',
-    )[2];
-    console.log(targetParentEl);
-    style(
-      targetParentEl,
-      `
-      flex-wrap: wrap;
-      width: stretch;
-    `,
-    );
-
-    const contEl = generateElements(`<div></div>`, targetParentEl);
-    style(
-      contEl,
-      `
-      max-width: 500px;
-      margin: 20px;
-    `,
-    );
-    waitForEach(
-      '[data-testid="user-reviews-summary-shoveler"] .ipc-list-card--span',
-      reviewEl => {
-        const reviewLinkEl = reviewEl.querySelector(
-          '[href*="/reviews/?featured="]',
-        );
-        const urlObj = new URL(reviewLinkEl.href);
-        const reviewId = urlObj.searchParams.get('featured');
-        if (processedReviewsIds.has(reviewId)) return;
-        const clonedEl = reviewEl.cloneNode(true);
-        clonedEl.querySelector('.ipc-html-content').remove();
-        style(
-          clonedEl,
-          `
-            font-size: 1.2rem;
-            display: block;
-            margin-bottom: 10px;
-          `,
-        );
-        contEl.appendChild(clonedEl);
-
-        processedReviewsIds.add(reviewId);
-      },
-    );
-  })();
-
-  //* external links
-  (async function () {
-    'use strict';
-
-    const titleMatch = location.href.match(/\/title\/(tt\d+)/);
-    if (!titleMatch) return;
-    const titleId = titleMatch[1];
-
-    const el = await waitFor(`[data-testid="hero__pageTitle"] ~ ul`);
-    const titleEl = await waitFor(`[data-testid="hero__pageTitle"]`);
-    const title = encodeURIComponent(titleEl.textContent);
-    const yearEl = await waitFor(`[href*="/releaseinfo"]`);
-    const year = yearEl.textContent;
-
-    //* YTS
-    addExtLink('https://yts.gg/', 'browse-movies/' + titleId);
-    //* Leet
-    addExtLink('https://1337x.to/', `search/${title}+${year}/1/`);
-    //* criticker
-    addExtLink('https://www.criticker.com/', `?search=${titleId}`);
-    function addExtLink(
-      urlBase,
-      urlRest,
-      imgSrc = `https://www.google.com/s2/favicons?sz=64&domain=${urlBase}`,
-    ) {
-      generateElements(
-        `
-            <li class=ipc-inline-list__item>
-                <a target=_blank href=${urlBase}${urlRest}>
-                    <img style='width: 32px' src='${imgSrc}'>
-                </a>
-            </li>`,
-        el,
-      );
-    }
-  })();
-
-  //* tooltips for genre/interests pill elements
-  const genrePillEls = document.querySelectorAll(
-    '[data-testid="interests"] .ipc-chip',
-  );
-  genrePillEls.forEach(async pillEl => {
-    pillEl.addEventListener('click', async event => {
-      event.preventDefault();
-      const url = pillEl.href;
-      const loaderEl = generateElements(`<div>🔃</div>`, pillEl);
-      const doc = await fetchDoc(url);
-      const descriptionSectionEl = doc.querySelector(
-        '[data-testid="interest-description-and-chips"]',
-      );
-      const enrollDialog = new VanillaDialog({
-        content: descriptionSectionEl,
-        mode: 'modal',
-        closeOnBackdrop: true,
-      });
-      enrollDialog.show();
-      loaderEl.remove();
-    });
-    style(pillEl, `outline: 1px solid #ceb55d; `);
-    return;
-  });
-
-  //* watched filter for "more like this"
-  const targetEl = document.querySelector(
-    `[data-testid="MoreLikeThis"] .ipc-title__actions`,
-  );
-  if (targetEl) {
-    const filterBtnEl = generateElements(`<button">👁️</button>`, targetEl);
-    filterBtnEl.classList = 'ipc-btn ipc-btn--secondary ipc-btn--small';
-    filterBtnEl.style = 'margin-left: 8px;';
-    let toggled = false;
-    filterBtnEl.addEventListener('click', () => {
-      const locatorEls = document.querySelectorAll('.ipc-rate-button--rated');
-      locatorEls.forEach(el => {
-        const parentEl = el.closest('.ipc-poster-card');
-        if (parentEl) {
-          parentEl.style.display = toggled ? '' : 'none';
-        }
-      });
-      toggled = !toggled;
-    });
-  }
-
-  //* adding "connections" to the top nav
-  (function () {
-    const subNavbarEl = document.querySelector(
-      `[data-testid="hero-subnav-bar-topic-links"]`,
-    );
-    if (subNavbarEl) {
-      const titleId = getImdbId();
-      if (!titleId) return;
-      generateElements(
-        `<li role="presentation" class="ipc-inline-list__item">
-          <a
-            class="ipc-link ipc-link--baseAlt ipc-link--inherit-color"
-            href=/title/${titleId}/movieconnections/>Connections
-          </a>
-        </li>`,
-        subNavbarEl,
-      );
-    }
-  })();
-
-  //* gallery/mediaindex flex-wrap fix
-  waitForEach('[data-testid="sub-section-images"] > section > div', rowEl => {
-    unwrapItself(rowEl);
-  });
-
-  //* link to gallery fix
-  const photosLinkEl = document.querySelector(
-    `[data-testid="Photos"] > [data-testid="photos-title"] a`,
-  );
-  if (photosLinkEl) {
-    photosLinkEl.href = photosLinkEl.href.replace(
-      /\/mediaviewer\/.+/,
-      '/mediaindex/',
-    );
-  }
 
   //* location.href/link fixes
   history.pushState({ state: 1 }, 'new state', sanitizeLink(location.href));
