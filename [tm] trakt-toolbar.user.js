@@ -71,7 +71,7 @@
     if (!section || !slug) return { type: 'unknown' };
 
     if (section === 'movies') {
-      const matches = slug.match(/(.+?)-(\d{4})$/);
+      const matches = slug.match(/(.+?)-(\d{4})($|-\d\d-\d\d)/);
       if (!matches) {
         return { type: 'unknown' };
       }
