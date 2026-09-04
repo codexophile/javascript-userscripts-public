@@ -582,6 +582,10 @@ function addStyle(css) {
 }
 
 function style(targetEl, css, debug) {
+  if (!(targetEl && css)) {
+    console.warn('style() requires both targetEl and css parameters');
+    return;
+  }
   css
     .split(';')
     .map(d => d.trim())
