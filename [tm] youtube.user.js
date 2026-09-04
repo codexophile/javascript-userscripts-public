@@ -12,7 +12,7 @@
     const origPlay = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function (...args) {
       if (this.tagName === 'VIDEO' && !autoPauseDone) {
-        this.muted = true;
+        mute(this);
         const result = origPlay.apply(this, args);
         this.pause();
         return result;
@@ -38,10 +38,14 @@
     waitFor('video').then(el => {
       videoEl = el;
       if (!autoPauseDone) {
-        videoEl.muted = true;
+        mute(videoEl);
         if (!videoEl.paused) videoEl.pause();
       }
     });
+
+    function mute(videoEl) {
+      // videoEl.muted = true;
+    }
   })();
 
   //* auto click "show more" toggle buttons
