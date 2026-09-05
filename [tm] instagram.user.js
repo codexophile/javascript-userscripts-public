@@ -12,6 +12,47 @@
     ``,
   );
 
+  //* post items
+  (function () {
+    const queryForIGPosts =
+      'img[crossorigin="anonymous"][style="object-fit: cover;"]:not(.imgProcessed)';
+    const queryForIGAllImagesItems = '#igAllImages > * > img';
+    const queryForOpenedImgs = 'article li img:not(.imgProcessed)';
+    const combinedQuery = `${queryForIGAllImagesItems}, ${queryForIGPosts}, ${queryForOpenedImgs}`;
+    waitForEach(combinedQuery, itemEl => {
+      const imgSrc = itemEl.src;
+
+      const linksContainerEl = generateElements(
+        `<div id="cdx-container"></div>`,
+      );
+      itemEl.after(linksContainerEl);
+      console.log(linksContainerEl);
+      style(
+        linksContainerEl,
+        `
+        position: absolute;
+        top:      5px;
+        left:     5px;
+        z-index:  1000;
+        `,
+      );
+      generateElements(
+        `<a href='${imgSrc}' target=_blank> 🔗 </a>`,
+        linksContainerEl,
+      );
+      generateElements(
+        `<button>⬇️</button>`,
+        linksContainerEl,
+      ).addEventListener('click', () => clickHandler(itemEl));
+      generateElements(
+        `<button>📄</button>`,
+        linksContainerEl,
+      ).addEventListener('click', () => {
+        copyImageToClipboard(imgSrc);
+      });
+    });
+  })();
+
   //* filtering posts from same account in 'reposts' and 'tagged' sections
   (function () {
     'use strict';
@@ -152,39 +193,6 @@
     // $(`[role=button]:contains('See translation')`).click();
 
     // const $imagesOpened = $( '[style*="padding-bottom:"] > img[src]:not(.imgProcessed)' )
-    const queryForIGPosts =
-      'img[crossorigin="anonymous"][style="object-fit: cover;"]:not(.imgProcessed)';
-    const queryForIGAllImagesItems = '#igAllImages > * > img';
-    const queryForOpenedImgs = 'article li img:not(.imgProcessed)';
-
-    const $imagesOpened = $(
-      `${queryForIGAllImagesItems}, ${queryForIGPosts}, ${queryForOpenedImgs}`,
-    );
-    $imagesOpened.each(function () {
-      this.classList.add('imgProcessed');
-      const $this = $(this);
-      const imgSrc = this.src;
-
-      const $linksContainer = $(`<div></div>`).insertAfter($this);
-      style(
-        $linksContainer[0],
-        `
-                position: absolute;
-                top:      5px;
-                left:     5px;
-                z-index:  1000;
-            `,
-      );
-      $linksContainer.append(`<a href='${imgSrc}' target=_blank> 🔗 </a>`);
-      $(`<button>⬇️</button>`)
-        .appendTo($linksContainer)
-        .on('click', () => clickHandler(this));
-      $(`<button>📄</button>`)
-        .appendTo($linksContainer)
-        .on('click', () => {
-          copyImageToClipboard(imgSrc);
-        });
-    });
 
     const $videos = $(`video`);
     $videos.each(function (index, element) {
