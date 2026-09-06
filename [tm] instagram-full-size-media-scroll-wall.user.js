@@ -14,7 +14,6 @@
     AUTO_SCROLL_DELAY_MS: 900,
     AUTO_SCROLL_MAX_IDLE_ROUNDS: 6, // stop auto-load after this many scrolls with 0 new posts
     HARVEST_DEBOUNCE_MS: 250,
-    EMBED_PROCESS_DEBOUNCE_MS: 300,
   };
 
   const state = {
@@ -27,8 +26,6 @@
     idleRounds: 0,
     isAutoMode: false,
     harvestDebounceTimer: null,
-    embedScriptPromise: null,
-    embedProcessTimer: null,
   };
 
   // --- small DOM builder ---
@@ -102,14 +99,6 @@
       }
       .ig-wall-item img {
         display: block; width: 100%; max-height: ${vh}vh; object-fit: contain; background: #000;
-      }
-      .ig-wall-item.ig-wall-embed {
-        width: 360px;
-        max-width: 94vw;
-        border: none;
-      }
-      .ig-wall-item.ig-wall-embed blockquote.instagram-media {
-        margin: 0 !important;
       }
       .ig-wall-item .ig-wall-meta {
         display: flex; justify-content: space-between; align-items: center;
@@ -212,16 +201,6 @@
   }
 
   function addWallItem(item) {
-    // Carousels and reels/videos can't be fully rendered from the grid alone
-    // (the grid only ever shows a cover thumbnail), so use Instagram's own
-    // official embed widget for those — it's a sanctioned public endpoint
-    // built for exactly this, and it already handles carousel navigation
-    // and video playback correctly.
-    if (item.isCarousel || item.isReel) {
-      renderEmbedCard(item);
-      return;
-    }
-
     const card = el('div', { className: 'ig-wall-item' });
     const link = el('a', {
       href: item.href,
@@ -233,97 +212,23 @@
     card.appendChild(link);
 
     const meta = el('div', { className: 'ig-wall-meta' });
-    meta.appendChild(
-      el(
-        'a',
-        { href: item.href, target: '_blank', rel: 'noopener noreferrer' },
-        'Open original',
-      ),
-    );
-    card.appendChild(meta);
-
-    const status = document.getElementById('ig-wall-status');
-    state.contentEl.insertBefore(card, status);
-  }
-
-  // --- Instagram's official oEmbed widget (embed.js), used for carousels
-  // and reels/videos so we get real slide navigation and playback for free,
-  // via the endpoint Instagram explicitly built to be embedded. ---
-
-  function loadInstagramEmbedScript() {
-    if (state.embedScriptPromise) return state.embedScriptPromise;
-
-    state.embedScriptPromise = new Promise((resolve, reject) => {
-      if (window.instgrm && window.instgrm.Embeds) {
-        resolve(window.instgrm);
-        return;
-      }
-
-      const waitForReady = () => {
-        const check = () => {
-          if (window.instgrm && window.instgrm.Embeds) resolve(window.instgrm);
-          else setTimeout(check, 100);
-        };
-        check();
-      };
-
-      if (document.querySelector('script[src*="instagram.com/embed.js"]')) {
-        waitForReady();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = 'https://www.instagram.com/embed.js';
-      script.onload = waitForReady;
-      script.onerror = () =>
-        reject(new Error('Failed to load Instagram embed.js'));
-      document.body.appendChild(script);
-    });
-
-    return state.embedScriptPromise;
-  }
-
-  function scheduleEmbedProcess() {
-    if (state.embedProcessTimer) return;
-    state.embedProcessTimer = setTimeout(async () => {
-      state.embedProcessTimer = null;
-      try {
-        const instgrm = await loadInstagramEmbedScript();
-        instgrm.Embeds.process();
-      } catch (err) {
-        console.warn('Instagram embed widget failed to load:', err);
-        setStatus(
-          "Could not load Instagram's embed widget for a carousel/reel — check your connection and try again.",
-        );
-      }
-    }, config.EMBED_PROCESS_DEBOUNCE_MS);
-  }
-
-  function renderEmbedCard(item) {
-    const card = el('div', { className: 'ig-wall-item ig-wall-embed' });
-    const blockquote = el('blockquote', { className: 'instagram-media' });
-    blockquote.setAttribute('data-instgrm-permalink', item.href);
-    blockquote.setAttribute('data-instgrm-version', '14');
-    card.appendChild(blockquote);
-
-    const meta = el('div', { className: 'ig-wall-meta' });
-    if (item.isReel)
+    if (item.isReel) {
       meta.appendChild(el('span', { className: 'ig-wall-badge' }, 'Reel'));
-    if (item.isCarousel)
+    }
+    if (item.isCarousel) {
       meta.appendChild(el('span', { className: 'ig-wall-badge' }, 'Carousel'));
+    }
     meta.appendChild(
       el(
         'a',
         { href: item.href, target: '_blank', rel: 'noopener noreferrer' },
-        'Open original',
+        item.isCarousel ? 'View all slides →' : 'Open original',
       ),
     );
     card.appendChild(meta);
 
     const status = document.getElementById('ig-wall-status');
     state.contentEl.insertBefore(card, status);
-    scheduleEmbedProcess();
   }
 
   function setStatus(text) {
@@ -444,10 +349,6 @@
     if (state.harvestDebounceTimer) {
       clearTimeout(state.harvestDebounceTimer);
       state.harvestDebounceTimer = null;
-    }
-    if (state.embedProcessTimer) {
-      clearTimeout(state.embedProcessTimer);
-      state.embedProcessTimer = null;
     }
     document.removeEventListener('keydown', onKeyDown);
     if (state.wallEl) state.wallEl.remove();
