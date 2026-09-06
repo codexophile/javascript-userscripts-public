@@ -1,3 +1,11 @@
+// ==UserScript==
+// @name         Instagram Full-Size Media Scroll Wall
+// @description  Opens Instagram media in a full-size infinite scroll wall
+// @match        https://www.instagram.com/*
+// @grant        GM.xmlHttpRequest
+// @connect      www.instagram.com
+// ==/UserScript==
+
 (function () {
   'use strict';
 
@@ -121,6 +129,20 @@
   }
 
   /**
+   * Reads a non-HttpOnly cookie value for headers used by Instagram's web API.
+   * @param {string} name
+   * @returns {string|null}
+   */
+  function getCookieValue(name) {
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return (
+      document.cookie.match(
+        new RegExp(`(?:^|; )${escapedName}=([^;]*)`),
+      )?.[1] || null
+    );
+  }
+
+  /**
    * Provides a rank token required by some Instagram endpoints (e.g., usertags).
    * Attempts to reuse device_id when available to keep requests consistent.
    */
@@ -230,15 +252,19 @@
 
     const app_id = '936619743392459'; // Standard web app ID
     const asbd_id = '129477'; // Standard ASBD ID
+    const igWwwClaim = getCookieValue('ig_www_claim') || '0';
 
     let url;
     const options = {
       credentials: 'include',
-      referrerPolicy: 'no-referrer',
+      referrerPolicy: 'strict-origin-when-cross-origin',
       headers: {
         'X-IG-App-ID': app_id,
         'X-ASBD-ID': asbd_id,
         'X-CSRFToken': csrfToken,
+        'X-IG-WWW-Claim': igWwwClaim,
+        'X-Requested-With': 'XMLHttpRequest',
+        Referer: window.location.href,
         'User-Agent': navigator.userAgent,
         Accept: '*/*',
       },
@@ -246,7 +272,7 @@
 
     switch (state.pageMode) {
       case 'profile':
-        url = `https://i.instagram.com/api/v1/feed/user/${state.targetUserId}/?count=${config.MEDIA_PER_QUERY}`;
+        url = `https://www.instagram.com/api/v1/feed/user/${state.targetUserId}/?count=${config.MEDIA_PER_QUERY}`;
         if (state.nextPageCursor) url += `&max_id=${state.nextPageCursor}`;
         break;
 
@@ -270,7 +296,7 @@
       }
 
       case 'home': {
-        url = 'https://i.instagram.com/api/v1/feed/timeline/';
+        url = 'https://www.instagram.com/api/v1/feed/timeline/';
         const formData = new URLSearchParams();
         // These parameters seem to be required for the timeline endpoint.
         formData.set('is_async_ads_rti', '0');
@@ -280,6 +306,8 @@
         formData.set('device_id', window._sharedData?.device_id);
         if (state.nextPageCursor) formData.set('max_id', state.nextPageCursor);
         options.method = 'POST';
+        options.headers['Content-Type'] =
+          'application/x-www-form-urlencoded; charset=UTF-8';
         options.body = formData;
         break;
       }
@@ -292,6 +320,65 @@
     }
 
     return { url, options };
+  }
+
+  /**
+   * Sends an API request with the userscript transport when available so
+   * cross-origin requests use the browser's Instagram cookie context.
+   * @param {string} url
+   * @param {object} options
+   * @returns {Promise<Response|object>}
+   */
+  function requestApi(url, options) {
+    const gmRequest =
+      typeof GM_xmlhttpRequest === 'function'
+        ? GM_xmlhttpRequest
+        : typeof GM !== 'undefined' && typeof GM.xmlHttpRequest === 'function'
+          ? GM.xmlHttpRequest
+          : null;
+
+    if (!gmRequest) return fetch(url, options);
+
+    const headers = { ...options.headers };
+    const body =
+      options.body instanceof URLSearchParams
+        ? options.body.toString()
+        : options.body;
+
+    return new Promise((resolve, reject) => {
+      gmRequest({
+        method: options.method || 'GET',
+        url,
+        headers,
+        data: body,
+        responseType: 'text',
+        anonymous: false,
+        onload: response => {
+          const responseHeaders = new Headers();
+          for (const line of (response.responseHeaders || '').split(/\r?\n/)) {
+            const separatorIndex = line.indexOf(':');
+            if (separatorIndex > 0) {
+              responseHeaders.set(
+                line.slice(0, separatorIndex).trim(),
+                line.slice(separatorIndex + 1).trim(),
+              );
+            }
+          }
+
+          const responseText = response.responseText || '';
+          resolve({
+            ok: response.status >= 200 && response.status < 300,
+            status: response.status,
+            url: response.finalUrl || url,
+            headers: responseHeaders,
+            text: async () => responseText,
+            json: async () => JSON.parse(responseText),
+          });
+        },
+        onerror: () =>
+          reject(new Error('Instagram API network request failed.')),
+      });
+    });
   }
 
   /**
@@ -320,14 +407,14 @@
     );
 
     try {
-      const response = await fetch(request.url, request.options);
+      const response = await requestApi(request.url, request.options);
 
       // Check content type first before trying to parse
       const contentType = response.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
         const text = await response.text();
         throw new Error(
-          `Non-JSON response (status ${response.status}): ${text.slice(0, 120)}`,
+          `Non-JSON response (status ${response.status}, URL ${response.url}): ${text.slice(0, 120)}`,
         );
       }
 
