@@ -1471,6 +1471,11 @@ function lazyLoad(load, ...items) {
 
 //  MARK: Page functionalities
 
+function addGalleryDlCheckbox(parentEl) {
+  const checkboxEl = generateElements(`<input type="checkbox">`, parentEl);
+  checkboxEl.classList.add('gallery-dl-checkbox');
+}
+
 async function setupYtDlpBtn(
   url,
   title,
