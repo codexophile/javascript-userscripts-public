@@ -12,21 +12,30 @@
     ``,
   );
 
+  //* ig-wall items
+  waitForEach('.ig-wall-meta', itemEl => {
+    addGalleryDlCheckbox(itemEl);
+  });
+
   //* post items
   (function () {
-    const queryForIGPosts =
-      'img[crossorigin="anonymous"][style="object-fit: cover;"]:not(.imgProcessed)';
-    const queryForIGAllImagesItems = '#igAllImages > * > img';
-    const queryForOpenedImgs = 'article li img:not(.imgProcessed)';
-    const combinedQuery = `${queryForIGAllImagesItems}, ${queryForIGPosts}, ${queryForOpenedImgs}`;
+    const queries = {
+      igPosts: 'img[crossorigin="anonymous"][style="object-fit: cover;"]',
+      igAllImagesItems: '#igAllImages > * > img',
+      openedImgs: 'article li img',
+      igWallItems: '.ig-wall-item',
+    };
+    const combinedQuery = Object.values(queries).join(', ');
+
     waitForEach(combinedQuery, itemEl => {
+      const grandParentEl = grandParent(itemEl, 4);
       const imgSrc = itemEl.src;
 
       const linksContainerEl = generateElements(
         `<div id="cdx-container"></div>`,
+        grandParentEl,
       );
-      itemEl.after(linksContainerEl);
-      console.log(linksContainerEl);
+
       style(
         linksContainerEl,
         `
@@ -50,6 +59,9 @@
       ).addEventListener('click', () => {
         copyImageToClipboard(imgSrc);
       });
+
+      //* gallery-dl
+      addGalleryDlCheckbox(linksContainerEl);
     });
   })();
 
@@ -65,7 +77,6 @@
       const shouldTest = sectionsToTestForArr.some(section =>
         location.href.includes(`/${section}/`),
       );
-      console.log(shouldTest);
       if (!shouldTest) return;
       const userIdEl = document.querySelector(`section [href="#"]:has(>h2)`);
       if (!userIdEl) return;
