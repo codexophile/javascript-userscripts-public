@@ -1806,7 +1806,7 @@ const DOWNLOADERS = /** @type {const} */ (['ytdlp', 'gallerydl']);
  */
 function invokeDownloader(
   downloader,
-  { urlToDownload, destination, mode, browser, profile },
+  { urlToDownload, destination, mode, browser, profile, autoRetryInfoJson },
 ) {
   if (!DOWNLOADERS.includes(downloader)) {
     throw new Error(
@@ -1819,8 +1819,11 @@ function invokeDownloader(
   const modeSegment = mode ? `mode:${mode}::` : '';
   const browserSegment = browser ? `browser:${browser}::` : ``;
   const profileSegment = profile ? `profile:${profile}::` : ``;
+  const autoRetryInfoJsonSegment = autoRetryInfoJson
+    ? `autoRetryInfoJson:true::`
+    : ``;
   GM_setClipboard(
-    `initiate-${downloader}:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
+    `initiate-${downloader}:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}${autoRetryInfoJsonSegment}`,
   );
 }
 
