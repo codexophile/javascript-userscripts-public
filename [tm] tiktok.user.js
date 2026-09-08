@@ -51,9 +51,10 @@
       urlToDownload: url,
       destination: 'x:\\tiktok',
       mode: 'noprompt',
+      autoRetryInfoJson: true,
       //? 👇🏻
-      browser: 'firefox',
-      profile: '3vm341ho.default-release',
+      // browser: 'firefox',
+      // profile: '3vm341ho.default-release',
     });
     addHistoryEntry(url);
   }
