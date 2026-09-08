@@ -94,10 +94,10 @@
     'confession',
     'confessions',
 
-    'claim',
-    'claims',
-    'claiming',
-    'claimed',
+    // 'claim',
+    // 'claims',
+    // 'claiming',
+    // 'claimed',
 
     'prove',
     'proves',
