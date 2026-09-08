@@ -182,6 +182,16 @@
     alt: 'ytdlp logo',
   });
 
+  GM_addElement(ytDlpPopover, 'input', {
+    textContent: 'noprompt',
+    type: 'checkbox',
+    id: 'ytdlp-noprompt-checkbox',
+    class: 'ytdlp-option',
+  });
+  GM_addElement(ytDlpPopover, 'label', {
+    textContent: 'noprompt',
+    for: 'ytdlp-noprompt-checkbox',
+  });
   GM_addElement(ytDlpPopover, 'button', {
     textContent: '⬇️',
     onclick: () => {
