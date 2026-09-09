@@ -166,6 +166,13 @@
       }
       .yt-ts-card.entering { animation: yt-ts-slide-in 0.25s ease-out; }
       .yt-ts-card.closing { animation: yt-ts-slide-out 0.25s ease-in forwards; }
+      .yt-ts-controls { display: flex; justify-content: flex-end; gap: 6px; }
+      .yt-ts-controls[hidden] { display: none; }
+      .yt-ts-control {
+        background: #303030; border: 1px solid #505050; border-radius: 4px;
+        color: #ddd; cursor: pointer; font-size: 11px; padding: 3px 6px;
+      }
+      .yt-ts-control:hover { background: #444; color: #fff; }
       .yt-ts-progress { height: 2px; margin: 0 -14px -12px; background: #303030; }
       .yt-ts-progress-bar { height: 100%; width: 100%; background: #ff0000; transform-origin: left; }
       .yt-ts-header { display: flex; align-items: center; gap: 8px; }
@@ -193,7 +200,9 @@
   }
 
   function showPopup(comment, video) {
+    if (blockNewPopups) return;
     const stack = ensureStack();
+    ensureControls();
     const existingPopup = activePopups.get(comment.id);
     if (existingPopup) {
       existingPopup.refresh();
@@ -290,6 +299,7 @@
       if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
       video.removeEventListener('pause', pauseProgress);
       video.removeEventListener('play', resumeProgress);
+      updateControls();
       card.classList.add('closing');
       setTimeout(() => card.remove(), 250);
     };
@@ -315,10 +325,11 @@
     });
 
     stack.appendChild(card);
-    activePopups.set(comment.id, { refresh });
-    [...stack.children]
+    activePopups.set(comment.id, { refresh, close });
+    [...stack.querySelectorAll('.yt-ts-card')]
       .sort((a, b) => Number(b.dataset.likeCount) - Number(a.dataset.likeCount))
       .forEach(sortedCard => stack.appendChild(sortedCard));
+    updateControls();
     if (CONFIG.AUTO_DISMISS_MS > 0) {
       video.addEventListener('pause', pauseProgress);
       video.addEventListener('play', resumeProgress);
@@ -327,6 +338,37 @@
   }
 
   const activePopups = new Map();
+  let blockNewPopups = false;
+
+  function updateControls() {
+    const controls = document.getElementById('yt-ts-controls');
+    if (controls) controls.hidden = activePopups.size === 0;
+  }
+
+  function ensureControls() {
+    const stack = ensureStack();
+    let controlsDivEl = document.getElementById('yt-ts-controls');
+    if (!controlsDivEl) {
+      controlsHtml = `
+        <button class="yt-ts-control" type="button">Close all</button>
+        <button class="yt-ts-control" type="button">Close all and block</button>
+      `;
+      controlsDivEl = generateElements(`<div>${controlsHtml}</div>`);
+      controlsDivEl.id = 'yt-ts-controls';
+      controlsDivEl.className = 'yt-ts-controls';
+      const [closeAllButton, blockButton] =
+        controlsDivEl.querySelectorAll('button');
+      closeAllButton.addEventListener('click', () => {
+        for (const popup of activePopups.values()) popup.close();
+      });
+      blockButton.addEventListener('click', () => {
+        blockNewPopups = true;
+        for (const popup of activePopups.values()) popup.close();
+      });
+      stack.prepend(controlsDivEl);
+    }
+    updateControls();
+  }
 
   function watchVideo(video, comments) {
     let previousTime = video.currentTime;
