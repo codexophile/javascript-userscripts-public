@@ -1,7 +1,9 @@
 (function () {
   'use strict';
-
-  if (location.href.includes('/mediaindex/')) {
+  const WHEN_TO_REDIRECT = '%3Fseason%3D10';
+  if (location.href.includes(WHEN_TO_REDIRECT)) {
+    location.replace(location.href.replace(WHEN_TO_REDIRECT, ''));
+  } else if (location.href.includes('/mediaindex/')) {
     //* gallery/mediaindex flex-wrap fix
     waitForEach('[data-testid="sub-section-images"] > section > div', rowEl => {
       console.log('xxx', rowEl);
