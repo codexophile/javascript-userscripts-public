@@ -167,14 +167,71 @@ async function sbControls(
   }
 }
 
+function resolveStoryboardLayout({
+  horizontal,
+  vertical,
+  samplingFq,
+  trueNoOfSlots,
+  imageCount,
+  videoDuration,
+}) {
+  const toPositiveNumber = value => {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? number : null;
+  };
+
+  let totalSlots = toPositiveNumber(trueNoOfSlots);
+  let interval = toPositiveNumber(samplingFq);
+  const duration = toPositiveNumber(videoDuration);
+
+  if (!totalSlots && interval && duration) {
+    totalSlots = Math.ceil(duration / interval);
+  }
+  if (!interval && totalSlots && duration) {
+    interval = duration / totalSlots;
+  }
+
+  let resolvedHorizontal = toPositiveNumber(horizontal);
+  let resolvedVertical = toPositiveNumber(vertical);
+  const slotsPerSheet =
+    totalSlots && imageCount ? Math.ceil(totalSlots / imageCount) : null;
+
+  if (!resolvedHorizontal && !resolvedVertical) {
+    throw new Error(
+      'Storyboard horizontal and vertical are both missing; provide one grid dimension.',
+    );
+  } else if (!resolvedHorizontal) {
+    if (!slotsPerSheet) {
+      throw new Error(
+        'Storyboard horizontal is missing; provide trueNoOfSlots or samplingFq with a video duration.',
+      );
+    }
+    resolvedHorizontal = Math.ceil(slotsPerSheet / resolvedVertical);
+  } else if (!resolvedVertical) {
+    if (!slotsPerSheet) {
+      throw new Error(
+        'Storyboard vertical is missing; provide trueNoOfSlots or samplingFq with a video duration.',
+      );
+    }
+    resolvedVertical = Math.ceil(slotsPerSheet / resolvedHorizontal);
+  }
+
+  return {
+    horizontal: resolvedHorizontal,
+    vertical: resolvedVertical,
+    samplingFq: interval,
+    trueNoOfSlots: totalSlots,
+  };
+}
+
 /**
  * Renders storyboard tiles for a video.
  * @param {number} trueNoOfSlots - Max slots to render (clamped to available).
  */
 async function storyboard({
   storyboardParent,
-  horizontal,
-  vertical,
+  horizontal = null,
+  vertical = null,
   linkToVid = null,
   vidOnPage,
   samplingFq = null,
@@ -193,8 +250,23 @@ async function storyboard({
 
   if (!imgUrls.length) console.error('imgUrls: Error!');
 
+  const layout = resolveStoryboardLayout({
+    horizontal,
+    vertical,
+    samplingFq,
+    trueNoOfSlots,
+    imageCount: imgUrls.length,
+    videoDuration: vidOnPage?.duration,
+  });
+
   const promises = imgUrls.map((url, index) =>
-    storyboardFlex(horizontal, vertical, url, index, trueNoOfSlots),
+    storyboardFlex(
+      layout.horizontal,
+      layout.vertical,
+      url,
+      index,
+      layout.trueNoOfSlots,
+    ),
   );
 
   // @ts-ignore
@@ -226,9 +298,9 @@ async function storyboard({
 
       slot.addEventListener('click', ev => {
         const samplingFreq =
-          samplingFq ||
+          layout.samplingFq ||
           vidOnPage.duration / totalSlots ||
-          vidOnPage.duration / (horizontal * vertical);
+          vidOnPage.duration / (layout.horizontal * layout.vertical);
         // const samplingFreq = samplingFq || ( vidOnPage.duration / ( horizontal * vertical ) );
         const newTime =
           (ev.target.closest('div').index + offset) * samplingFreq;
