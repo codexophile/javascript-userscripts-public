@@ -186,56 +186,117 @@
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(120%); opacity: 0; }
       }
+      #yt-ts-popup-stack {
+        --yt-ts-background: #212121;
+        --yt-ts-surface: #272727;
+        --yt-ts-surface-hover: #3f3f3f;
+        --yt-ts-border: #3f3f3f;
+        --yt-ts-text: #f1f1f1;
+        --yt-ts-secondary-text: #aaa;
+        --yt-ts-accent: #c5221f;
+        --yt-ts-accent-hover: #d83b35;
+      }
       .yt-ts-card {
-        background: #0f0f0f;
-        border: 1px solid #303030;
-        border-left: 4px solid #ff0000;
-        border-radius: 12px;
-        padding: 12px 14px;
-        color: #f1f1f1;
+        background: var(--yt-ts-background);
+        border: 1px solid var(--yt-ts-border);
+        border-left: 4px solid var(--yt-ts-accent);
+        border-radius: 10px;
+        padding: 14px 16px;
+        color: var(--yt-ts-text);
         font-family: "Roboto", Arial, sans-serif;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        font-size: 14px;
+        line-height: 1.4;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
         animation: none;
       }
       .yt-ts-card.entering { animation: yt-ts-slide-in 0.25s ease-out; }
       .yt-ts-card.closing { animation: yt-ts-slide-out 0.25s ease-in forwards; }
-      .yt-ts-controls { display: flex; justify-content: flex-end; gap: 6px; }
+      .yt-ts-controls {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
       .yt-ts-controls[hidden] { display: none; }
       .yt-ts-control {
-        background: #303030; border: 1px solid #505050; border-radius: 4px;
-        color: #ddd; cursor: pointer; font-size: 11px; padding: 3px 6px;
+        min-height: 32px;
+        padding: 0 14px;
+        border: 1px solid #606060;
+        border-radius: 18px;
+        background: transparent;
+        color: #f1f1f1;
+        cursor: pointer;
+        font: 500 13px/1 "Roboto", Arial, sans-serif;
+        letter-spacing: 0.01em;
+        transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
       }
-      .yt-ts-control:hover { background: #444; color: #fff; }
-      .yt-ts-progress { height: 2px; margin: 0 -14px -12px; background: #303030; }
-      .yt-ts-progress-bar { height: 100%; width: 100%; background: #ff0000; transform-origin: left; }
+      .yt-ts-control:hover { background: var(--yt-ts-surface-hover); border-color: #777; }
+      .yt-ts-control:active { background: #4a4a4a; }
+      .yt-ts-control:focus-visible,
+      .yt-ts-close:focus-visible {
+        outline: 2px solid #8ab4f8;
+        outline-offset: 2px;
+      }
+      .yt-ts-control:disabled {
+        border-color: #4a4a4a;
+        color: #777;
+        cursor: wait;
+        opacity: 0.75;
+      }
+      .yt-ts-control--destructive {
+        border-color: #8d3a37;
+        color: #ffb4ae;
+      }
+      .yt-ts-control--destructive:hover {
+        background: #542a29;
+        border-color: var(--yt-ts-accent-hover);
+        color: #ffd8d4;
+      }
+      .yt-ts-progress { height: 3px; margin: 0 -16px -14px; background: #3a3a3a; }
+      .yt-ts-progress-bar { height: 100%; width: 100%; background: var(--yt-ts-accent); transform-origin: left; }
       .yt-ts-header { display: flex; align-items: center; gap: 8px; }
       .yt-ts-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
       .yt-ts-name { font-size: ${BASE_FONT_SIZE}px; font-weight: 500; color: #fff; text-decoration: none; }
-      .yt-ts-name:hover { text-decoration: underline; color: #ff4444; }
-      .yt-ts-meta { font-size: ${BASE_FONT_SIZE}px; color: #aaa; margin-top: 1px; }
+      .yt-ts-name:hover { text-decoration: underline; color: #ffb4ae; }
+      .yt-ts-meta { font-size: ${BASE_FONT_SIZE}px; color: var(--yt-ts-secondary-text); margin-top: 1px; }
       .yt-ts-badge {
-        margin-left: auto; background: #ff0000; color: #fff; font-size: ${BASE_FONT_SIZE}px;
-        font-weight: 600; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+        margin-left: auto; background: #542a29; color: #ffb4ae; font-size: ${BASE_FONT_SIZE}px;
+        font-weight: 600; padding: 3px 9px; border: 1px solid #8d3a37; border-radius: 12px; white-space: nowrap;
       }
       .yt-ts-text {
-        font-size: ${FONT_SIZE_L2}px; line-height: 1.4; margin: 8px 0 6px; color: #ddd;
+        font-size: ${FONT_SIZE_L2}px; line-height: 1.45; margin: 10px 0 8px; color: #e4e4e4;
         max-height: 90px; overflow-y: auto;
       }
-      .yt-ts-footer { display: flex; align-items: center; justify-content: space-between; }
-      .yt-ts-likes { display: flex; align-items: center; gap: 4px; font-size: ${FONT_SIZE_L2}px; color: #aaa; }
+      .yt-ts-footer {
+        margin: 5px;
+        display: flex;
+        align-items: center;
+        justify-content:
+        space-between;
+      }
+      .yt-ts-likes { display: flex; align-items: center; gap: 5px; font-size: ${FONT_SIZE_L2}px; color: var(--yt-ts-secondary-text); }
       .yt-ts-replies-button { margin-left: auto; }
-      .yt-ts-replies { border-top: 1px solid #303030; margin-top: 8px; padding-top: 8px; }
+      .yt-ts-replies { border-top: 1px solid var(--yt-ts-border); margin-top: 10px; padding-top: 10px; }
       .yt-ts-reply { display: flex; gap: 8px; margin-top: 8px; }
       .yt-ts-reply:first-child { margin-top: 0; }
       .yt-ts-reply-avatar { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; }
       .yt-ts-reply-content { min-width: 0; }
-      .yt-ts-reply-meta { color: #aaa; font-size: ${BASE_FONT_SIZE}px; }
+      .yt-ts-reply-meta { color: var(--yt-ts-secondary-text); font-size: ${BASE_FONT_SIZE}px; }
       .yt-ts-reply-text { color: #ddd; font-size: ${BASE_FONT_SIZE}px; line-height: 1.35; margin-top: 2px; white-space: pre-wrap; }
       .yt-ts-close {
-        background: none; border: none; color: #888; cursor: pointer;
-        font-size: ${FONT_SIZE_L3}px; line-height: 1; padding: 2px 6px;
+        width: 32px;
+        height: 32px;
+        margin: -4px -8px -4px 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: ${FONT_SIZE_L3}px;
+        line-height: 1;
+        padding: 0;
       }
-      .yt-ts-close:hover { color: #fff; }
+      .yt-ts-close:hover { background: var(--yt-ts-surface-hover); color: #fff; }
     `;
     GM_addStyle(styleText);
   }
@@ -446,7 +507,7 @@
     if (!controlsDivEl) {
       controlsHtml = `
         <button class="yt-ts-control" type="button">Close all</button>
-        <button class="yt-ts-control" type="button">Close all and block</button>
+        <button class="yt-ts-control yt-ts-control--destructive" type="button">Close all and block</button>
       `;
       controlsDivEl = generateElements(`<div>${controlsHtml}</div>`);
       controlsDivEl.id = 'yt-ts-controls';
