@@ -3461,6 +3461,33 @@ function calculateWidthAndExpand(collapsibleContent) {
 
 // MARK: Site specific functions
 
+function markVideoItems(mainElSelector, durationElSelector, qualityElSelector) {
+  waitForEach(mainElSelector, async videoItemEl => {
+    const durationEl = videoItemEl.querySelector(durationElSelector);
+    if (!durationEl) {
+      markAsErrored(videoItemEl);
+      return;
+    }
+    const duration = toSeconds(durationEl.textContent);
+    if (isNaN(duration)) {
+      markAsErrored(videoItemEl);
+      return;
+    }
+    if (duration >= 15 * 60) {
+      videoItemEl.style.outline = 'solid 2px chartreuse';
+    }
+    if (duration >= 60 * 60) {
+      videoItemEl.style.outline = 'solid 2px orange';
+    }
+    console.log('xxx', videoItemEl, duration);
+    const qualityEl = videoItemEl.querySelector(qualityElSelector);
+  });
+
+  function markAsErrored(el) {
+    el.style.outline = '2px solid red';
+  }
+}
+
 function getStreamwishQuery() {
   const doodHosts = ['peytonepre'];
   const doodHostsQuery = doodHosts.map(host => `[href*="${host}"]`).join(',');
