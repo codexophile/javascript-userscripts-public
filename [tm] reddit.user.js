@@ -30,24 +30,34 @@
       const matches = location.href.match(/\/u(?:ser)?\/(.+?)(?:[\/?]|$)/);
       if (!matches) return;
       const userId = matches[1];
-      generateElements(
-        `<a
-          target="_blank"
-          class="external-service-links"
-          href="https://arctic-shift.photon-reddit.com/search?fun=posts_search&author=${userId}&limit=10&sort=desc"
-        >arctic-shift</a>`,
+      createExtLink(
+        'arctic-shift',
+        `https://arctic-shift.photon-reddit.com/search?fun=posts_search&author=${userId}&limit=10&sort=desc`,
         parentEl,
       );
-      generateElements(
-        `<a
-          target="_blank"
-          class="external-service-links"
-          href="https://search.pullpush.io/?author=${userId}&type=submission&sort_type=created_utc&sort=desc"
-        >pullpush</a>`,
+      createExtLink(
+        'pullpush',
+        `https://search.pullpush.io/?author=${userId}&type=submission&sort_type=created_utc&sort=desc`,
+        parentEl,
+      );
+      createExtLink(
+        'redveal',
+        `https://redveal.com/user/${userId}?tab=activity`,
         parentEl,
       );
     },
   );
+
+  function createExtLink(text, url, parentEl) {
+    generateElements(
+      `<a
+          target="_blank"
+          class="external-service-links"
+          href="${url}"
+        >${text}</a>`,
+      parentEl,
+    );
+  }
 
   //*
   const REDDIT_TITLE_SUFFIX = '- [Reddit]';
