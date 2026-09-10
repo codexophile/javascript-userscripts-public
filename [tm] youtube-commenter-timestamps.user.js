@@ -33,9 +33,9 @@
     return out;
   }
 
-  function apiGet(params) {
+  function apiGet(endpoint, params) {
     const url =
-      'https://www.googleapis.com/youtube/v3/commentThreads?' +
+      `https://www.googleapis.com/youtube/v3/${endpoint}?` +
       new URLSearchParams(params).toString();
     return new Promise((resolve, reject) => {
       GM_xmlhttpRequest({
@@ -73,7 +73,7 @@
 
       let data;
       try {
-        data = await apiGet(params);
+        data = await apiGet('commentThreads', params);
       } catch (e) {
         console.error('[TimestampComments] API error', e);
         break;
@@ -87,6 +87,7 @@
         for (const ts of timestamps) {
           results.push({
             id: item.id + '-' + ts.seconds,
+            commentId: item.id,
             author: top.authorDisplayName,
             authorChannelUrl: top.authorChannelUrl,
             authorProfileImageUrl: top.authorProfileImageUrl,
@@ -108,6 +109,38 @@
 
     results.sort((a, b) => a.seconds - b.seconds);
     return results;
+  }
+
+  async function fetchReplies(commentId) {
+    const replies = [];
+    let pageToken = '';
+
+    for (let page = 0; page < CONFIG.MAX_PAGES; page++) {
+      const params = {
+        part: 'snippet',
+        parentId: commentId,
+        maxResults: '100',
+        textFormat: 'plainText',
+        key: CONFIG.API_KEY,
+      };
+      if (pageToken) params.pageToken = pageToken;
+
+      const data = await apiGet('comments', params);
+      for (const item of data.items || []) {
+        const reply = item.snippet;
+        replies.push({
+          author: reply.authorDisplayName,
+          authorProfileImageUrl: reply.authorProfileImageUrl,
+          publishedAt: reply.publishedAt,
+          text: reply.textDisplay,
+        });
+      }
+
+      pageToken = data.nextPageToken;
+      if (!pageToken) break;
+    }
+
+    return replies;
   }
 
   function formatDate(iso) {
@@ -190,6 +223,14 @@
       }
       .yt-ts-footer { display: flex; align-items: center; justify-content: space-between; }
       .yt-ts-likes { display: flex; align-items: center; gap: 4px; font-size: ${FONT_SIZE_L2}px; color: #aaa; }
+      .yt-ts-replies-button { margin-left: auto; }
+      .yt-ts-replies { border-top: 1px solid #303030; margin-top: 8px; padding-top: 8px; }
+      .yt-ts-reply { display: flex; gap: 8px; margin-top: 8px; }
+      .yt-ts-reply:first-child { margin-top: 0; }
+      .yt-ts-reply-avatar { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; }
+      .yt-ts-reply-content { min-width: 0; }
+      .yt-ts-reply-meta { color: #aaa; font-size: ${BASE_FONT_SIZE}px; }
+      .yt-ts-reply-text { color: #ddd; font-size: ${BASE_FONT_SIZE}px; line-height: 1.35; margin-top: 2px; white-space: pre-wrap; }
       .yt-ts-close {
         background: none; border: none; color: #888; cursor: pointer;
         font-size: ${FONT_SIZE_L3}px; line-height: 1; padding: 2px 6px;
@@ -229,7 +270,9 @@
             </svg>
             <span>${(comment.likeCount || 0).toLocaleString()}</span>
           </div>
+          <button class="yt-ts-control yt-ts-replies-button" type="button">Load replies</button>
         </div>
+        <div class="yt-ts-replies" hidden></div>
         <div class="yt-ts-progress"><div class="yt-ts-progress-bar"></div></div>
       </div>
       `);
@@ -242,6 +285,58 @@
     );
     card.dataset.likeCount = String(comment.likeCount || 0);
     card.querySelector('.yt-ts-text').textContent = comment.text;
+
+    const repliesButton = card.querySelector('.yt-ts-replies-button');
+    const repliesContainer = card.querySelector('.yt-ts-replies');
+    let repliesLoaded = false;
+    repliesButton.addEventListener('click', async event => {
+      event.stopPropagation();
+      if (repliesLoaded) {
+        repliesContainer.hidden = !repliesContainer.hidden;
+        repliesButton.textContent = repliesContainer.hidden
+          ? 'Show replies'
+          : 'Hide replies';
+        return;
+      }
+
+      repliesButton.disabled = true;
+      repliesButton.textContent = 'Loading replies...';
+      try {
+        const replies = await fetchReplies(comment.commentId);
+        repliesContainer.replaceChildren();
+        if (replies.length === 0) {
+          repliesContainer.textContent = 'No replies found.';
+        } else {
+          for (const reply of replies) {
+            const replyEl = generateElements(`
+              <div class="yt-ts-reply">
+                <img class="yt-ts-reply-avatar" alt="">
+                <div class="yt-ts-reply-content">
+                  <div class="yt-ts-reply-meta"></div>
+                  <div class="yt-ts-reply-text"></div>
+                </div>
+              </div>
+            `);
+            replyEl.querySelector('.yt-ts-reply-avatar').src =
+              reply.authorProfileImageUrl;
+            replyEl.querySelector('.yt-ts-reply-meta').textContent =
+              `${reply.author} - ${formatDate(reply.publishedAt)}`;
+            replyEl.querySelector('.yt-ts-reply-text').textContent = reply.text;
+            repliesContainer.append(replyEl);
+          }
+        }
+        repliesLoaded = true;
+        repliesContainer.hidden = false;
+        repliesButton.textContent = 'Hide replies';
+      } catch (error) {
+        console.error('[TimestampComments] replies API error', error);
+        repliesContainer.textContent = 'Unable to load replies.';
+        repliesContainer.hidden = false;
+        repliesButton.textContent = 'Retry loading replies';
+      } finally {
+        repliesButton.disabled = false;
+      }
+    });
 
     const progressBar = card.querySelector('.yt-ts-progress-bar');
     let remainingMs = CONFIG.AUTO_DISMISS_MS;
@@ -316,7 +411,7 @@
       .querySelector('.yt-ts-close')
       .addEventListener('click', () => close(true));
     card.addEventListener('click', e => {
-      if (e.target.closest('.yt-ts-close')) return;
+      if (e.target.closest('.yt-ts-close, .yt-ts-replies-button')) return;
       const video = document.querySelector('video');
       if (video) {
         video.currentTime = comment.seconds;
