@@ -93,6 +93,7 @@
             authorProfileImageUrl: top.authorProfileImageUrl,
             publishedAt: top.publishedAt,
             likeCount: top.likeCount,
+            totalReplyCount: item.snippet.totalReplyCount,
             text: top.textDisplay,
             seconds: ts.seconds,
             raw: ts.raw,
@@ -331,7 +332,7 @@
             </svg>
             <span>${(comment.likeCount || 0).toLocaleString()}</span>
           </div>
-          <button class="yt-ts-control yt-ts-replies-button" type="button">Load replies</button>
+          <button class="yt-ts-control yt-ts-replies-button" type="button">Load replies (${(comment.totalReplyCount || 0).toLocaleString()})</button>
         </div>
         <div class="yt-ts-replies" hidden></div>
         <div class="yt-ts-progress"><div class="yt-ts-progress-bar"></div></div>
@@ -349,19 +350,20 @@
 
     const repliesButton = card.querySelector('.yt-ts-replies-button');
     const repliesContainer = card.querySelector('.yt-ts-replies');
+    const replyCountLabel = (comment.totalReplyCount || 0).toLocaleString();
     let repliesLoaded = false;
     repliesButton.addEventListener('click', async event => {
       event.stopPropagation();
       if (repliesLoaded) {
         repliesContainer.hidden = !repliesContainer.hidden;
         repliesButton.textContent = repliesContainer.hidden
-          ? 'Show replies'
-          : 'Hide replies';
+          ? `Show replies (${replyCountLabel})`
+          : `Hide replies (${replyCountLabel})`;
         return;
       }
 
       repliesButton.disabled = true;
-      repliesButton.textContent = 'Loading replies...';
+      repliesButton.textContent = `Loading replies (${replyCountLabel})...`;
       try {
         const replies = await fetchReplies(comment.commentId);
         repliesContainer.replaceChildren();
@@ -388,12 +390,12 @@
         }
         repliesLoaded = true;
         repliesContainer.hidden = false;
-        repliesButton.textContent = 'Hide replies';
+        repliesButton.textContent = `Hide replies (${replyCountLabel})`;
       } catch (error) {
         console.error('[TimestampComments] replies API error', error);
         repliesContainer.textContent = 'Unable to load replies.';
         repliesContainer.hidden = false;
-        repliesButton.textContent = 'Retry loading replies';
+        repliesButton.textContent = `Retry loading replies (${replyCountLabel})`;
       } finally {
         repliesButton.disabled = false;
       }
