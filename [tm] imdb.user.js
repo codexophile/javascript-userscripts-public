@@ -1,8 +1,11 @@
 (function () {
   'use strict';
   const WHEN_TO_REDIRECT = /%3Fseason%3D1(0|1)/;
-  if (location.href.match(WHEN_TO_REDIRECT)) {
-    location.replace(location.href.replace(WHEN_TO_REDIRECT, ''));
+  const matches = location.href.match(WHEN_TO_REDIRECT);
+  if (location.href.includes('https://m.')) {
+    location.replace(location.href.replace('https://m.', 'https://www.'));
+  } else if (matches) {
+    location.replace(location.href.replace(WHEN_TO_REDIRECT[0], ''));
   } else if (location.href.includes('/mediaindex/')) {
     //* gallery/mediaindex flex-wrap fix
     waitForEach('[data-testid="sub-section-images"] > section > div', rowEl => {
@@ -212,11 +215,6 @@
   //? I'm not sure what this is 👇
   const $moreFromSectionEl = $(`[data-testid="more-from-section"]`);
   $moreFromSectionEl.insertBefore('[data-testid="contribution"]');
-
-  //*____________________
-  if (location.href.includes('https://m.')) {
-    location.replace(location.href.replace('https://m.', 'https://www.'));
-  }
 
   //* Helpers
   function getImdbId() {
