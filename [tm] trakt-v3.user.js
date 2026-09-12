@@ -120,7 +120,7 @@
 
       if (
         location.href.match(/www\.justwatch\.com\/.+?\/tv-series\//) &&
-        !location.href.includes(`/season-${seasonNumber}`)
+        !location.href.includes(`/season-`)
       ) {
         const seasonSegment = `/season-${seasonNumber}`;
         location.replace(location.href + seasonSegment);
