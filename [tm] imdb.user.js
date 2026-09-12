@@ -1,7 +1,7 @@
 (function () {
   'use strict';
-  const WHEN_TO_REDIRECT = '%3Fseason%3D10';
-  if (location.href.includes(WHEN_TO_REDIRECT)) {
+  const WHEN_TO_REDIRECT = /%3Fseason%3D1(0|1)/;
+  if (location.href.match(WHEN_TO_REDIRECT)) {
     location.replace(location.href.replace(WHEN_TO_REDIRECT, ''));
   } else if (location.href.includes('/mediaindex/')) {
     //* gallery/mediaindex flex-wrap fix
