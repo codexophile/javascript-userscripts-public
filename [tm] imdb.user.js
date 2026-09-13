@@ -5,7 +5,8 @@
   if (location.href.includes('https://m.')) {
     location.replace(location.href.replace('https://m.', 'https://www.'));
   } else if (matches) {
-    location.replace(location.href.replace(WHEN_TO_REDIRECT[0], ''));
+    const newUrl = location.href.replace(WHEN_TO_REDIRECT, '');
+    location.replace(newUrl);
   } else if (location.href.includes('/mediaindex/')) {
     //* gallery/mediaindex flex-wrap fix
     waitForEach('[data-testid="sub-section-images"] > section > div', rowEl => {
