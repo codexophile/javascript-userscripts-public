@@ -20,7 +20,9 @@
   }
 
   //* download item button
-  waitForEach('[data-e2e="user-post-item"]', postItemEl => {
+  const dataE2eArr = ['user-post-item', 'collection-item'];
+  const query = dataE2eArr.map(dataE2e => `[data-e2e="${dataE2e}"]`).join(',');
+  waitForEach(query, postItemEl => {
     const downloadBtnEl = generateElements('<button>⬇️</button>', postItemEl);
     downloadBtnEl.style.position = 'absolute';
     downloadBtnEl.style.top = '5px';
@@ -53,8 +55,8 @@
       mode: 'noprompt',
       autoRetryInfoJson: true,
       //? 👇🏻
-      // browser: 'firefox',
-      // profile: '3vm341ho.default-release',
+      browser: 'firefox',
+      profile: '3vm341ho.default-release',
     });
     addHistoryEntry(url);
   }
