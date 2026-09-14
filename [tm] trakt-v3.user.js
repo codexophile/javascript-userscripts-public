@@ -35,6 +35,11 @@
       });
 
       waitForEach('.trakt-user-rating', ratingEl => {
+        const alreadyAddedEl = ratingEl.querySelector(
+          '.trakt-user-rating-out-of-ten',
+        );
+        if (alreadyAddedEl) return;
+
         const ratingOutOfFive = parseFloat(ratingEl.textContent.trim());
         if (Number.isNaN(ratingOutOfFive)) return;
 
