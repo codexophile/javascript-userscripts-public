@@ -5,7 +5,12 @@
   window.addEventListener('urlchange', main);
 
   function main() {
-    console.log('xxxxxxxxxx');
+    if (location.host === 'tvtime.trakt.tv') {
+      const newUrl = location.href.replace('tvtime.trakt.tv', 'app.trakt.tv');
+      location.replace(newUrl);
+      return;
+    }
+
     if (location.host === 'app.trakt.tv') {
       waitForEach('.trakt-filter-button', filterButtonEl => {
         const switchEl = generateElements(
