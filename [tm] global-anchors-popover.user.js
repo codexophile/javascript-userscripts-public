@@ -7,6 +7,7 @@
   const ELEMENT_WIDTH = '20px';
   const svgsObj = {
     'open-in-new': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></svg>`,
+    'copy-link': `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/></svg>`,
   };
 
   let openTimer = null;
@@ -101,6 +102,11 @@
       `<button>${svgsObj['open-in-new']}</button>`,
       popoverEl,
     ).addEventListener('click', () => openInBackgroundTab(linkHref));
+    generateElements(
+      `<button>${svgsObj['copy-link']}</button>`,
+      popoverEl,
+    ).addEventListener('click', () => GM_setClipboard(linkHref));
+
     generateElements(`<div>${linkText}</div>`, popoverEl);
     generateElements(
       `<div style="font: 12px monospace; word-break: break-all;">${linkHref}</div>`,
