@@ -99,24 +99,29 @@
     const linkHref = anchorEl.href;
     popoverEl.textContent = ''; // clear previous
 
-    generateElements(
-      `<button>${svgsObj['open-in-new']}</button>`,
+    createButton(svgsObj['open-in-new'], popoverEl, () =>
+      openInBackgroundTab(linkHref),
+    );
+    createButton(
+      svgsObj['open-here'],
       popoverEl,
-    ).addEventListener('click', () => openInBackgroundTab(linkHref));
-    generateElements(
-      `<button>${svgsObj['open-here']}</button>`,
-      popoverEl,
-    ).addEventListener('click', () => (window.location.href = linkHref));
-    generateElements(
-      `<button>${svgsObj['copy-link']}</button>`,
-      popoverEl,
-    ).addEventListener('click', () => GM_setClipboard(linkHref));
+      () => (window.location.href = linkHref),
+    );
+    createButton(svgsObj['copy-link'], popoverEl, () =>
+      GM_setClipboard(linkHref),
+    );
 
     generateElements(`<div>${linkText}</div>`, popoverEl);
     generateElements(
       `<div style="font: 12px monospace; word-break: break-all;">${linkHref}</div>`,
       popoverEl,
     );
+  }
+
+  function createButton(svgHtml, parentEl, onClick) {
+    const buttonEl = generateElements(`<button>${svgHtml}</button>`, parentEl);
+    buttonEl.addEventListener('click', onClick);
+    return buttonEl;
   }
 
   function openInBackgroundTab(url) {
