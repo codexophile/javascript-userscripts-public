@@ -1,9 +1,20 @@
 (function () {
   'use strict';
 
+  const CONFIG = {
+    markerStyle: 'pulse-border', // 'pulse-border' or 'breathing-dot'
+  };
+
   const BADGE_SELECTORS = ['.ytBadgeShapeText'].join(',');
   const MAIN_El_SELECTORS = ['yt-lockup-view-model'].join(',');
   const THUMB_El_SELECTORS = ['.ytLockupViewModelContentImage'].join(',');
+  const MARKER_STYLE_CLASSES = {
+    'pulse-border': 'new-item--pulse-border',
+    'breathing-dot': 'new-item--breathing-dot',
+  };
+  const markerStyleClass =
+    MARKER_STYLE_CLASSES[CONFIG.markerStyle] ||
+    MARKER_STYLE_CLASSES['pulse-border'];
 
   const css = `
     .new-item {
@@ -11,27 +22,49 @@
       overflow: visible;
     }
 
-    .new-item::before {
+    .new-item--pulse-border::after {
       content: "";
       position: absolute;
-      inset: 0;
-      padding: 2.5px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #ff0033, #ff2d78, #ff4dd2, #cc33ff00, #ff0033);
-      background-size: 300% 300%;
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
+      inset: -3px;
+      border: 2px solid #ff0000;
+      border-radius: 15px;
+      box-shadow: 0 0 10px 1px #ff0000;
+      opacity: 0.35;
       pointer-events: none;
-      z-index: 6;
-      animation: yt-new-gradient-shift 5s ease infinite;
-      box-shadow: 0 0 8px rgba(255, 0, 90, 0.35);
+      z-index: 2;
+      animation: new-item-border-pulse 2.4s ease-in-out infinite;
     }
 
-    @keyframes yt-new-gradient-shift {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    .new-item--breathing-dot::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ff0000;
+      box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.25);
+      pointer-events: none;
+      z-index: 2;
+      animation: new-item-dot-breathe 1.6s ease-in-out infinite;
+    }
+
+    @keyframes new-item-border-pulse {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes new-item-dot-breathe {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.35); opacity: 0.6; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .new-item--pulse-border::after,
+      .new-item--breathing-dot::before {
+        animation: none;
+      }
     }
   `;
   GM_addStyle(css);
@@ -44,8 +77,9 @@
   waitForEach(BADGE_SELECTORS, el => {
     if (!isNewBadge(el)) return;
     const mainEl = el.closest(MAIN_El_SELECTORS);
+    if (!mainEl) return;
     const thumbEl = mainEl.querySelector(THUMB_El_SELECTORS);
     if (!thumbEl) return;
-    thumbEl.classList.add('new-item');
+    thumbEl.classList.add('new-item', markerStyleClass);
   });
 })();
