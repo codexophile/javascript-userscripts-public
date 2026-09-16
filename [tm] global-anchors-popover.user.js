@@ -31,6 +31,12 @@
       color: #f5f5f5;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 
+      .cdx-popover-toolbar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
       button {
         padding: 0;
         width: ${ELEMENT_WIDTH};
@@ -99,15 +105,20 @@
     const linkHref = anchorEl.href;
     popoverEl.textContent = ''; // clear previous
 
-    createButton(svgsObj['open-in-new'], popoverEl, () =>
+    const toolbar01El = generateElements(
+      `<div class="cdx-popover-toolbar"></div>`,
+      popoverEl,
+    );
+
+    createButton(svgsObj['open-in-new'], toolbar01El, () =>
       openInBackgroundTab(linkHref),
     );
     createButton(
       svgsObj['open-here'],
-      popoverEl,
+      toolbar01El,
       () => (window.location.href = linkHref),
     );
-    createButton(svgsObj['copy-link'], popoverEl, () =>
+    createButton(svgsObj['copy-link'], toolbar01El, () =>
       GM_setClipboard(linkHref),
     );
 
