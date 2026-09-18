@@ -211,7 +211,7 @@
   });
   generateElements(`<button>`);
 
-  //* gallery-dl
+  //  MARK: gallery-dl
   collapsible.addButton('🖼️', null, () => {
     const gallerydlCheckboxEls = document.querySelectorAll(
       `.gallery-dl-checkbox:checked`,
