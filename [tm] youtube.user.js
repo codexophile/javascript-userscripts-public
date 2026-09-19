@@ -1,53 +1,6 @@
 (async function () {
   'use strict';
 
-  //* pause video upon load/reload
-  // @run-at document-start   <-- important, so we patch play() before YT's player script runs
-
-  // @run-at document-start
-  (function () {
-    let autoPauseDone = false;
-    let videoEl = null;
-
-    const origPlay = HTMLMediaElement.prototype.play;
-    HTMLMediaElement.prototype.play = function (...args) {
-      if (this.tagName === 'VIDEO' && !autoPauseDone) {
-        mute(this);
-        const result = origPlay.apply(this, args);
-        this.pause();
-        return result;
-      }
-      return origPlay.apply(this, args);
-    };
-
-    // Capture phase on document fires before ANY listener on the target itself,
-    // regardless of when YouTube registered theirs.
-    document.addEventListener('click', maybeRestore, true);
-    document.addEventListener('auxclick', maybeRestore, true);
-
-    function maybeRestore(event) {
-      if (!videoEl) return;
-      if (event.type === 'auxclick' && event.button !== 1) return;
-      const isVideo = event.target === videoEl;
-      const isPlayBtn =
-        event.target.closest && event.target.closest('.ytp-play-button');
-      if (isVideo || isPlayBtn)
-        ((autoPauseDone = true), (videoEl.muted = false));
-    }
-
-    waitFor('video').then(el => {
-      videoEl = el;
-      if (!autoPauseDone) {
-        mute(videoEl);
-        if (!videoEl.paused) videoEl.pause();
-      }
-    });
-
-    function mute(videoEl) {
-      // videoEl.muted = true;
-    }
-  })();
-
   //* auto click "show more" toggle buttons
   waitForEach('.expand-collapse-button', showMoreBtnEl => {
     if (showMoreBtnEl.innerText.toLowerCase().includes('show more')) {
