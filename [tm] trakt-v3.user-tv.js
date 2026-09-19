@@ -6,87 +6,15 @@
   window.addEventListener('urlchange', main);
 
   async function main(event) {
-    if (event?.url === lastUrl) return;
+    if (event) {
+      if (event.url === lastUrl) return;
+      setSeasonAndEpisode(event.url);
+    }
     lastUrl = location.href;
 
-    if (location.host === 'tvtime.trakt.tv') {
-      const newUrl = location.href.replace('tvtime.trakt.tv', 'app.trakt.tv');
-      location.replace(newUrl);
-      return;
-    }
-
     if (location.host === 'app.trakt.tv') {
-      waitForEach('.trakt-filter-button', filterButtonEl => {
-        const switchEl = generateElements(
-          '<input type="checkbox" class="trakt-filter-switch">',
-        );
-        switchEl.title = 'Toggle watched items';
-        filterButtonEl.before(switchEl);
-
-        switchEl.addEventListener('change', () => {
-          const isChecked = switchEl.checked;
-          const watchedItemEls = document.querySelectorAll(
-            'svelte-css-wrapper:has(>.trakt-gesture-container):has([data-variant="full"])',
-          );
-          watchedItemEls.forEach(watchedItemEl => {
-            if (isChecked) {
-              fadeOut(watchedItemEl);
-            } else {
-              fadeIn(watchedItemEl);
-            }
-          });
-        });
-      });
-
-      waitForEach('.trakt-user-rating', ratingEl => {
-        const alreadyAddedEl = ratingEl.querySelector(
-          '.trakt-user-rating-out-of-ten',
-        );
-        if (alreadyAddedEl) return;
-
-        const ratingOutOfFive = parseFloat(ratingEl.textContent.trim());
-        if (Number.isNaN(ratingOutOfFive)) return;
-
-        const ratingOutOfTen = ((ratingOutOfFive / 5) * 10).toFixed(1);
-        const ratingOutOfTenEl = generateElements(
-          `<span class="trakt-user-rating-out-of-ten">${ratingOutOfTen}/10</span>`,
-          ratingEl,
-        );
-        ratingOutOfTenEl.title = 'Out of 10';
-      });
-
-      setSeasonAndEpisode(location.href);
-      window.addEventListener('urlchange', urlChangeInfo => {
-        setSeasonAndEpisode(urlChangeInfo.url);
-      });
-
-      // Reads season/episode independently via URLSearchParams instead of a
-      // combined regex, so a season-only URL (no episode param) still updates
-      // the stored season number.
-      function setSeasonAndEpisode(url) {
-        let params;
-        try {
-          params = new URL(url).searchParams;
-        } catch {
-          return;
-        }
-
-        const seasonParam = params.get('season');
-        const episodeParam = params.get('episode');
-
-        if (seasonParam !== null) {
-          GM_setValue('seasonNumber', seasonParam);
-        }
-        if (episodeParam !== null) {
-          GM_setValue('episodeNumber', episodeParam);
-        }
-      }
+      return;
     } else {
-      const getStoredSeasonEpisode = () => ({
-        seasonNumber: Number(GM_getValue('seasonNumber')),
-        episodeNumber: Number(GM_getValue('episodeNumber')),
-      });
-
       let { seasonNumber, episodeNumber } = getStoredSeasonEpisode();
 
       if (
@@ -182,6 +110,30 @@
         const segment = `/s${seasonNumber.toString().padStart(2, '0')}/e${episodeNumber.toString().padStart(2, '0')}`;
         location.replace(location.href + segment);
       }
+    }
+  }
+
+  const getStoredSeasonEpisode = () => ({
+    seasonNumber: Number(GM_getValue('seasonNumber')),
+    episodeNumber: Number(GM_getValue('episodeNumber')),
+  });
+
+  function setSeasonAndEpisode(url) {
+    let params;
+    try {
+      params = new URL(url).searchParams;
+    } catch {
+      return;
+    }
+
+    const seasonParam = params.get('season');
+    const episodeParam = params.get('episode');
+
+    if (seasonParam !== null) {
+      GM_setValue('seasonNumber', seasonParam);
+    }
+    if (episodeParam !== null) {
+      GM_setValue('episodeNumber', episodeParam);
     }
   }
 
