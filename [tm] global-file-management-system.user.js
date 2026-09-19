@@ -15,7 +15,24 @@
     console.log(userId);
     location.replace(`es: ${userId}`);
   });
-  generateElements(`<button id="lookupPostIdBtn">Post</button>`, fmsPopoverEl);
+  generateElements(
+    `<button id="lookupPostIdBtn">Post</button>`,
+    fmsPopoverEl,
+  ).addEventListener('click', () => {
+    const postId = getPostId();
+    console.log(postId);
+    location.replace(`es: ${postId}`);
+  });
+
+  function getPostId() {
+    switch (location.host) {
+      case 'www.youtube.com':
+        const urlParams = new URLSearchParams(location.search);
+        const videoId = urlParams.get('v');
+        if (!videoId) alert('No video ID matches');
+        return videoId;
+    }
+  }
 
   function getUserId() {
     switch (location.host) {
@@ -23,7 +40,6 @@
         const matches = location.pathname.match(/\/(\w+?)\/(?:$|reel|p)/);
         if (!matches) alert('No user ID matches');
         return matches[1];
-        break;
     }
   }
 })();
