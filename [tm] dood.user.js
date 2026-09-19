@@ -23,26 +23,54 @@
       } </a>`,
     ).prependTo(document.body);
 
-    // if (!document.querySelector(`[name="og:image"]`)) return; // 🛑
-    // let imageUrl = document
-    //   .querySelector(`[name="og:image"]`)
-    //   .getAttribute('content');
-    // imageUrl = imageUrl.replace('/splash/', '/slides/');
-    // imageUrl = imageUrl.replace('/cover/', '/slides/');
-    // imageUrl = imageUrl.replace(/-.+?\./, '.');
+    waitForEach('script:not([src])', () => {
+      const scriptEls = contains('script:not([src])', 'thumbnails:');
+      if (!scriptEls.length) return;
+      const matchesForVtt = scriptEls[0].innerHTML.match(
+        /thumbnails:\s*{\s*vtt:\s*(?:'|")\/\/(.+?)(?:'|")/,
+      );
+      if (!matchesForVtt) {
+        alert('No matches found in script content.');
+        return;
+      }
+      const matchesForBase = scriptEls[0].innerHTML.match(
+        /basePath:\s*(?:'|"(.+?)(?:'|"))/,
+      );
+      if (!matchesForBase) {
+        alert('No basePath matches found in script content.');
+        return;
+      }
+      const webvttUrl = 'https://' + matchesForVtt[1];
+      const baseUrlPath = matchesForBase[1];
+      GM_xmlhttpRequest({
+        method: 'GET',
+        url: webvttUrl,
+        responseType: 'document',
+        onload: async function (response) {
+          const webvttContent = response.responseText;
+          if (!webvttContent) {
+            alert('No response text received from the WebVTT request.');
+            return;
+          }
+          const vidOnPage = document.querySelector(`video`);
+          try {
+            await storyboard({
+              storyboardParent: document.body,
+              vidOnPage,
+              webvttContent,
+              baseUrlPath,
+            });
+          } catch (error) {
+            alert(error.message);
+          }
+        },
+      });
+      return false;
+      alert(vidOnPage);
 
-    const imageUrl = await getDoodStoryboardSrc(
-      location.href.replace('/e/', '/d/'),
-    );
-    const vidOnPage = document.querySelector(`video`);
-
-    storyboard({
-      storyboardParent: document.body,
-      horizontal: 6,
-      vertical: 6,
-      vidOnPage,
-      imgUrls: [imageUrl],
-      offset: 1,
+      return false;
     });
+
+    return;
   }
 })();
