@@ -135,7 +135,10 @@ async function sbControls(
         if (!slotEls[index]) return;
         const timeStringEl = generateElements(`<div></div>`, slotEls[index]);
         timeStringEl.classList.add('timeString');
-        const timeString = Math.round((index * video.duration) / totalSlots);
+        const cueStartTime = Number(slotEls[index].dataset.storyboardStartTime);
+        const timeString = Number.isFinite(cueStartTime)
+          ? cueStartTime
+          : Math.round((index * video.duration) / totalSlots);
         const timeStringReadable = forHumans(timeString);
         timeStringEl.textContent = timeStringReadable;
         style(
@@ -224,9 +227,117 @@ function resolveStoryboardLayout({
   };
 }
 
+function parseWebvttTime(timeString) {
+  const parts = timeString.trim().replace(',', '.').split(':');
+  if (parts.length === 2) parts.unshift('0');
+  if (parts.length !== 3) return null;
+
+  const seconds = Number(parts[2].split('.')[0]);
+  const milliseconds = Number(
+    (parts[2].split('.')[1] || '').slice(0, 3).padEnd(3, '0'),
+  );
+  const hours = Number(parts[0]);
+  const minutes = Number(parts[1]);
+  if (![hours, minutes, seconds, milliseconds].every(Number.isFinite))
+    return null;
+
+  return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000;
+}
+
+function parseWebvtt(webvttContent, baseUrlPath) {
+  const cues = [];
+  const cuePattern =
+    /(?:^|\n)\s*(\d{2}:\d{2}:\d{2}(?:[.,]\d{3})+(?:\s*-->\s*)(\d{2}:\d{2}:\d{2}(?:[.,]\d{3})+)[^\n]*)\n([^\r\n]+)/g;
+  const baseUrl = baseUrlPath ? new URL(baseUrlPath, document.baseURI) : null;
+
+  for (const match of webvttContent.matchAll(cuePattern)) {
+    const [startTimeString, endTimeString] = match[1].split(/\s*-->\s*/);
+    const imageReference = match[3].trim();
+    const imageUrl = new URL(
+      imageReference.split('#')[0],
+      baseUrl || document.baseURI,
+    );
+    const xywh = imageReference.match(/#xywh=(\d+),(\d+),(\d+),(\d+)/i);
+    const startTime = parseWebvttTime(startTimeString);
+    const endTime = parseWebvttTime(endTimeString);
+
+    if (!xywh || startTime === null || endTime === null) continue;
+    cues.push({
+      startTime,
+      endTime,
+      imageUrl: imageUrl.href,
+      x: Number(xywh[1]),
+      y: Number(xywh[2]),
+      width: Number(xywh[3]),
+      height: Number(xywh[4]),
+    });
+  }
+
+  if (!cues.length) throw new Error('No valid WebVTT storyboard cues found.');
+  return cues;
+}
+
+function storyboardWebvttCue(cue) {
+  return new Promise(resolve => {
+    const imgElement = document.createElement('img');
+    imgElement.onload = () => {
+      const storyboardItem = document.createElement('div');
+      storyboardItem.classList.add('storyboardItem');
+
+      const canvas = document.createElement('canvas');
+      canvas.classList.add('storyboard-canvas');
+      canvas.width = cue.width;
+      canvas.height = cue.height;
+      canvas
+        .getContext('2d')
+        .drawImage(
+          imgElement,
+          cue.x,
+          cue.y,
+          cue.width,
+          cue.height,
+          0,
+          0,
+          cue.width,
+          cue.height,
+        );
+      storyboardItem.append(canvas);
+      storyboardItem.dataset.storyboardStartTime = String(cue.startTime);
+      Object.assign(storyboardItem.style, {
+        backgroundColor: 'black',
+        width: `${cue.width}px`,
+        height: `${cue.height}px`,
+        margin: '1px',
+        border: 'solid white',
+      });
+      imgElement.remove();
+      resolve([storyboardItem]);
+    };
+    imgElement.onerror = () => {
+      const storyboardItem = document.createElement('div');
+      storyboardItem.classList.add('storyboardItem');
+      storyboardItem.dataset.storyboardStartTime = String(cue.startTime);
+      const errorEl = document.createElement('div');
+      errorEl.classList.add('storyboard-canvas');
+      errorEl.textContent = 'Image load error';
+      Object.assign(errorEl.style, { color: 'red', fontSize: '20px' });
+      storyboardItem.append(errorEl);
+      imgElement.remove();
+      resolve([storyboardItem]);
+    };
+    imgElement.src = cue.imageUrl;
+  });
+}
+
 /**
  * Renders storyboard tiles for a video.
  * @param {number} trueNoOfSlots - Max slots to render (clamped to available).
+ * @param {string|null} webvttContent - Optional WebVTT storyboard cue content.
+ * @param {string|null} baseUrlPath - Base URL for relative WebVTT image paths.
+ *
+ * When WebVTT content is provided, each cue must contain an image reference
+ * with a #xywh=x,y,w,h fragment. For example:
+ * storyboard({ storyboardParent, vidOnPage, webvttContent, baseUrlPath });
  */
 async function storyboard({
   storyboardParent,
@@ -240,6 +351,8 @@ async function storyboard({
   offset = 0,
   slotWidth = null,
   setSbHash = true,
+  webvttContent = null,
+  baseUrlPath = null,
 }) {
   const slotsDiv = document.createElement('div');
   storyboardParent.append(slotsDiv);
@@ -248,26 +361,33 @@ async function storyboard({
   slotsDiv.style.flexWrap = 'wrap';
   slotsDiv.style.justifyContent = 'space-evenly';
 
-  if (!imgUrls.length) console.error('imgUrls: Error!');
+  if (!webvttContent && !imgUrls.length) console.error('imgUrls: Error!');
 
-  const layout = resolveStoryboardLayout({
-    horizontal,
-    vertical,
-    samplingFq,
-    trueNoOfSlots,
-    imageCount: imgUrls.length,
-    videoDuration: vidOnPage?.duration,
-  });
+  const webvttCues = webvttContent
+    ? parseWebvtt(webvttContent, baseUrlPath)
+    : null;
+  const layout = webvttCues
+    ? null
+    : resolveStoryboardLayout({
+        horizontal,
+        vertical,
+        samplingFq,
+        trueNoOfSlots,
+        imageCount: imgUrls.length,
+        videoDuration: vidOnPage?.duration,
+      });
 
-  const promises = imgUrls.map((url, index) =>
-    storyboardFlex(
-      layout.horizontal,
-      layout.vertical,
-      url,
-      index,
-      layout.trueNoOfSlots,
-    ),
-  );
+  const promises = webvttCues
+    ? webvttCues.map(storyboardWebvttCue)
+    : imgUrls.map((url, index) =>
+        storyboardFlex(
+          layout.horizontal,
+          layout.vertical,
+          url,
+          index,
+          layout.trueNoOfSlots,
+        ),
+      );
 
   // @ts-ignore
   const results = await Promise.allSettled(promises);
@@ -297,13 +417,15 @@ async function storyboard({
       }
 
       slot.addEventListener('click', ev => {
-        const samplingFreq =
-          layout.samplingFq ||
-          vidOnPage.duration / totalSlots ||
-          vidOnPage.duration / (layout.horizontal * layout.vertical);
-        // const samplingFreq = samplingFq || ( vidOnPage.duration / ( horizontal * vertical ) );
-        const newTime =
-          (ev.target.closest('div').index + offset) * samplingFreq;
+        const cueTime = Number(slot.dataset.storyboardStartTime);
+        let newTime = cueTime;
+        if (!Number.isFinite(newTime)) {
+          const samplingFreq =
+            layout.samplingFq ||
+            vidOnPage.duration / totalSlots ||
+            vidOnPage.duration / (layout.horizontal * layout.vertical);
+          newTime = (ev.target.closest('div').index + offset) * samplingFreq;
+        }
         vidOnPage.currentTime = newTime;
         vidOnPage.play();
         vidOnPage.scrollIntoView({ behavior: 'instant', block: 'center' });
@@ -312,15 +434,22 @@ async function storyboard({
     });
   });
 
-  totalSlots =
-    Number.isFinite(trueNoOfSlots) && trueNoOfSlots > 0
+  totalSlots = webvttCues
+    ? index
+    : Number.isFinite(trueNoOfSlots) && trueNoOfSlots > 0
       ? Math.min(trueNoOfSlots, index)
       : index;
 
   if (slotWidth) setSlotSize(storyboardParent, slotWidth);
   else if (storyboardParent.querySelector('canvas').width < 200)
     setSlotSize(storyboardParent, 200);
-  sbControls(vidOnPage, totalSlots, storyboardParent, imgUrls, setSbHash);
+  sbControls(
+    vidOnPage,
+    totalSlots,
+    storyboardParent,
+    webvttCues ? webvttCues.map(cue => cue.imageUrl) : imgUrls,
+    setSbHash,
+  );
   return slotsDiv;
 }
 
@@ -334,6 +463,8 @@ async function storyboardToggleable({
   trueNoOfSlots,
   imgUrls = [],
   maxHeight = '80vh', // Added default value for maxHeight
+  webvttContent = null,
+  baseUrlPath = null,
 }) {
   const slotsDiv = await storyboard({
     storyboardParent,
@@ -344,6 +475,8 @@ async function storyboardToggleable({
     samplingFq,
     trueNoOfSlots,
     imgUrls,
+    webvttContent,
+    baseUrlPath,
   });
 
   Object.assign(slotsDiv.style, {
