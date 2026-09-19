@@ -85,9 +85,14 @@
       //* YTS
       addExtLink('https://yts.gg/', 'browse-movies/' + titleId);
       //* Leet
-      addExtLink('https://1337x.to/', `search/${title}+${year}/1/`);
+      // addExtLink('https://1337x.to/', `search/${title}+${year}/1/`);
       //* criticker
       addExtLink('https://www.criticker.com/', `?search=${titleId}`);
+      //* youtube
+      addExtLink(
+        'https://www.youtube.com/',
+        `results?search_query=${title}+${year}`,
+      );
       function addExtLink(
         urlBase,
         urlRest,
