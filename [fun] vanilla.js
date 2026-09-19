@@ -814,6 +814,43 @@ const CentralObserverManager = (function () {
   };
 })();
 
+// Modified version of waitForEach using the consolidated observer
+function waitForEach(selector, callback, options = {}) {
+  const { once = false } = options;
+  let stopped = false;
+  let unobserve;
+
+  const stop = () => {
+    stopped = true;
+    unobserve?.();
+  };
+
+  const wrappedCallback = element => {
+    if (stopped) return;
+
+    const result = callback(element, { stop });
+    if (result === false) stop();
+  };
+
+  // Register with observer manager
+  unobserve = CentralObserverManager.observe(selector, wrappedCallback);
+
+  // observe() may process existing elements synchronously before it returns.
+  if (stopped) unobserve();
+
+  // If once is true, unobserve after processing existing elements
+  if (once) {
+    setTimeout(stop, 0);
+  }
+
+  return {
+    unobserve: stop,
+    reload: () => {
+      CentralObserverManager.resetSelector(selector);
+    },
+  };
+}
+
 // Modified version of waitFor using the consolidated observer
 function waitFor(selector) {
   return new Promise(resolve => {
@@ -834,26 +871,6 @@ function waitFor(selector) {
       false,
     ); // Don't process existing elements (we already checked)
   });
-}
-
-// Modified version of waitForEach using the consolidated observer
-function waitForEach(selector, callback, options = {}) {
-  const { once = false } = options;
-
-  // Register with observer manager
-  const unobserve = CentralObserverManager.observe(selector, callback);
-
-  // If once is true, unobserve after processing existing elements
-  if (once) {
-    setTimeout(unobserve, 0);
-  }
-
-  return {
-    unobserve,
-    reload: () => {
-      CentralObserverManager.resetSelector(selector);
-    },
-  };
 }
 
 // Example implementation of markAndFilter using the consolidated observer
