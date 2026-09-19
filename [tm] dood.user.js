@@ -23,17 +23,16 @@
       } </a>`,
     ).prependTo(document.body);
 
-    waitForEach('script:not([src])', () => {
-      const scriptEls = contains('script:not([src])', 'thumbnails:');
-      if (!scriptEls.length) return;
-      const matchesForVtt = scriptEls[0].innerHTML.match(
+    waitForEach('script:not([src])', scriptEl => {
+      if (!scriptEl.innerHTML.includes('thumbnails:')) return;
+      const matchesForVtt = scriptEl.innerHTML.match(
         /thumbnails:\s*{\s*vtt:\s*(?:'|")\/\/(.+?)(?:'|")/,
       );
       if (!matchesForVtt) {
         alert('No matches found in script content.');
         return;
       }
-      const matchesForBase = scriptEls[0].innerHTML.match(
+      const matchesForBase = scriptEl.innerHTML.match(
         /basePath:\s*(?:'|"(.+?)(?:'|"))/,
       );
       if (!matchesForBase) {
