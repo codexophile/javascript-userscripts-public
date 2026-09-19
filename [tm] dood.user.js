@@ -66,9 +66,6 @@
         },
       });
       return false;
-      alert(vidOnPage);
-
-      return false;
     });
 
     return;
