@@ -1,10 +1,14 @@
 (function () {
   'use strict';
 
+  let lastUrl = '';
   main();
   window.addEventListener('urlchange', main);
 
-  function main() {
+  async function main(event) {
+    if (event?.url === lastUrl) return;
+    lastUrl = location.href;
+
     if (location.host === 'tvtime.trakt.tv') {
       const newUrl = location.href.replace('tvtime.trakt.tv', 'app.trakt.tv');
       location.replace(newUrl);
@@ -127,6 +131,29 @@
       // Guard: bail out if we never got a usable season number, rather than
       // building a "/season-NaN" URL and redirecting to it.
       if (!seasonNumber || Number.isNaN(seasonNumber)) return;
+
+      if (location.href.startsWith('https://www.criticker.com/tv/')) {
+        const seasonOrEpisodeTabEl = await waitFor(
+          '[data-section="seasons"], [data-section="episodes"]',
+        );
+        seasonOrEpisodeTabEl.click();
+
+        await waitFor('#seasons_section, #episodes_section');
+        const seasonsSectionEl = document.querySelector(`#seasons_section`);
+        if (seasonsSectionEl) {
+          const seasonLinkEls = seasonsSectionEl.querySelectorAll(
+            '#seasons_section .titlerow_name_header a',
+          );
+          seasonLinkEls[seasonNumber - 1]?.click();
+        } else {
+          const episodesSectionEl = document.querySelector(`#episodes_section`);
+          const episodeLinkEls = episodesSectionEl.querySelectorAll(
+            '#episodes_section .titlerow_name_header a',
+          );
+          console.log('xxx', episodeLinkEls);
+          episodeLinkEls[episodeNumber - 1]?.click();
+        }
+      }
 
       if (
         location.href.match(/www\.justwatch\.com\/.+?\/tv-series\//) &&
