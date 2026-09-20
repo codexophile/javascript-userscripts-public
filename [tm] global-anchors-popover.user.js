@@ -136,6 +136,9 @@
   }
 
   function openInBackgroundTab(url) {
+    try {
+      addHistoryEntry(url);
+    } catch {}
     GM_openInTab(url, { active: true, setParent: true });
   }
 
