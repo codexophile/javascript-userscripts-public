@@ -3496,7 +3496,7 @@ function markVideoItems(mainElSelector, durationElSelector, qualityElSelector) {
     if (duration >= 60 * 60) {
       videoItemEl.style.outline = 'solid 2px orange';
     }
-    console.log('xxx', videoItemEl, duration);
+    // console.log('xxx', videoItemEl, duration);
     const qualityEl = videoItemEl.querySelector(qualityElSelector);
   });
 
