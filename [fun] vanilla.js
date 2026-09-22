@@ -852,10 +852,13 @@ function waitForEach(selector, callback, options = {}) {
 }
 
 // Modified version of waitFor using the consolidated observer
-function waitFor(selector) {
+function waitFor(selector, textToMatch = null) {
   return new Promise(resolve => {
     // Check if element already exists
-    const existing = document.querySelector(selector);
+    const existing = [...document.querySelectorAll(selector)].find(
+      element =>
+        textToMatch === null || element.textContent.includes(textToMatch),
+    );
     if (existing) {
       resolve(existing);
       return;
@@ -865,6 +868,12 @@ function waitFor(selector) {
     const unobserve = CentralObserverManager.observe(
       selector,
       element => {
+        if (
+          textToMatch !== null &&
+          !element.textContent.includes(textToMatch)
+        ) {
+          return;
+        }
         unobserve(); // Remove the observer once found
         resolve(element);
       },
