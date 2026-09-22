@@ -31,6 +31,10 @@
         const videoId = urlParams.get('v');
         if (!videoId) alert('No video ID matches');
         return videoId;
+      case 'www.instagram.com':
+        const matches = location.pathname.match(/\/p\/(\w+?)\/(?:$|reel|p)/);
+        if (!matches) alert('No post ID matches');
+        return matches[1];
     }
   }
 
