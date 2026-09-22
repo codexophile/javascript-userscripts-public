@@ -1825,6 +1825,34 @@ function getVideoInfo(url, options = {}) {
 
 // MARK: Rest
 
+async function retrieveVttData(
+  queryForScriptEl = 'script',
+  textToMatchVtt = 'thumbnails:',
+  textToMatchBase = 'basePath:',
+) {
+  return new Promise(resolve => {
+    waitForEach(queryForScriptEl, scriptEl => {
+      if (!scriptEl.innerHTML.includes(textToMatchVtt)) return;
+      const vttRegex = `${textToMatchVtt}\\s*{\\s*vtt:\\s*(?:'|")([^'"]+)(?:'|")`;
+      const matchesForVtt = scriptEl.innerHTML.match(new RegExp(vttRegex));
+      if (!matchesForVtt) {
+        alert('No matches found in script content.');
+        return;
+      }
+      const baseRegex = `${textToMatchBase}\\s*(?:'|")([^'"]+)(?:'|")`;
+      const matchesForBase = scriptEl.innerHTML.match(new RegExp(baseRegex));
+      if (!matchesForBase) {
+        alert('No basePath matches found in script content.');
+        return;
+      }
+      const webvttUrl = 'https://' + matchesForVtt[1];
+      const baseUrlPath = matchesForBase[1];
+      resolve({ webvttUrl, baseUrlPath });
+      return false;
+    });
+  });
+}
+
 /** @typedef {'ytdlp' | 'gallerydl'} Downloader */
 const DOWNLOADERS = /** @type {const} */ (['ytdlp', 'gallerydl']);
 /**
