@@ -2,6 +2,11 @@
   'use strict';
 
   //* gallery-dl
+  waitForEach('li', liEl => {
+    if (!location.href.includes('/media?filter=photo')) return;
+    addGalleryDlCheckbox(liEl);
+  });
+
   const ARTICLE_SELECTOR = 'article[data-testid="tweet"]';
   const LOCATOR_SELECTOR = '[aria-label="More"]';
   waitForEach(`${ARTICLE_SELECTOR} ${LOCATOR_SELECTOR}`, locatorEl => {
