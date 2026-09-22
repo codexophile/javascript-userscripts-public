@@ -40,11 +40,7 @@
         `https://search.pullpush.io/?author=${userId}&type=submission&sort_type=created_utc&sort=desc`,
         parentEl,
       );
-      createExtLink(
-        'redveal',
-        `https://redveal.com/user/${userId}?tab=activity`,
-        parentEl,
-      );
+      createExtLink('redveal', `https://redveal.com/user/${userId}`, parentEl);
     },
   );
 
