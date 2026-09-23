@@ -1206,47 +1206,6 @@
     // 'https://sh.reddit.com'
   );
 
-  //* Collapsible
-  waitFor('.collapsible-content').then(async el => {
-    // el.parentElement.style.left = '';
-    // el.parentElement.style.right = '5px';
-
-    const collapsible = await Collapsible();
-    const redditPopup = collapsible.addPopup();
-    redditPopup.id = 'redditPopup';
-    collapsible.addButton('Reddit', redditPopup);
-    const match = location.href.match(/\/\/.+?\.(.*)/);
-    const oldLink = `https://old.${match[1]}`;
-    const newLink = `https://new.${match[1]}`;
-    const shLink = `https://sh.${match[1]}`;
-    const wwwLink = `https://www.${match[1]}`;
-
-    function blockAnchor(href, text) {
-      generateElements(
-        `<a href=${href}>${text}</a>`,
-        redditPopup,
-      ).style.display = 'block';
-    }
-    blockAnchor(newLink, 'New');
-    blockAnchor(shLink, 'SH');
-    blockAnchor(oldLink, 'Old');
-    blockAnchor(wwwLink, 'WWW');
-
-    //? regex -> (.+?/r/.+?)(/|$)
-    const subredditMatch = location.href.match(/(.+?\/r\/.+?)(\/|$)/);
-    if (subredditMatch) {
-      generateElements('<hr>', redditPopup);
-      const topAllLink = `${subredditMatch[1]}/top/?t=all`;
-      blockAnchor(topAllLink, 'TopAll');
-    }
-
-    const uncollapseBtnEl = collapsible.addButton('🌂', null, () => {
-      document.querySelectorAll(`shreddit-comment`).forEach(el => {
-        el.style.display = 'block';
-      });
-    });
-  });
-
   //* Upvote/Downvote buttons
   waitForEach('shreddit-comment', commentEl => {
     const buttonsContEl = generateElements('<div></div>', commentEl);
