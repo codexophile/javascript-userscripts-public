@@ -1,6 +1,44 @@
 (function () {
   ('use strict');
 
+  //* Top sort buttons
+  waitForEach('div:has(>[sort-event="feed-sort-change"])', sortEl => {
+    const sortTypes = ['hour', 'day', 'week', 'month', 'year', 'all'];
+    const currentSubreddit = getCurrentSubreddit();
+    if (!currentSubreddit) return;
+    sortTypes.forEach(type => {
+      const btn = createSorLinkBtn(type);
+      sortEl.after(btn);
+    });
+  });
+
+  /**
+   * Create a sort link button
+   * @param {"hour"|"day"|"week"|"month"|"year"|"all"} type - The type of sort
+   * @returns {HTMLElement} The created button
+   */
+  function createSorLinkBtn(type) {
+    const currentSubreddit = getCurrentSubreddit();
+    const newEl = generateElements(`<a>${type}</a>`);
+    newEl.href = `https://reddit.com/r/${currentSubreddit}/top/?t=${type}`;
+    style(
+      newEl,
+      `
+        margin-right: 5px;
+        text-decoration: none;
+        color: #007bff;
+      `,
+    );
+    return newEl;
+  }
+
+  function getCurrentSubreddit() {
+    const matches = location.href.match(/\/r\/([^\/]+)(?:[\/?]|$)/);
+    if (matches) {
+      return matches[1];
+    }
+  }
+
   //* copy button for code blocks
   waitForEach('pre', preEl => {
     const copyBtn = generateElements(
