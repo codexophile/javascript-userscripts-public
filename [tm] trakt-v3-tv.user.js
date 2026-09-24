@@ -78,7 +78,6 @@
           const episodeLinkEls = episodesSectionEl.querySelectorAll(
             '#episodes_section .titlerow_name_header a',
           );
-          console.log('xxx', episodeLinkEls);
           episodeLinkEls[episodeNumber - 1]?.click();
         }
       }
@@ -113,10 +112,12 @@
     }
   }
 
-  const getStoredSeasonEpisode = () => ({
-    seasonNumber: Number(GM_getValue('seasonNumber')),
-    episodeNumber: Number(GM_getValue('episodeNumber')),
-  });
+  function getStoredSeasonEpisode() {
+    return {
+      seasonNumber: Number(GM_getValue('seasonNumber')),
+      episodeNumber: Number(GM_getValue('episodeNumber')),
+    };
+  }
 
   function setSeasonAndEpisode(url) {
     let params;
