@@ -3230,7 +3230,7 @@ function elementsToArray(els) {
 
 function contains(selector, text, parent = document) {
   const elsContaining = [...parent.querySelectorAll(selector)].filter(el => {
-    el.textContent.includes(text);
+    return el.textContent.includes(text);
   });
   return elsContaining;
 }
