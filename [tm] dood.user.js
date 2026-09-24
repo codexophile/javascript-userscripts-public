@@ -29,7 +29,7 @@
         /thumbnails:\s*{\s*vtt:\s*(?:'|")\/\/(.+?)(?:'|")/,
       );
       if (!matchesForVtt) {
-        alert('No matches found in script content.');
+        console.warn('No matches found in script content.');
         return;
       }
       const matchesForBase = scriptEl.innerHTML.match(
