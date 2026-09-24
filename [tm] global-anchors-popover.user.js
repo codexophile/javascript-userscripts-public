@@ -100,6 +100,7 @@
     currentAnchor = null;
   }
 
+  //  MARK: 🔥
   function renderActions(anchorEl) {
     const linkText = anchorEl.textContent.trim();
     const linkHref = anchorEl.href;
