@@ -34,7 +34,20 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
       padding: 1rem;
       border-radius: 4px;
       position-area: top span-right;
+      background-color: darkgray;
     `;
+
+    if (document.querySelectorAll(`#cdx-collapsible-styles`).length === 0) {
+      const styleEl = GM_addStyle(`
+        .collapsible-container {
+          .collapsible-popover > * {
+            margin: 5px;
+          }
+        }
+      `);
+      styleEl.id = 'cdx-collapsible-styles';
+    }
+
     return popoverEl;
   }
 
