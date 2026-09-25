@@ -255,6 +255,11 @@
       'https://feedly.com/i/discover?query=suggesto%2F',
       rssFeedsPopover,
     );
+    addLinkToFeedReader(
+      'FreshRSS',
+      'http://localhost:8080/i/?c=feed&a=add&cat_id=1&url_rss=',
+      rssFeedsPopover,
+    );
 
     rssLinks.forEach(link => {
       generateElements(
