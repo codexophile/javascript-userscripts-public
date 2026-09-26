@@ -1,9 +1,8 @@
 (function () {
   'use strict';
-  if (window.top != window.self) return; //don't run on frames or iframes
 
   const API_KEY = getYoutubeAPI();
-  const regionCode = 'US'; // Adjust this according to your preferred region
+  const regionCode = 'US';
 
   initializeFetchingAndDisplayingCountryFlags();
   initializeTitleSetter();
