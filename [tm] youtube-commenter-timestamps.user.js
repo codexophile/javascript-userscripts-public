@@ -157,6 +157,102 @@
     );
   }
 
+  /**
+   * Formats a video position for chart labels and tooltips.
+   * @param {number} seconds - Video position in seconds.
+   * @returns {string} A compact minutes-and-seconds label.
+   * @example
+   * formatVideoTime(93); // "1:33"
+   */
+  function formatVideoTime(seconds) {
+    const totalSeconds = Math.max(0, Math.floor(seconds));
+    const minutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = String(totalSeconds % 60).padStart(2, '0');
+    return `${minutes}:${remainingSeconds}`;
+  }
+
+  /**
+   * Builds a replay-density chart from timestamp mentions and keeps its playhead in sync.
+   * @param {HTMLVideoElement} video - The video whose timeline is being visualized.
+   * @param {Array<{seconds: number, commentId?: string, id?: string}>} comments - Timestamp mentions collected from comments.
+   * @returns {void}
+   * @example
+   * renderReplayGraph(video, timestampComments);
+   */
+  function renderReplayGraph(video, comments) {
+    const stack = ensureStack();
+    document.getElementById('yt-ts-replay-graph')?.remove();
+
+    const duration = video.duration;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+
+    const binCount = Math.min(120, Math.max(40, Math.ceil(duration / 10)));
+    const commentIdsByBin = Array.from({ length: binCount }, () => new Set());
+    for (const comment of comments) {
+      if (comment.seconds < 0 || comment.seconds > duration) continue;
+      const bin = Math.min(
+        binCount - 1,
+        Math.floor((comment.seconds / duration) * binCount),
+      );
+      commentIdsByBin[bin].add(comment.commentId || comment.id);
+    }
+
+    const counts = commentIdsByBin.map(commentIds => commentIds.size);
+    const uniqueCommentCount = new Set(
+      comments.map(comment => comment.commentId || comment.id),
+    ).size;
+    const peak = Math.max(...counts, 1);
+    const graph = generateElements(`
+      <section id="yt-ts-replay-graph" aria-label="Comment replay density">
+        <div class="yt-ts-replay-header">
+          <strong>Comment replay density</strong>
+          <span>${uniqueCommentCount.toLocaleString()} comments</span>
+        </div>
+        <div class="yt-ts-replay-plot" role="group" aria-label="Comment count by video position"></div>
+        <div class="yt-ts-replay-axis"><span>0:00</span><span>${formatVideoTime(duration)}</span></div>
+      </section>
+    `);
+    const plot = graph.querySelector('.yt-ts-replay-plot');
+    const bars = [];
+    for (let index = 0; index < binCount; index++) {
+      const start = (index / binCount) * duration;
+      const count = counts[index];
+      const bar = generateElements(
+        '<button type="button" class="yt-ts-replay-bar"></button>',
+      );
+      bar.title = `${formatVideoTime(start)}: ${count.toLocaleString()} comment${count === 1 ? '' : 's'}`;
+      bar.setAttribute('aria-label', bar.title);
+      bar.style.height = `${Math.max(count ? 8 : 2, (count / peak) * 100)}%`;
+      bar.style.opacity = String(count ? 0.35 + (count / peak) * 0.65 : 0.18);
+      bar.addEventListener('click', () => {
+        video.currentTime = start;
+        video.play();
+      });
+      plot.append(bar);
+      bars.push(bar);
+    }
+
+    const playhead = generateElements(
+      '<div class="yt-ts-replay-playhead" aria-hidden="true"></div>',
+    );
+    plot.append(playhead);
+    const updatePlayhead = () => {
+      playhead.style.left = `${Math.min(video.currentTime / duration, 1) * 100}%`;
+      const activeBin = Math.min(
+        binCount - 1,
+        Math.floor((video.currentTime / duration) * binCount),
+      );
+      bars.forEach((bar, index) =>
+        bar.classList.toggle('active', index === activeBin),
+      );
+    };
+    replayGraphCleanup = () =>
+      video.removeEventListener('timeupdate', updatePlayhead);
+    video.addEventListener('timeupdate', updatePlayhead);
+    updatePlayhead();
+    stack.prepend(graph);
+  }
+
   function ensureStack() {
     let stack = document.getElementById('yt-ts-popup-stack');
     if (!stack) {
@@ -219,6 +315,64 @@
         margin-bottom: 8px;
       }
       .yt-ts-controls[hidden] { display: none; }
+      #yt-ts-replay-graph {
+        width: min(560px, calc(100vw - 40px));
+        padding: 12px 14px 10px;
+        background: var(--yt-ts-background);
+        border: 1px solid var(--yt-ts-border);
+        border-radius: 10px;
+        color: var(--yt-ts-text);
+        font-family: "Roboto", Arial, sans-serif;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+      }
+      .yt-ts-replay-header,
+      .yt-ts-replay-axis {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+      }
+      .yt-ts-replay-header span,
+      .yt-ts-replay-axis { color: var(--yt-ts-secondary-text); }
+      .yt-ts-replay-header strong { color: var(--yt-ts-text); font-weight: 500; }
+      .yt-ts-replay-plot {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        gap: 1px;
+        height: 58px;
+        margin: 8px 0 4px;
+        padding: 0 1px;
+        overflow: hidden;
+        background: #181818;
+        border-radius: 3px;
+      }
+      .yt-ts-replay-bar {
+        flex: 1 1 0;
+        min-width: 1px;
+        height: 2%;
+        padding: 0;
+        border: 0;
+        border-radius: 1px 1px 0 0;
+        background: var(--yt-ts-accent);
+        cursor: pointer;
+      }
+      .yt-ts-replay-bar:hover,
+      .yt-ts-replay-bar.active { background: #ffb4ae; }
+      .yt-ts-replay-bar:focus-visible {
+        outline: 2px solid #8ab4f8;
+        outline-offset: -1px;
+      }
+      .yt-ts-replay-playhead {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 2px;
+        background: #fff;
+        pointer-events: none;
+        transform: translateX(-1px);
+      }
       .yt-ts-control {
         min-height: 32px;
         padding: 0 14px;
@@ -496,6 +650,7 @@
   }
 
   const activePopups = new Map();
+  let replayGraphCleanup = null;
   let blockNewPopups = false;
 
   function updateControls() {
@@ -560,6 +715,10 @@
   async function init() {
     const videoId = new URLSearchParams(location.search).get('v');
     if (!videoId || videoId === currentVideoId) return;
+    for (const popup of activePopups.values()) popup.close();
+    replayGraphCleanup?.();
+    document.getElementById('yt-ts-replay-graph')?.remove();
+    blockNewPopups = false;
     currentVideoId = videoId;
 
     const video = await waitFor('video');
@@ -568,6 +727,15 @@
       `[TimestampComments] ${comments.length} timestamp mentions found`,
       comments,
     );
+    if (Number.isFinite(video.duration) && video.duration > 0) {
+      renderReplayGraph(video, comments);
+    } else {
+      video.addEventListener(
+        'loadedmetadata',
+        () => renderReplayGraph(video, comments),
+        { once: true },
+      );
+    }
     watchVideo(video, comments);
   }
 
