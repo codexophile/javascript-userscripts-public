@@ -224,7 +224,7 @@
         padding: 0 14px;
         border: 1px solid #606060;
         border-radius: 18px;
-        background: transparent;
+        background: #2d2d2d;
         color: #f1f1f1;
         cursor: pointer;
         font: 500 13px/1 "Roboto", Arial, sans-serif;
@@ -290,7 +290,7 @@
         margin: -4px -8px -4px 0;
         border: 0;
         border-radius: 50%;
-        background: transparent;
+        background: #2d2d2d;
         color: #aaa;
         cursor: pointer;
         font-size: ${FONT_SIZE_L3}px;
