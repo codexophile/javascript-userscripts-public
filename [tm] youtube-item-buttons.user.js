@@ -9,7 +9,7 @@
     'ytd-rich-item-renderer',
     'ytd-playlist-video-renderer',
     'a.ytp-videowall-still',
-    // 'yt-lockup-view-model .yt-lockup-view-model-wiz',
+    'yt-lockup-view-model > div', // related section
     'yt-lockup-view-model .yt-lockup-view-model__content-image',
   ];
   const queryForThumbEls = thumbElSelectorsArr.join(', ');
