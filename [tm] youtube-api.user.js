@@ -7,6 +7,60 @@
   initializeFetchingAndDisplayingCountryFlags();
   initializeTitleSetter();
 
+  (function () {
+    'use strict';
+    document.addEventListener('yt-navigate-finish', async () => {
+      const { videoId, description, status } = getCurrentVideoDetails();
+      if (!status === 'UNPLAYABLE') return;
+      if (
+        !description.includes(
+          'The uploader has not made this video available in your country',
+        )
+      ) {
+        alert('Video is unplayable for other reasons: \n' + description);
+        return;
+      }
+
+      const errorScreenEl = await waitFor(
+        `.interstitialViewModelModelContainer`,
+      );
+      GM_xmlhttpRequest({
+        method: 'GET',
+        url: `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoId}&key=${API_KEY}`,
+        responseType: 'document',
+        onload: function (response) {
+          const resText = response.responseText;
+          const resJson = JSON.parse(resText);
+          const allowedIn =
+            resJson.items[0].contentDetails.regionRestriction.allowed;
+          clearThenLog('API response:', resJson);
+          const newEl = generateElements(
+            `<div>
+              <p>Video is playable in:</p>
+              ${allowedIn.map(code => `<div>${getCountryName(code)} (${code})</div>`).join('')}
+            </div>`,
+            errorScreenEl,
+          );
+          style(
+            newEl,
+            `
+            font-size: 2em;
+            margin-top: 1em;
+            color: #bcb6b6;
+          `,
+          );
+        },
+      });
+    });
+    return;
+    const ytInitialPlayerResponse = window.ytInitialPlayerResponse;
+    if (!ytInitialPlayerResponse) {
+      alert('ytInitialPlayerResponse is not available');
+      return;
+    }
+    const playabilityStatus = ytInitialPlayerResponse.playabilityStatus;
+  })();
+
   async function initializeTitleSetter() {
     let cachedContent = null;
     let cachedVideoId = null;
@@ -185,14 +239,5 @@
 
     // Use the free flagsapi.com service
     return `https://flagsapi.com/${code.toUpperCase()}/${style}/${size}.png`;
-  }
-
-  function getCountryName(code) {
-    try {
-      const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-      return regionNames.of(code.toUpperCase()) || 'Unknown Country';
-    } catch (error) {
-      return 'Invalid Country Code';
-    }
   }
 })();
