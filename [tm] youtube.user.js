@@ -85,12 +85,6 @@
     $(`#guide-button.ytd-masthead`).click();
   });
 
-  //* reddit links
-  // waitForEach( `[href^="https://www.reddit"], [href^="https://reddit"]`, ( linkEl ) => {
-  //   linkEl.href = linkEl.href.replace( 'https://reddit', 'https://old.reddit' );
-  //   linkEl.href = linkEl.href.replace( 'https://www.reddit', 'https://old.reddit' );
-  // } );
-
   //* video flex fix in 'videos' pages
   //? adding this because stylus css fix doesn't work
   waitForEach('ytd-two-column-browse-results-renderer', element => {
