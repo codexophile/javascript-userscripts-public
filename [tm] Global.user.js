@@ -21,6 +21,11 @@
       justify-content: center;
       padding: 3px;
 
+      & > svg {
+        width: 100%;
+        height: 100%;
+      }
+
       &:has(> svg) {
         background-color: #ababab;
       }
@@ -275,12 +280,6 @@
   const rssFeedsPopover = collapsible.addPopup('rss-feeds-popover');
   const rssBtnEl = collapsible.addButton('', rssFeedsPopover);
   generateElements(rssLinks.length ? SVGS.rssYes : SVGS.rssNo, rssBtnEl);
-  const rssIconEl = rssBtnEl.querySelector('svg');
-  if (rssIconEl) {
-    rssIconEl.style.display = 'block';
-    rssIconEl.style.width = '100%';
-    rssIconEl.style.height = '100%';
-  }
   addLinkToFeedReader(
     'Inoreader',
     'https://www.inoreader.com/search/feeds/',
