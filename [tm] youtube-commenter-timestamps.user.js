@@ -179,8 +179,8 @@
    * @example
    * renderReplayGraph(video, timestampComments);
    */
-  function renderReplayGraph(video, comments) {
-    const stack = ensureStack();
+  async function renderReplayGraph(video, comments) {
+    const stack = await ensureStack();
     document.getElementById('yt-ts-replay-graph')?.remove();
 
     const duration = video.duration;
@@ -253,22 +253,34 @@
     stack.prepend(graph);
   }
 
-  function ensureStack() {
+  async function ensureStack() {
     let stack = document.getElementById('yt-ts-popup-stack');
     if (!stack) {
       stack = document.createElement('div');
       stack.id = 'yt-ts-popup-stack';
       Object.assign(stack.style, {
-        position: 'fixed',
-        top: '80px',
-        right: '20px',
-        zIndex: '99999',
+        marginBottom: '10px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '10px',
         maxWidth: '600px',
       });
-      document.body.appendChild(stack);
+      const rightHandSideEl = await waitFor('#secondary-inner, #secondary');
+      if (rightHandSideEl) {
+        rightHandSideEl.prepend(stack);
+      } else {
+        Object.assign(stack.style, {
+          gap: '10px',
+          position: 'fixed',
+          top: '80px',
+          right: '20px',
+          zIndex: '99999',
+          display: 'flex',
+          flexDirection: 'column',
+          maxWidth: '600px',
+        });
+        document.body.appendChild(stack);
+      }
+      clearThenLog(stack);
     }
     return stack;
   }
@@ -456,10 +468,10 @@
     GM_addStyle(styleText);
   }
 
-  function showPopup(comment, video) {
+  async function showPopup(comment, video) {
     if (blockNewPopups) return;
-    const stack = ensureStack();
-    ensureControls();
+    const stack = await ensureStack();
+    await ensureControls();
     const existingPopup = activePopups.get(comment.id);
     if (existingPopup) {
       existingPopup.refresh();
@@ -658,8 +670,8 @@
     if (controls) controls.hidden = activePopups.size === 0;
   }
 
-  function ensureControls() {
-    const stack = ensureStack();
+  async function ensureControls() {
+    const stack = await ensureStack();
     let controlsDivEl = document.getElementById('yt-ts-controls');
     if (!controlsDivEl) {
       controlsHtml = `
@@ -704,7 +716,7 @@
         if (c.shown || c.dismissed) continue;
         if (Math.abs(t - c.seconds) <= CONFIG.TRIGGER_WINDOW) {
           c.shown = true;
-          showPopup(c, video);
+          void showPopup(c, video);
         }
       }
     });
@@ -728,11 +740,11 @@
       comments,
     );
     if (Number.isFinite(video.duration) && video.duration > 0) {
-      renderReplayGraph(video, comments);
+      await renderReplayGraph(video, comments);
     } else {
       video.addEventListener(
         'loadedmetadata',
-        () => renderReplayGraph(video, comments),
+        () => void renderReplayGraph(video, comments),
         { once: true },
       );
     }
