@@ -94,9 +94,9 @@
   //* video flex fix in 'videos' pages
   //? adding this because stylus css fix doesn't work
   waitForEach('ytd-two-column-browse-results-renderer', element => {
-    if (!location.href.match(/\/videos|\/shorts/)) return;
-    element.style.width = 'unset !important';
-    element.style.maxWidth = 'unset !important';
+    if (!location.href.match(/\/(videos|shorts)/)) return;
+    element.style.width = '90vw !important';
+    element.style.maxWidth = '90vw !important';
   });
 
   //* @channelName links -> @channelName/videos/
