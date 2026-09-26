@@ -1821,9 +1821,16 @@ function getVideoInfo(url, options = {}) {
   });
 }
 
-//  MARK: Userscript helpers
-
 // MARK: Rest
+
+function getCountryName(code) {
+  try {
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    return regionNames.of(code.toUpperCase()) || 'Unknown Country';
+  } catch (error) {
+    return 'Invalid Country Code';
+  }
+}
 
 async function retrieveVttData(
   queryForScriptEl = 'script',
@@ -1881,9 +1888,9 @@ function invokeDownloader(
   );
 }
 
-function clearThenLog(logWhat) {
+function clearThenLog(...logWhat) {
   console.clear();
-  console.log(logWhat);
+  console.log(...logWhat);
 }
 
 function getPlayerConfig(options = {}) {
