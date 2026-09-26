@@ -142,3 +142,17 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
     return { allUrls: [], trueNoOfSlots: 0, samplingFq: 0 };
   }
 }
+
+function getCurrentVideoDetails() {
+  const player = document.getElementById('movie_player');
+  const resp = player?.getPlayerResponse?.();
+  const description =
+    resp.playabilityStatus.errorScreen.playerInterstitialRenderer.content
+      .interstitialViewModel.description.content;
+  const videoId = resp.videoDetails?.videoId;
+  return {
+    videoId,
+    description,
+    status: resp?.playabilityStatus.status ?? null,
+  };
+}
