@@ -4,6 +4,10 @@
 
   const YT_DLP_LOGO_URL =
     'https://raw.githubusercontent.com/codexophile/javascript-userscripts-public/refs/heads/new-branch/%5Btm%5D%20Global.user.js-ytdlp.png';
+  const RSS_YES =
+    '<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools --><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.2426 7.75736C17.6695 9.18422 18.2275 11.1509 17.9166 13M7.75736 16.2426C5.41421 13.8995 5.41421 10.1005 7.75736 7.75732M4.92893 19.0711C1.02369 15.1658 1.02369 8.83418 4.92893 4.92893M19.0711 4.92898C21.9628 7.8207 22.7133 12.0428 21.3225 15.6251M10.5 10.6771C10.1888 11.0297 10 11.4928 10 12C10 13.1046 10.8954 14 12 14C12.5072 14 12.9703 13.8112 13.3229 13.5M21 21L3 3" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const RSS_NO =
+    '<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools --><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.2426 7.75736C17.6695 9.18422 18.2275 11.1509 17.9166 13M7.75736 16.2426C5.41421 13.8995 5.41421 10.1005 7.75736 7.75732M4.92893 19.0711C1.02369 15.1658 1.02369 8.83418 4.92893 4.92893M19.0711 4.92898C21.9628 7.8207 22.7133 12.0428 21.3225 15.6251M10.5 10.6771C10.1888 11.0297 10 11.4928 10 12C10 13.1046 10.8954 14 12 14C12.5072 14 12.9703 13.8112 13.3229 13.5M21 21L3 3" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   //* title
 
@@ -242,36 +246,46 @@
   const rssLinks = document.querySelectorAll(
     'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
   );
-  if (rssLinks.length) {
-    const rssFeedsPopover = collapsible.addPopup('rss-feeds-popover');
-    collapsible.addButton('📶', rssFeedsPopover);
-    addLinkToFeedReader(
-      'Inoreader',
-      'https://www.inoreader.com/search/feeds/',
-      rssFeedsPopover,
-    );
-    addLinkToFeedReader(
-      'Feedly',
-      'https://feedly.com/i/discover?query=suggesto%2F',
-      rssFeedsPopover,
-    );
-    addLinkToFeedReader(
-      'FreshRSS',
-      'http://localhost:8080/i/?c=feed&a=add&cat_id=1&url_rss=',
-      rssFeedsPopover,
-    );
 
-    rssLinks.forEach(link => {
-      generateElements(
-        `<a
+  const rssFeedsPopover = collapsible.addPopup('rss-feeds-popover');
+  const rssBtnEl = collapsible.addButton('', rssFeedsPopover);
+  generateElements(rssLinks.length ? RSS_YES : RSS_NO, rssBtnEl);
+  rssBtnEl.style.display = 'flex';
+  rssBtnEl.style.alignItems = 'center';
+  rssBtnEl.style.justifyContent = 'center';
+  rssBtnEl.style.padding = '0';
+  const rssIconEl = rssBtnEl.querySelector('svg');
+  if (rssIconEl) {
+    rssIconEl.style.display = 'block';
+    rssIconEl.style.width = '100%';
+    rssIconEl.style.height = '100%';
+  }
+  addLinkToFeedReader(
+    'Inoreader',
+    'https://www.inoreader.com/search/feeds/',
+    rssFeedsPopover,
+  );
+  addLinkToFeedReader(
+    'Feedly',
+    'https://feedly.com/i/discover?query=suggesto%2F',
+    rssFeedsPopover,
+  );
+  addLinkToFeedReader(
+    'FreshRSS',
+    'http://localhost:8080/i/?c=feed&a=add&cat_id=1&url_rss=',
+    rssFeedsPopover,
+  );
+
+  rssLinks.forEach(link => {
+    generateElements(
+      `<a
           href='${link.href}'
           target=_blank
           style='display: block;'
         >${link.title}</a>`,
-        rssFeedsPopover,
-      );
-    });
-  }
+      rssFeedsPopover,
+    );
+  });
 
   function addLinkToFeedReader(readerName, baseUrl, parentEl) {
     const addFeedBtnEl = generateElements(`<a>➕ ${readerName}</a>`, parentEl);
