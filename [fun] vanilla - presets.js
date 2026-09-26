@@ -161,7 +161,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
             margin: 3px;
         }
         .collapsible-content > .button-like {
-            background-color: ${backgroundColor};
+            /* background-color: ${backgroundColor}; */
             color: ${textColor};
             width: ${buttonSize};
             height: ${buttonSize};
@@ -175,7 +175,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
           width: inherit;
         }
         .collapsible-button:hover {
-            background-color: ${hoverColor};
+            /*background-color: ${hoverColor}; */
         }
         .collapsible-container .popup {
             display: none;
