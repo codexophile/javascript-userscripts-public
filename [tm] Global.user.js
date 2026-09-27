@@ -242,7 +242,6 @@
       });
     },
   });
-  generateElements(`<button>`);
 
   //  MARK: gallery-dl
   collapsible.addButton('🖼️', null, () => {
