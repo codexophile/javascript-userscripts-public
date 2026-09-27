@@ -1,6 +1,50 @@
 (async function () {
   'use strict';
 
+  //* Fixing new youtube video metadata section under video thumbnail
+  //* uploader, tagged channels, number of views, and upload date etc.
+  waitForEach('.ytContentMetadataViewModelMetadataRow', metadataRowEl => {
+    style(
+      metadataRowEl,
+      `
+      flex-wrapt: wrap;
+    `,
+    );
+
+    // wrapping verified badge with the channel name it belongs to
+    const verifiedBadgeEls = metadataRowEl.querySelectorAll(
+      '.ytIconWrapperHost.ytContentMetadataViewModelIcon[aria-label="Verified"]',
+    );
+    verifiedBadgeEls.forEach(verifiedBadgeEl => {
+      const verifiedBadgeBelongsToEl = verifiedBadgeEl.previousElementSibling;
+      createWrapperForMetadataSection(
+        undefined,
+        verifiedBadgeBelongsToEl,
+        verifiedBadgeEl,
+      );
+    });
+
+    // wrapping views count with its icon element
+    const viewsCountIconEl = metadataRowEl.querySelector(
+      '.ytContentMetadataViewModelLeadingIcon',
+    );
+    const viewsCountEl = viewsCountIconEl.nextElementSibling;
+    createWrapperForMetadataSection(undefined, viewsCountIconEl, viewsCountEl);
+  });
+
+  function createWrapperForMetadataSection(html = '<div></div>', ...elements) {
+    const newEl = wrap(html, ...elements);
+    style(
+      newEl,
+      `
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    `,
+    );
+    return newEl;
+  }
+
   //* auto click "show more" toggle buttons
   waitForEach('.expand-collapse-button', showMoreBtnEl => {
     if (showMoreBtnEl.innerText.toLowerCase().includes('show more')) {
