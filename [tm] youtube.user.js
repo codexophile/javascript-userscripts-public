@@ -28,8 +28,14 @@
     const viewsCountIconEl = metadataRowEl.querySelector(
       '.ytContentMetadataViewModelLeadingIcon',
     );
-    const viewsCountEl = viewsCountIconEl.nextElementSibling;
-    createWrapperForMetadataSection(undefined, viewsCountIconEl, viewsCountEl);
+    if (viewsCountIconEl) {
+      const viewsCountEl = viewsCountIconEl.nextElementSibling;
+      createWrapperForMetadataSection(
+        undefined,
+        viewsCountIconEl,
+        viewsCountEl,
+      );
+    }
   });
 
   function createWrapperForMetadataSection(html = '<div></div>', ...elements) {
@@ -129,14 +135,6 @@
     $(`#guide-button.ytd-masthead`).click();
   });
 
-  //* video flex fix in 'videos' pages
-  //? adding this because stylus css fix doesn't work
-  waitForEach('ytd-two-column-browse-results-renderer', element => {
-    if (!location.href.match(/\/(videos|shorts)/)) return;
-    element.style.setProperty('width', '90vw', 'important');
-    element.style.setProperty('max-width', '90vw', 'important');
-  });
-
   //* @channelName links -> @channelName/videos/
   waitForEach(`[href*='/@'], [href*='/channel/']`, linkToChannelEl => {
     linkToChannelEl.href += '/videos/';
@@ -160,4 +158,14 @@
     window.stop();
     location.replace(url);
   }
+
+  //  MARK: CSS fixes with JavaScript
+  //? adding this because stylus css fixes don't work
+
+  //* video flex fix in 'videos' pages
+  waitForEach('ytd-two-column-browse-results-renderer', element => {
+    if (!location.href.match(/\/(videos|shorts)/)) return;
+    element.style.setProperty('width', '90vw', 'important');
+    element.style.setProperty('max-width', '90vw', 'important');
+  });
 })();
