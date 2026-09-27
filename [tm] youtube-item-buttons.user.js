@@ -19,22 +19,22 @@
   const queryForMenuTriggerEls = menuTriggerSelectorArr.join(', ');
 
   //* youtube menu actions
-  waitForEach(queryForMenuTriggerEls, menuTriggerEl => {
-    menuTriggerEl.addEventListener('click', async () => {
-      const menuEl = document.querySelector(queryForMenuEls);
-      const menuActionsCntEl = insertOrUpdateElement(
-        '#menuActionsContainer',
-        `<div id=menuActionsContainer>test</div>`,
-        menuEl,
-        true,
-      );
-      const thumbEl = menuTriggerEl.closest(queryForThumbEls);
-      const videosLinkEl = await addLinkToVideos(thumbEl, menuActionsCntEl);
-      console.log(videosLinkEl);
-      videosLinkEl.style = `
-      font-size: 20px;`;
-    });
-  });
+  // waitForEach(queryForMenuTriggerEls, menuTriggerEl => {
+  //   menuTriggerEl.addEventListener('click', async () => {
+  //     const menuEl = document.querySelector(queryForMenuEls);
+  //     const menuActionsCntEl = insertOrUpdateElement(
+  //       '#menuActionsContainer',
+  //       `<div id=menuActionsContainer>test</div>`,
+  //       menuEl,
+  //       true,
+  //     );
+  //     const thumbEl = menuTriggerEl.closest(queryForThumbEls);
+  //     const videosLinkEl = await addLinkToVideos(thumbEl, menuActionsCntEl);
+  //     console.log(videosLinkEl);
+  //     videosLinkEl.style = `
+  //     font-size: 20px;`;
+  //   });
+  // });
 
   //* thumbnail actions
   waitForEach(queryForThumbEls, thumbEl => {
