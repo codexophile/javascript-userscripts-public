@@ -328,7 +328,7 @@
       }
       .yt-ts-controls[hidden] { display: none; }
       #yt-ts-replay-graph {
-        width: min(560px, calc(100vw - 40px));
+        /* width: min(560px, calc(100vw - 40px)); */
         padding: 12px 14px 10px;
         background: var(--yt-ts-background);
         border: 1px solid var(--yt-ts-border);
