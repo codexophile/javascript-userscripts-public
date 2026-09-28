@@ -172,6 +172,28 @@
   }
 
   /**
+   * Shows the empty comment state without starting video tracking.
+   * @returns {Promise<void>}
+   * @example
+   * await renderNoCommentsState();
+   */
+  async function renderNoCommentsState() {
+    const stack = await ensureStack();
+    const state = generateElements(`
+      <section id="yt-ts-replay-graph" aria-label="Timestamp comments">
+        <div class="yt-ts-empty-state">
+          <span>0 comments</span>
+          <button class="yt-ts-control" type="button">Reload</button>
+        </div>
+      </section>
+    `);
+    state
+      .querySelector('button')
+      .addEventListener('click', () => location.reload());
+    stack.prepend(state);
+  }
+
+  /**
    * Builds a replay-density chart from timestamp mentions and keeps its playhead in sync.
    * @param {HTMLVideoElement} video - The video whose timeline is being visualized.
    * @param {Array<{seconds: number, commentId?: string, id?: string}>} comments - Timestamp mentions collected from comments.
@@ -206,13 +228,17 @@
       <section id="yt-ts-replay-graph" aria-label="Comment replay density">
         <div class="yt-ts-replay-header">
           <strong>Comment replay density</strong>
-          <span>${uniqueCommentCount.toLocaleString()} comments</span>
+          <span class="yt-ts-replay-count">${uniqueCommentCount.toLocaleString()} comments</span>
+          <button class="yt-ts-control" type="button">Reload</button>
         </div>
         <div class="yt-ts-replay-plot" role="group" aria-label="Comment count by video position"></div>
         <div class="yt-ts-replay-axis"><span>0:00</span><span>${formatVideoTime(duration)}</span></div>
       </section>
     `);
     const plot = graph.querySelector('.yt-ts-replay-plot');
+    graph
+      .querySelector('button')
+      .addEventListener('click', () => location.reload());
     const bars = [];
     for (let index = 0; index < binCount; index++) {
       const start = (index / binCount) * duration;
@@ -280,7 +306,6 @@
         });
         document.body.appendChild(stack);
       }
-      clearThenLog(stack);
     }
     return stack;
   }
@@ -343,6 +368,14 @@
         justify-content: space-between;
         gap: 12px;
         font-size: 12px;
+      }
+      .yt-ts-empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--yt-ts-secondary-text);
       }
       .yt-ts-replay-header span,
       .yt-ts-replay-axis { color: var(--yt-ts-secondary-text); }
@@ -739,6 +772,10 @@
       `[TimestampComments] ${comments.length} timestamp mentions found`,
       comments,
     );
+    if (comments.length === 0) {
+      await renderNoCommentsState();
+      return;
+    }
     if (Number.isFinite(video.duration) && video.duration > 0) {
       await renderReplayGraph(video, comments);
     } else {
