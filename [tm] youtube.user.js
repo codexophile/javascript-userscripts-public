@@ -4,12 +4,7 @@
   //* Fixing new youtube video metadata section under video thumbnail
   //* uploader, tagged channels, number of views, and upload date etc.
   waitForEach('.ytContentMetadataViewModelMetadataRow', metadataRowEl => {
-    style(
-      metadataRowEl,
-      `
-      flex-wrapt: wrap;
-    `,
-    );
+    metadataRowEl.style.setProperty('flex-wrap', 'wrap', 'important');
 
     // wrapping verified badge with the channel name it belongs to
     const verifiedBadgeEls = metadataRowEl.querySelectorAll(
