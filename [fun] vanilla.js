@@ -3446,6 +3446,21 @@ function generateElements(html, parent, returnTrusted) {
   return returnChildren.length === 1 ? returnChildren[0] : returnChildren;
 }
 
+function setInnerHTML(element, html, parent) {
+  const escapeHTMLPolicy = trustedTypes.createPolicy('forceInner', {
+    createHTML: to_escape => to_escape,
+  });
+
+  element.innerHTML = escapeHTMLPolicy.createHTML(html.trim());
+
+  const children = [...element.children];
+  let returnChildren = children;
+  if (parent) {
+    returnChildren = children.map(child => parent.appendChild(child));
+  }
+  return returnChildren.length === 1 ? returnChildren[0] : returnChildren;
+}
+
 function replaceWith(toBeReplacedEl, html) {
   const newEl = generateElements(html);
   toBeReplacedEl.parentNode.replaceChild(newEl, toBeReplacedEl);
