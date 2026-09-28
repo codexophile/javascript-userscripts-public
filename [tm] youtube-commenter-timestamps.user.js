@@ -9,6 +9,14 @@
     AUTO_DISMISS_MS: 16000, // auto-close popups after this long
   };
 
+  const NOTIFICATION_SETTINGS_KEY = 'ytTimestampNotificationSettings';
+  const DEFAULT_NOTIFICATION_SETTINGS = {
+    soundEnabled: true,
+    soundThrottleSeconds: 2,
+  };
+  let notificationAudioContext = null;
+  let lastNotificationSoundAt = -Infinity;
+
   BASE_FONT_SIZE = 15;
   FONT_SIZE_L1 = BASE_FONT_SIZE + 1;
   FONT_SIZE_L2 = BASE_FONT_SIZE + 2;
@@ -21,6 +29,93 @@
     let seconds = 0;
     for (const p of parts) seconds = seconds * 60 + p;
     return seconds;
+  }
+
+  /**
+   * Reads and normalizes persisted notification sound settings.
+   * @returns {{soundEnabled: boolean, soundThrottleSeconds: number}} Current notification settings.
+   * @example
+   * const settings = getNotificationSettings();
+   * if (settings.soundEnabled) console.log('Sounds enabled');
+   */
+  function getNotificationSettings() {
+    const storedSettings = GM_getValue(
+      NOTIFICATION_SETTINGS_KEY,
+      DEFAULT_NOTIFICATION_SETTINGS,
+    );
+    return {
+      soundEnabled: storedSettings?.soundEnabled !== false,
+      soundThrottleSeconds: Math.max(
+        0,
+        Number(storedSettings?.soundThrottleSeconds) || 0,
+      ),
+    };
+  }
+
+  /**
+   * Persists notification sound settings for future videos and page loads.
+   * @param {{soundEnabled: boolean, soundThrottleSeconds: number}} settings - Settings to save.
+   * @returns {void}
+   * @example
+   * saveNotificationSettings({ soundEnabled: false, soundThrottleSeconds: 3 });
+   */
+  function saveNotificationSettings(settings) {
+    GM_setValue(NOTIFICATION_SETTINGS_KEY, {
+      soundEnabled: Boolean(settings.soundEnabled),
+      soundThrottleSeconds: Math.max(
+        0,
+        Number(settings.soundThrottleSeconds) || 0,
+      ),
+    });
+  }
+
+  /**
+   * Plays a short notification tone unless sound is disabled or recently played.
+   * @returns {void}
+   * @example
+   * playNotificationSound();
+   */
+  function playNotificationSound() {
+    const settings = getNotificationSettings();
+    const now = performance.now();
+    if (
+      !settings.soundEnabled ||
+      now - lastNotificationSoundAt < settings.soundThrottleSeconds * 1000
+    ) {
+      return;
+    }
+
+    const AudioContextConstructor =
+      window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextConstructor) return;
+
+    try {
+      if (!notificationAudioContext) {
+        notificationAudioContext = new AudioContextConstructor();
+      }
+      if (notificationAudioContext.state === 'suspended') {
+        void notificationAudioContext.resume().catch(() => {});
+      }
+
+      const oscillator = notificationAudioContext.createOscillator();
+      const gain = notificationAudioContext.createGain();
+      const startTime = notificationAudioContext.currentTime;
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(660, startTime);
+      oscillator.frequency.exponentialRampToValueAtTime(880, startTime + 0.08);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.16);
+      oscillator.connect(gain).connect(notificationAudioContext.destination);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.16);
+      lastNotificationSoundAt = now;
+    } catch (error) {
+      console.debug(
+        '[TimestampComments] notification sound unavailable',
+        error,
+      );
+    }
   }
 
   function extractTimestamps(text) {
@@ -352,6 +447,29 @@
         margin-bottom: 8px;
       }
       .yt-ts-controls[hidden] { display: none; }
+      .yt-ts-settings {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--yt-ts-border);
+        border-radius: 8px;
+        background: var(--yt-ts-surface);
+        color: var(--yt-ts-secondary-text);
+        font-size: 12px;
+      }
+      .yt-ts-settings[hidden] { display: none; }
+      .yt-ts-settings label { display: flex; align-items: center; gap: 5px; }
+      .yt-ts-settings input[type="number"] {
+        width: 58px;
+        min-height: 28px;
+        box-sizing: border-box;
+        padding: 0 6px;
+        border: 1px solid #606060;
+        border-radius: 4px;
+        background: #181818;
+        color: var(--yt-ts-text);
+      }
       #yt-ts-replay-graph {
         /* width: min(560px, calc(100vw - 40px)); */
         padding: 12px 14px 10px;
@@ -682,6 +800,7 @@
     });
 
     stack.appendChild(card);
+    playNotificationSound();
     activePopups.set(comment.id, { refresh, close });
     [...stack.querySelectorAll('.yt-ts-card')]
       .sort((a, b) => Number(b.dataset.likeCount) - Number(a.dataset.likeCount))
@@ -707,15 +826,37 @@
     const stack = await ensureStack();
     let controlsDivEl = document.getElementById('yt-ts-controls');
     if (!controlsDivEl) {
-      controlsHtml = `
+      const settings = getNotificationSettings();
+      const controlsHtml = `
         <button class="yt-ts-control" type="button">Close all</button>
         <button class="yt-ts-control yt-ts-control--destructive" type="button">Close all and block</button>
+        <button class="yt-ts-control" type="button" data-settings-toggle>Settings</button>
+        <div class="yt-ts-settings" data-settings-panel hidden>
+          <label>
+            <input type="checkbox" data-sound-enabled ${settings.soundEnabled ? 'checked' : ''}>
+            Play sound
+          </label>
+          <label>
+            Minimum gap
+            <input type="number" min="0" step="0.1" inputmode="decimal" data-sound-throttle value="${settings.soundThrottleSeconds}">
+            sec
+          </label>
+        </div>
       `;
       controlsDivEl = generateElements(`<div>${controlsHtml}</div>`);
       controlsDivEl.id = 'yt-ts-controls';
       controlsDivEl.className = 'yt-ts-controls';
-      const [closeAllButton, blockButton] =
+      const [closeAllButton, blockButton, settingsButton] =
         controlsDivEl.querySelectorAll('button');
+      const settingsPanel = controlsDivEl.querySelector(
+        '[data-settings-panel]',
+      );
+      const soundEnabledInput = controlsDivEl.querySelector(
+        '[data-sound-enabled]',
+      );
+      const soundThrottleInput = controlsDivEl.querySelector(
+        '[data-sound-throttle]',
+      );
       closeAllButton.addEventListener('click', () => {
         for (const popup of activePopups.values()) popup.close();
       });
@@ -723,6 +864,20 @@
         blockNewPopups = true;
         for (const popup of activePopups.values()) popup.close();
       });
+      settingsButton.addEventListener('click', () => {
+        settingsPanel.hidden = !settingsPanel.hidden;
+      });
+      const saveSettings = () => {
+        saveNotificationSettings({
+          soundEnabled: soundEnabledInput.checked,
+          soundThrottleSeconds: soundThrottleInput.value,
+        });
+        soundThrottleInput.value = String(
+          getNotificationSettings().soundThrottleSeconds,
+        );
+      };
+      soundEnabledInput.addEventListener('change', saveSettings);
+      soundThrottleInput.addEventListener('change', saveSettings);
       stack.prepend(controlsDivEl);
     }
     updateControls();
