@@ -33,7 +33,6 @@
           const resJson = JSON.parse(resText);
           const allowedIn =
             resJson.items[0].contentDetails.regionRestriction.allowed;
-          clearThenLog('API response:', resJson);
           const newEl = generateElements(
             `<div>
               <p>Video is playable in:</p>
