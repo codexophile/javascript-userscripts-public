@@ -13,6 +13,7 @@
   const DEFAULT_NOTIFICATION_SETTINGS = {
     soundEnabled: true,
     soundThrottleSeconds: 2,
+    soundVolumePercent: 25,
   };
   let notificationAudioContext = null;
   let lastNotificationSoundAt = -Infinity;
@@ -43,11 +44,21 @@
       NOTIFICATION_SETTINGS_KEY,
       DEFAULT_NOTIFICATION_SETTINGS,
     );
+    const storedVolumePercent = Number(storedSettings?.soundVolumePercent);
     return {
       soundEnabled: storedSettings?.soundEnabled !== false,
       soundThrottleSeconds: Math.max(
         0,
         Number(storedSettings?.soundThrottleSeconds) || 0,
+      ),
+      soundVolumePercent: Math.min(
+        100,
+        Math.max(
+          0,
+          Number.isFinite(storedVolumePercent)
+            ? storedVolumePercent
+            : DEFAULT_NOTIFICATION_SETTINGS.soundVolumePercent,
+        ),
       ),
     };
   }
@@ -65,6 +76,10 @@
       soundThrottleSeconds: Math.max(
         0,
         Number(settings.soundThrottleSeconds) || 0,
+      ),
+      soundVolumePercent: Math.min(
+        100,
+        Math.max(0, Number(settings.soundVolumePercent) || 0),
       ),
     });
   }
@@ -104,7 +119,10 @@
       oscillator.frequency.setValueAtTime(660, startTime);
       oscillator.frequency.exponentialRampToValueAtTime(880, startTime + 0.08);
       gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.08, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(
+        Math.max(settings.soundVolumePercent / 100, 0.0001),
+        startTime + 0.01,
+      );
       gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.16);
       oscillator.connect(gain).connect(notificationAudioContext.destination);
       oscillator.start(startTime);
@@ -470,6 +488,7 @@
         background: #181818;
         color: var(--yt-ts-text);
       }
+      .yt-ts-settings input[type="range"] { width: 90px; accent-color: var(--yt-ts-accent); }
       #yt-ts-replay-graph {
         /* width: min(560px, calc(100vw - 40px)); */
         padding: 12px 14px 10px;
@@ -841,6 +860,11 @@
             <input type="number" min="0" step="0.1" inputmode="decimal" data-sound-throttle value="${settings.soundThrottleSeconds}">
             sec
           </label>
+          <label>
+            Volume
+            <input type="range" min="0" max="100" step="1" data-sound-volume value="${settings.soundVolumePercent}">
+            <output data-sound-volume-output>${settings.soundVolumePercent}%</output>
+          </label>
         </div>
       `;
       controlsDivEl = generateElements(`<div>${controlsHtml}</div>`);
@@ -857,6 +881,12 @@
       const soundThrottleInput = controlsDivEl.querySelector(
         '[data-sound-throttle]',
       );
+      const soundVolumeInput = controlsDivEl.querySelector(
+        '[data-sound-volume]',
+      );
+      const soundVolumeOutput = controlsDivEl.querySelector(
+        '[data-sound-volume-output]',
+      );
       closeAllButton.addEventListener('click', () => {
         for (const popup of activePopups.values()) popup.close();
       });
@@ -871,13 +901,21 @@
         saveNotificationSettings({
           soundEnabled: soundEnabledInput.checked,
           soundThrottleSeconds: soundThrottleInput.value,
+          soundVolumePercent: soundVolumeInput.value,
         });
         soundThrottleInput.value = String(
           getNotificationSettings().soundThrottleSeconds,
         );
+        const normalizedSettings = getNotificationSettings();
+        soundVolumeInput.value = String(normalizedSettings.soundVolumePercent);
+        soundVolumeOutput.textContent = `${normalizedSettings.soundVolumePercent}%`;
       };
       soundEnabledInput.addEventListener('change', saveSettings);
       soundThrottleInput.addEventListener('change', saveSettings);
+      soundVolumeInput.addEventListener('input', () => {
+        soundVolumeOutput.textContent = `${soundVolumeInput.value}%`;
+      });
+      soundVolumeInput.addEventListener('change', saveSettings);
       stack.prepend(controlsDivEl);
     }
     updateControls();
