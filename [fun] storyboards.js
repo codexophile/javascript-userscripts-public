@@ -1,3 +1,5 @@
+const storyboardTimeUpdateHandlers = new WeakMap();
+
 function playVideo(videoEl, total, index) {
   videoEl.scrollIntoView();
   const duration = videoEl.duration;
@@ -39,8 +41,9 @@ async function sbControls(
   setSbHash = true,
 ) {
   const collapsible = await Collapsible();
+  const storyboardItems = [...sbParent.querySelectorAll('.storyboardItem')];
   const getTotalSlots = () => {
-    const slotCount = sbParent.querySelectorAll('.storyboardItem').length;
+    const slotCount = storyboardItems.length;
     if (!Number.isFinite(trueNoOfSlots) || trueNoOfSlots <= 0) return slotCount;
     return Math.min(trueNoOfSlots, slotCount);
   };
@@ -101,30 +104,39 @@ async function sbControls(
       addTimeStrings();
     } else video.addEventListener('loadeddata', addTimeStrings);
 
-    video.removeEventListener('timeupdate', handleTimeUpdate);
+    const previousHandler = storyboardTimeUpdateHandlers.get(video);
+    if (previousHandler) {
+      video.removeEventListener('timeupdate', previousHandler);
+    }
+
+    let lastSlotNo = -1;
     video.addEventListener('timeupdate', handleTimeUpdate);
+    storyboardTimeUpdateHandlers.set(video, handleTimeUpdate);
+
     function handleTimeUpdate() {
       const duration = video.duration;
       const totalSlots = getTotalSlots();
-      if (!totalSlots) return;
+      if (!totalSlots || !Number.isFinite(duration) || duration <= 0) return;
       const currentSlotNo = Math.min(
         totalSlots - 1,
         Math.round((video.currentTime * totalSlots) / duration),
       );
-      const storyboardItems = sbParent.querySelectorAll('.storyboardItem');
+      if (currentSlotNo === lastSlotNo) return;
+
       if (setSbHash) {
         setHash(`slot=${currentSlotNo}`);
       }
 
-      storyboardItems.forEach((item, index) => {
-        if (index <= currentSlotNo) {
-          item.classList.add('wentPast');
-          item.style.border = '3px solid red';
-        } else {
-          item.classList.remove('wentPast');
-          item.style.border = '3px solid white';
-        }
-      });
+      const firstChangedSlot = Math.min(lastSlotNo, currentSlotNo) + 1;
+      const lastChangedSlot = Math.max(lastSlotNo, currentSlotNo);
+      for (let index = firstChangedSlot; index <= lastChangedSlot; index++) {
+        const item = storyboardItems[index];
+        if (!item) continue;
+        const hasBeenPlayed = index <= currentSlotNo;
+        item.classList.toggle('wentPast', hasBeenPlayed);
+        item.style.border = hasBeenPlayed ? '3px solid red' : '3px solid white';
+      }
+      lastSlotNo = currentSlotNo;
     }
 
     function addTimeStrings() {
