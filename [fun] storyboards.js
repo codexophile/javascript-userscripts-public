@@ -39,6 +39,7 @@ async function sbControls(
   sbParent,
   imgUrls,
   setSbHash = true,
+  storyboardStartTime = null,
 ) {
   const collapsible = await Collapsible();
   const storyboardItems = [...sbParent.querySelectorAll('.storyboardItem')];
@@ -95,6 +96,10 @@ async function sbControls(
         ? `Slots shown: ${totalSlots} (limit: ${trueNoOfSlots})`
         : `Slots shown: ${totalSlots}`;
     generateElements(`<div>${slotsLabel}</div>`, imgUrlsPopupEl);
+    const renderTimeEl = generateElements(
+      '<div>Storyboard render time: measuring...</div>',
+      imgUrlsPopupEl,
+    );
 
     console.log('xxx', video.duration);
     if (video.readyState > 0) jumpToSlot();
@@ -103,6 +108,15 @@ async function sbControls(
     if (+video.duration > 0) {
       addTimeStrings();
     } else video.addEventListener('loadeddata', addTimeStrings);
+
+    if (storyboardStartTime !== null) {
+      await new Promise(resolve =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      );
+      const timeInMs = performance.now() - storyboardStartTime;
+      const timeReadable = forHumans(timeInMs / 1000);
+      renderTimeEl.textContent = `Storyboard render time: ${timeReadable}`;
+    }
 
     const previousHandler = storyboardTimeUpdateHandlers.get(video);
     if (previousHandler) {
@@ -366,6 +380,7 @@ async function storyboard({
   webvttContent = null,
   baseUrlPath = null,
 }) {
+  const storyboardStartTime = performance.now();
   const slotsDiv = document.createElement('div');
   storyboardParent.append(slotsDiv);
   slotsDiv.id = 'slotsDiv';
@@ -455,12 +470,13 @@ async function storyboard({
   if (slotWidth) setSlotSize(storyboardParent, slotWidth);
   else if (storyboardParent.querySelector('canvas').width < 200)
     setSlotSize(storyboardParent, 200);
-  sbControls(
+  await sbControls(
     vidOnPage,
     totalSlots,
     storyboardParent,
     webvttCues ? webvttCues.map(cue => cue.imageUrl) : imgUrls,
     setSbHash,
+    storyboardStartTime,
   );
   return slotsDiv;
 }
