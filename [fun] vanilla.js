@@ -469,11 +469,14 @@ function toSecondsFromHMS(hours, minutes, seconds) {
 }
 
 function forHumans(seconds) {
-  if (!Number.isInteger(seconds) || seconds < 0) return 'Invalid input';
+  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds < 0) {
+    return 'Invalid input';
+  }
 
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
+  const totalSeconds = Math.floor(seconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
 
   return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(remainingSeconds).padStart(2, '0')}s`;
 }
