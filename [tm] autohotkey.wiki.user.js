@@ -5,7 +5,7 @@
   });
   document.querySelectorAll(`div.li`).forEach(divLiEl => {
     console.log(divLiEl);
-    if (!/(\[|\()v2(\]|\))/i.test(divLiEl.textContent)) return;
+    if (!/[\[(]v2[\])]/i.test(divLiEl.textContent)) return;
     style(
       divLiEl,
       `
