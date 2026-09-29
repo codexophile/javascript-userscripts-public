@@ -1036,32 +1036,63 @@ function markAndFilterCOM(
   };
 }
 
-// convert this function so it accepts an object with options
 function makeMarkable({
   mainSelector,
   uidElSelector = 'a',
-  hrefElSelector = 'a',
+  hrefElSelector = uidElSelector,
   parentSelector = null,
   uidAttr = 'href',
-  filter = null,
-  filterParent = null,
+  onMarked = null, // was `filter`; receives the element once it's marked
+  normalizeId = id => id, // e.g. id => id.split('?')[0]
+  storageKey = 'marked',
 }) {
-  waitForEach(mainSelector, mainElement => {
-    // check if the element's uid is already in storage
-    const uidEl = mainElement.querySelector(uidElSelector);
-    const uniqueId = uidEl ? uidEl.getAttribute(uidAttr) : null;
-    const parentEl = mainElement.closest(parentSelector);
+  const load = () => GM_getValue(storageKey, {});
+  let marked = load();
 
-    if (uniqueId && GM_getValue(`marked-${uniqueId}`)) {
-      if (filter) filter(mainElement);
-      else {
-        replaceMarkedElement(mainElement);
-      }
+  const getId = el => {
+    const raw = el.querySelector(uidElSelector)?.getAttribute(uidAttr);
+    return raw ? normalizeId(raw) : null;
+  };
+
+  const saveMark = id => {
+    marked = { ...load(), [id]: Date.now() }; // re-read so other tabs' marks survive
+    GM_setValue(storageKey, marked);
+  };
+
+  const updateParent = parentEl => {
+    if (!parentEl) return;
+    const remaining = parentEl.querySelector(
+      `${mainSelector}:not([data-marked])`,
+    );
+    parentEl.style.display = remaining ? '' : 'none';
+  };
+
+  const applyMarked = (el, parentEl) => {
+    el.dataset.marked = '';
+    (onMarked || replaceMarkedElement)(el);
+    updateParent(parentEl);
+  };
+
+  waitForEach(mainSelector, el => {
+    if ('markableInit' in el.dataset) return;
+    el.dataset.markableInit = '';
+
+    const parentEl = parentSelector ? el.closest(parentSelector) : null;
+    const id = getId(el);
+    if (!id) return;
+
+    if (id in marked) {
+      applyMarked(el, parentEl);
+      return; // no button on already-marked items
     }
-    const markBtnEl = generateElements(`<button>Mark</button>`, mainElement);
-    style(mainElement, `position: relative`);
+
+    if (getComputedStyle(el).position === 'static') {
+      style(el, 'position: relative');
+    }
+
+    const btn = generateElements('<button type="button">Mark</button>', el);
     style(
-      markBtnEl,
+      btn,
       `
       position: absolute;
       top: 0;
@@ -1074,47 +1105,30 @@ function makeMarkable({
       cursor: pointer;
     `,
     );
-    markBtnEl.addEventListener('click', () => {
-      const uidEl = mainElement.querySelector(uidElSelector);
-      const uniqueId = uidEl ? uidEl.getAttribute(uidAttr) : null;
-      if (!uniqueId) {
-        console.log('No unique ID found for marking');
-        return;
-      }
-      GM_setValue(`marked-${uniqueId}`, true);
-      if (filter) filter(mainElement);
-      else {
-        replaceMarkedElement(mainElement);
-      }
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      saveMark(id);
+      applyMarked(el, parentEl);
     });
 
-    if (parentSelector) {
-      const mainEls = parentEl.querySelectorAll(mainSelector);
-      const remainingMainEls = mainEls.length;
-      if (remainingMainEls === 0) {
-        parentEl.style.display = 'none';
-      } else {
-        parentEl.style.display = 'block';
-      }
-    }
+    updateParent(parentEl);
   });
 
-  function replaceMarkedElement(element) {
-    const href =
-      element.querySelector(hrefElSelector)?.getAttribute('href') || '#';
-    const newEl = generateElements(
-      `<a href="${href}">${element.textContent}</a>`,
-    );
+  function replaceMarkedElement(el) {
+    const a = document.createElement('a');
+    a.href = el.querySelector(hrefElSelector)?.href || '#';
+    a.textContent = el.textContent.replace(/\s+/g, ' ').trim();
     style(
-      newEl,
+      a,
       `
+      display: inline-block;
       margin: 5px;
       padding: 5px;
       border: 1px solid yellow;
-      `,
+    `,
     );
-    element.replaceWith(newEl);
-    return newEl;
+    el.replaceWith(a);
   }
 }
 
