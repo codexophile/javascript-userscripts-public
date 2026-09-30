@@ -1036,29 +1036,93 @@ function markAndFilterCOM(
   };
 }
 
+/**
+ * Result info passed to the `onProcessed` callback.
+ * @typedef {Object} ProcessedInfo
+ * @property {string|null} id - The element's unique ID, or null if none was found.
+ * @property {'marked'|'unmarked'|'skipped'} status - `marked`: filtered/replaced; `unmarked`: left in place with a Mark button; `skipped`: no ID, left untouched.
+ * @property {boolean} isMarked - Shorthand for `status === 'marked'`.
+ * @property {Element} currentEl - The element now in the DOM (the replacement if one was created, otherwise the original).
+ * @property {Element|null} parentEl - The matched parent container, if `parentSelector` was given.
+ */
+
+/**
+ * Adds a "Mark" button to each matching element and filters elements that were
+ * marked previously. Marks persist via GM storage.
+ *
+ * @param {Object} options - Configuration options.
+ * @param {string} options.mainSelector - Selector for the elements to make markable.
+ * @param {string} [options.uidElSelector='a'] - Selector (inside each element) for the node holding the unique ID.
+ * @param {string} [options.hrefElSelector=options.uidElSelector] - Selector (inside each element) for the link used by the default replacement.
+ * @param {string|null} [options.parentSelector=null] - Ancestor selector; the ancestor is hidden when all its markable children are marked.
+ * @param {string} [options.uidAttr='href'] - Attribute of the ID node that holds the unique ID.
+ * @param {boolean} [options.dynamic=false] - Use `waitForEach` for content that loads over time. When false, all elements are collected in one pass.
+ * @param {ParentNode} [options.root=document] - Root to search in when `dynamic` is false.
+ * @param {function(Element): (Element|void)|null} [options.onMarked=null] - Custom handler for marked elements. May return the replacement element.
+ * @param {function(Element, ProcessedInfo): void|null} [options.onProcessed=null] - Runs after each element is processed (and again after a manual click-to-mark).
+ * @param {function(string): string} [options.normalizeId] - Transforms raw IDs before lookup/storage.
+ * @param {string} [options.storageKey='marked'] - GM storage key for the marks object.
+ * @returns {void}
+ *
+ * @example
+ * // Static page: one pass, then count what happened
+ * let hidden = 0;
+ * makeMarkable({
+ *   mainSelector: '.card',
+ *   parentSelector: '.section',
+ *   onProcessed: (el, { isMarked }) => { if (isMarked) hidden++; },
+ * });
+ *
+ * @example
+ * // Dynamic page
+ * makeMarkable({ mainSelector: '.card', dynamic: true });
+ */
 function makeMarkable({
   mainSelector,
   uidElSelector = 'a',
   hrefElSelector = uidElSelector,
   parentSelector = null,
   uidAttr = 'href',
-  onMarked = null, // was `filter`; receives the element once it's marked
-  normalizeId = id => id, // e.g. id => id.split('?')[0]
+  dynamic = false,
+  root = document,
+  onMarked = null,
+  onProcessed = null,
+  normalizeId = id => id,
   storageKey = 'marked',
 }) {
+  /**
+   * Reads the marks object from storage.
+   * @returns {Object<string, number>} Map of ID to the timestamp it was marked.
+   */
   const load = () => GM_getValue(storageKey, {});
+
   let marked = load();
 
+  /**
+   * Extracts the normalized unique ID from an element.
+   * @param {Element} el - The element to inspect.
+   * @returns {string|null} The ID, or null if not found.
+   */
   const getId = el => {
     const raw = el.querySelector(uidElSelector)?.getAttribute(uidAttr);
     return raw ? normalizeId(raw) : null;
   };
 
+  /**
+   * Persists a mark, re-reading storage first so other tabs' marks survive.
+   * @param {string} id - The ID to mark.
+   * @returns {void}
+   */
   const saveMark = id => {
-    marked = { ...load(), [id]: Date.now() }; // re-read so other tabs' marks survive
+    marked = { ...load(), [id]: Date.now() };
     GM_setValue(storageKey, marked);
   };
 
+  /**
+   * Hides the parent container if it has no unmarked children left, else shows it.
+   * @param {Element|null} parentEl - The parent container.
+   * @returns {void}
+   */
   const updateParent = parentEl => {
     if (!parentEl) return;
     const remaining = parentEl.querySelector(
@@ -1067,23 +1131,63 @@ function makeMarkable({
     parentEl.style.display = remaining ? '' : 'none';
   };
 
+  /**
+   * Applies the marked treatment (custom handler or default replacement).
+   * @param {Element} el - The element to filter.
+   * @param {Element|null} parentEl - The parent container to refresh.
+   * @returns {Element} The element now representing it in the DOM.
+   */
   const applyMarked = (el, parentEl) => {
     el.dataset.marked = '';
-    (onMarked || replaceMarkedElement)(el);
+    const result = (onMarked || replaceMarkedElement)(el);
     updateParent(parentEl);
+    return result instanceof Element ? result : el;
   };
 
-  waitForEach(mainSelector, el => {
+  /**
+   * Invokes the `onProcessed` callback, if provided.
+   * @param {Element} el - The original element.
+   * @param {ProcessedInfo} info - Details about the outcome.
+   * @returns {void}
+   */
+  const notify = (el, info) => {
+    if (onProcessed) onProcessed(el, info);
+  };
+
+  /**
+   * Processes a single element: filters it if marked, otherwise adds the button.
+   * Always calls `onProcessed` at the end, whatever the outcome.
+   * @param {Element} el - The element to process.
+   * @returns {void}
+   */
+  const processElement = el => {
     if ('markableInit' in el.dataset) return;
     el.dataset.markableInit = '';
 
     const parentEl = parentSelector ? el.closest(parentSelector) : null;
     const id = getId(el);
-    if (!id) return;
+
+    if (!id) {
+      notify(el, {
+        id,
+        status: 'skipped',
+        isMarked: false,
+        currentEl: el,
+        parentEl,
+      });
+      return;
+    }
 
     if (id in marked) {
-      applyMarked(el, parentEl);
-      return; // no button on already-marked items
+      const currentEl = applyMarked(el, parentEl);
+      notify(el, {
+        id,
+        status: 'marked',
+        isMarked: true,
+        currentEl,
+        parentEl,
+      });
+      return;
     }
 
     if (getComputedStyle(el).position === 'static') {
@@ -1109,12 +1213,34 @@ function makeMarkable({
       e.preventDefault();
       e.stopPropagation();
       saveMark(id);
-      applyMarked(el, parentEl);
+      const currentEl = applyMarked(el, parentEl);
+      notify(el, {
+        id,
+        status: 'marked',
+        isMarked: true,
+        currentEl,
+        parentEl,
+      });
     });
 
     updateParent(parentEl);
-  });
+    notify(el, {
+      id,
+      status: 'unmarked',
+      isMarked: false,
+      currentEl: el,
+      parentEl,
+    });
+  };
 
+  if (dynamic) waitForEach(mainSelector, processElement);
+  else root.querySelectorAll(mainSelector).forEach(processElement);
+
+  /**
+   * Default handler for marked elements: replaces them with a compact link.
+   * @param {Element} el - The element to replace.
+   * @returns {HTMLAnchorElement} The replacement link.
+   */
   function replaceMarkedElement(el) {
     const a = document.createElement('a');
     a.href = el.querySelector(hrefElSelector)?.href || '#';
@@ -1129,6 +1255,7 @@ function makeMarkable({
     `,
     );
     el.replaceWith(a);
+    return a;
   }
 }
 
