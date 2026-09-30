@@ -1,11 +1,14 @@
 (function () {
   'use strict';
 
+  //  MARK: Main
+
   let lastUrl = '';
   main();
   window.addEventListener('urlchange', main);
 
   async function main(event) {
+    if (location.hash === '#prevent-main') return;
     if (event) {
       if (event.url === lastUrl) return;
       setSeasonAndEpisode(event.url);
@@ -111,6 +114,26 @@
       }
     }
   }
+
+  //  MARK: Preventing main
+  const queryAcrossSites = [
+    // metacritic
+    'a.hero-episode-title__back-link',
+    'a.product-score-card.product-score-card--clickable.product-score-card--season',
+    //rottentomatoes
+    'rt-link',
+    // criticker
+    '.cr_breadcrumb a',
+  ].join(',');
+  waitForEach(queryAcrossSites, el => {
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      location.replace(el.href + '#prevent-main');
+    });
+  });
+
+  //  MARK: Helpers
 
   function getStoredSeasonEpisode() {
     return {
