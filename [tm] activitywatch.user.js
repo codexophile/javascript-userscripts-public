@@ -1,5 +1,6 @@
 (async function () {
   'use strict';
+  if (location.host !== 'localhost:5600') return;
 
   //* sort listbox
   const LIST_BOX_SELECTOR = 'select.custom-select-sm';
