@@ -1,4 +1,4 @@
-const storyboardTimeUpdateHandlers = new WeakMap();
+const storyboardTimeUpdateStates = new WeakMap();
 
 function playVideo(videoEl, total, index) {
   videoEl.scrollIntoView();
@@ -41,6 +41,13 @@ async function sbControls(
   setSbHash = true,
   storyboardStartTime = null,
 ) {
+  const previousState = video && storyboardTimeUpdateStates.get(video);
+  if (previousState?.handler) {
+    video.removeEventListener('timeupdate', previousState.handler);
+  }
+  const setupState = video ? { handler: null } : null;
+  if (video) storyboardTimeUpdateStates.set(video, setupState);
+
   const collapsible = await Collapsible();
   const storyboardItems = [...sbParent.querySelectorAll('.storyboardItem')];
   const getTotalSlots = () => {
@@ -118,14 +125,11 @@ async function sbControls(
       renderTimeEl.textContent = `Storyboard render time: ${timeReadable}`;
     }
 
-    const previousHandler = storyboardTimeUpdateHandlers.get(video);
-    if (previousHandler) {
-      video.removeEventListener('timeupdate', previousHandler);
-    }
+    if (storyboardTimeUpdateStates.get(video) !== setupState) return;
 
     let lastSlotNo = -1;
     video.addEventListener('timeupdate', handleTimeUpdate);
-    storyboardTimeUpdateHandlers.set(video, handleTimeUpdate);
+    setupState.handler = handleTimeUpdate;
 
     function handleTimeUpdate() {
       const duration = video.duration;
