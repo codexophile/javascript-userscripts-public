@@ -64,32 +64,40 @@
     document.addEventListener(s, fixUrl, true);
   }
 
+  /**
+   * Normalizes YouTube Shorts, live, and watch URLs without discarding the URL hash.
+   *
+   * @param {Event} [event] YouTube navigation event that should be stopped for redirects.
+   * @returns {void}
+   * @example
+   * // https://www.youtube.com/watch?v=abcdefghijk#slot=2 remains unchanged in its hash.
+   * fixUrl();
+   */
   function fixUrl(event) {
-    const locationHref = location.href;
-    const liveOrShortMatch = locationHref.match(/\/(shorts|live)\//);
+    const currentUrl = new URL(location.href);
+    const mediaMatch = currentUrl.pathname.match(/^\/(shorts|live)\/([^/]+)/);
 
-    if (liveOrShortMatch && event) {
-      event.stopPropagation();
-      event.stopImmediatePropagation();
+    if (mediaMatch) {
+      event?.stopPropagation();
+      event?.stopImmediatePropagation();
+
+      currentUrl.pathname = '/watch';
+      currentUrl.search = '';
+      currentUrl.searchParams.set('v', mediaMatch[2]);
+      stopAndChangeUrl(currentUrl.href);
+      return;
     }
 
-    if (liveOrShortMatch) {
-      let href = location.href;
-      href = href.replace(liveOrShortMatch[0], '/watch?v=');
-      stopAndChangeUrl(href);
-    }
+    if (currentUrl.pathname !== '/watch') return;
 
-    //? regex -> https://www.youtube.com/watch
-    if (locationHref.match(/https:\/\/www\.youtube\.com\/watch/)) {
-      const videoID = locationHref.match(/[\?&]v=(...........)/)[1];
+    const videoID = currentUrl.searchParams.get('v');
+    if (!videoID) return;
 
-      let hashSlots = locationHref.match(/#slot=\d+?($|#)/);
-      hashSlots = hashSlots ? hashSlots[0] : '';
-      const newUrl = `https://www.youtube.com/watch?v=${videoID}${hashSlots}`;
+    currentUrl.search = '';
+    currentUrl.searchParams.set('v', videoID);
 
-      if (location.href !== newUrl) {
-        history.pushState({ state: 1 }, 'new state', newUrl);
-      }
+    if (location.href !== currentUrl.href) {
+      history.pushState({ state: 1 }, 'new state', currentUrl.href);
     }
   }
 
