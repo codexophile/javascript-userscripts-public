@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  if (location.hash === '#allow-play') return;
+
   let autoPauseDone = false;
   let videoEl = null;
 
