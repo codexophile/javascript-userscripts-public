@@ -6,11 +6,37 @@
     play: '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z"/></svg>',
   };
 
-  waitForEach('main#stream > div:has(article)', feedItemEl => {
-    console.log(feedItemEl);
-    const linkToContentLinkBtnEl = feedItemEl.querySelector('li.item.link');
+  const QUERY_FOR_LINK_BTN_ELS = '.not_read li.item.link';
+
+  async function markReadAndHide(rssItemEl) {
+    const isUnread = rssItemEl.matches('.not_read');
+    if (!isUnread) return;
+    const markBtnEl = rssItemEl.querySelector(
+      'li.item.manage:has(>[title="Toggle read"])',
+    );
+    markBtnEl?.style.outline = '2px solid red';
+    return;
+    markBtnEl.click();
+    await asyncTimeout(500);
+  }
+
+  waitForEach('main#stream > div.not_read:has(article)', async feedItemEl => {
+    const linkToContentLinkBtnEl = feedItemEl.querySelector(
+      QUERY_FOR_LINK_BTN_ELS,
+    );
     const linkEl = linkToContentLinkBtnEl.querySelector('a');
     const url = linkEl.href;
+
+    //* removing items with duplicate links
+    const linkElsOnPage = document.querySelectorAll(
+      `${QUERY_FOR_LINK_BTN_ELS}:has([href="${CSS.escape(url)}"])`,
+    );
+    if (
+      linkElsOnPage.length > 1 &&
+      linkElsOnPage[0] !== linkToContentLinkBtnEl
+    ) {
+      await markReadAndHide(feedItemEl);
+    }
 
     //* youtube links
     if (url.startsWith('https://www.youtube.com/')) {
