@@ -31,10 +31,10 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     popoverEl.setAttribute('popover', '');
     popoverEl.id = id;
     popoverEl.style = `
-      padding: 1rem;
-      border-radius: 4px;
-      position-area: top span-right;
-      background-color: darkgray;
+    padding: 1rem;
+    border-radius: 4px;
+    position-area: top span-right;
+    background-color: darkgray;
     `;
 
     if (document.querySelectorAll(`#cdx-collapsible-styles`).length === 0) {
@@ -42,9 +42,9 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
         .collapsible-container {
           .collapsible-popover > * {
             margin: 5px;
-          }
-        }
-      `);
+            }
+            }
+            `);
       styleEl.id = 'cdx-collapsible-styles';
     }
 
@@ -682,89 +682,71 @@ class modalBox {
   constructor() {
     GM_addStyle(`
 
-            #vanilla-presets-modal {
-                display: none; /* Hidden by default */
-                position: fixed; /* Stay in place */
-                z-index: 10000; /* Sit on top */
-                padding-top: 10px; /* Location of the box */
-                left: 0;
-                top: 0;
-                width: 100%; /* Full width */
-                height: 100%; /* Full height */
-                overflow: auto; /* Enable scroll if needed */
-                background-color: rgb(0,0,0); /* Fallback color */
-                background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-            }
+      #vanilla-presets-modal {
+        width: 95%;
+        max-width: 95vw;
+        padding: 0;
+        border: 1px solid #888;
+        background: black;
+        color: white;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
 
-            #modal-content {
-                position: relative;
-                background-color: black;
-                margin: auto;
-                padding: 0;
-                border: 1px solid #888;
-                width: 95%;
-                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
-                animation-name: animatetop;
-                animation-duration: 0.4s
-            }
-
-            @keyframes animatetop {
-                from {top:-300px; opacity:0}
-                to {top:0; opacity:1}
-            }
-
-            #close:hover,
-            #close:focus {
-                color: #000;
-                text-decoration: none;
-                cursor: pointer;
-            }
-
-            #modal-header {
-
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                
-                position: sticky;
-                top: 0px;
-                padding: 2px 16px;
-                background-color: #5cb85c;
-                color: white;
-                
-            }
-
-            #header-content {
-                margin: auto;
-            }
-
-            #modal-body {padding: 2px 16px;}
-
-        `);
+      #vanilla-presets-modal::backdrop { background: rgba(0, 0, 0, 0.4); }
+      #modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        padding: 2px 16px;
+        background: #5cb85c;
+        color: white;
+      }
+      #header-content { margin: auto; }
+      #modal-body {
+        padding: 2px 16px;
+        max-height: 80vh;
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+      #dismiss { font-size: x-large; }
+      #dismiss:hover, #dismiss:focus { color: #000; cursor: pointer; }
+    `);
 
     this.modal = generateElements(`
-            <div id=vanilla-presets-modal class=modal>
-                <div id=modal-content>
-                    <div id=modal-header>
-                        <h2 id=header-content></h2>
-                        <div id=dismiss style='font-size: x-large'>❌</div>
-                    </div>
-                    <div id=modal-body></div>
-                </div>
-            </div>
-            `);
+      <dialog id="vanilla-presets-modal">
+        <div id="modal-header">
+          <h2 id="header-content"></h2>
+          <button id="dismiss" type="button" aria-label="Close dialog">&times;</button>
+        </div>
+        <div id="modal-body"></div>
+      </dialog>
+    `);
 
     document.body.append(this.modal);
     this.header = this.modal.querySelector('#header-content');
     this.body = this.modal.querySelector('#modal-body');
     const dismiss = this.modal.querySelector('#dismiss');
-    dismiss.addEventListener('click', () => {
-      this.destroy();
+    this.closeButton = dismiss;
+    this.boundKeydown = event => this.trapFocus(event);
+    dismiss.addEventListener('click', () => this.hide());
+    this.modal.addEventListener('close', () => {
+      this.restorePageScroll();
+      this.modal.removeEventListener('keydown', this.boundKeydown);
     });
   }
 
   display() {
-    this.modal.style.display = 'block';
+    if (this.modal.open) return;
+    this.previousActiveElement = document.activeElement;
+    this.lockPageScroll();
+    this.modal.showModal();
+    this.modal.addEventListener('keydown', this.boundKeydown);
+    this.closeButton.focus();
+  }
+  show() {
+    this.display();
   }
   headerAddContent(content) {
     this.header.append(content);
@@ -773,7 +755,23 @@ class modalBox {
     this.body.append(content);
   }
   hide() {
-    this.modal.style.display = 'none';
+    if (this.modal.open) this.modal.close();
+    if (this.previousActiveElement instanceof HTMLElement) {
+      this.previousActiveElement.focus();
+    }
+  }
+
+  lockPageScroll() {
+    this.previousDocumentOverflow = document.documentElement.style.overflow;
+    this.previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  }
+
+  restorePageScroll() {
+    document.documentElement.style.overflow =
+      this.previousDocumentOverflow || '';
+    document.body.style.overflow = this.previousBodyOverflow || '';
   }
   flushHeader() {
     this.modal.querySelector('#header-content').replaceChildren();
@@ -785,6 +783,35 @@ class modalBox {
     this.flushHeader();
     this.flushBody();
     this.hide();
+  }
+
+  trapFocus(event) {
+    if (event.key === 'PageDown' || event.key === 'PageUp') {
+      const direction = event.key === 'PageDown' ? 1 : -1;
+      this.body.scrollBy({
+        top: direction * this.body.clientHeight * 0.9,
+        behavior: 'auto',
+      });
+      event.preventDefault();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = this.modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 }
 
@@ -814,95 +841,83 @@ class ModalBox {
 
   createStyles() {
     const styles = `
-            .vanilla-modal {
-                display: none;
-                position: fixed;
-                z-index: 10000;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                overflow: auto;
-                background-color: rgba(0,0,0,0.4);
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            .vanilla-modal.show {
-                opacity: 1;
-            }
-
-            .vanilla-modal-content {
-                position: relative;
-                background-color: ${this.options.backgroundColor};
-                margin: 50px auto;
-                padding: 0;
-                border-radius: 8px;
-                width: ${this.options.width};
-                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-                transform: translateY(-50px);
-                transition: transform 0.3s ease;
-            }
-
-            .vanilla-modal.show .vanilla-modal-content {
-                transform: translateY(0);
-            }
-
-            .vanilla-modal-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 15px 20px;
-                background-color: ${this.options.headerColor};
-                color: ${this.options.headerTextColor};
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-            }
-
-            .vanilla-modal-title {
-                margin: 0;
-                font-size: 1.25rem;
-                font-weight: 600;
-            }
-
-            .vanilla-modal-close {
-                color: ${this.options.closeButtonColor};
-                font-size: 28px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: color 0.2s ease;
-            }
-
-            .vanilla-modal-close:hover {
-                color: #000;
-            }
-
-            .vanilla-modal-body {
-                padding: 20px;
-                max-height: 70vh;
-                overflow-y: auto;
-            }
-        `;
+      .vanilla-modal {
+        width: ${this.options.width};
+        max-width: 95vw;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: ${this.options.backgroundColor};
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+      .vanilla-modal::backdrop { background: rgba(0, 0, 0, 0.4); }
+      .vanilla-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: ${this.options.headerColor};
+        color: ${this.options.headerTextColor};
+        border-radius: 8px 8px 0 0;
+      }
+      .vanilla-modal-title { margin: 0; font-size: 1.25rem; font-weight: 600; }
+      .vanilla-modal-close {
+        color: ${this.options.closeButtonColor};
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        border: 0;
+        background: transparent;
+      }
+      .vanilla-modal-close:hover, .vanilla-modal-close:focus { color: #000; }
+      .vanilla-modal-body {
+        padding: 20px;
+        max-height: 70vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+      ${
+        this.options.animation
+          ? `
+        .vanilla-modal[open] { animation: vanilla-modal-in 0.3s ease; }
+        @keyframes vanilla-modal-in {
+          from { opacity: 0; transform: translateY(-50px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `
+          : ''
+      }
+    `;
 
     GM_addStyle(styles);
   }
 
   createModal() {
     this.modal = generateElements(`
-            <div class="vanilla-modal-content">
-                <div class="vanilla-modal-header">
-                    <h2 class="vanilla-modal-title"></h2>
-                    <span class="vanilla-modal-close">&times;</span>
-                </div>
-                <div class="vanilla-modal-body"></div>
-            </div>
-            `);
-    this.modal.className = 'vanilla-modal';
+      <dialog class="vanilla-modal">
+        <div class="vanilla-modal-header">
+          <h2 class="vanilla-modal-title"></h2>
+          <button class="vanilla-modal-close" type="button" aria-label="Close dialog">&times;</button>
+        </div>
+        <div class="vanilla-modal-body"></div>
+      </dialog>
+    `);
     document.body.appendChild(this.modal);
 
     this.titleElement = this.modal.querySelector('.vanilla-modal-title');
     this.bodyElement = this.modal.querySelector('.vanilla-modal-body');
     this.closeButton = this.modal.querySelector('.vanilla-modal-close');
+    this.boundKeydown = event => this.trapFocus(event);
+    this.modal.addEventListener('cancel', event => {
+      if (!this.options.closeOnEscape) event.preventDefault();
+    });
+    this.modal.addEventListener('close', () => {
+      this.modal.removeEventListener('keydown', this.boundKeydown);
+      if (this.previousActiveElement instanceof HTMLElement) {
+        this.previousActiveElement.focus();
+      }
+      this.restorePageScroll();
+    });
   }
 
   setupEventListeners() {
@@ -916,21 +931,13 @@ class ModalBox {
         if (e.target === this.modal) this.hide();
       });
     }
-
-    if (this.options.closeOnEscape) {
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && this.isVisible()) this.hide();
-      });
-    }
   }
 
   setTitle(title) {
     if (typeof title === 'string') {
       this.titleElement.textContent = title;
-    }
-    // else {
-    else if (content instanceof Node) {
-      this.titleElement.appendChild(title);
+    } else if (title instanceof Node) {
+      this.titleElement.replaceChildren(title);
     }
   }
 
@@ -938,34 +945,72 @@ class ModalBox {
     if (typeof content === 'string') {
       this.bodyElement.innerHTML = content;
     } else if (content instanceof Node) {
-      const uniqueString = generateUniqueString();
-      let policy = trustedTypes.createPolicy(uniqueString, {
-        createHTML: input => input,
-      });
-      this.bodyElement.innerHTML = policy.createHTML('');
-
-      this.bodyElement.appendChild(content);
+      this.bodyElement.replaceChildren(content);
     }
   }
 
   show() {
-    this.modal.style.display = 'block';
-    setTimeout(() => this.modal.classList.add('show'), 10);
+    if (this.modal.open) return;
+    this.previousActiveElement = document.activeElement;
+    this.lockPageScroll();
+    this.modal.showModal();
+    this.modal.addEventListener('keydown', this.boundKeydown);
+    this.closeButton.focus();
   }
 
   hide() {
-    this.modal.classList.remove('show');
-    setTimeout(() => {
-      this.modal.style.display = 'none';
-    }, 300);
+    if (this.modal.open) this.modal.close();
   }
 
   isVisible() {
-    return this.modal.style.display === 'block';
+    return this.modal.open;
+  }
+
+  lockPageScroll() {
+    this.previousDocumentOverflow = document.documentElement.style.overflow;
+    this.previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  }
+
+  restorePageScroll() {
+    document.documentElement.style.overflow =
+      this.previousDocumentOverflow || '';
+    document.body.style.overflow = this.previousBodyOverflow || '';
+  }
+
+  trapFocus(event) {
+    if (event.key === 'PageDown' || event.key === 'PageUp') {
+      const direction = event.key === 'PageDown' ? 1 : -1;
+      this.bodyElement.scrollBy({
+        top: direction * this.bodyElement.clientHeight * 0.9,
+        behavior: 'auto',
+      });
+      event.preventDefault();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = this.modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   destroy() {
-    document.body.removeChild(this.modal);
+    if (this.modal.open) this.modal.close();
+    this.modal.remove();
   }
 }
 
