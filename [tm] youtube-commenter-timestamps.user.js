@@ -942,11 +942,20 @@
     return low;
   }
 
+  /**
+   * Tracks timestamp comments for a video and returns a listener cleanup function.
+   * @param {HTMLVideoElement} video - Video element to monitor.
+   * @param {Array<{seconds: number, dismissed?: boolean, shown?: boolean}>} comments - Sorted timestamp comments.
+   * @returns {() => void} Removes the playback listener.
+   * @example
+   * const stopWatching = watchVideo(video, comments);
+   * stopWatching();
+   */
   function watchVideo(video, comments) {
     let previousTime = video.currentTime;
     let nextCommentIndex = 0;
 
-    video.addEventListener('timeupdate', () => {
+    const handleTimeUpdate = () => {
       const t = video.currentTime;
       if (t < previousTime) {
         nextCommentIndex = findFirstCommentAtOrAfter(
@@ -974,22 +983,31 @@
           void showPopup(comment, video);
         }
       }
-    });
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    return () => video.removeEventListener('timeupdate', handleTimeUpdate);
   }
 
   let currentVideoId = null;
+  let initGeneration = 0;
+  let watchVideoCleanup = null;
 
   async function init() {
     const videoId = new URLSearchParams(location.search).get('v');
     if (!videoId || videoId === currentVideoId) return;
+    const generation = ++initGeneration;
     for (const popup of activePopups.values()) popup.close();
     replayGraphCleanup?.();
+    watchVideoCleanup?.();
+    watchVideoCleanup = null;
     document.getElementById('yt-ts-replay-graph')?.remove();
     blockNewPopups = false;
     currentVideoId = videoId;
 
     const video = await waitFor('video');
     const comments = await fetchTimestampComments(videoId);
+    if (generation !== initGeneration) return;
     console.log(
       `[TimestampComments] ${comments.length} timestamp mentions found`,
       comments,
@@ -1003,11 +1021,15 @@
     } else {
       video.addEventListener(
         'loadedmetadata',
-        () => void renderReplayGraph(video, comments),
+        () => {
+          if (generation === initGeneration) {
+            void renderReplayGraph(video, comments);
+          }
+        },
         { once: true },
       );
     }
-    watchVideo(video, comments);
+    watchVideoCleanup = watchVideo(video, comments);
   }
 
   injectStyles();
