@@ -9,10 +9,10 @@
     location.replace(newUrl);
   } else if (location.href.includes('/mediaindex/')) {
     //* gallery/mediaindex flex-wrap fix
-    waitForEach('[data-testid="sub-section-images"] > section > div', rowEl => {
-      console.log('xxx', rowEl);
-      unwrapItself(rowEl);
-    });
+    // waitForEach(
+    //   '[data-testid="sub-section-images"] > section > div',
+    //   rowEl => {},
+    // );
   } else if (location.href.includes('/title/')) {
     //* bring review titles up
     (function () {
