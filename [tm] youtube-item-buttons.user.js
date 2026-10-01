@@ -108,7 +108,7 @@
       `<div id=buttonsContainer></div>`,
     );
     parent.append(buttonsContainer);
-    buttonsContainer.style = 'position: absolute; left: 5px; top: 5px;';
+    buttonsContainer.style = 'position: absolute; left: 5px; bottom: 5px;';
     GM_addStyle(`
       #buttonsContainer { display: none; }
       :is(${queryForThumbEls}):hover #buttonsContainer { display: flex; }
