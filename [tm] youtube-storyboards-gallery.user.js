@@ -9,151 +9,270 @@
   const galleryPopoverEl = collapsible.addPopup('gallery-popover');
   const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
   generateElements(SVG, galleryBtnEl);
-  console.log(galleryBtnEl);
-  generateElements(
+  const thisTabButton = generateElements(
     `<button style="margin-left: 10px;">This tab</button>`,
     galleryPopoverEl,
-  ).addEventListener('click', async () => {});
-  generateElements(
+  );
+  thisTabButton.addEventListener('click', async () => {
+    const allVideoLinks = gatherAllVideoLinks();
+    const modalBody = generateElements('<div></div>');
+    const modal = new ModalBox({
+      width: '95vw',
+      backgroundColor: '#f0f0f0',
+      headerColor: '#3498db',
+      animation: true,
+      closeOnEscape: true,
+      closeOnOutsideClick: true,
+    });
+    modal.setTitle('YouTube storyboard gallery');
+    modal.setContent(modalBody);
+    modal.show();
+
+    const progressElement = createProgressIndicator(document.body);
+    modal.modal.addEventListener(
+      'close',
+      () => progressElement.remove(),
+      { once: true },
+    );
+    await processGalleryBatch(allVideoLinks, modalBody, progressElement);
+  });
+
+  const newTabButton = generateElements(
     `<button style="margin-left: 10px;">New tab</button>`,
     galleryPopoverEl,
-  ).addEventListener('click', async () => {
+  );
+  newTabButton.addEventListener('click', async () => {
     try {
-      // Create progress indicator container
-      const progressContainer = document.createElement('div');
-      style(
-        progressContainer,
-        `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 10px 15px;
-        border-radius: 5px;
-        z-index: 9999;
-        font-size: 14px;
-      `,
-      );
-      document.body.appendChild(progressContainer);
-
       const allVideoLinks = gatherAllVideoLinks();
+      const progressElement = createProgressIndicator(document.body);
       if (allVideoLinks.length === 0) {
         console.warn('No video links found.');
-        progressContainer.remove();
+        updateProgress(progressElement, 0, 0, { successful: 0, failed: 0 });
         return;
       }
-
-      // Initialize progress display
-      const totalVideos = allVideoLinks.length;
-      let loadedVideos = 0;
-      updateProgress(loadedVideos, totalVideos);
 
       const newWindow = window.open('', '_blank');
       if (!newWindow) {
         console.log('Failed to open new window.');
-        progressContainer.remove();
+        progressElement.textContent = 'Unable to open a new tab.';
         return;
       }
 
       newWindow.document.body.style.backgroundColor = 'black';
-
-      // Add progress indicator to new window
-      const newWindowProgress = newWindow.document.createElement('div');
-      style(
-        newWindowProgress,
-        `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 10px 15px;
-        border-radius: 5px;
-        z-index: 9999;
-        font-size: 14px;
-      `,
+      const newWindowProgress = createProgressIndicator(
+        newWindow.document.body,
       );
-      newWindow.document.body.appendChild(newWindowProgress);
-
-      // Fetch and process videos one by one to show accurate progress
-      for (let i = 0; i < allVideoLinks.length; i++) {
-        try {
-          const response = await GMXmlHttpReqResponse(allVideoLinks[i]);
-          const storyboardObj = generateAllYouTubeSbUrls(response);
-          storyboardObj.href = allVideoLinks[i];
-          const horizontal = storyboardObj.horizontal || 5;
-          const vertical = storyboardObj.vertical || 5;
-          await createStoryboardGalleryItem(
-            storyboardObj,
-            newWindow,
-            horizontal,
-            vertical,
-          );
-
-          loadedVideos++;
-          updateProgress(loadedVideos, totalVideos);
-          updateNewWindowProgress(loadedVideos, totalVideos, newWindowProgress);
-        } catch (error) {
-          console.error(`Error processing video ${allVideoLinks[i]}:`, error);
-        }
-      }
-
-      // Remove progress indicators after completion
-      setTimeout(() => {
-        progressContainer.remove();
-        newWindowProgress.remove();
-      }, 2000);
+      await processGalleryBatch(
+        allVideoLinks,
+        newWindow.document.body,
+        progressElement,
+        newWindowProgress,
+      );
     } catch (error) {
       console.error('An error occurred:', error);
     }
   });
 
-  function updateProgress(current, total) {
-    const progressContainer = document.querySelector(
-      '[data-progress-container]',
+  /**
+   * Creates a progress indicator attached to the supplied document element.
+   * @param {HTMLElement} parentElement Element that receives the indicator.
+   * @returns {HTMLDivElement} The progress indicator element.
+   */
+  function createProgressIndicator(parentElement) {
+    const progressElement = parentElement.ownerDocument.createElement('div');
+    progressElement.dataset.progressContainer = 'true';
+    style(
+      progressElement,
+      `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      max-width: min(90vw, 420px);
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      z-index: 9999;
+      font-size: 14px;
+      line-height: 1.4;
+    `,
     );
-    if (progressContainer) {
-      progressContainer.textContent = `Loading: ${current}/${total} storyboards`;
-    }
+    parentElement.appendChild(progressElement);
+    return progressElement;
   }
 
-  function updateNewWindowProgress(current, total, progressElement) {
-    progressElement.textContent = `Loaded: ${current}/${total} storyboards`;
-  }
-
-  async function createStoryboardGalleryItem(
-    item,
-    window,
-    horizontal,
-    vertical,
+  /**
+   * Processes each video link and updates all active progress indicators.
+   * @param {string[]} videoLinks Video URLs to process.
+   * @param {HTMLElement} targetElement Element that receives gallery items.
+   * @param {HTMLElement} progressElement Primary progress indicator.
+   * @param {HTMLElement|null} secondaryProgressElement Optional second indicator.
+   * @returns {Promise<void>} Resolves after every requested item is processed.
+   */
+  async function processGalleryBatch(
+    videoLinks,
+    targetElement,
+    progressElement,
+    secondaryProgressElement = null,
   ) {
+    const results = { successful: 0, failed: 0 };
+    updateProgress(
+      progressElement,
+      0,
+      videoLinks.length,
+      results,
+      secondaryProgressElement,
+    );
+
+    for (const videoLink of videoLinks) {
+      try {
+        const response = await GMXmlHttpReqResponse(videoLink);
+        const storyboardObj = generateAllYouTubeSbUrls(response);
+        storyboardObj.href = videoLink;
+        if (!storyboardObj.allUrls?.length) {
+          throw new Error('No storyboard URLs generated');
+        }
+
+        await createStoryboardGalleryItem(storyboardObj, targetElement);
+        results.successful++;
+      } catch (error) {
+        results.failed++;
+        createFailedGalleryItem(videoLink, error, targetElement);
+        console.error(`Error processing video ${videoLink}:`, error);
+      }
+
+      updateProgress(
+        progressElement,
+        results.successful + results.failed,
+        videoLinks.length,
+        results,
+        secondaryProgressElement,
+      );
+    }
+
+  }
+
+  /**
+   * Updates one or two progress indicators with the current batch result.
+   * @param {HTMLElement} progressElement Primary progress indicator.
+   * @param {number} completed Number of processed items.
+   * @param {number} total Number of requested items.
+   * @param {{successful: number, failed: number}} results Batch result counts.
+   * @param {HTMLElement|null} secondaryProgressElement Optional second indicator.
+   * @returns {void}
+   */
+  function updateProgress(
+    progressElement,
+    completed,
+    total,
+    results,
+    secondaryProgressElement = null,
+  ) {
+    const message =
+      completed === total
+        ? `Completed: ${completed}/${total} | Successful: ${results.successful} | Failed: ${results.failed}`
+        : `Loading: ${completed}/${total} | Successful: ${results.successful} | Failed: ${results.failed}`;
+    progressElement.textContent = message;
+    if (secondaryProgressElement)
+      secondaryProgressElement.textContent = message;
+  }
+
+  /**
+   * Renders one storyboard gallery item into the requested target element.
+   * @param {Object} item Parsed storyboard data with its source URL.
+   * @param {HTMLElement} targetElement Element that receives the gallery item.
+   * @returns {Promise<void>} Resolves after the storyboard has rendered.
+   */
+  async function createStoryboardGalleryItem(item, targetElement) {
     const galleryItemEl = generateElements(`<div class="gallery-item"></div>`);
     style(
       galleryItemEl,
       `
-      border: 1px solid black;
-      border-radius: 5px;
-      margin: 5px;
-      padding: 10px;
+      background: #ffffff;
+      border: 1px solid #b8d8f0;
+      border-left: 5px solid #3498db;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(31, 78, 121, 0.12);
+      margin: 10px 0;
+      padding: 14px 16px;
     `,
     );
-    const galleryItemHeader = generateElements(
-      `<div style="margin-bottom: 10px;"><a href="${item.href}" target="_blank">${item.href}</a></div>`,
-      galleryItemEl,
-    );
+    const galleryItemHeader = generateElements('<div></div>', galleryItemEl);
+    style(galleryItemHeader, 'margin-bottom: 10px;');
+    const statusLabel = generateElements('<strong>Successful</strong> ', galleryItemHeader);
+    style(statusLabel, 'color: #18794e; margin-right: 8px;');
+    const galleryLink = generateElements('<a></a>', galleryItemHeader);
+    galleryLink.href = item.href;
+    galleryLink.target = '_blank';
+    galleryLink.rel = 'noopener noreferrer';
+    galleryLink.textContent = item.href;
     const storyboardContainer = generateElements(`<div></div>`, galleryItemEl);
     await storyboard({
       storyboardParent: storyboardContainer,
-      horizontal: horizontal,
-      vertical: vertical,
+      horizontal: item.horizontal || 5,
+      vertical: item.vertical || 5,
       linkToVid: item.href,
       samplingFq: item.samplingFq,
       trueNoOfSlots: item.trueNoOfSlots,
       imgUrls: item.allUrls,
       // maxHeight: 'unset',
     });
-    window.document.body.append(galleryItemEl);
+    targetElement.append(galleryItemEl);
+  }
+
+  /**
+   * Renders a failed URL with its failure reason beside successful items.
+   * @param {string} videoLink URL that failed to render.
+   * @param {unknown} error Error thrown while processing the URL.
+   * @param {HTMLElement} targetElement Element that receives the failure card.
+   * @returns {HTMLDivElement} The rendered failure card.
+   */
+  function createFailedGalleryItem(videoLink, error, targetElement) {
+    const galleryItemEl = generateElements('<div class="gallery-item"></div>');
+    style(
+      galleryItemEl,
+      `
+      background: #fff5f5;
+      border: 1px solid #f0b8b8;
+      border-left: 5px solid #d64545;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(130, 31, 31, 0.1);
+      margin: 10px 0;
+      padding: 14px 16px;
+    `,
+    );
+
+    const header = generateElements('<div></div>', galleryItemEl);
+    style(header, 'margin-bottom: 8px;');
+    const statusLabel = generateElements('<strong>Failed</strong> ', header);
+    style(statusLabel, 'color: #b42318; margin-right: 8px;');
+    const link = generateElements('<a></a>', header);
+    link.href = videoLink;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = videoLink;
+
+    const reason = generateElements('<div></div>', galleryItemEl);
+    reason.textContent = `Reason: ${getErrorMessage(error)}`;
+    style(reason, 'color: #7a271a; white-space: pre-wrap;');
+
+    targetElement.append(galleryItemEl);
+    return galleryItemEl;
+  }
+
+  /**
+   * Converts an unknown thrown value into a useful display message.
+   * @param {unknown} error Thrown value from the failed operation.
+   * @returns {string} Human-readable failure reason.
+   */
+  function getErrorMessage(error) {
+    if (error instanceof Error && error.message) return error.message;
+    if (typeof error === 'string' && error) return error;
+    try {
+      return JSON.stringify(error) || 'Unknown error';
+    } catch {
+      return 'Unknown error';
+    }
   }
 
   function gatherAllVideoLinks() {
