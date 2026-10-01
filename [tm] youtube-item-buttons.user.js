@@ -2,6 +2,8 @@
   ('use strict');
   if (window.top != window.self) return; //don't run on frames or iframes
 
+  const MENU_BTN_SELECTOR =
+    '.ytLockupViewModelMetadata :is(ytd-menu-renderer button, button-view-model button, yt-icon-button button)';
   const API_KEY = getYoutubeAPI();
   const thumbElSelectorsArr = [
     'ytd-video-renderer',
@@ -66,6 +68,20 @@
         browser: 'firefox',
         profile: '3vm341ho.default-release',
       });
+    });
+
+    generateElements(
+      '<button>👎🏻</button>',
+      buttonsContainerEl,
+    ).addEventListener('click', async () => {
+      const menuBtn = thumbEl.querySelector(MENU_BTN_SELECTOR);
+      if (!menuBtn) throw new Error('Menu button not found');
+      menuBtn.click();
+      const notInterestedEl = await waitFor(
+        'yt-list-item-view-model',
+        'Not interested',
+      );
+      notInterestedEl.click();
     });
   });
 
