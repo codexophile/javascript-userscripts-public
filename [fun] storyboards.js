@@ -1,4 +1,16 @@
 const storyboardTimeUpdateStates = new WeakMap();
+const storyboardBatchSize = 4;
+const storyboardTileChunkSize = 12;
+
+/**
+ * Lets the browser process input, paint, and other pending work.
+ * @returns {Promise<void>} Resolves on the next macrotask.
+ * @example
+ * await yieldToBrowser();
+ */
+function yieldToBrowser() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
 
 function playVideo(videoEl, total, index) {
   videoEl.scrollIntoView();
@@ -408,24 +420,24 @@ async function storyboard({
         videoDuration: vidOnPage?.duration,
       });
 
-  const promises = webvttCues
-    ? webvttCues.map(storyboardWebvttCue)
-    : imgUrls.map((url, index) =>
-        storyboardFlex(
-          layout.horizontal,
-          layout.vertical,
-          url,
-          index,
-          layout.trueNoOfSlots,
-        ),
-      );
-
-  // @ts-ignore
-  const results = await Promise.allSettled(promises);
   let index = 0;
-  let totalSlots = 0;
+  let totalSlots = webvttCues
+    ? webvttCues.length
+    : Number.isFinite(layout.trueNoOfSlots) && layout.trueNoOfSlots > 0
+      ? Math.min(
+          layout.trueNoOfSlots,
+          imgUrls.length * layout.horizontal * layout.vertical,
+        )
+      : imgUrls.length * layout.horizontal * layout.vertical;
 
-  results.forEach(result => {
+  /**
+   * Appends one completed storyboard batch while preserving source order.
+   * @param {{status: string, value?: HTMLElement[]}} result - Settled batch result.
+   * @returns {void}
+   * @example
+   * results.forEach(appendResult);
+   */
+  function appendResult(result) {
     if (result.status !== 'fulfilled' || !result.value) return;
     result.value.forEach(slot => {
       slotsDiv.append(slot);
@@ -463,13 +475,35 @@ async function storyboard({
       });
       index++;
     });
-  });
+  }
 
-  totalSlots = webvttCues
-    ? index
-    : Number.isFinite(trueNoOfSlots) && trueNoOfSlots > 0
-      ? Math.min(trueNoOfSlots, index)
-      : index;
+  const storyboardSources = webvttCues || imgUrls;
+  for (
+    let batchStart = 0;
+    batchStart < storyboardSources.length;
+    batchStart += storyboardBatchSize
+  ) {
+    const batch = storyboardSources.slice(
+      batchStart,
+      batchStart + storyboardBatchSize,
+    );
+    const promises = webvttCues
+      ? batch.map(storyboardWebvttCue)
+      : batch.map((url, batchIndex) =>
+          storyboardFlex(
+            layout.horizontal,
+            layout.vertical,
+            url,
+            batchStart + batchIndex,
+            layout.trueNoOfSlots,
+          ),
+        );
+    const results = await Promise.allSettled(promises);
+    results.forEach(appendResult);
+    await yieldToBrowser();
+  }
+
+  totalSlots = Math.min(totalSlots, index);
 
   if (slotWidth) setSlotSize(storyboardParent, slotWidth);
   else if (storyboardParent.querySelector('canvas').width < 200)
@@ -545,7 +579,7 @@ async function storyboardFlex(
 
   // @ts-ignore
   const promise = new Promise((resolve, reject) => {
-    imgElement.onload = () => {
+    imgElement.onload = async () => {
       const allSlots = [];
       const gridHorizontal = horizontal;
       const gridVertical = vertical;
@@ -607,6 +641,8 @@ async function storyboardFlex(
           margin: '1px',
           border: 'solid white',
         });
+
+        if ((i + 1) % storyboardTileChunkSize === 0) await yieldToBrowser();
       }
 
       resolve(allSlots);
