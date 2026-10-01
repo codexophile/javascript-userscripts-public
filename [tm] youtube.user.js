@@ -1,6 +1,52 @@
 (async function () {
   'use strict';
 
+  const SVGs = {
+    detachRelated:
+      '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m348-292-56-56 172-172H320v-80h280v280h-80v-144L348-292Zm412-188v-280H480v-80h360v360h-80ZM200-120q-33 0-56.5-23.5T120-200v-640h80v640h640v80H200Z"/></svg>',
+  };
+
+  //* detaching related section
+  GM_addStyle(`
+        #related.detached {
+        background: black;
+        
+        #header {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: black;
+        }
+        
+        #contents > *:not(yt-horizontal-list-renderer) {
+            max-width: 15%;
+        }
+    }
+  `);
+
+  waitForEach('#related #chips', async chipsEl => {
+    if (!location.href.match(/\/watch/)) return;
+    const relatedEl = chipsEl.closest('#related');
+    if (!relatedEl) {
+      console.log('Error: Could not find #chips element in related section.');
+      return;
+    }
+    generateElements(
+      `<button id="detachRelatedBtn">${SVGs.detachRelated}</button>`,
+      chipsEl,
+    ).addEventListener('click', () => {
+      relatedEl.style.setProperty('position', 'fixed', 'important');
+      relatedEl.style.setProperty('top', '0', 'important');
+      relatedEl.style.setProperty('left', '0', 'important');
+      relatedEl.style.setProperty('z-index', '9999', 'important');
+      relatedEl.style.setProperty('width', '100%', 'important');
+      relatedEl.style.setProperty('height', '100vh', 'important');
+      relatedEl.style.setProperty('overflow-y', 'scroll', 'important');
+
+      relatedEl.classList.add('detached');
+    });
+  });
+
   //* Fixing new youtube video metadata section under video thumbnail
   //* uploader, tagged channels, number of views, and upload date etc.
   waitForEach('.ytContentMetadataViewModelMetadataRow', metadataRowEl => {
@@ -168,7 +214,7 @@
   //* video flex fix in 'videos' pages
   waitForEach('ytd-two-column-browse-results-renderer', element => {
     if (!location.href.match(/\/(videos|shorts)/)) return;
-    element.style.setProperty('width', '90vw', 'important');
-    element.style.setProperty('max-width', '90vw', 'important');
+    element.style.setProperty('width', '100%', 'important');
+    element.style.setProperty('max-width', '100%', 'important');
   });
 })();
