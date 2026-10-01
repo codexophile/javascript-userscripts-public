@@ -39,6 +39,9 @@
   //* thumbnail actions
   waitForEach(queryForThumbEls, thumbEl => {
     const buttonsContainerEl = createButtonsContainer(thumbEl);
+    const linkEl = thumbEl.querySelector('a');
+    const itemUrl = linkEl.href;
+
     if (!location.href.match(/\/@|\/channel\//))
       addLinkToVideos(thumbEl, buttonsContainerEl);
     addHighResThumbButton(thumbEl, buttonsContainerEl);
@@ -49,6 +52,20 @@
       const linkToVidsEl = buttonsContainerEl.querySelector('#linkToVids');
       setPreviewImgHref(fullResThumbBtnEl, thumbEl);
       setLinkToVidsHref(linkToVidsEl, thumbEl);
+    });
+
+    generateElements(
+      `<button>⬇️</button>`,
+      buttonsContainerEl,
+    ).addEventListener('click', () => {
+      addHistoryEntry(itemUrl);
+      invokeDownloader('ytdlp', {
+        urlToDownload: itemUrl,
+        destination: 'x:\\tiktok',
+        mode: 'noprompt',
+        browser: 'firefox',
+        profile: '3vm341ho.default-release',
+      });
     });
   });
 
