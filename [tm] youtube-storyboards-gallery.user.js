@@ -29,11 +29,9 @@
     modal.show();
 
     const progressElement = createProgressIndicator(document.body);
-    modal.modal.addEventListener(
-      'close',
-      () => progressElement.remove(),
-      { once: true },
-    );
+    modal.modal.addEventListener('close', () => progressElement.remove(), {
+      once: true,
+    });
     await processGalleryBatch(allVideoLinks, modalBody, progressElement);
   });
 
@@ -149,7 +147,6 @@
         secondaryProgressElement,
       );
     }
-
   }
 
   /**
@@ -199,7 +196,10 @@
     );
     const galleryItemHeader = generateElements('<div></div>', galleryItemEl);
     style(galleryItemHeader, 'margin-bottom: 10px;');
-    const statusLabel = generateElements('<strong>Successful</strong> ', galleryItemHeader);
+    const statusLabel = generateElements(
+      '<strong>Successful</strong> ',
+      galleryItemHeader,
+    );
     style(statusLabel, 'color: #18794e; margin-right: 8px;');
     const galleryLink = generateElements('<a></a>', galleryItemHeader);
     galleryLink.href = item.href;
