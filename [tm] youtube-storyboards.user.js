@@ -11,20 +11,42 @@
   //? these didn't fire
   // window.addEventListener( 'yt-page-type-changed', findStuff )
   //* adding the main storyboard for the video page
+  let storyboardBuildToken = 0;
+
   async function addStoryboard() {
     if (!location.href.includes('/watch?v=')) return; // 🛑
 
-    document.querySelector(`#storyboardParent`)?.remove();
+    const storyboardUrl = new URL(location.href);
+    storyboardUrl.hash = '';
+    const storyboardHref = storyboardUrl.href;
+    const existingStoryboard = document.querySelector(`#storyboardParent`);
+    if (existingStoryboard?.dataset.storyboardUrl === storyboardHref) return;
+    existingStoryboard?.remove();
     document
       .querySelectorAll(`#collapsibleContent > .storyboardControl`)
       .forEach(item => {
         item.remove();
       });
 
+    const buildToken = ++storyboardBuildToken;
+
     const sbLocator = await waitFor('#above-the-fold > #top-row');
+    if (
+      buildToken !== storyboardBuildToken ||
+      location.href.replace(location.hash, '') !== storyboardHref
+    )
+      return;
     const sbParent = generateElements(`<div id=storyboardParent></div>`);
+    sbParent.dataset.storyboardUrl = storyboardHref;
     sbLocator.after(sbParent);
-    const ytHtml = await GMXmlHttpReqResponse(location.href);
+    const ytHtml = await GMXmlHttpReqResponse(storyboardHref);
+    if (
+      buildToken !== storyboardBuildToken ||
+      location.href.replace(location.hash, '') !== storyboardHref
+    ) {
+      sbParent.remove();
+      return;
+    }
     const { allUrls, trueNoOfSlots, samplingFq, horizontal, vertical } =
       generateAllYouTubeSbUrls(ytHtml);
 
@@ -42,7 +64,7 @@
       return;
     }
 
-    storyboard({
+    await storyboard({
       storyboardParent: sbParent,
       horizontal: horizontal || 5,
       vertical: vertical || 5,
