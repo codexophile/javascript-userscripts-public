@@ -2,9 +2,22 @@
   'use strict';
   if (window.top !== window.self) return; // Don't run on frames or iframes
 
-  const collapsible = await Collapsible();
+  const SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M627-520h133v-160H627v160Zm-214 0h133v-160H413v160Zm-213 0h133v-160H200v160Zm0 240h133v-160H200v160Zm213 0h133v-160H413v160Zm214 0h133v-160H627v160Zm-507 0v-400q0-33 23.5-56.5T200-760h560q33 0 56.5 23.5T840-680v400q0 33-23.5 56.5T760-200H200q-33 0-56.5-23.5T120-280Z"/></svg>';
 
-  collapsible.addButton('G', null, async event => {
+  const collapsible = await Collapsible();
+  const galleryPopoverEl = collapsible.addPopup('gallery-popover');
+  const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
+  generateElements(SVG, galleryBtnEl);
+  console.log(galleryBtnEl);
+  generateElements(
+    `<button style="margin-left: 10px;">This tab</button>`,
+    galleryPopoverEl,
+  ).addEventListener('click', async () => {});
+  generateElements(
+    `<button style="margin-left: 10px;">New tab</button>`,
+    galleryPopoverEl,
+  ).addEventListener('click', async () => {
     try {
       // Create progress indicator container
       const progressContainer = document.createElement('div');
