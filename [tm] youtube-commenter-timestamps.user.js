@@ -375,15 +375,17 @@
       '<div class="yt-ts-replay-playhead" aria-hidden="true"></div>',
     );
     plot.append(playhead);
+    let activeBin = -1;
     const updatePlayhead = () => {
       playhead.style.left = `${Math.min(video.currentTime / duration, 1) * 100}%`;
-      const activeBin = Math.min(
+      const currentBin = Math.min(
         binCount - 1,
         Math.floor((video.currentTime / duration) * binCount),
       );
-      bars.forEach((bar, index) =>
-        bar.classList.toggle('active', index === activeBin),
-      );
+      if (currentBin === activeBin) return;
+      bars[activeBin]?.classList.remove('active');
+      bars[currentBin]?.classList.add('active');
+      activeBin = currentBin;
     };
     replayGraphCleanup = () =>
       video.removeEventListener('timeupdate', updatePlayhead);
@@ -921,28 +923,55 @@
     updateControls();
   }
 
+  /**
+   * Finds the first sorted comment at or after a timestamp.
+   * @param {Array<{seconds: number}>} comments - Comments sorted by timestamp.
+   * @param {number} timestamp - Timestamp to search for.
+   * @returns {number} Index of the first matching comment.
+   * @example
+   * const index = findFirstCommentAtOrAfter(comments, 30);
+   */
+  function findFirstCommentAtOrAfter(comments, timestamp) {
+    let low = 0;
+    let high = comments.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (comments[middle].seconds < timestamp) low = middle + 1;
+      else high = middle;
+    }
+    return low;
+  }
+
   function watchVideo(video, comments) {
     let previousTime = video.currentTime;
+    let nextCommentIndex = 0;
 
     video.addEventListener('timeupdate', () => {
       const t = video.currentTime;
       if (t < previousTime) {
-        for (const comment of comments) {
-          if (
-            !comment.dismissed &&
-            comment.seconds >= t - CONFIG.TRIGGER_WINDOW
-          ) {
-            comment.shown = false;
-          }
+        nextCommentIndex = findFirstCommentAtOrAfter(
+          comments,
+          Math.max(0, t - CONFIG.TRIGGER_WINDOW),
+        );
+        for (let index = nextCommentIndex; index < comments.length; index++) {
+          if (!comments[index].dismissed) comments[index].shown = false;
         }
       }
       previousTime = t;
 
-      for (const c of comments) {
-        if (c.shown || c.dismissed) continue;
-        if (Math.abs(t - c.seconds) <= CONFIG.TRIGGER_WINDOW) {
-          c.shown = true;
-          void showPopup(c, video);
+      const triggerThrough = t + CONFIG.TRIGGER_WINDOW;
+      while (
+        nextCommentIndex < comments.length &&
+        comments[nextCommentIndex].seconds <= triggerThrough
+      ) {
+        const comment = comments[nextCommentIndex++];
+        if (
+          !comment.dismissed &&
+          comment.seconds >= t - CONFIG.TRIGGER_WINDOW &&
+          !comment.shown
+        ) {
+          comment.shown = true;
+          void showPopup(comment, video);
         }
       }
     });
