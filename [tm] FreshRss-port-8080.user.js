@@ -6,7 +6,7 @@
     play: '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z"/></svg>',
   };
 
-  const QUERY_FOR_LINK_BTN_ELS = '.not_read li.item.link';
+  const QUERY_FOR_LINK_BTN_ELS = 'li.item.link';
 
   async function markReadAndHide(rssItemEl) {
     const isUnread = rssItemEl.matches('.not_read');
@@ -14,18 +14,23 @@
     const markBtnEl = rssItemEl.querySelector(
       'li.item.manage:has(>[title="Toggle read"])',
     );
-    markBtnEl?.style.outline = '2px solid red';
+    if (!markBtnEl) return;
+    markBtnEl.style.outline = '2px solid red';
+    // const linkEl = markBtnEl.querySelector('a.read');
     return;
-    markBtnEl.click();
-    await asyncTimeout(500);
   }
 
-  waitForEach('main#stream > div.not_read:has(article)', async feedItemEl => {
+  waitForEach('main#stream > div:has(article)', async feedItemEl => {
     const linkToContentLinkBtnEl = feedItemEl.querySelector(
       QUERY_FOR_LINK_BTN_ELS,
     );
     const linkEl = linkToContentLinkBtnEl.querySelector('a');
     const url = linkEl.href;
+    const itemTitleLinkEl = feedItemEl.querySelector('a.item-element.title');
+
+    //* titles as tooltips
+    const title = itemTitleLinkEl.textContent.trim();
+    grandParent(itemTitleLinkEl, 2).setAttribute('title', title);
 
     //* removing items with duplicate links
     const linkElsOnPage = document.querySelectorAll(
@@ -59,6 +64,8 @@
   waitForEach(
     '.markAllRead[style="visibility: hidden;"]',
     bigMarkAsReadWhenAllIsReadEl => {
+      const urlParams = new URLSearchParams(location.search);
+      if (!urlParams.get('get').match(/^[cf]_/)) return;
       const btnEl = bigMarkAsReadWhenAllIsReadEl.closest(
         'button#bigMarkAsRead',
       );
