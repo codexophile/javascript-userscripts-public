@@ -3559,35 +3559,73 @@ function grandParent(child, iterations, debug = false) {
   return grandParent(parent, currentIteration - 1, debug);
 }
 
-function generateDoc(html, returnTrusted) {
-  let escapeHTMLPolicy;
+/**
+ * Trusted Types policy that passes HTML through unchanged.
+ * Created once at module level, since creating a policy with the same name twice throws.
+ * @type {TrustedTypePolicy}
+ */
+const htmlPolicy = trustedTypes.createPolicy('forceInner', {
+  createHTML: input => input,
+});
 
-  escapeHTMLPolicy = trustedTypes.createPolicy('forceInner', {
-    createHTML: to_escape => to_escape,
-  });
-
-  const template = document.createElement('template');
-  document.body.prepend(template);
-
-  template.innerHTML = escapeHTMLPolicy.createHTML(html.trim());
-
-  const templateContent = template.content;
-  template.remove();
-  return templateContent;
-  // return template.content;
+/**
+ * Re-applies deferred `data-style` attributes through the CSSOM, which is
+ * allowed under a strict CSP (unlike `style="..."` attributes).
+ *
+ * @param {ParentNode} root - Node whose descendants should be processed.
+ * @returns {void}
+ * @example
+ * applyDeferredStyles(fragment); // <div data-style="color:red"> becomes red
+ */
+function applyDeferredStyles(root) {
+  for (const el of root.querySelectorAll('[data-style]')) {
+    el.style.cssText = el.getAttribute('data-style');
+    el.removeAttribute('data-style');
+  }
 }
 
-function generateElements(html, parent, returnTrusted) {
-  const doc = generateDoc(html, returnTrusted);
-  const children = doc.children;
-  let returnChildren = [...children];
-  if (parent) {
-    returnChildren.length = 0;
-    for (const child of children) {
-      returnChildren.push(parent.appendChild(child));
-    }
-  }
-  return returnChildren.length === 1 ? returnChildren[0] : returnChildren;
+/**
+ * Parses an HTML string into a DocumentFragment without tripping an
+ * inline-style CSP. Any `style="..."` attribute is renamed to `data-style`
+ * before parsing, then applied via the CSSOM.
+ *
+ * Note: the rename is a plain regex, so it can also match the literal text
+ * ` style=` inside text content. Prefer writing `data-style` directly in
+ * your templates if that matters.
+ *
+ * @param {string} html - HTML markup to parse.
+ * @returns {DocumentFragment} The parsed content with styles applied.
+ * @example
+ * const frag = generateDoc('<div style="color:red">Hi</div>');
+ * document.body.append(frag);
+ */
+function generateDoc(html) {
+  const safeHtml = html.trim().replace(/(\s)style=/gi, '$1data-style=');
+
+  const template = document.createElement('template');
+  template.innerHTML = htmlPolicy.createHTML(safeHtml);
+
+  const content = template.content;
+  applyDeferredStyles(content);
+  return content;
+}
+
+/**
+ * Creates DOM elements from an HTML string, optionally appending them to a parent.
+ *
+ * @param {string} html - HTML markup to parse.
+ * @param {Element} [parent] - If given, the created elements are appended to it.
+ * @returns {Element|Element[]} A single element if exactly one was created, otherwise an array.
+ * @example
+ * const btn = generateElements('<button style="color:red">Go</button>', document.body);
+ */
+function generateElements(html, parent) {
+  const doc = generateDoc(html);
+  const created = [...doc.children];
+
+  if (parent) parent.append(...created);
+
+  return created.length === 1 ? created[0] : created;
 }
 
 function setInnerHTML(element, html, parent) {
