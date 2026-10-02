@@ -224,9 +224,13 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
         }
     `;
 
-  const style = document.createElement('style');
-  style.textContent = css;
-  document.head.appendChild(style);
+  if (GM_addStyle) {
+    GM_addStyle(css);
+  } else {
+    alert(
+      'GM_addStyle is not available. Please ensure you are using a compatible userscript manager.',
+    );
+  }
 
   const collapsibleStructure = generateElements(
     `
