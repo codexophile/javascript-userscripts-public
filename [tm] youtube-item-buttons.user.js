@@ -40,12 +40,15 @@
 
   //* thumbnail actions
   waitForEach(queryForThumbEls, thumbEl => {
+    if (thumbEl.querySelector(queryForThumbEls)) return; // skip if it has a child thumbnail element
+
     const buttonsContainerEl = createButtonsContainer(thumbEl);
     const linkEl = thumbEl.querySelector('a');
     const itemUrl = linkEl.href;
 
     if (!location.href.match(/\/@|\/channel\//))
       addLinkToVideos(thumbEl, buttonsContainerEl);
+
     addHighResThumbButton(thumbEl, buttonsContainerEl);
 
     thumbEl.addEventListener('mouseover', () => {
