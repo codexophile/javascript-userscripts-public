@@ -8,19 +8,22 @@
 
   //* detaching related section
   GM_addStyle(`
-        #related.detached {
-        background: black;
-        
-        #header {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            background: black;
-        }
-        
-        #contents > *:not(yt-horizontal-list-renderer) {
-            max-width: 15%;
-        }
+    #related.detached {
+      background: black;
+      
+      #header {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background: black;
+      }
+      
+      #contents > *:not(:is(
+        yt-horizontal-list-renderer,
+        ytd-reel-shelf-renderer
+      )) {
+          max-width: 15%;
+      }
     }
   `);
 
