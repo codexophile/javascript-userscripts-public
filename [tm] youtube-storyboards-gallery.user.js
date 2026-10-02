@@ -33,6 +33,13 @@
       once: true,
     });
     await processGalleryBatch(allVideoLinks, modalBody, progressElement);
+    GM_notification({
+      text: 'All video links processed.',
+      title: 'YouTube storyboard gallery',
+      onclick: () => {
+        window.focus();
+      },
+    });
   });
 
   const newTabButton = generateElements(
