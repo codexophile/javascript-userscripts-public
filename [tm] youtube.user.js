@@ -1,13 +1,16 @@
 (async function () {
   'use strict';
 
-  const SVGs = {
-    detachRelated:
-      '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m348-292-56-56 172-172H320v-80h280v280h-80v-144L348-292Zm412-188v-280H480v-80h360v360h-80ZM200-120q-33 0-56.5-23.5T120-200v-640h80v640h640v80H200Z"/></svg>',
-  };
+  (function () {
+    'use strict';
 
-  //* detaching related section
-  GM_addStyle(`
+    const SVGs = {
+      detachRelated:
+        '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m348-292-56-56 172-172H320v-80h280v280h-80v-144L348-292Zm412-188v-280H480v-80h360v360h-80ZM200-120q-33 0-56.5-23.5T120-200v-640h80v640h640v80H200Z"/></svg>',
+    };
+
+    //* detaching related section
+    GM_addStyle(`
     #related.detached {
       background: black;
       
@@ -27,33 +30,33 @@
     }
   `);
 
-  waitForEach('#related #chips', async chipsEl => {
-    if (!location.href.match(/\/watch/)) return;
-    const relatedEl = chipsEl.closest('#related');
-    if (!relatedEl) {
-      console.log('Error: Could not find #chips element in related section.');
-      return;
-    }
-    const detachedStyleProperties = [
-      'position',
-      'top',
-      'left',
-      'z-index',
-      'width',
-      'height',
-      'overflow-y',
-    ];
-    const originalStyles = Object.fromEntries(
-      detachedStyleProperties.map(property => [
-        property,
-        {
-          value: relatedEl.style.getPropertyValue(property),
-          priority: relatedEl.style.getPropertyPriority(property),
-        },
-      ]),
-    );
-    const detachRelatedBtn = generateElements(
-      `
+    waitForEach('#related #chips', async chipsEl => {
+      if (!location.href.match(/\/watch/)) return;
+      const relatedEl = chipsEl.closest('#related');
+      if (!relatedEl) {
+        console.log('Error: Could not find #chips element in related section.');
+        return;
+      }
+      const detachedStyleProperties = [
+        'position',
+        'top',
+        'left',
+        'z-index',
+        'width',
+        'height',
+        'overflow-y',
+      ];
+      const originalStyles = Object.fromEntries(
+        detachedStyleProperties.map(property => [
+          property,
+          {
+            value: relatedEl.style.getPropertyValue(property),
+            priority: relatedEl.style.getPropertyPriority(property),
+          },
+        ]),
+      );
+      const detachRelatedBtn = generateElements(
+        `
         <button
           id="detachRelatedBtn"
           class="ytChipShapeChip"
@@ -61,11 +64,11 @@
           ${SVGs.detachRelated}
         </button>
       `,
-      chipsEl,
-    );
-    style(
-      detachRelatedBtn,
-      `
+        chipsEl,
+      );
+      style(
+        detachRelatedBtn,
+        `
         display: flex;
         align-items: center;
         justify-content: center;
@@ -74,36 +77,38 @@
         border-radius: 8px;
         border: unset;
       `,
-    );
-    let isDetached = false;
+      );
+      let isDetached = false;
 
-    detachRelatedBtn.addEventListener('click', () => {
-      isDetached = !isDetached;
+      detachRelatedBtn.addEventListener('click', () => {
+        document.querySelector(`video`).pause();
+        isDetached = !isDetached;
 
-      if (isDetached) {
-        relatedEl.style.setProperty('position', 'fixed', 'important');
-        relatedEl.style.setProperty('top', '0', 'important');
-        relatedEl.style.setProperty('left', '0', 'important');
-        relatedEl.style.setProperty('z-index', '9999', 'important');
-        relatedEl.style.setProperty('width', '100%', 'important');
-        relatedEl.style.setProperty('height', '100vh', 'important');
-        relatedEl.style.setProperty('overflow-y', 'scroll', 'important');
-        relatedEl.classList.add('detached');
-      } else {
-        detachedStyleProperties.forEach(property => {
-          const { value, priority } = originalStyles[property];
-          if (value) {
-            relatedEl.style.setProperty(property, value, priority);
-          } else {
-            relatedEl.style.removeProperty(property);
-          }
-        });
-        relatedEl.classList.remove('detached');
-      }
+        if (isDetached) {
+          relatedEl.style.setProperty('position', 'fixed', 'important');
+          relatedEl.style.setProperty('top', '0', 'important');
+          relatedEl.style.setProperty('left', '0', 'important');
+          relatedEl.style.setProperty('z-index', '9999', 'important');
+          relatedEl.style.setProperty('width', '100%', 'important');
+          relatedEl.style.setProperty('height', '100vh', 'important');
+          relatedEl.style.setProperty('overflow-y', 'scroll', 'important');
+          relatedEl.classList.add('detached');
+        } else {
+          detachedStyleProperties.forEach(property => {
+            const { value, priority } = originalStyles[property];
+            if (value) {
+              relatedEl.style.setProperty(property, value, priority);
+            } else {
+              relatedEl.style.removeProperty(property);
+            }
+          });
+          relatedEl.classList.remove('detached');
+        }
 
-      detachRelatedBtn.setAttribute('aria-pressed', String(isDetached));
+        detachRelatedBtn.setAttribute('aria-pressed', String(isDetached));
+      });
     });
-  });
+  })();
 
   //* Fixing new youtube video metadata section under video thumbnail
   //* uploader, tagged channels, number of views, and upload date etc.
