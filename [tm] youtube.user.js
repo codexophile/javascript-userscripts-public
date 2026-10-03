@@ -34,19 +34,74 @@
       console.log('Error: Could not find #chips element in related section.');
       return;
     }
-    generateElements(
-      `<button id="detachRelatedBtn">${SVGs.detachRelated}</button>`,
+    const detachedStyleProperties = [
+      'position',
+      'top',
+      'left',
+      'z-index',
+      'width',
+      'height',
+      'overflow-y',
+    ];
+    const originalStyles = Object.fromEntries(
+      detachedStyleProperties.map(property => [
+        property,
+        {
+          value: relatedEl.style.getPropertyValue(property),
+          priority: relatedEl.style.getPropertyPriority(property),
+        },
+      ]),
+    );
+    const detachRelatedBtn = generateElements(
+      `
+        <button
+          id="detachRelatedBtn"
+          class="ytChipShapeChip"
+        >
+          ${SVGs.detachRelated}
+        </button>
+      `,
       chipsEl,
-    ).addEventListener('click', () => {
-      relatedEl.style.setProperty('position', 'fixed', 'important');
-      relatedEl.style.setProperty('top', '0', 'important');
-      relatedEl.style.setProperty('left', '0', 'important');
-      relatedEl.style.setProperty('z-index', '9999', 'important');
-      relatedEl.style.setProperty('width', '100%', 'important');
-      relatedEl.style.setProperty('height', '100vh', 'important');
-      relatedEl.style.setProperty('overflow-y', 'scroll', 'important');
+    );
+    style(
+      detachRelatedBtn,
+      `
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 8px 8px 0;
+        background: #292929;
+        border-radius: 8px;
+        border: unset;
+      `,
+    );
+    let isDetached = false;
 
-      relatedEl.classList.add('detached');
+    detachRelatedBtn.addEventListener('click', () => {
+      isDetached = !isDetached;
+
+      if (isDetached) {
+        relatedEl.style.setProperty('position', 'fixed', 'important');
+        relatedEl.style.setProperty('top', '0', 'important');
+        relatedEl.style.setProperty('left', '0', 'important');
+        relatedEl.style.setProperty('z-index', '9999', 'important');
+        relatedEl.style.setProperty('width', '100%', 'important');
+        relatedEl.style.setProperty('height', '100vh', 'important');
+        relatedEl.style.setProperty('overflow-y', 'scroll', 'important');
+        relatedEl.classList.add('detached');
+      } else {
+        detachedStyleProperties.forEach(property => {
+          const { value, priority } = originalStyles[property];
+          if (value) {
+            relatedEl.style.setProperty(property, value, priority);
+          } else {
+            relatedEl.style.removeProperty(property);
+          }
+        });
+        relatedEl.classList.remove('detached');
+      }
+
+      detachRelatedBtn.setAttribute('aria-pressed', String(isDetached));
     });
   });
 
