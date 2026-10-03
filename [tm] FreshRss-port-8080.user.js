@@ -27,10 +27,10 @@
     const linkEl = linkToContentLinkBtnEl.querySelector('a');
     const url = linkEl.href;
     const itemTitleLinkEl = feedItemEl.querySelector('a.item-element.title');
+    const itemTitle = itemTitleLinkEl.textContent.trim();
 
     //* titles as tooltips
-    const title = itemTitleLinkEl.textContent.trim();
-    grandParent(itemTitleLinkEl, 2).setAttribute('title', title);
+    grandParent(itemTitleLinkEl, 2).setAttribute('title', itemTitle);
 
     //* removing items with duplicate links
     const linkElsOnPage = document.querySelectorAll(
@@ -50,6 +50,33 @@
         linkEl.href = newUrl;
       }
 
+      //* durations
+      const matches = itemTitle.match(/^\[(\d{0,2}:\d{0,2})\]\s/);
+      if (matches) {
+        const duration = matches[1];
+        const newTitle = itemTitle.replace(`[${duration}] `, '');
+        itemTitleLinkEl.textContent = newTitle;
+        const durationBadgeEl = generateElements(
+          `<span class="duration-badge">${duration}</span>`,
+          feedItemEl,
+        );
+        style(
+          durationBadgeEl,
+          `
+          z-index: 9999;
+          position: absolute;
+          top: 0.5rem;
+          right: 0.5rem;
+          font-size: 1rem;
+          color: #e3e3e3;
+          background-color: #512929;
+          padding: 0 0.2rem;
+          border-radius: 0.2rem;
+        `,
+        );
+      }
+
+      //* allow play
       const allowPlayEl = linkToContentLinkBtnEl.cloneNode(true);
       linkToContentLinkBtnEl.after(allowPlayEl);
       allowPlayEl.querySelector('img').replaceWith(generateElements(SVGs.play));
