@@ -7,6 +7,12 @@
 
   const collapsible = await Collapsible();
   const galleryPopoverEl = collapsible.addPopup('gallery-popover');
+  GM_addStyle(`
+    #gallery-popover:popover-open {
+      display: flex;
+      flex-direction: column-reverse;
+    }
+  `);
   const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
   let allVideoLinks = [];
   generateElements(SVG, galleryBtnEl);
@@ -308,7 +314,25 @@
     const videoLinks = Array.from(
       document.querySelectorAll(query),
       el => el.href,
-    );
+    ).filter(href => {
+      try {
+        const url = new URL(href);
+        const videoId = url.searchParams.get('v');
+        return (
+          [
+            'youtube.com',
+            'www.youtube.com',
+            'm.youtube.com',
+            'music.youtube.com',
+          ].includes(url.hostname) &&
+          url.pathname === '/watch' &&
+          videoId !== null &&
+          /^[\w-]{11}$/.test(videoId)
+        );
+      } catch {
+        return false;
+      }
+    });
     return [...new Set(videoLinks)];
   }
 })();
