@@ -16,7 +16,18 @@
     );
     if (!markBtnEl) return;
     markBtnEl.style.outline = '2px solid red';
-    // const linkEl = markBtnEl.querySelector('a.read');
+    const linkEl = markBtnEl.querySelector('a.read > img');
+    rssItemEl.style.setProperty('width', '5px', 'important');
+    rssItemEl.style.setProperty('height', '5px', 'important');
+    return;
+    linkEl.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: false,
+        cancelable: true,
+        view: window,
+      }),
+    );
+    await asyncTimeout(1000);
     return;
   }
 
