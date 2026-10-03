@@ -152,6 +152,8 @@
 
   //* auto click "show more" toggle buttons
   waitForEach('.expand-collapse-button', showMoreBtnEl => {
+    const belongsToEl = showMoreBtnEl.closest('ytd-rich-section-renderer');
+    if (belongsToEl?.querySelector('ytd-mini-game-card-view-model')) return;
     if (showMoreBtnEl.innerText.toLowerCase().includes('show more')) {
       showMoreBtnEl.click();
     }
