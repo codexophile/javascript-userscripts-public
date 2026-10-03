@@ -8,13 +8,34 @@
   const collapsible = await Collapsible();
   const galleryPopoverEl = collapsible.addPopup('gallery-popover');
   const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
+  let allVideoLinks = [];
   generateElements(SVG, galleryBtnEl);
+  galleryBtnEl.addEventListener('click', () => {
+    if (allVideoLinks.length === 0) {
+      allVideoLinks = gatherAllVideoLinks();
+      allVideoLinks.map(link => {
+        const linkEl = generateElements(
+          `<a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a>`,
+          galleryPopoverEl,
+        );
+        style(
+          linkEl,
+          `
+          display: block;
+          margin: 5px 0;
+          text-decoration: none;
+          color: #3498db;
+          font-size: 14px;
+        `,
+        );
+      });
+    }
+  });
   const thisTabButton = generateElements(
     `<button style="margin-left: 10px;">This tab</button>`,
     galleryPopoverEl,
   );
   thisTabButton.addEventListener('click', async () => {
-    const allVideoLinks = gatherAllVideoLinks();
     const modalBody = generateElements('<div></div>');
     const modal = new ModalBox({
       width: '95vw',
