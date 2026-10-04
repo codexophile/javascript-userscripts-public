@@ -358,7 +358,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
 
 /**
  * @typedef {Object} DialogConfig
- * @property {'expanded'|'collapsed'} [initialState='collapsed'] Initial body state.
+ * @property {'expanded'|'collapsed'} [initialState='expanded'] Initial body state.
  * @property {DialogDimensions} [dimensions] Dialog dimensions.
  * @property {DialogPosition} [position] Dialog position.
  * @property {string} [maxHeight='300px'] Legacy alias for dimensions.maxHeight.
@@ -394,7 +394,7 @@ function dialog(title = '', contentElement, configOrMaxHeight = {}) {
   const dimensions = config.dimensions || {};
   const position = config.position || {};
   const maxHeight = dimensions.maxHeight ?? config.maxHeight ?? '300px';
-  const initialState = config.initialState === 'expanded' ? 'expanded' : 'collapsed';
+  const initialState = config.initialState === 'collapsed' ? 'collapsed' : 'expanded';
   const isDraggable = config.draggable !== false;
 
   if (!document.querySelector('#vanilla-presets-dialog-styles')) {
