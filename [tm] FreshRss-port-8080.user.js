@@ -99,7 +99,10 @@
   });
 
   //* auto expanding of certain groups
-  const GROUP_IDs_TO_AUTO_EXPAND = ['19'];
+  const GROUP_IDs_TO_AUTO_EXPAND = [
+    '1', // uncategorized
+    '19', // list view feeds
+  ];
   const combinedSelector = GROUP_IDs_TO_AUTO_EXPAND.map(
     groupId => `#c_${groupId}`,
   ).join(', ');
