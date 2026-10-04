@@ -340,69 +340,150 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
 }
 
 function dialog(title = '', contentElement, maxHeight = '300px') {
-  // Create the GUI container
+  if (!document.querySelector('#vanilla-presets-dialog-styles')) {
+    const style = document.createElement('style');
+    style.id = 'vanilla-presets-dialog-styles';
+    style.textContent = `
+      .vanilla-presets-dialog {
+        --dialog-surface: color-mix(in srgb, Canvas 94%, transparent);
+        --dialog-border: color-mix(in srgb, CanvasText 16%, transparent);
+        --dialog-text: CanvasText;
+        --dialog-muted: color-mix(in srgb, CanvasText 64%, transparent);
+        position: fixed;
+        inset: 100px 50px auto auto;
+        z-index: 9999;
+        width: min(360px, calc(100vw - 32px));
+        overflow: hidden;
+        border: 1px solid var(--dialog-border);
+        border-radius: 16px;
+        background: var(--dialog-surface);
+        color: var(--dialog-text);
+        box-shadow: 0 20px 50px rgb(0 0 0 / 22%), 0 2px 10px rgb(0 0 0 / 10%);
+        backdrop-filter: blur(16px);
+        font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        animation: vanilla-presets-dialog-in 180ms ease-out;
+      }
+      .vanilla-presets-dialog__header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 8px 10px 8px 16px;
+        border-bottom: 1px solid var(--dialog-border);
+        background: color-mix(in srgb, CanvasText 5%, transparent);
+        cursor: move;
+        user-select: none;
+      }
+      .vanilla-presets-dialog__title {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        color: var(--dialog-text);
+        font-size: 15px;
+        font-weight: 650;
+        letter-spacing: .01em;
+        overflow-wrap: anywhere;
+      }
+      .vanilla-presets-dialog__button {
+        display: inline-grid;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--dialog-muted);
+        cursor: pointer;
+        font: inherit;
+        font-size: 20px;
+        line-height: 1;
+        transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+      }
+      .vanilla-presets-dialog__button:hover,
+      .vanilla-presets-dialog__button:focus-visible {
+        background: color-mix(in srgb, CanvasText 12%, transparent);
+        color: var(--dialog-text);
+        outline: none;
+      }
+      .vanilla-presets-dialog__button:active {
+        transform: scale(.92);
+      }
+      .vanilla-presets-dialog__body {
+        padding: 16px;
+        background: color-mix(in srgb, Canvas 98%, transparent);
+        max-height: var(--dialog-max-height);
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+      @keyframes vanilla-presets-dialog-in {
+        from { opacity: 0; transform: translateY(-8px) scale(.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .vanilla-presets-dialog { animation: none; }
+        .vanilla-presets-dialog__button { transition: none; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   const guiContainer = document.createElement('div');
-  guiContainer.style.position = 'fixed';
-  guiContainer.style.top = '100px';
-  guiContainer.style.right = '50px';
-  guiContainer.style.width = '300px';
-  guiContainer.style.border = '1px solid #ccc';
-  guiContainer.style.backgroundColor = '#f0f0f0';
-  guiContainer.style.zIndex = '9999';
-  guiContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.1)';
+  guiContainer.className = 'vanilla-presets-dialog';
+  guiContainer.style.setProperty('--dialog-max-height', maxHeight);
 
-  // Create the header
   const header = document.createElement('div');
-  header.style.backgroundColor = '#e0e0e0';
-  // header.style.padding = '10px';
-  header.style.cursor = 'move';
-  header.style.display = 'flex';
-  header.style.justifyContent = 'space-between';
-  header.style.alignItems = 'center';
-  header.innerText = title;
+  header.className = 'vanilla-presets-dialog__header';
 
-  // Create the collapse button
+  const titleElement = document.createElement('h2');
+  titleElement.className = 'vanilla-presets-dialog__title';
+  titleElement.textContent = title;
+  header.appendChild(titleElement);
+
   const collapseBtn = document.createElement('button');
   collapseBtn.id = 'expand-btn';
-  collapseBtn.innerHTML = '+';
-  collapseBtn.style.marginLeft = 'auto';
-  collapseBtn.style.marginRight = '5px';
+  collapseBtn.className = 'vanilla-presets-dialog__button';
+  collapseBtn.type = 'button';
+  collapseBtn.setAttribute('aria-label', 'Expand dialog');
+  collapseBtn.setAttribute('aria-expanded', 'false');
+  collapseBtn.textContent = '+';
   collapseBtn.onclick = () => {
     if (body.style.display === 'none') {
       body.style.display = 'block';
-      collapseBtn.innerHTML = '-';
+      collapseBtn.textContent = '−';
+      collapseBtn.setAttribute('aria-label', 'Collapse dialog');
+      collapseBtn.setAttribute('aria-expanded', 'true');
     } else {
       body.style.display = 'none';
-      collapseBtn.innerHTML = '+';
+      collapseBtn.textContent = '+';
+      collapseBtn.setAttribute('aria-label', 'Expand dialog');
+      collapseBtn.setAttribute('aria-expanded', 'false');
     }
   };
+  collapseBtn.title = 'Expand or collapse dialog';
 
-  // Create the close button
   const closeBtn = document.createElement('button');
-  closeBtn.innerHTML = 'x';
+  closeBtn.className = 'vanilla-presets-dialog__button';
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('aria-label', 'Close dialog');
+  closeBtn.textContent = '×';
+  closeBtn.title = 'Close dialog';
   closeBtn.onclick = () => {
     guiContainer.remove();
   };
 
-  // Append buttons to the header
   header.appendChild(collapseBtn);
   header.appendChild(closeBtn);
 
-  // Create the body
   const body = document.createElement('div');
+  body.className = 'vanilla-presets-dialog__body';
   body.style.display = 'none';
-  body.style.padding = '10px';
-  body.style.backgroundColor = '#fff';
-  body.style.maxHeight = maxHeight;
-  body.style.overflow = 'auto';
-  // adding the content element given by the function parameter
   body.append(contentElement);
 
-  // Append header and body to the container
   guiContainer.appendChild(header);
   guiContainer.appendChild(body);
 
-  // Append the container to the document body
   document.body.appendChild(guiContainer);
 
   // Make the GUI draggable
