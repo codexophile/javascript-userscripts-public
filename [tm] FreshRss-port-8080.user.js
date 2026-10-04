@@ -98,6 +98,17 @@
     }
   });
 
+  //* auto expanding of certain groups
+  const GROUP_IDs_TO_AUTO_EXPAND = ['19'];
+  const combinedSelector = GROUP_IDs_TO_AUTO_EXPAND.map(
+    groupId => `#c_${groupId}`,
+  ).join(', ');
+  waitForEach(`${combinedSelector}:has(>ul:not(.active))`, async groupEl => {
+    const toggleBtnEl = groupEl.querySelector('button.dropdown-toggle');
+    await asyncTimeout(1000);
+    toggleBtnEl.click();
+  });
+
   //* auto advancing to the next sibling feed group
   waitForEach(
     '.markAllRead[style="visibility: hidden;"]',
