@@ -25,7 +25,7 @@
       dialogContentEl.appendChild(clonedEl);
 
       clonedEl.addEventListener('click', () => {
-        headingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        headingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
 })();
