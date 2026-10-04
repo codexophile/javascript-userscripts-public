@@ -126,7 +126,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
             transform: rotate(180deg);
             background-color: ${backgroundColor};
             color: ${textColor};
-            cursor: move;
+            cursor: var(--dialog-header-cursor, move);
             padding: 15px 5px;
             border: none;
             outline: none;
@@ -339,7 +339,64 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
   };
 }
 
-function dialog(title = '', contentElement, maxHeight = '300px') {
+/**
+ * @typedef {Object} DialogDimensions
+ * @property {string} [width='min(360px, calc(100vw - 32px))'] Dialog width.
+ * @property {string} [minWidth] Minimum dialog width.
+ * @property {string} [maxWidth] Maximum dialog width.
+ * @property {string} [height] Dialog height.
+ * @property {string} [maxHeight='300px'] Maximum scrollable body height.
+ */
+
+/**
+ * @typedef {Object} DialogPosition
+ * @property {string} [top='100px'] Distance from the top of the viewport.
+ * @property {string} [right='50px'] Distance from the right of the viewport.
+ * @property {string} [bottom] Distance from the bottom of the viewport.
+ * @property {string} [left] Distance from the left of the viewport.
+ */
+
+/**
+ * @typedef {Object} DialogConfig
+ * @property {'expanded'|'collapsed'} [initialState='collapsed'] Initial body state.
+ * @property {DialogDimensions} [dimensions] Dialog dimensions.
+ * @property {DialogPosition} [position] Dialog position.
+ * @property {string} [maxHeight='300px'] Legacy alias for dimensions.maxHeight.
+ * @property {string} [width] Legacy alias for dimensions.width.
+ * @property {string} [minWidth] Legacy alias for dimensions.minWidth.
+ * @property {string} [maxWidth] Legacy alias for dimensions.maxWidth.
+ * @property {string} [height] Legacy alias for dimensions.height.
+ * @property {string} [top] Legacy alias for position.top.
+ * @property {string} [right] Legacy alias for position.right.
+ * @property {string} [bottom] Legacy alias for position.bottom.
+ * @property {string} [left] Legacy alias for position.left.
+ * @property {string} [borderRadius='16px'] Dialog corner radius.
+ * @property {string} [headerPadding] Header padding.
+ * @property {string} [bodyPadding] Body padding.
+ * @property {number|string} [zIndex=9999] Dialog stacking order.
+ * @property {boolean} [draggable=true] Whether the header moves the dialog.
+ */
+
+/**
+ * Creates a draggable, collapsible dialog.
+ *
+ * @param {string} [title=''] Dialog title.
+ * @param {Node|string} contentElement Content appended to the dialog body.
+ * @param {DialogConfig|string} [configOrMaxHeight={}] Dialog options, or a
+ *   legacy max-height string.
+ * @returns {HTMLDivElement} The created dialog container.
+ */
+function dialog(title = '', contentElement, configOrMaxHeight = {}) {
+  const config =
+    typeof configOrMaxHeight === 'string'
+      ? { maxHeight: configOrMaxHeight }
+      : configOrMaxHeight || {};
+  const dimensions = config.dimensions || {};
+  const position = config.position || {};
+  const maxHeight = dimensions.maxHeight ?? config.maxHeight ?? '300px';
+  const initialState = config.initialState === 'expanded' ? 'expanded' : 'collapsed';
+  const isDraggable = config.draggable !== false;
+
   if (!document.querySelector('#vanilla-presets-dialog-styles')) {
     const style = document.createElement('style');
     style.id = 'vanilla-presets-dialog-styles';
@@ -350,12 +407,18 @@ function dialog(title = '', contentElement, maxHeight = '300px') {
         --dialog-text: CanvasText;
         --dialog-muted: color-mix(in srgb, CanvasText 64%, transparent);
         position: fixed;
-        inset: 100px 50px auto auto;
+        top: var(--dialog-top, 100px);
+        right: var(--dialog-right, 50px);
+        bottom: var(--dialog-bottom, auto);
+        left: var(--dialog-left, auto);
         z-index: 9999;
-        width: min(360px, calc(100vw - 32px));
+        width: var(--dialog-width, min(360px, calc(100vw - 32px)));
+        min-width: var(--dialog-min-width, 0);
+        max-width: var(--dialog-max-width, none);
+        height: var(--dialog-height, auto);
         overflow: hidden;
         border: 1px solid var(--dialog-border);
-        border-radius: 16px;
+        border-radius: var(--dialog-border-radius, 16px);
         background: var(--dialog-surface);
         color: var(--dialog-text);
         box-shadow: 0 20px 50px rgb(0 0 0 / 22%), 0 2px 10px rgb(0 0 0 / 10%);
@@ -368,10 +431,10 @@ function dialog(title = '', contentElement, maxHeight = '300px') {
         align-items: center;
         gap: 8px;
         min-height: 48px;
-        padding: 8px 10px 8px 16px;
+        padding: var(--dialog-header-padding, 8px 10px 8px 16px);
         border-bottom: 1px solid var(--dialog-border);
         background: color-mix(in srgb, CanvasText 5%, transparent);
-        cursor: move;
+        cursor: var(--dialog-header-cursor, move);
         user-select: none;
       }
       .vanilla-presets-dialog__title {
@@ -411,7 +474,7 @@ function dialog(title = '', contentElement, maxHeight = '300px') {
         transform: scale(.92);
       }
       .vanilla-presets-dialog__body {
-        padding: 16px;
+        padding: var(--dialog-body-padding, 16px);
         background: color-mix(in srgb, Canvas 98%, transparent);
         max-height: var(--dialog-max-height);
         overflow: auto;
@@ -432,6 +495,28 @@ function dialog(title = '', contentElement, maxHeight = '300px') {
   const guiContainer = document.createElement('div');
   guiContainer.className = 'vanilla-presets-dialog';
   guiContainer.style.setProperty('--dialog-max-height', maxHeight);
+  const styleProperties = {
+    '--dialog-width': dimensions.width ?? config.width,
+    '--dialog-min-width': dimensions.minWidth ?? config.minWidth,
+    '--dialog-max-width': dimensions.maxWidth ?? config.maxWidth,
+    '--dialog-height': dimensions.height ?? config.height,
+    '--dialog-border-radius': config.borderRadius,
+    '--dialog-header-padding': config.headerPadding,
+    '--dialog-body-padding': config.bodyPadding,
+    '--dialog-header-cursor': isDraggable ? 'move' : 'default',
+    '--dialog-top': position.top ?? config.top,
+    '--dialog-right': position.right ?? config.right,
+    '--dialog-bottom': position.bottom ?? config.bottom,
+    '--dialog-left': position.left ?? config.left,
+  };
+  Object.entries(styleProperties).forEach(([property, value]) => {
+    if (value !== undefined && value !== null) {
+      guiContainer.style.setProperty(property, value);
+    }
+  });
+  if (config.zIndex !== undefined) {
+    guiContainer.style.zIndex = config.zIndex;
+  }
 
   const header = document.createElement('div');
   header.className = 'vanilla-presets-dialog__header';
@@ -445,9 +530,15 @@ function dialog(title = '', contentElement, maxHeight = '300px') {
   collapseBtn.id = 'expand-btn';
   collapseBtn.className = 'vanilla-presets-dialog__button';
   collapseBtn.type = 'button';
-  collapseBtn.setAttribute('aria-label', 'Expand dialog');
-  collapseBtn.setAttribute('aria-expanded', 'false');
-  collapseBtn.textContent = '+';
+  collapseBtn.setAttribute(
+    'aria-label',
+    initialState === 'expanded' ? 'Collapse dialog' : 'Expand dialog',
+  );
+  collapseBtn.setAttribute(
+    'aria-expanded',
+    String(initialState === 'expanded'),
+  );
+  collapseBtn.textContent = initialState === 'expanded' ? '−' : '+';
   collapseBtn.onclick = () => {
     if (body.style.display === 'none') {
       body.style.display = 'block';
@@ -478,7 +569,7 @@ function dialog(title = '', contentElement, maxHeight = '300px') {
 
   const body = document.createElement('div');
   body.className = 'vanilla-presets-dialog__body';
-  body.style.display = 'none';
+  body.style.display = initialState === 'expanded' ? 'block' : 'none';
   body.append(contentElement);
 
   guiContainer.appendChild(header);
@@ -486,27 +577,28 @@ function dialog(title = '', contentElement, maxHeight = '300px') {
 
   document.body.appendChild(guiContainer);
 
-  // Make the GUI draggable
   let isDragging = false;
   let offsetX = 0;
   let offsetY = 0;
 
-  header.onmousedown = e => {
-    isDragging = true;
-    offsetX = e.clientX - guiContainer.getBoundingClientRect().left;
-    offsetY = e.clientY - guiContainer.getBoundingClientRect().top;
-  };
+  if (isDraggable) {
+    header.onmousedown = e => {
+      isDragging = true;
+      offsetX = e.clientX - guiContainer.getBoundingClientRect().left;
+      offsetY = e.clientY - guiContainer.getBoundingClientRect().top;
+    };
 
-  document.onmousemove = e => {
-    if (isDragging) {
-      guiContainer.style.left = `${e.clientX - offsetX}px`;
-      guiContainer.style.top = `${e.clientY - offsetY}px`;
-    }
-  };
+    document.onmousemove = e => {
+      if (isDragging) {
+        guiContainer.style.left = `${e.clientX - offsetX}px`;
+        guiContainer.style.top = `${e.clientY - offsetY}px`;
+      }
+    };
 
-  document.onmouseup = () => {
-    isDragging = false;
-  };
+    document.onmouseup = () => {
+      isDragging = false;
+    };
+  }
 
   return guiContainer;
 }
