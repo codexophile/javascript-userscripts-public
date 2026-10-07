@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  const WHEN_TO_REDIRECT = /%3Fseason%3D1(0|1)/;
+  const WHEN_TO_REDIRECT = /%3Fseason%3D1(0|1)|%3Fref_%3Dtt_eps_nx/;
   const matches = location.href.match(WHEN_TO_REDIRECT);
   if (location.href.includes('https://m.')) {
     location.replace(location.href.replace('https://m.', 'https://www.'));
