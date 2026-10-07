@@ -65,7 +65,7 @@
       }
 
       //* durations
-      const matches = itemTitle.match(/^\[(\d{0,2}:\d{0,2})\]\s/);
+      const matches = itemTitle.match(/^\[((?:\d{0,2}:)?\d{0,2}:\d{0,2})\]\s/);
       if (matches) {
         const duration = matches[1];
         const newTitle = itemTitle.replace(`[${duration}] `, '');
@@ -187,7 +187,7 @@
       const btnEl = bigMarkAsReadWhenAllIsReadEl.closest(
         'button#bigMarkAsRead',
       );
-      btnEl.click();
+      if (isElementInViewport(btnEl)) btnEl.click();
     },
   );
 })();
