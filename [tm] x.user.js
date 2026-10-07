@@ -52,16 +52,19 @@
   });
 
   //* video download buttons
-  // Add this to your userscript (assuming handleDownload is defined elsewhere)
-
   waitForEach('div[data-testid="videoPlayer"]', playerContainer => {
-    // 3. Create the Download Button
-    const btn = document.createElement('div');
-    btn.className = 'x-dl-btn';
-    btn.title = 'Download Video';
+    playerContainer.append(
+      createDownloadButton('Y:\\@TOP\\twitter', 'top'),
+      createDownloadButton('Y:\\@BOTTOM\\twitter', 'bottom'),
+    );
+  });
 
-    // Using an SVG icon for a cleaner look that matches Twitter's UI
-    btn.innerHTML = `
+  const createDownloadButton = (destination, verticalPosition) => {
+    const downloadBtnEl = document.createElement('div');
+    downloadBtnEl.className = 'x-dl-btn';
+    downloadBtnEl.title = `Download Video to ${destination}`;
+
+    downloadBtnEl.innerHTML = `
         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: white;">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -69,10 +72,9 @@
         </svg>
     `;
 
-    // 4. Style the button to look like a native overlay
-    Object.assign(btn.style, {
+    Object.assign(downloadBtnEl.style, {
       position: 'absolute',
-      top: '12px',
+      [verticalPosition]: '12px',
       left: '12px',
       zIndex: '9999',
       display: 'flex',
@@ -82,17 +84,17 @@
       height: '32px',
       borderRadius: '9999px',
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      backdropFilter: 'blur(4px)', // Gives it that "glass" effect Twitter uses
+      backdropFilter: 'blur(4px)',
       cursor: 'pointer',
       transition: 'background-color 0.2s ease',
     });
 
-    // 5. Add Hover Effects
-    btn.onmouseenter = () => (btn.style.backgroundColor = 'rgba(0, 0, 0, 0.8)');
-    btn.onmouseleave = () => (btn.style.backgroundColor = 'rgba(0, 0, 0, 0.6)');
+    downloadBtnEl.onmouseenter = () =>
+      (downloadBtnEl.style.backgroundColor = 'rgba(0, 0, 0, 0.8)');
+    downloadBtnEl.onmouseleave = () =>
+      (downloadBtnEl.style.backgroundColor = 'rgba(0, 0, 0, 0.6)');
 
-    // 6. Handle Click
-    btn.addEventListener('click', e => {
+    downloadBtnEl.addEventListener('click', e => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -102,7 +104,7 @@
       if (linkAnchor) {
         const tweetUrl = linkAnchor.href;
         const urlSegment = `url:${tweetUrl}::`;
-        const destinationSegment = `dest:x:\\tw::`;
+        const destinationSegment = `dest:${destination}::`;
         const modeSegment = `mode:noprompt::`;
         const browserSegment = `browser:firefox::`;
         const profileSegment = `profile:3vm341ho.default-release::`;
@@ -115,9 +117,8 @@
       }
     });
 
-    // 7. Append to the player container
-    playerContainer.appendChild(btn);
-  });
+    return downloadBtnEl;
+  };
 
   function handleDownload(videoElement) {}
 })();
