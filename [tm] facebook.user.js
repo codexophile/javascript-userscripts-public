@@ -117,8 +117,7 @@ function getTagged() {
 //* new yt-dlp button
 const { addButton } = await Collapsible();
 addButton('tiktok', null, () => {
-  let postLink = '';
-  postLink = location.href;
+  const postLink = getPostLink();
 
   const urlSegment = `url:${postLink}::`;
   const destinationSegment = `dest:x:\\tiktok::`;
@@ -127,6 +126,19 @@ addButton('tiktok', null, () => {
     `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
   );
 });
+
+function getPostLink() {
+  const locationHref = location.href;
+  if (locationHref.includes('/reel/')) {
+    return locationHref;
+  }
+  if (locationHref.includes('/watch/')) {
+    const visiblePostEl = getVisibleElements(
+      '#watch_feed [data-virtualized="false"]',
+    )[0];
+    return visiblePostEl.querySelector('a[href*="/watch/?v="]').href;
+  }
+}
 
 //* follow button
 addButton('➕', null, () => {
