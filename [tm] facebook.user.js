@@ -115,17 +115,19 @@ function getTagged() {
 }
 
 //* new yt-dlp button
-const { addButton } = await Collapsible();
-addButton('tiktok', null, () => {
-  const postLink = getPostLink();
-
-  const urlSegment = `url:${postLink}::`;
-  const destinationSegment = `dest:x:\\tiktok::`;
-  const modeSegment = `mode:noprompt::`;
-  GM_setClipboard(
-    `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
-  );
-});
+const ytdlpPopoverEl = await waitFor('#yt-dlp-popover');
+generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
+  'click',
+  () => {
+    const postLink = getPostLink();
+    const urlSegment = `url:${postLink}::`;
+    const destinationSegment = `dest:Y:\\@TOP\\tiktok::`;
+    const modeSegment = `mode:noprompt::`;
+    GM_setClipboard(
+      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
+    );
+  },
+);
 
 function getPostLink() {
   const locationHref = location.href;
