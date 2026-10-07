@@ -2724,6 +2724,65 @@ function fallbackCopyMethod(img) {
   console.log('Image copied to clipboard using fallback method');
 }
 
+/**
+ * @typedef {'google' | 'duckduckgo' | 'direct'} FaviconProvider
+ */
+
+/**
+ * Builds a favicon URL for the website at the given URL.
+ *
+ * Uses free, keyless favicon services by default. The "direct" provider
+ * skips third parties and points at the site's conventional `/favicon.ico`
+ * (which not every site serves).
+ *
+ * @param {string} url - Page or site URL. The protocol is optional (e.g. "example.com/path" works).
+ * @param {Object} [options] - Optional settings.
+ * @param {number} [options.size=64] - Desired icon size in pixels (used by the "google" provider only).
+ * @param {FaviconProvider} [options.provider='google'] - Which source to build the favicon URL from.
+ * @returns {string} The favicon URL.
+ * @throws {TypeError} If `url` is not a valid URL or the provider is unknown.
+ *
+ * @example
+ * ```js
+ * getFaviconUrl('https://github.com/anthropics');
+ * // "https://www.google.com/s2/favicons?domain=github.com&sz=64"
+ *
+ * getFaviconUrl('github.com', { provider: 'duckduckgo' });
+ * // "https://icons.duckduckgo.com/ip3/github.com.ico"
+ *
+ * getFaviconUrl('https://github.com/anthropics', { provider: 'direct' });
+ * // "https://github.com/favicon.ico"
+ * ```
+ */
+function getFaviconUrlFromProvider(
+  url,
+  { size = 64, provider = 'google' } = {},
+) {
+  // Add a protocol if missing so the URL constructor can parse it.
+  const normalized = /^[a-z][a-z\d+.-]*:\/\//i.test(url)
+    ? url
+    : `https://${url}`;
+
+  /** @type {URL} */
+  let parsed;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    throw new TypeError(`Invalid URL: "${url}"`);
+  }
+
+  switch (provider) {
+    case 'google':
+      return `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=${size}`;
+    case 'duckduckgo':
+      return `https://icons.duckduckgo.com/ip3/${parsed.hostname}.ico`;
+    case 'direct':
+      return `${parsed.origin}/favicon.ico`;
+    default:
+      throw new TypeError(`Unknown provider: "${provider}"`);
+  }
+}
+
 function getFaviconUrl() {
   const links = document.querySelectorAll(
     'link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]',
