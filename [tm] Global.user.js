@@ -249,24 +249,20 @@
       `.gallery-dl-checkbox:checked`,
     );
 
-    if (gallerydlCheckboxEls.length < 1) {
-      invokeDownloader('gallerydl', {
-        urlToDownload: location.href,
-        destination: 'X:\\Pic\\gallery-dl',
-        mode: 'regular',
-      });
-      return;
-    }
-
     const selectedLinksSet = new Set();
-    gallerydlCheckboxEls.forEach(checkboxEl => {
-      const linkEl = checkboxEl.parentElement.querySelector('a');
-      const url = linkEl.href;
-      selectedLinksSet.add(url);
-    });
+
+    if (gallerydlCheckboxEls.length < 1) {
+      selectedLinksSet.add(location.href);
+    } else {
+      gallerydlCheckboxEls.forEach(checkboxEl => {
+        const linkEl = checkboxEl.parentElement.querySelector('a');
+        const url = linkEl.href;
+        selectedLinksSet.add(url);
+      });
+    }
     invokeDownloader('gallerydl', {
       urlToDownload: [...selectedLinksSet].join(','),
-      destination: 'X:\\Pic\\gallery-dl',
+      destination: 'Y:\\Pic\\gallery-dl',
       mode: 'regular',
     });
   });
@@ -295,6 +291,20 @@
     rssFeedsPopover,
   );
 
+  const openRssSegment = 'https://openrss.org/';
+  generateElements(
+    `
+    <div>
+      <a href="${openRssSegment}${location.href}"
+        target="_blank">
+        <img src="${getFaviconUrlFromProvider(openRssSegment)}">
+        <span>OpenRSS</span>
+      </a>
+    </div>
+  `,
+    rssFeedsPopover,
+  );
+
   rssLinks.forEach(link => {
     generateElements(
       `<a
@@ -312,9 +322,10 @@
     addFeedBtnEl.href = `${baseUrl}${encodedURI}`;
     addFeedBtnEl.target = '_blank';
     addFeedBtnEl.style = `
-        display: block;
-        font-size: 14px;
-      `;
+      text-decoration: none;
+      display: block;
+      font-size: 14px;
+    `;
   }
 
   //* scraping meta elements
