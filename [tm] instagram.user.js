@@ -131,7 +131,7 @@
 
     invokeDownloader('ytdlp', {
       urlToDownload: postLink,
-      destination: 'x:\\tiktok',
+      destination: 'Y:\\@TOP\\tiktok',
       mode: 'noprompt',
       browser: 'firefox',
       profile: '3vm341ho.default-release',
