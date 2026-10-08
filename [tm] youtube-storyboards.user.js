@@ -133,6 +133,7 @@
 
           peekButton.textContent = '🫣';
           modal.show();
+          addHistoryEntry(videoUrl);
         } catch (error) {
           console.error('[YT-Storyboard] Peek error:', error);
           peekButton.textContent = '❌';
