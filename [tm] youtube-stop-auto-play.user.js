@@ -2,6 +2,10 @@
   'use strict';
 
   if (location.hash === '#allow-play') return;
+  const saidYes = confirm(
+    "Would you like to start the video? Click 'OK' to start playing, or 'Cancel' to keep it paused.",
+  );
+  if (saidYes) return;
 
   let autoPauseDone = false;
   let videoEl = null;
