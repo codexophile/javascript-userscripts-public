@@ -116,27 +116,30 @@
   });
 
   //* new yt-dlp button
-  const { addButton } = await Collapsible();
-  addButton('tiktok', null, () => {
-    let postLink = '';
+  const ytdlpPopoverEl = await waitFor('#yt-dlp-popover');
+  generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
+    'click',
+    () => {
+      let postLink = '';
 
-    if (location.href === 'https://www.instagram.com/') {
-      const visiblePostEl = getVisibleElements('article')[0];
-      if (!visiblePostEl) return;
-      style(visiblePostEl, `outline: solid red;`);
-      postLink = visiblePostEl.querySelector('[href*="/p/"]').href;
-    } else if (location.href.match(/\/(p|reels?)\//)) {
-      postLink = location.href;
-    }
+      if (location.href === 'https://www.instagram.com/') {
+        const visiblePostEl = getVisibleElements('article')[0];
+        if (!visiblePostEl) return;
+        style(visiblePostEl, `outline: solid red;`);
+        postLink = visiblePostEl.querySelector('[href*="/p/"]').href;
+      } else if (location.href.match(/\/(p|reels?)\//)) {
+        postLink = location.href;
+      }
 
-    invokeDownloader('ytdlp', {
-      urlToDownload: postLink,
-      destination: 'Y:\\@TOP\\tiktok',
-      mode: 'noprompt',
-      browser: 'firefox',
-      profile: '3vm341ho.default-release',
-    });
-  });
+      invokeDownloader('ytdlp', {
+        urlToDownload: postLink,
+        destination: 'Y:\\@TOP\\tiktok',
+        mode: 'noprompt',
+        browser: 'firefox',
+        profile: '3vm341ho.default-release',
+      });
+    },
+  );
 
   //* Shortcuts
   document.addEventListener(
