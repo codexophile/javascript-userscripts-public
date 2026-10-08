@@ -1090,6 +1090,7 @@ function makeMarkable({
   normalizeId = id => id,
   storageKey = 'marked',
 }) {
+  mainSelector = `${mainSelector}:has(${uidElSelector})`;
   /**
    * Reads the marks object from storage.
    * @returns {Object<string, number>} Map of ID to the timestamp it was marked.
@@ -1161,6 +1162,7 @@ function makeMarkable({
    * @returns {void}
    */
   const processElement = el => {
+    console.log(el);
     if ('markableInit' in el.dataset) return;
     el.dataset.markableInit = '';
 
