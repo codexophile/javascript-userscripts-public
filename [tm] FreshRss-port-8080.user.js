@@ -65,6 +65,7 @@
       }
 
       //* durations
+      await asyncTimeout(1000);
       const matches = itemTitle.match(/^\[((?:\d{0,2}:)?\d{0,2}:\d{0,2})\]\s/);
       if (matches) {
         const duration = matches[1];
@@ -175,7 +176,7 @@
   waitForEach(`${combinedSelector}:has(>ul:not(.active))`, async groupEl => {
     const toggleBtnEl = groupEl.querySelector('button.dropdown-toggle');
     await asyncTimeout(1000);
-    toggleBtnEl.click();
+    if (groupEl.querySelector('ul:not(.active)')) toggleBtnEl.click();
   });
 
   //* auto advancing to the next sibling feed group
