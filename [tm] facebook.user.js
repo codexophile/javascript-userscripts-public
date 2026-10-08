@@ -41,7 +41,7 @@ waitForEach('div:has(>[aria-label="Reel tile preview"])', reelCntEl => {
       browser: 'firefox',
       profile: '3vm341ho.default-release',
       urlToDownload,
-      destination: 'x:\\tiktok',
+      destination: 'Y:\\@TOP\\tiktok',
       mode: 'noprompt',
     });
     addHistoryEntry(urlToDownload);
@@ -136,8 +136,13 @@ function getPostLink() {
   }
   if (locationHref.includes('/watch/')) {
     const visiblePostEl = getVisibleElements(
-      '#watch_feed [data-virtualized="false"]',
+      '#watch_feed [data-virtualized="false"]:has(a[href*="/watch/?v="])',
+      VisibilityMode.FULL,
     )[0];
+    console.log(visiblePostEl);
+    if (!visiblePostEl) {
+      return locationHref;
+    }
     return visiblePostEl.querySelector('a[href*="/watch/?v="]').href;
   }
 }
