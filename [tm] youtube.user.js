@@ -107,6 +107,37 @@
 
         detachRelatedBtn.setAttribute('aria-pressed', String(isDetached));
       });
+      const hideUploaderCheckboxEl = generateElements(
+        `
+        <input
+          type="checkbox"
+          id="hideUploaderCheckbox"
+          title="Hide videos from this uploader"
+        >
+      `,
+        chipsEl,
+      );
+      hideUploaderCheckboxEl.addEventListener('change', () => {
+        const thisUploader = document
+          .querySelector(`#text-container.ytd-channel-name`)
+          ?.textContent.trim();
+        if (!thisUploader) {
+          alert('Error: Could not find uploader name.');
+          return;
+        }
+        const videoItemEls = document.querySelectorAll('yt-lockup-view-model');
+        videoItemEls.forEach(videoItemEl => {
+          const channelNameEl = videoItemEl.querySelector(
+            "[role='text'].ytAttributedStringHost.ytContentMetadataViewModelMetadataText.ytContentMetadataViewModelMetadataTextLastPart.ytAttributedStringWhiteSpacePreWrap.ytAttributedStringLinkInheritColor:only-child",
+          );
+          const channelName = channelNameEl?.textContent.trim();
+          if (channelName === thisUploader) {
+            videoItemEl.style.display = hideUploaderCheckboxEl.checked
+              ? 'none'
+              : '';
+          }
+        });
+      });
     });
   })();
 
