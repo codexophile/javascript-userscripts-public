@@ -11,9 +11,13 @@
     #gallery-popover:popover-open {
       display: flex;
       flex-direction: column-reverse;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 10px;
     }
   `);
   const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
+  galleryBtnEl.title = 'YouTube storyboard gallery';
   let allVideoLinks = [];
   generateElements(SVG, galleryBtnEl);
   galleryBtnEl.addEventListener('click', () => {
@@ -229,6 +233,15 @@
     `,
     );
     const galleryItemHeader = generateElements('<div></div>', galleryItemEl);
+    style(
+      galleryItemHeader,
+      `
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      font-size: 20px;
+      `,
+    );
     style(galleryItemHeader, 'margin-bottom: 10px;');
     const statusLabel = generateElements(
       '<strong>Successful</strong> ',
@@ -333,6 +346,14 @@
         return false;
       }
     });
-    return [...new Set(videoLinks)];
+    return [
+      ...new Set(
+        videoLinks.map(href => {
+          const url = new URL(href);
+          url.hash = '';
+          return url.href;
+        }),
+      ),
+    ];
   }
 })();
