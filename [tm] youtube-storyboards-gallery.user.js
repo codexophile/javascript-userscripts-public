@@ -240,6 +240,7 @@
       top: 0;
       background: #ffffff;
       font-size: 20px;
+      box-shadow: 0 3px 8px rgba(31, 78, 121, 0.22);
       `,
     );
     style(galleryItemHeader, 'margin-bottom: 10px;');
