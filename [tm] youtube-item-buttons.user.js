@@ -46,6 +46,11 @@
     const linkEl = thumbEl.querySelector('a');
     const itemUrl = linkEl.href;
 
+    generateElements(
+      '<a id="allow-play-link">▶️</a>',
+      buttonsContainerEl,
+    ).setAttribute('href', itemUrl + '#allow-play');
+
     if (!location.href.match(/\/@|\/channel\//))
       addLinkToVideos(thumbEl, buttonsContainerEl);
 
@@ -146,7 +151,12 @@
     parent.append(buttonsContainer);
     buttonsContainer.style = 'position: absolute; left: 5px; bottom: 5px;';
     GM_addStyle(`
-      #buttonsContainer { display: none; }
+      #buttonsContainer {
+        display: none;
+        a {
+          text-decoration: none;
+        }
+      }
       :is(${queryForThumbEls}):hover #buttonsContainer { display: flex; }
     `);
     return buttonsContainer;
