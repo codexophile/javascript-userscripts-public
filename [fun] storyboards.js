@@ -75,6 +75,7 @@ async function sbControls(
 
     collapsible
       .addButton('🔙', null, async () => {
+        video.pause();
         const targetEl = [...sbParent.querySelectorAll('.wentPast')].pop();
         targetEl.scrollIntoView({ behavior: 'instant', block: 'center' });
         await asyncTimeout(250);
