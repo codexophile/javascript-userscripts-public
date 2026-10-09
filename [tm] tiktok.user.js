@@ -51,7 +51,7 @@
   function initiateYtdlp(url) {
     invokeDownloader('ytdlp', {
       urlToDownload: url,
-      destination: 'x:\\tiktok',
+      destination: 'Y:\\@TOP\\tiktok',
       mode: 'noprompt',
       autoRetryInfoJson: true,
       //? 👇🏻
