@@ -22,13 +22,7 @@
         '[data-testid="hero-parent"] > div > div:first-child',
       )[2];
       console.log(targetParentEl);
-      style(
-        targetParentEl,
-        `
-      flex-wrap: wrap;
-      width: stretch;
-    `,
-      );
+      style(targetParentEl, `flex-wrap: wrap; width: stretch;`);
 
       const contEl = generateElements(`<div></div>`, targetParentEl);
       style(
@@ -86,6 +80,8 @@
       addExtLink('https://yts.gg/', 'browse-movies/' + titleId);
       //* Leet
       // addExtLink('https://1337x.to/', `search/${title}+${year}/1/`);
+      //* Ex.to
+      addExtLink('https://ext.to/', `browse/?imdb_id=${titleId}`);
       //* criticker
       addExtLink('https://www.criticker.com/', `?search=${titleId}`);
       //* youtube
