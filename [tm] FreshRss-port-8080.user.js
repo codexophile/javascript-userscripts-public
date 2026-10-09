@@ -34,6 +34,7 @@
     return;
   }
 
+  //* card items
   waitForEach('main#stream > div:has(article)', async feedItemEl => {
     const linkToContentLinkBtnEl = feedItemEl.querySelector(
       QUERY_FOR_LINK_BTN_ELS,
@@ -134,9 +135,10 @@
             width: '95vw',
             backgroundColor: '#f0f0f0',
             headerColor: '#3498db',
-            animation: true,
+            // animation: true,
             closeOnEscape: true,
             closeOnOutsideClick: true,
+            lockPageScroll: false,
           });
 
           modal.setTitle(headerLink);
@@ -152,7 +154,8 @@
             imgUrls: [...allUrls],
           });
 
-          peekButton.textContent = '🫣';
+          // peekButton.textContent = '🫣';
+          console.log(modal);
           modal.show();
         } catch (error) {
           console.error('[YT-Storyboard] Peek error:', error);
@@ -162,6 +165,21 @@
           }, 2000);
         }
       });
+    }
+  });
+
+  //* opened list view items
+  waitForEach('#ylArticleSplitPane > .content', async openPaneEl => {
+    const titleEl = openPaneEl.querySelector('h1.title');
+    const linkToArticle = titleEl.querySelector('a').href;
+    const urlObj = new URL(linkToArticle);
+
+    switch (urlObj.host) {
+      case '':
+        break;
+
+      default:
+        break;
     }
   });
 
