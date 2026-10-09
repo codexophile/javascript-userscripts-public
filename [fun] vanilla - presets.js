@@ -1009,6 +1009,8 @@ class ModalBox {
         options.closeOnOutsideClick !== undefined
           ? options.closeOnOutsideClick
           : true,
+      lockPageScroll:
+        options.lockPageScroll !== undefined ? options.lockPageScroll : true,
     };
 
     this.createStyles();
@@ -1093,7 +1095,7 @@ class ModalBox {
       if (this.previousActiveElement instanceof HTMLElement) {
         this.previousActiveElement.focus();
       }
-      this.restorePageScroll();
+      if (this.options.lockPageScroll) this.restorePageScroll();
     });
   }
 
@@ -1129,7 +1131,7 @@ class ModalBox {
   show() {
     if (this.modal.open) return;
     this.previousActiveElement = document.activeElement;
-    this.lockPageScroll();
+    if (this.options.lockPageScroll) this.lockPageScroll();
     this.modal.showModal();
     this.modal.addEventListener('keydown', this.boundKeydown);
     this.closeButton.focus();
