@@ -444,8 +444,10 @@ async function storyboard({
       slotsDiv.append(slot);
       slot.index = index;
       if (linkToVid) {
-        console.log(slot, slot.querySelector('.storyboard-canvas'));
         const link = wrap(`<a></a>`, slot.querySelector('.storyboard-canvas'));
+        link.addEventListener('click', () => {
+          addHistoryEntry(`${linkToVid}`);
+        });
         // @ts-ignore
         link.href = `${linkToVid}#slot=${index}`;
         // @ts-ignore
