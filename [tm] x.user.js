@@ -53,13 +53,26 @@
 
   //* video download buttons
   waitForEach('div[data-testid="videoPlayer"]', playerContainer => {
-    playerContainer.append(
+    const btnsContainerEl = generateElements(`<div></div>`, playerContainer);
+    style(
+      btnsContainerEl,
+      `
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      display: flex;
+      gap: 8px;
+    `,
+    );
+    btnsContainerEl.append(
       createDownloadButton('Y:\\@TOP\\twitter', 'top'),
       createDownloadButton('Y:\\@BOTTOM\\twitter', 'bottom'),
+      createDownloadButton('Y:\\@ANY\\twitter', 'top'),
     );
   });
 
-  const createDownloadButton = (destination, verticalPosition) => {
+  const createDownloadButton = destination => {
     const downloadBtnEl = document.createElement('div');
     downloadBtnEl.className = 'x-dl-btn';
     downloadBtnEl.title = `Download Video to ${destination}`;
@@ -73,10 +86,6 @@
     `;
 
     Object.assign(downloadBtnEl.style, {
-      position: 'absolute',
-      [verticalPosition]: '12px',
-      left: '12px',
-      zIndex: '9999',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -85,7 +94,6 @@
       borderRadius: '9999px',
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
       backdropFilter: 'blur(4px)',
-      cursor: 'pointer',
       transition: 'background-color 0.2s ease',
     });
 
@@ -98,27 +106,25 @@
       e.preventDefault();
       e.stopPropagation();
 
-      const article = playerContainer.closest('article[data-testid="tweet"]');
+      const article = e.target.closest('article[data-testid="tweet"]');
       const linkAnchor = article?.querySelector('time')?.closest('a');
 
-      if (linkAnchor) {
-        const tweetUrl = linkAnchor.href;
-        const urlSegment = `url:${tweetUrl}::`;
-        const destinationSegment = `dest:${destination}::`;
-        const modeSegment = `mode:noprompt::`;
-        const browserSegment = `browser:firefox::`;
-        const profileSegment = `profile:3vm341ho.default-release::`;
-        GM_setClipboard(
-          `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}`,
-        );
-        console.log('Download initiated for:', tweetUrl);
-      } else {
+      if (!linkAnchor) {
         alert('Could not find Tweet URL');
+        return;
       }
+
+      const tweetUrl = linkAnchor.href;
+      invokeDownloader('ytdlp', {
+        urlToDownload: tweetUrl,
+        destination: destination,
+        mode: 'noprompt',
+        browser: 'firefox',
+        profile: '3vm341ho.default-release',
+      });
+      console.log('Download initiated for:', tweetUrl);
     });
 
     return downloadBtnEl;
   };
-
-  function handleDownload(videoElement) {}
 })();
