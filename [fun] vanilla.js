@@ -91,6 +91,50 @@ function pipeline(input, ...functions) {
 
 // MARK: Text functions
 
+/**
+ * Replaces the element's own (direct) text with new text, leaving all
+ * child elements and their text untouched. Existing direct text nodes are
+ * removed, and a single new text node is inserted after the last child
+ * element, or at the start if there are no child elements.
+ *
+ * @param {HTMLElement} element - The element whose own text to replace.
+ * @param {string} newText - The new text to set.
+ * @returns {void}
+ *
+ * @example
+ * ```js
+ * const link = document.querySelector('a.item-element.title');
+ * setOwnText(link, '[13:33] A New Title');
+ * ```
+ */
+function setOwnText(element, newText) {
+  const textNodes = Array.from(element.childNodes).filter(
+    node => node.nodeType === Node.TEXT_NODE,
+  );
+  textNodes.forEach(node => node.remove());
+  element.append(document.createTextNode(newText));
+}
+
+/**
+ * Concatenates only the direct child text nodes of an element, ignoring
+ * all child elements and their contents.
+ *
+ * @param {HTMLElement} element - The element to read direct text from.
+ * @returns {string} The trimmed, concatenated direct text.
+ *
+ * @example
+ * ```js
+ * const title = getOwnText(document.querySelector('a.item-element.title'));
+ * ```
+ */
+function getOwnText(element) {
+  return Array.from(element.childNodes)
+    .filter(node => node.nodeType === Node.TEXT_NODE)
+    .map(node => node.textContent)
+    .join('')
+    .trim();
+}
+
 function includesSome(string, array, regexFlags = '') {
   return array.some(item =>
     item instanceof RegExp
