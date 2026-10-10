@@ -232,7 +232,10 @@
       padding: 14px 16px;
     `,
     );
-    const galleryItemHeader = generateElements('<div></div>', galleryItemEl);
+    const galleryItemHeader = generateElements(
+      '<div class="gallery-item-header"></div>',
+      galleryItemEl,
+    );
     style(
       galleryItemHeader,
       `
@@ -254,6 +257,13 @@
     galleryLink.target = '_blank';
     galleryLink.rel = 'noopener noreferrer';
     galleryLink.textContent = item.href;
+    generateElements(`<button>⬇️</button>`, galleryItemHeader).addEventListener(
+      'click',
+      () => {
+        addHistoryEntry(item.href);
+        GM_setClipboard(`initiate-ytdlp:url:${item.href}::`);
+      },
+    );
     const storyboardContainer = generateElements(`<div></div>`, galleryItemEl);
     await storyboard({
       storyboardParent: storyboardContainer,
