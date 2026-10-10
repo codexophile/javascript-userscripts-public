@@ -34,7 +34,7 @@
     return;
   }
 
-  //* card items
+  //  MARK: card items
   waitForEach('main#stream > div:has(article)', async feedItemEl => {
     const linkToContentLinkBtnEl = feedItemEl.querySelector(
       QUERY_FOR_LINK_BTN_ELS,
@@ -42,7 +42,7 @@
     const linkEl = linkToContentLinkBtnEl.querySelector('a');
     const url = linkEl.href;
     const itemTitleLinkEl = feedItemEl.querySelector('a.item-element.title');
-    const itemTitle = itemTitleLinkEl.textContent.trim();
+    const itemTitle = getOwnText(itemTitleLinkEl).trim();
 
     //* titles as tooltips
     grandParent(itemTitleLinkEl, 2).setAttribute('title', itemTitle);
@@ -71,7 +71,7 @@
       if (matches) {
         const duration = matches[1];
         const newTitle = itemTitle.replace(`[${duration}] `, '');
-        itemTitleLinkEl.textContent = newTitle;
+        setOwnText(itemTitleLinkEl, newTitle);
         const durationBadgeEl = generateElements(
           `<span class="duration-badge">${duration}</span>`,
           feedItemEl,
@@ -168,11 +168,25 @@
     }
   });
 
-  //* opened list view items
+  //  MARK:    opened list view items
+  const displayTheseInFlexArr = [];
   waitForEach('#ylArticleSplitPane > .content', async openPaneEl => {
     const titleEl = openPaneEl.querySelector('h1.title');
     const linkToArticle = titleEl.querySelector('a').href;
+    const articleBodyEl = openPaneEl.querySelector('.text');
+    const feedId = openPaneEl
+      .querySelector('.website > a')
+      .href.match(/\/\?get=(.+?)$/)[1];
     const urlObj = new URL(linkToArticle);
+
+    if (displayTheseInFlexArr.includes(feedId)) {
+      openPaneEl.classList.add('flex-mode');
+      // the styles are in stylus extension
+    }
+
+    articleBodyEl.querySelectorAll('a').forEach(linkEl => {
+      linkEl.setAttribute('target', '_blank');
+    });
 
     switch (urlObj.host) {
       case '':

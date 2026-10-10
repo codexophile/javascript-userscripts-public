@@ -4,7 +4,7 @@
 (async function () {
   'use strict';
 
-  const targetUrl = 'https://www.imdb.com/title/tt0844471/ratings/';
+  const targetUrl = 'https://news.ycombinator.com/item?id=50028855';
   const result = await two();
   GM_setClipboard(result);
 
