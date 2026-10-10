@@ -9,6 +9,8 @@
     'open-in-new': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></svg>`,
     'open-here': `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z"/></svg>`,
     'copy-link': `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/></svg>`,
+    popup:
+      '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M520-400h200v-240H520v240ZM160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Z"/></svg>',
   };
 
   let openTimer = null;
@@ -111,16 +113,29 @@
       popoverEl,
     );
 
-    createButton(svgsObj['open-in-new'], toolbar01El, () =>
-      openInBackgroundTab(linkHref),
+    createPopoverToolbarButton(
+      svgsObj['open-in-new'],
+      toolbar01El,
+      () => openInBackgroundTab(linkHref),
+      'Open in new tab',
     );
-    createButton(
+    createPopoverToolbarButton(
+      svgsObj['popup'],
+      toolbar01El,
+      () => window.open(linkHref, '_blank', 'popup=yes'),
+      'Open as a popup window',
+    );
+    createPopoverToolbarButton(
       svgsObj['open-here'],
       toolbar01El,
       () => (window.location.href = linkHref),
+      'Open here',
     );
-    createButton(svgsObj['copy-link'], toolbar01El, () =>
-      GM_setClipboard(linkHref),
+    createPopoverToolbarButton(
+      svgsObj['copy-link'],
+      toolbar01El,
+      () => GM_setClipboard(linkHref),
+      'Copy link',
     );
 
     generateElements(`<div id="link-text">${linkText}</div>`, popoverEl);
@@ -135,9 +150,17 @@
     );
   }
 
-  function createButton(svgHtml, parentEl, onClick) {
+  function createPopoverToolbarButton(
+    svgHtml,
+    parentEl,
+    onClick,
+    tooltipText = '',
+  ) {
     const buttonEl = generateElements(`<button>${svgHtml}</button>`, parentEl);
     buttonEl.addEventListener('click', onClick);
+    if (tooltipText) {
+      buttonEl.setAttribute('title', tooltipText);
+    }
     return buttonEl;
   }
 
