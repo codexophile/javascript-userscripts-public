@@ -284,20 +284,37 @@
   waitForEach(`[href*='/@'], [href*='/channel/']`, linkToChannelEl => {
     linkToChannelEl.href += '/videos/';
   });
+  //* playlist items
+  waitForEach(
+    'a[href*="list="]:has(>yt-collection-thumbnail-view-model)',
+    el => {
+      const urlObj = new URL(el.href);
+      const listId = urlObj.searchParams.get('list');
+      el.href = `https://www.youtube.com/playlist?list=${listId}`;
+    },
+  );
+
   //* short links
   waitForEach(`[href*='/shorts/']`, linkToShortEl => {
     linkToShortEl.href = linkToShortEl.href.replace('/shorts/', '/watch?v=');
   });
-  //* cleaning tracking params from links
-  waitForEach(
-    `:not(#storyboard) :is([href*="&list="],[href*="&index="],[href*="&pp="],[href*="&t="])`,
-    videoLinkEl => {
-      const matches = videoLinkEl.href.match(/\?v=(.{11})/);
-      if (!matches) return;
-      const videoID = matches[1];
-      videoLinkEl.href = `https://www.youtube.com/watch?v=${videoID}`;
-    },
-  );
+
+  //* cleaning tracking params from linksrls
+  // const urlParamsToRemove = ['pp', 'index', 't', 'list'];
+  waitForEach(`*:not(#storyboard) a[href]`, videoLinkEl => {
+    const url = videoLinkEl.href;
+    if (!url) return;
+    if (videoLinkEl.matches('.storyboardItem > a')) return;
+    let searchParams;
+    try {
+      searchParams = new URL(url).searchParams;
+    } catch (error) {
+      alert(url);
+    }
+    const videoID = searchParams.get('v');
+    if (!videoID) return;
+    videoLinkEl.href = `https://www.youtube.com/watch?v=${videoID}`;
+  });
 
   function stopAndChangeUrl(url) {
     window.stop();
