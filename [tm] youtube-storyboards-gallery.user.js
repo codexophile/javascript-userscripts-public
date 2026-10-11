@@ -261,9 +261,22 @@
       'click',
       () => {
         addHistoryEntry(item.href);
-        GM_setClipboard(`initiate-ytdlp:url:${item.href}::`);
+        invokeDownloader('ytdlp', {
+          urlToDownload: item.href,
+          browser: 'firefox',
+          profile: '3vm341ho.default-release',
+          destination: 'Y:\\@TOP\\yt-ind',
+          mode: 'noprompt',
+        });
       },
     );
+    generateElements(
+      `<button>yt-ind</button>`,
+      galleryItemHeader,
+    ).addEventListener('click', () => {
+      addHistoryEntry(item.href);
+      GM_setClipboard(`initiate-ytdlp:url:${item.href}::`);
+    });
     const storyboardContainer = generateElements(`<div></div>`, galleryItemEl);
     await storyboard({
       storyboardParent: storyboardContainer,
