@@ -95,27 +95,29 @@ function pipeline(input, ...functions) {
  */
 
 /**
- * A function executed for a matched value.
+ * A sync or async function executed for a matched value.
  * @template V
  * @callback Handler
  * @param {V} value - The value that matched.
  * @param {Context} ctx - Per-call state shared by `common` and every handler.
- * @returns {void}
+ * @returns {void | Promise<void>}
  */
 
 /**
- * Builds a dispatcher that replaces a `switch` statement.
+ * Builds an async dispatcher that replaces a `switch` statement.
  *
  * Order for a matching value: `common`, then every handler from every rule
- * listing the value (rule order, de-duplicated). All of them receive the
- * SAME `ctx` object, so `common` can compute values once and hand them on.
+ * listing the value (rule order, de-duplicated). Each step is awaited before
+ * the next starts, so async `common` results are visible on `ctx` to every
+ * later handler. All steps receive the SAME `ctx` object.
  *
  * @template V
  * @param {Object} config - Dispatcher configuration.
  * @param {Handler<V>} [config.common] - Runs once whenever ANY listed value matches.
  * @param {[V | V[], Handler<V> | Handler<V>[]][]} config.rules - Value(s) → handler(s) pairs.
  * @param {Handler<V>} [config.fallback] - Runs when no value matches.
- * @returns {(value: V, ctx?: Context) => boolean} Returns `true` if a value matched.
+ * @returns {(value: V, ctx?: Context) => Promise<boolean>} Resolves to `true` if a value matched.
+ * Rejects if any handler throws, and remaining handlers are skipped.
  */
 function createDispatcher({ common, rules, fallback }) {
   /** @type {Map<*, Handler<*>[]>} */
@@ -129,14 +131,14 @@ function createDispatcher({ common, rules, fallback }) {
     }
   }
 
-  return (value, ctx = {}) => {
+  return async (value, ctx = {}) => {
     const list = table.get(value);
     if (!list) {
-      fallback?.(value, ctx);
+      await fallback?.(value, ctx);
       return false;
     }
-    common?.(value, ctx);
-    for (const handler of new Set(list)) handler(value, ctx);
+    await common?.(value, ctx);
+    for (const handler of new Set(list)) await handler(value, ctx);
     return true;
   };
 }
@@ -2125,8 +2127,8 @@ function invokeDownloader(
   const autoRetryInfoJsonSegment = autoRetryInfoJson
     ? `autoRetryInfoJson:true::`
     : ``;
-  GM_setClipboard(
-    `initiate-${downloader}:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}${autoRetryInfoJsonSegment}`,
+  location.replace(
+    `cdx-ahk-protocol://initiate-${downloader}:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}${autoRetryInfoJsonSegment}`,
   );
 }
 
