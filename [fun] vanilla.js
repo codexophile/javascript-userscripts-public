@@ -89,6 +89,58 @@ function pipeline(input, ...functions) {
   }, input);
 }
 
+/**
+ * Per-call shared state. `common` writes to it; later handlers read from it.
+ * @typedef {Record<string, any>} Context
+ */
+
+/**
+ * A function executed for a matched value.
+ * @template V
+ * @callback Handler
+ * @param {V} value - The value that matched.
+ * @param {Context} ctx - Per-call state shared by `common` and every handler.
+ * @returns {void}
+ */
+
+/**
+ * Builds a dispatcher that replaces a `switch` statement.
+ *
+ * Order for a matching value: `common`, then every handler from every rule
+ * listing the value (rule order, de-duplicated). All of them receive the
+ * SAME `ctx` object, so `common` can compute values once and hand them on.
+ *
+ * @template V
+ * @param {Object} config - Dispatcher configuration.
+ * @param {Handler<V>} [config.common] - Runs once whenever ANY listed value matches.
+ * @param {[V | V[], Handler<V> | Handler<V>[]][]} config.rules - Value(s) → handler(s) pairs.
+ * @param {Handler<V>} [config.fallback] - Runs when no value matches.
+ * @returns {(value: V, ctx?: Context) => boolean} Returns `true` if a value matched.
+ */
+function createDispatcher({ common, rules, fallback }) {
+  /** @type {Map<*, Handler<*>[]>} */
+  const table = new Map();
+
+  for (const [keys, handlers] of rules) {
+    for (const key of [].concat(keys)) {
+      const list = table.get(key) ?? [];
+      list.push(...[].concat(handlers));
+      table.set(key, list);
+    }
+  }
+
+  return (value, ctx = {}) => {
+    const list = table.get(value);
+    if (!list) {
+      fallback?.(value, ctx);
+      return false;
+    }
+    common?.(value, ctx);
+    for (const handler of new Set(list)) handler(value, ctx);
+    return true;
+  };
+}
+
 // MARK: Text functions
 
 /**
