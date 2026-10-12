@@ -139,10 +139,10 @@ function getPostLink() {
       '#watch_feed [data-virtualized="false"]:has(a[href*="/watch/?v="])',
       VisibilityMode.FULL,
     )[0];
-    console.log(visiblePostEl);
     if (!visiblePostEl) {
       return locationHref;
     }
+    style(visiblePostEl, `outline: 2px solid red;`);
     return visiblePostEl.querySelector('a[href*="/watch/?v="]').href;
   }
 }
