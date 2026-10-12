@@ -17,11 +17,12 @@
   async function addStoryboard(force = false) {
     if (!location.href.includes('/watch?v=')) return; // 🛑
 
-    const video = document.querySelector(`video`);
+    const video = await waitFor(`video`);
     if (!video) {
       console.warn('[YT-Storyboard] Video element not found');
       return;
     }
+
     if (!force && video.duration >= 3600) {
       console.warn(
         '[YT-Storyboard] Video duration exceeds 1 hour, skipping storyboard generation',
