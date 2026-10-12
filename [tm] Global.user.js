@@ -228,7 +228,9 @@
   GM_addElement(ytDlpPopover, 'button', {
     textContent: '⬇️',
     onclick: () => {
-      GM_setClipboard(`initiate-ytdlp:url:${location.href}::`);
+      invokeDownloader('ytdlp', {
+        urlToDownload: location.href,
+      });
     },
   });
   GM_addElement(ytDlpPopover, 'button', {
@@ -313,6 +315,31 @@
           style='display: block;'
         >${link.title}</a>`,
       rssFeedsPopover,
+    );
+  });
+
+  const possibleRssPathsSet = new Set([
+    '/feed',
+    '/feed/',
+    '/rss',
+    '/rss/',
+    '/rss.xml',
+    '/atom.xml',
+    '/index.xml',
+    '/feed.xml',
+    '/feeds/posts/default',
+    '/comments/feed/',
+    '/?feed=rss2',
+  ]);
+  const possiblePathsEl = generateElements(
+    `<div style="margin-top: 8px; font-size: 12px; color: #a0a0a0;">Possible RSS paths:</div>`,
+    rssFeedsPopover,
+  );
+  possibleRssPathsSet.forEach(path => {
+    const stem = location.href.replace(/\/$/, '');
+    generateElements(
+      `<a href='${stem}${path}' target=_blank style='display: block;'>${path}</a>`,
+      possiblePathsEl,
     );
   });
 

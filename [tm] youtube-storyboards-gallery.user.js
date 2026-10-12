@@ -160,7 +160,7 @@
       secondaryProgressElement,
     );
 
-    for (const videoLink of videoLinks) {
+    for (const [index, videoLink] of videoLinks.entries()) {
       try {
         const response = await GMXmlHttpReqResponse(videoLink);
         const storyboardObj = generateAllYouTubeSbUrls(response);
@@ -169,11 +169,22 @@
           throw new Error('No storyboard URLs generated');
         }
 
-        await createStoryboardGalleryItem(storyboardObj, targetElement);
+        await createStoryboardGalleryItem(
+          storyboardObj,
+          targetElement,
+          index,
+          videoLinks.length,
+        );
         results.successful++;
       } catch (error) {
         results.failed++;
-        createFailedGalleryItem(videoLink, error, targetElement);
+        createFailedGalleryItem(
+          videoLink,
+          error,
+          targetElement,
+          // index,
+          // videoLinks.length,
+        );
         console.error(`Error processing video ${videoLink}:`, error);
       }
 
@@ -218,7 +229,12 @@
    * @param {HTMLElement} targetElement Element that receives the gallery item.
    * @returns {Promise<void>} Resolves after the storyboard has rendered.
    */
-  async function createStoryboardGalleryItem(item, targetElement) {
+  async function createStoryboardGalleryItem(
+    item,
+    targetElement,
+    index,
+    total,
+  ) {
     const galleryItemEl = generateElements(`<div class="gallery-item"></div>`);
     style(
       galleryItemEl,
@@ -247,6 +263,10 @@
       `,
     );
     style(galleryItemHeader, 'margin-bottom: 10px;');
+    generateElements(
+      `<span style="font-size: 14px; color: #555;">(${index + 1}/${total})</span>`,
+      galleryItemHeader,
+    );
     const statusLabel = generateElements(
       '<strong>Successful</strong> ',
       galleryItemHeader,

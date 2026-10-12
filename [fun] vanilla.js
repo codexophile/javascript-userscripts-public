@@ -2104,32 +2104,67 @@ async function retrieveVttData(
   });
 }
 
-/** @typedef {'ytdlp' | 'gallerydl'} Downloader */
-const DOWNLOADERS = /** @type {const} */ (['ytdlp', 'gallerydl']);
 /**
- * @param {Downloader} downloader
+ * Supported downloader identifiers.
+ * @typedef {'ytdlp' | 'gallerydl'} Downloader
+ */
+
+/**
+ * Valid downloader names, used for runtime validation.
+ * @constant {ReadonlyArray<Downloader>}
+ */
+const DOWNLOADERS = /** @type {const} */ (['ytdlp', 'gallerydl']);
+
+/**
+ * Options for a downloader invocation.
+ * @typedef {Object} DownloaderOptions
+ * @property {string} [urlToDownload] - Page or media URL to download.
+ * @property {string} [destination] - Target directory (Windows path).
+ * @property {string} [mode] - Downloader-specific mode name.
+ * @property {string} [browser] - Browser to read cookies from.
+ * @property {string} [profile] - Browser profile name.
+ * @property {boolean} [autoRetryInfoJson] - Whether to retry using the info JSON.
+ */
+
+/**
+ * Launches an external downloader through the cdx-ahk-protocol handler.
+ * Options are sent as a percent-encoded query string, so URLs, fragments
+ * and Windows paths survive intact.
+ * @param {Downloader} downloader - Which downloader to start.
+ * @param {DownloaderOptions} options - Invocation options; empty values are omitted.
+ * @returns {void}
+ * @throws {Error} If `downloader` is not in {@link DOWNLOADERS}.
+ * @example
+ * invokeDownloader('ytdlp', { urlToDownload: location.href, mode: 'video' });
  */
 function invokeDownloader(
   downloader,
-  { urlToDownload, destination, mode, browser, profile, autoRetryInfoJson },
+  {
+    urlToDownload,
+    destination,
+    mode,
+    browser,
+    profile,
+    autoRetryInfoJson,
+  } = {},
 ) {
   if (!DOWNLOADERS.includes(downloader)) {
     throw new Error(
-      `Invalid downloader: "${downloader}".
-      Expected one of: ${DOWNLOADERS.join(', ')}`,
+      `Invalid downloader: "${downloader}". Expected one of: ${DOWNLOADERS.join(', ')}`,
     );
   }
-  const urlSegment = urlToDownload ? `url:${urlToDownload}::` : '';
-  const destinationSegment = destination ? `dest:${destination}::` : '';
-  const modeSegment = mode ? `mode:${mode}::` : '';
-  const browserSegment = browser ? `browser:${browser}::` : ``;
-  const profileSegment = profile ? `profile:${profile}::` : ``;
-  const autoRetryInfoJsonSegment = autoRetryInfoJson
-    ? `autoRetryInfoJson:true::`
-    : ``;
-  location.replace(
-    `cdx-ahk-protocol://initiate-${downloader}:${urlSegment}${destinationSegment}${modeSegment}${browserSegment}${profileSegment}${autoRetryInfoJsonSegment}`,
-  );
+
+  const params = new URLSearchParams();
+  if (urlToDownload) params.set('url', urlToDownload);
+  if (destination) params.set('dest', destination);
+  if (mode) params.set('mode', mode);
+  if (browser) params.set('browser', browser);
+  if (profile) params.set('profile', profile);
+  if (autoRetryInfoJson) params.set('autoRetryInfoJson', 'true');
+
+  // URLSearchParams encodes spaces as "+", but the AHK decoder expects %20
+  const query = params.toString().replace(/\+/g, '%20');
+  location.replace(`cdx-ahk-protocol://initiate-${downloader}/?${query}`);
 }
 
 function clearThenLog(...logWhat) {
