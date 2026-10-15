@@ -143,15 +143,19 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
   }
 }
 
-function getCurrentVideoDetails() {
-  const player = document.getElementById('movie_player');
+async function getCurrentVideoDetails() {
+  const player = await waitFor('#movie_player');
   const resp = player?.getPlayerResponse?.();
+  // console.log(resp);
+  const ownerChannelName =
+    resp?.microformat?.playerMicroformatRenderer?.ownerChannelName;
   const description =
-    resp.playabilityStatus.errorScreen.playerInterstitialRenderer.content
+    resp.playabilityStatus.errorScreen?.playerInterstitialRenderer.content
       .interstitialViewModel.description.content;
   const videoId = resp.videoDetails?.videoId;
   return {
     videoId,
+    ownerChannelName,
     description,
     status: resp?.playabilityStatus.status ?? null,
   };
