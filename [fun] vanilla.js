@@ -3010,8 +3010,8 @@ function fetchDoc(url, headers = '', returnHtml) {
           return false;
         }
         if (returnHtml) resolve(resText);
-        const tempDoc = generateDoc(resText, true);
-        resolve(tempDoc);
+        if (response.response) resolve(response.response);
+        resolve(generateDoc(resText));
       },
       onerror: obj => reject(obj.error),
       ontimeout: obj => reject(obj),
@@ -3816,6 +3816,9 @@ function generateDoc(html) {
 function generateElements(html, parent) {
   const doc = generateDoc(html);
   const created = [...doc.children];
+  created.forEach(el => {
+    el.setAttribute('data-origin', GM_info.script.name);
+  });
 
   if (parent) parent.append(...created);
 
