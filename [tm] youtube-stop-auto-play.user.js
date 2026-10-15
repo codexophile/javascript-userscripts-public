@@ -1,9 +1,10 @@
-(function () {
+(async function () {
   'use strict';
 
+  await waitFor('title');
   if (location.hash === '#allow-play') return;
   const saidYes = confirm(
-    "Would you like to start the video? Click 'OK' to start playing, or 'Cancel' to keep it paused.",
+    `${document.title}\n'OK': start playing\n'Cancel': keep it paused.`,
   );
   if (saidYes) return;
 
