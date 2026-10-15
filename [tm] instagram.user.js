@@ -20,26 +20,37 @@
   //* post items
   (function () {
     const queries = {
-      igPosts: 'img[crossorigin="anonymous"][style="object-fit: cover;"]',
-      igAllImagesItems: '#igAllImages > * > img',
-      openedImgs: 'article li img',
-      igWallItems: '.ig-wall-item',
+      reelItems: '[href*="/reel/"]',
+      // igPosts: 'img[crossorigin="anonymous"][style="object-fit: cover;"]',
+      // igAllImagesItems: '#igAllImages > * > img',
+      // openedImgs: 'article li img',
+      // igWallItems: '.ig-wall-item',
     };
     const combinedQuery = Object.values(queries).join(', ');
+    const finalQuery = `:is(${combinedQuery}):not(.cdx)`;
+    console.log(finalQuery);
 
-    waitForEach(combinedQuery, itemEl => {
-      const grandParentEl = grandParent(itemEl, 4);
+    waitForEach(finalQuery, itemEl => {
+      if (itemEl.parentElement.closest(finalQuery)) return; // skip if it has child matching the query
+      // const grandParentEl = grandParent(itemEl, 4);
+      const linkEl = itemEl.closest('a');
+      const url = linkEl ? linkEl.href : location.href;
       const imgSrc = itemEl.src;
 
       const linksContainerEl = generateElements(
-        `<div id="cdx-container"></div>`,
-        grandParentEl,
+        `<div
+          class="gfms-container"
+          data-url="${url}"
+        >
+        </div>`,
+        itemEl,
       );
 
       style(
         linksContainerEl,
         `
         position: absolute;
+        display: flex;
         top:      5px;
         left:     5px;
         z-index:  1000;
