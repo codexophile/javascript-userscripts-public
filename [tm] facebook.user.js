@@ -120,12 +120,11 @@ generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
   'click',
   () => {
     const postLink = getPostLink();
-    const urlSegment = `url:${postLink}::`;
-    const destinationSegment = `dest:Y:\\@TOP\\tiktok::`;
-    const modeSegment = `mode:noprompt::`;
-    GM_setClipboard(
-      `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
-    );
+    invokeDownloader('ytdlp', {
+      urlToDownload: postLink,
+      destination: 'Y:\\@TOP\\tiktok',
+      mode: 'noprompt',
+    });
   },
 );
 
