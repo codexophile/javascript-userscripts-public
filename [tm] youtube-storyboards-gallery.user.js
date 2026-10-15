@@ -221,6 +221,11 @@
     progressElement.textContent = message;
     if (secondaryProgressElement)
       secondaryProgressElement.textContent = message;
+    GM_notification({
+      title: 'Progress Update',
+      text: message,
+      tag: 'youtube-storyboards-gallery',
+    });
   }
 
   /**
