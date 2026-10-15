@@ -206,7 +206,15 @@
 
   refreshState();
 
-  //* ytdlp
+  //  MARK: Ytdlp
+
+  GM_addStyle(`
+    #yt-dlp-popover {
+      /* display: flex; */
+      flex-direction: column-reverse;
+    }
+  `);
+
   const ytDlpPopover = collapsible.addPopup('yt-dlp-popover');
   const ytdlpBtn = collapsible.addButton('', ytDlpPopover);
   ytdlpBtn.id = 'yt-dlp-Btn';
@@ -215,25 +223,31 @@
     alt: 'ytdlp logo',
   });
 
-  GM_addElement(ytDlpPopover, 'input', {
+  const mainContainerEl = generateElements(
+    `<div id="ytdlp-main"></div>`,
+    ytDlpPopover,
+  );
+  GM_addElement(mainContainerEl, 'input', {
     textContent: 'noprompt',
     type: 'checkbox',
     id: 'ytdlp-noprompt-checkbox',
     class: 'ytdlp-option',
   });
-  GM_addElement(ytDlpPopover, 'label', {
+  GM_addElement(mainContainerEl, 'label', {
     textContent: 'noprompt',
     for: 'ytdlp-noprompt-checkbox',
   });
-  GM_addElement(ytDlpPopover, 'button', {
+  GM_addElement(mainContainerEl, 'button', {
     textContent: '⬇️',
     onclick: () => {
       invokeDownloader('ytdlp', {
         urlToDownload: location.href,
+        destination: '',
+        mode: '',
       });
     },
   });
-  GM_addElement(ytDlpPopover, 'button', {
+  GM_addElement(mainContainerEl, 'button', {
     textContent: 'List',
     onclick: () => {
       invokeDownloader('ytdlp', {
