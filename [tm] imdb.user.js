@@ -1,12 +1,12 @@
 (function () {
   'use strict';
-  const WHEN_TO_REDIRECT =
-    /%3Fseason%3D1(0|1)|%3Fref_%3Dtt_eps_nx|%3Fref_%3Drlm/;
-  const matches = location.href.match(WHEN_TO_REDIRECT);
+  const malFormed = /\/(%3F.+?)(?:\/|$)/;
+  const matches = location.href.match(malFormed);
   if (location.href.includes('https://m.')) {
     location.replace(location.href.replace('https://m.', 'https://www.'));
   } else if (matches) {
-    const newUrl = location.href.replace(WHEN_TO_REDIRECT, '');
+    const proper = decodeURIComponent(matches[1]);
+    const newUrl = location.href.replace(malFormed, proper);
     location.replace(newUrl);
   } else if (location.href.includes('/mediaindex/')) {
     //* gallery/mediaindex flex-wrap fix
