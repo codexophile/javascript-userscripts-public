@@ -112,6 +112,15 @@
         const segment = `/s${seasonNumber.toString().padStart(2, '0')}/e${episodeNumber.toString().padStart(2, '0')}`;
         location.replace(location.href + segment);
       }
+
+      if (location.href.startsWith('https://www.themoviedb.org/tv/')) {
+        const split = location.href.split('/');
+        if (split.length !== 5) return;
+        const showId = split[4];
+        location.replace(
+          `https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}/episode/${episodeNumber}`,
+        );
+      }
     }
   }
 
