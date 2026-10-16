@@ -1747,15 +1747,12 @@ function addGalleryDlCheckbox(parentEl) {
 }
 
 async function setupYtDlpBtn(
-  url,
+  urlToDownload,
   title,
   urlSelector,
-  destinationPath,
-  extraInfoFunc,
+  destination,
   parentElement = null,
 ) {
-  const titleSegment = title ? `title:${title}::` : '';
-
   let ytDlpBtnEl;
   if (parentElement) {
     ytDlpBtnEl = generateElements(`<button>⬇️</button>`, parentElement);
@@ -1765,20 +1762,8 @@ async function setupYtDlpBtn(
   }
 
   ytDlpBtnEl.addEventListener('click', () => {
-    if (urlSelector) url = document.querySelector(urlSelector).href;
-    const urlSegment = `url:${url}::`;
-
-    const destinationSegment = destinationPath
-      ? `dest:${destinationPath}::`
-      : '';
-
-    const extraInfoSegment = extraInfoFunc
-      ? `extrainfo:${extraInfoFunc()}::`
-      : '';
-
-    GM_setClipboard(
-      `initiate-ytdlp:${urlSegment}${titleSegment}${destinationSegment}${extraInfoSegment}`,
-    );
+    if (urlSelector) urlToDownload = document.querySelector(urlSelector).href;
+    invokeDownloader('ytdlp', { urlToDownload, title, destination });
   });
   style(ytDlpBtnEl, `outline: solid red 2px;`);
 
@@ -2141,6 +2126,7 @@ function invokeDownloader(
   downloader,
   {
     urlToDownload,
+    title,
     destination,
     mode,
     browser,
@@ -2156,6 +2142,7 @@ function invokeDownloader(
 
   const params = new URLSearchParams();
   if (urlToDownload) params.set('url', urlToDownload);
+  if (title) params.set('title', title);
   if (destination) params.set('dest', destination);
   if (mode) params.set('mode', mode);
   if (browser) params.set('browser', browser);
@@ -2164,6 +2151,7 @@ function invokeDownloader(
 
   // URLSearchParams encodes spaces as "+", but the AHK decoder expects %20
   const query = params.toString().replace(/\+/g, '%20');
+
   location.replace(`cdx-ahk-protocol://initiate-${downloader}/?${query}`);
 }
 
@@ -3012,6 +3000,28 @@ function fetchDoc(url, headers = '', returnHtml) {
         if (returnHtml) resolve(resText);
         if (response.response) resolve(response.response);
         resolve(generateDoc(resText));
+      },
+      onerror: obj => reject(obj.error),
+      ontimeout: obj => reject(obj),
+    });
+  });
+}
+function fetchJson(url, headers = '', returnText = false) {
+  return new Promise((resolve, reject) => {
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: url,
+      headers: headers,
+      responseType: 'json',
+      onload: response => {
+        const resText = response.responseText;
+        if (!resText) {
+          reject('no response text');
+          return false;
+        }
+        if (returnText) resolve(resText);
+        if (response.response) resolve(response.response);
+        resolve(JSON.parse(resText));
       },
       onerror: obj => reject(obj.error),
       ontimeout: obj => reject(obj),
