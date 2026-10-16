@@ -346,9 +346,25 @@
     '/?feed=rss2',
   ]);
   const possiblePathsEl = generateElements(
-    `<div style="margin-top: 8px; font-size: 12px; color: #a0a0a0;">Possible RSS paths:</div>`,
+    `<div id="possible-rss-paths">Possible RSS paths:</div>`,
     rssFeedsPopover,
   );
+  GM_addStyle(`
+    #possible-rss-paths {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #a0a0a0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px; 
+      max-width: 500px;
+      & > * {
+        background-color: #2b2b2b;
+        padding: 2px 4px;
+        border-radius: 4px;
+      }
+    }
+  `);
   possibleRssPathsSet.forEach(path => {
     const stem = location.href.replace(/\/$/, '');
     generateElements(
