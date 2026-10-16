@@ -4,25 +4,10 @@
 (async function () {
   'use strict';
 
-  const targetUrl = 'https://news.ycombinator.com/item?id=50028855';
-  const result = await two();
-  GM_setClipboard(result);
-
-  function one() {
-    GM_xmlhttpRequest({
-      method: 'GET',
-      url: targetUrl,
-      // responseType: 'json',
-      onload: function (response) {
-        console.log(response);
-        return response;
-      },
-      onerror: function (error) {
-        console.log(error);
-        return error;
-      },
-    });
-  }
+  const targetUrl = 'https://status.d420.de/api/v1/instances';
+  const result = await fetchJson(targetUrl);
+  console.log(result);
+  // GM_setClipboard(result);
 
   async function two() {
     const doc = await fetchDoc(targetUrl, null, true);
