@@ -131,7 +131,7 @@
           settingTitleInternally = false;
         }, 0);
       } catch (error) {
-        alert(error);
+        console.Error(error);
       }
     }
   }
