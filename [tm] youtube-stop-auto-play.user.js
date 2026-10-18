@@ -2,7 +2,10 @@
   'use strict';
 
   await waitFor('title');
-  if (location.hash === '#allow-play') return;
+  if (location.hash === '#allow-play') {
+    addHistoryEntry(location.href.replace('#allow-play', ''));
+    return;
+  }
   const saidYes = confirm(
     `${document.title}\n'OK': start playing\n'Cancel': keep it paused.`,
   );
