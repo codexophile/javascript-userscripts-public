@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   'use strict';
   const searchParaObj = new URLSearchParams(location.search);
   const inputUrl = searchParaObj.get('input-url');
@@ -17,5 +17,6 @@
     alert('Search button element not found');
     return;
   }
+  await asyncTimeout(1000);
   searchBtnEl.click();
 })();
