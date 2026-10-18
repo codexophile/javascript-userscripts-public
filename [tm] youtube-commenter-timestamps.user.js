@@ -6,7 +6,7 @@
     MAX_PAGES: 10, // 10 pages * 100 = up to 1000 comments scanned
     ORDER: 'relevance', // 'relevance' or 'time'
     TRIGGER_WINDOW: 1.2, // seconds tolerance around the timestamp
-    AUTO_DISMISS_MS: 16000, // auto-close popups after this long
+    AUTO_DISMISS_MS: 8000, // auto-close popups after this long
   };
 
   const NOTIFICATION_SETTINGS_KEY = 'ytTimestampNotificationSettings';
