@@ -299,12 +299,13 @@
     linkToShortEl.href = linkToShortEl.href.replace('/shorts/', '/watch?v=');
   });
 
-  //* cleaning tracking params from linksrls
+  //* cleaning tracking params from linkurls
   // const urlParamsToRemove = ['pp', 'index', 't', 'list'];
   waitForEach(`*:not(#storyboard) a[href]`, videoLinkEl => {
     const url = videoLinkEl.href;
     if (!url) return;
-    if (videoLinkEl.matches('.storyboardItem > a')) return;
+    if (videoLinkEl.matches('.storyboardItem > a, [href*="#allow-play"]'))
+      return;
     let searchParams;
     try {
       searchParams = new URL(url).searchParams;
