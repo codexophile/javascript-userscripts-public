@@ -129,7 +129,7 @@
       --global-title-accent-ink: #edf3ff;
     }
 
-    #main-cnt {
+    #cdx-main-cnt {
       --shadow-1: rgba(0, 0, 0, 0.32);
       --shadow-2: rgba(var(--global-title-accent-rgb), 0.28);
 
@@ -179,7 +179,7 @@
         margin-right: -2px;
       }
 
-      #content {
+      #content, #content > * {
         min-width: 0;
         max-width: min(34vw, 420px);
         padding: 3px 6px 3px 2px;
@@ -293,20 +293,24 @@
   await waitFor('body');
   const mainCntEl = generateElements(
     `
-    <div id="main-cnt" aria-live="polite">
+    <div id="cdx-main-cnt" aria-live="polite">
       <div id="btns-cnt">
         <button id="btn-toggle" class="button" type="button" aria-label="Toggle title panel">⇰</button>
         <button id="btn-copy-title" class="button" type="button" aria-label="Copy page title">T</button>
         <button id="btn-copy-url" class="button" type="button" aria-label="Copy page URL">U</button>
         <button id="btn-open-in-new" class="button" type="button" aria-label="Open page in new tab">↗</button>
       </div>
-      <div id="content"></div>
+      <div id="content">
+        <div id="title"></div>
+        <a id="url"></a>
+      </div>
     </div>
   `,
     document.body,
   );
 
-  const titleCntEl = mainCntEl.querySelector('#content');
+  const titleCntEl = mainCntEl.querySelector('#title');
+  const urlCntEl = mainCntEl.querySelector('#url');
   const toggleBtn = mainCntEl.querySelector('#btn-toggle');
   const copyTitleBtn = mainCntEl.querySelector('#btn-copy-title');
   const copyUrlBtn = mainCntEl.querySelector('#btn-copy-url');
@@ -373,6 +377,7 @@
 
   let observer = new MutationObserver(main);
   observer.observe(titleEl, { childList: true, subtree: true });
+  window.addEventListener('urlchange', main);
   main();
 
   function main() {
@@ -380,6 +385,9 @@
     if (!titleCntEl) return;
     titleCntEl.textContent = title;
     titleCntEl.title = title;
+    urlCntEl.textContent = window.location.href;
+    urlCntEl.title = window.location.href;
+    urlCntEl.href = window.location.href;
     triggerContentUpdateAnimation();
   }
 })();

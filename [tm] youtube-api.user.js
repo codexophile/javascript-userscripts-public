@@ -24,32 +24,30 @@
       const errorScreenEl = await waitFor(
         `.interstitialViewModelModelContainer`,
       );
-      GM_xmlhttpRequest({
-        method: 'GET',
-        url: `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoId}&key=${API_KEY}`,
-        responseType: 'document',
-        onload: function (response) {
-          const resText = response.responseText;
-          const resJson = JSON.parse(resText);
-          const allowedIn =
-            resJson.items[0].contentDetails.regionRestriction.allowed;
-          const newEl = generateElements(
-            `<div>
-              <p>Video is playable in:</p>
-              ${allowedIn.map(code => `<div>${getCountryName(code)} (${code})</div>`).join('')}
-            </div>`,
-            errorScreenEl,
-          );
-          style(
-            newEl,
-            `
-            font-size: 2em;
-            margin-top: 1em;
-            color: #bcb6b6;
-          `,
-          );
-        },
-      });
+      try {
+        const resJson = await fetchYoutubeApi(
+          `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoId}&key=${API_KEY}`,
+        );
+        const allowedIn =
+          resJson.items[0].contentDetails.regionRestriction.allowed;
+        const newEl = generateElements(
+          `<div>
+            <p>Video is playable in:</p>
+            ${allowedIn.map(code => `<div>${getCountryName(code)} (${code})</div>`).join('')}
+          </div>`,
+          errorScreenEl,
+        );
+        style(
+          newEl,
+          `
+          font-size: 2em;
+          margin-top: 1em;
+          color: #bcb6b6;
+        `,
+        );
+      } catch (error) {
+        console.error('Failed to fetch video region restrictions:', error);
+      }
     });
     return;
     const ytInitialPlayerResponse = window.ytInitialPlayerResponse;

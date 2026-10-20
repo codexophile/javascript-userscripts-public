@@ -40,7 +40,9 @@
 
   //* thumbnail actions
   waitForEach(queryForThumbEls, thumbEl => {
-    if (thumbEl.querySelector(queryForThumbEls)) return; // skip if it has a child thumbnail element
+    const isNested = thumbEl.closest(queryForThumbEls) !== thumbEl;
+    if (isNested) return; // skip if it's a nested thumbnail element
+    // if (thumbEl.querySelector(queryForThumbEls)) return; // skip if it has a child thumbnail element
 
     const buttonsContainerEl = createButtonsContainer(thumbEl);
     const linkEl = thumbEl.querySelector('a');

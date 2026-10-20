@@ -14,20 +14,60 @@ function getVideoId() {
   return urlParams.get('v');
 }
 
-async function fetchChannelDetails(channelId, API_KEY) {
-  const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings&id=${channelId}&key=${API_KEY}`;
-  const response = await GMXmlHttpRequestAsync(apiUrl);
-  const data = JSON.parse(response);
+const youtubeApiResponseCache = new Map();
 
-  return data;
+/**
+ * Fetches and caches a YouTube API response for the current page session.
+ *
+ * @param {string} apiUrl The complete YouTube API URL.
+ * @returns {Promise<Object>} The parsed API response.
+ * @throws {Error} If the response is not valid JSON or the request fails.
+ * @example
+ * const videoData = await fetchYoutubeApi(
+ *   'https://www.googleapis.com/youtube/v3/videos?...',
+ * );
+ */
+async function fetchYoutubeApi(apiUrl) {
+  if (!youtubeApiResponseCache.has(apiUrl)) {
+    const request = GMXmlHttpRequestAsync(apiUrl)
+      .then(response => JSON.parse(response))
+      .catch(error => {
+        youtubeApiResponseCache.delete(apiUrl);
+        throw error;
+      });
+
+    youtubeApiResponseCache.set(apiUrl, request);
+  }
+
+  return youtubeApiResponseCache.get(apiUrl);
 }
 
+/**
+ * Fetches channel details, reusing the current session's cached response.
+ *
+ * @param {string} channelId The YouTube channel ID.
+ * @param {string} API_KEY The YouTube API key.
+ * @returns {Promise<Object>} The channel API response.
+ * @example
+ * const channel = await fetchChannelDetails(channelId, API_KEY);
+ */
+async function fetchChannelDetails(channelId, API_KEY) {
+  const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings&id=${channelId}&key=${API_KEY}`;
+  return fetchYoutubeApi(apiUrl);
+}
+
+/**
+ * Fetches video details, reusing the current session's cached response.
+ *
+ * @param {string} videoId The YouTube video ID.
+ * @param {string} API_KEY The YouTube API key.
+ * @returns {Promise<Object>} The video API response.
+ * @example
+ * const video = await fetchVideoDetails(videoId, API_KEY);
+ */
 async function fetchVideoDetails(videoId, API_KEY) {
   const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`;
-  const response = await GMXmlHttpRequestAsync(apiUrl);
-  const data = JSON.parse(response);
-
-  return data;
+  return fetchYoutubeApi(apiUrl);
 }
 
 async function getChannelId(videoId, API_KEY) {
@@ -49,8 +89,7 @@ async function getVideoCategoryAndTags(videoId, categories, API_KEY) {
 
 async function fetchCategories(regionCode, API_KEY) {
   const apiUrl = `https://www.googleapis.com/youtube/v3/videoCategories?part=snippet&regionCode=${regionCode}&key=${API_KEY}`;
-  const response = await GMXmlHttpRequestAsync(apiUrl);
-  const data = JSON.parse(response);
+  const data = await fetchYoutubeApi(apiUrl);
 
   const categories = {};
   if (data.items && data.items.length > 0) {

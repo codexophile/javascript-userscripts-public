@@ -1,24 +1,14 @@
-//* download images
-waitForEach('div:has(>[data-visualcompletion][alt])', imgCntEl => {
-  const toolsCntEl = generateElements(`<div class=toolsCnt></div>`, imgCntEl);
-  style(
-    toolsCntEl,
-    `
-    position: absolute;
-    top: 10px;
-    left: 10px;
-  `,
-  );
-  const dlBtnEl = generateElements(
-    `<button class=dlBtn>⬇️</button>`,
-    toolsCntEl,
-  );
-  dlBtnEl.addEventListener('click', () => handleDownload(imgCntEl));
-});
-
 //* download buttons for reel thumbnails
-waitForEach('div:has(>[aria-label="Reel tile preview"])', reelCntEl => {
-  const toolsCntEl = generateElements(`<div class=toolsCnt></div>`, reelCntEl);
+const queries = [
+  'div:has(>[data-visualcompletion][alt])', // images
+  'div:has(>[aria-label="Reel tile preview"])', // reels
+];
+const combinedQuery = queries.join(',');
+waitForEach(combinedQuery, parentEl => {
+  const toolsCntEl = generateElements(
+    `<div class=gfms-container></div>`,
+    parentEl,
+  );
   style(
     toolsCntEl,
     `
@@ -48,7 +38,7 @@ waitForEach('div:has(>[aria-label="Reel tile preview"])', reelCntEl => {
   });
 });
 
-function handleDownload(parentEl) {
+function handleImgDownload(parentEl) {
   const imgEl = parentEl.querySelector('[data-visualcompletion][alt]');
   const tempImg = GM_addElement('img', {
     src: imgEl.src,

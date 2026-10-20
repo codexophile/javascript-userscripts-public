@@ -274,28 +274,6 @@
   });
 
   //  MARK: gallery-dl
-  collapsible.addButton('🖼️', null, () => {
-    const gallerydlCheckboxEls = document.querySelectorAll(
-      `.gallery-dl-checkbox:checked`,
-    );
-
-    const selectedLinksSet = new Set();
-
-    if (gallerydlCheckboxEls.length < 1) {
-      selectedLinksSet.add(location.href);
-    } else {
-      gallerydlCheckboxEls.forEach(checkboxEl => {
-        const linkEl = checkboxEl.parentElement.querySelector('a');
-        const url = linkEl.href;
-        selectedLinksSet.add(url);
-      });
-    }
-    invokeDownloader('gallerydl', {
-      urlToDownload: [...selectedLinksSet].join(','),
-      destination: 'Y:\\Pic\\gallery-dl',
-      mode: 'regular',
-    });
-  });
 
   //  MARK: RSS
   const rssLinks = document.querySelectorAll(
@@ -317,6 +295,11 @@
   const rssFeedsPopover = collapsible.addPopup('rss-feeds-popover');
   const rssBtnEl = collapsible.addButton('', rssFeedsPopover);
   generateElements(rssLinks.length ? SVGS.rssYes : SVGS.rssNo, rssBtnEl);
+  addLinkToFeedReader(
+    'Blogtrottr',
+    'https://blogtrottr.com/?subscribe=',
+    rssFeedsPopover,
+  );
   addLinkToFeedReader(
     'Inoreader',
     'https://www.inoreader.com/search/feeds/',

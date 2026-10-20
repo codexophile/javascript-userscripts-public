@@ -22,40 +22,76 @@
     style(
       linkEl,
       `
+      color: #e3e3e3;
       display: block;
       padding: 4px 8px;
       text-decoration: none;
     `,
     );
   });
+
+  /**
+   * Replaces each popover link with the current page URL on that link's host.
+   *
+   * @param {NodeListOf<HTMLAnchorElement>} linkEls - The popover links to update.
+   * @returns {void}
+   *
+   * @example
+   * ```js
+   * updateTwitterPopoverLinks(document.querySelectorAll('#twitter-popover a'));
+   * ```
+   */
+  function updateTwitterPopoverLinks(linkEls) {
+    const currentUrl = new URL(location.href);
+    const supportedHosts = new Set(['twitter.com', 'x.com']);
+    if (!supportedHosts.has(currentUrl.hostname)) return;
+
+    linkEls.forEach(linkEl => {
+      const linkUrl = new URL(linkEl.href, currentUrl);
+      if (!linkUrl.host) return;
+      currentUrl.host = linkUrl.host;
+      linkEl.href = currentUrl.href;
+    });
+  }
+
   twitterBtnEl.addEventListener('click', async () => {
     const query = '#twitter-popover.collapsible-popover > a';
     await waitFor(query);
     const linkEls = document.querySelectorAll(query);
-    linkEls.forEach(linkEl => {});
+    updateTwitterPopoverLinks(linkEls);
   });
 
   //* gallery-dl
   waitForEach('li', liEl => {
     if (!location.href.includes('/media?filter=photo')) return;
-    addGalleryDlCheckbox(liEl);
+    initiateGalleryDlFunctionality(liEl);
   });
 
   const ARTICLE_SELECTOR = 'article[data-testid="tweet"]';
   const LOCATOR_SELECTOR = '[aria-label="More"]';
   waitForEach(`${ARTICLE_SELECTOR} ${LOCATOR_SELECTOR}`, locatorEl => {
     const parentEl = grandParent(locatorEl, 4);
-    const galleryDlBtnEl = generateElements(`<button>🖼️⬇️</button>`);
-    parentEl.prepend(galleryDlBtnEl);
+    const grandParentEl = grandParent(parentEl, 2);
+    const tweetLinkEl = grandParentEl.querySelector('time')?.closest('a');
+    let tweetUrl;
+    if (tweetLinkEl) {
+      tweetUrl = tweetLinkEl.href;
+    } else {
+      tweetUrl = location.href;
+    }
+
+    const toolsCntEl = generateElements(
+      `<div
+        class="gfms-container"
+        data-gfms-url=${tweetUrl}
+      ></div>`,
+      parentEl,
+    );
+    const galleryDlBtnEl = generateElements(
+      `<button>🖼️⬇️</button>`,
+      toolsCntEl,
+    );
     galleryDlBtnEl.addEventListener('click', () => {
-      const grandParentEl = grandParent(parentEl, 2);
-      const tweetLinkEl = grandParentEl.querySelector('time')?.closest('a');
-      let tweetUrl;
-      if (tweetLinkEl) {
-        tweetUrl = tweetLinkEl.href;
-      } else {
-        tweetUrl = location.href;
-      }
       invokeDownloader('gallerydl', {
         urlToDownload: tweetUrl,
         destination: 'Y:\\Pic\\gallery-dl',

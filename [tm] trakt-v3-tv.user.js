@@ -8,7 +8,8 @@
   window.addEventListener('urlchange', main);
 
   async function main(event) {
-    if (location.hash === '#prevent-main') return;
+    // alert(location.hash);
+    if (location.hash.match(/#(prevent-main|undefined)/)) return;
     if (event) {
       if (event.url === lastUrl) return;
       setSeasonAndEpisode(event.url);

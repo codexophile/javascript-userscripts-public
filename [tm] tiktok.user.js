@@ -20,14 +20,23 @@
   }
 
   //* download item button
-  const dataE2eArr = ['user-post-item', 'collection-item'];
+  const dataE2eArr = ['user-post-item', 'collection-item', 'user-liked-item'];
   const query = dataE2eArr.map(dataE2e => `[data-e2e="${dataE2e}"]`).join(',');
   waitForEach(query, postItemEl => {
-    const downloadBtnEl = generateElements('<button>⬇️</button>', postItemEl);
-    downloadBtnEl.style.position = 'absolute';
-    downloadBtnEl.style.top = '5px';
-    downloadBtnEl.style.right = '5px';
-    downloadBtnEl.style.zIndex = 9999;
+    const toolsCntEl = generateElements(
+      `<div class=gfms-container></div>`,
+      postItemEl,
+    );
+    style(
+      toolsCntEl,
+      `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 9999;
+      `,
+    );
+    const downloadBtnEl = generateElements('<button>⬇️</button>', toolsCntEl);
     downloadBtnEl.addEventListener('click', () => {
       const linkToVid = postItemEl.querySelector('a').href;
       initiateYtdlp(linkToVid);

@@ -1,33 +1,38 @@
 (async function () {
   'use strict';
 
-  markAndFilter(
-    'main .html-div > div:has([href*="/p/"])',
-    'a',
-    'href',
-    /\/p\/(.+?)\//,
-    // /\/explore\//
-    null,
-    false,
-    ``,
-  );
+  // markAndFilter(
+  //   'main .html-div > div:has([href*="/p/"])',
+  //   'a',
+  //   'href',
+  //   /\/p\/(.+?)\//,
+  //   // /\/explore\//
+  //   null,
+  //   false,
+  //   ``,
+  // );
+
+  const queries = {
+    reelItems: '[href*="/reel/"]',
+    pItems: '[href*="/p/"]',
+    // igPosts: 'img[crossorigin="anonymous"][style="object-fit: cover;"]',
+    // igAllImagesItems: '#igAllImages > * > img',
+    // openedImgs: 'article li img',
+    // igWallItems: '.ig-wall-item',
+  };
+  const combinedQuery = Object.values(queries).join(', ');
+  const finalQuery = `:is(${combinedQuery}):not(.cdx)`;
+
+  //* Collapsible items (mainly for gallerydl)
+  initiateGalleryDlFunctionality('.gfms-container');
 
   //* ig-wall items
   waitForEach('.ig-wall-meta', itemEl => {
-    addGalleryDlCheckbox(itemEl);
+    initiateGalleryDlFunctionality(itemEl);
   });
 
   //* post items
   (function () {
-    const queries = {
-      reelItems: '[href*="/reel/"]',
-      // igPosts: 'img[crossorigin="anonymous"][style="object-fit: cover;"]',
-      // igAllImagesItems: '#igAllImages > * > img',
-      // openedImgs: 'article li img',
-      // igWallItems: '.ig-wall-item',
-    };
-    const combinedQuery = Object.values(queries).join(', ');
-    const finalQuery = `:is(${combinedQuery}):not(.cdx)`;
     console.log(finalQuery);
 
     waitForEach(finalQuery, itemEl => {
@@ -40,11 +45,15 @@
       const linksContainerEl = generateElements(
         `<div
           class="gfms-container"
-          data-url="${url}"
+          data-gfms-url="${url}"
         >
         </div>`,
         itemEl,
       );
+
+      linksContainerEl.addEventListener('click', event => {
+        event.stopPropagation();
+      });
 
       style(
         linksContainerEl,
@@ -57,7 +66,14 @@
         `,
       );
       generateElements(
-        `<a href='${imgSrc}' target=_blank> 🔗 </a>`,
+        `
+        <a
+          href='${imgSrc}'
+          target=_blank
+          class="exclude-gallery-dl"
+        >
+          🔗
+        </a>`,
         linksContainerEl,
       );
       generateElements(
@@ -70,9 +86,6 @@
       ).addEventListener('click', () => {
         copyImageToClipboard(imgSrc);
       });
-
-      //* gallery-dl
-      addGalleryDlCheckbox(linksContainerEl);
     });
   })();
 

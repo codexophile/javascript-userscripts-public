@@ -1,9 +1,6 @@
-( async function () {
-    'use strict';
-    alert();
-    if ( window.top != window.self ) return; //don't run on frames or iframes
-
-    const temp = await waitFor( '#btn-main' );
-    console.log( temp );
-
-} )();
+(async function () {
+  'use strict';
+  waitFor('#btn-main').then(btnEl => {
+    btnEl.click();
+  });
+})();

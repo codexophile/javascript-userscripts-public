@@ -1741,9 +1741,54 @@ function lazyLoad(load, ...items) {
 
 //  MARK: Page functionalities
 
-function addGalleryDlCheckbox(parentEl) {
-  const checkboxEl = generateElements(`<input type="checkbox">`, parentEl);
-  checkboxEl.classList.add('gallery-dl-checkbox');
+async function initiateGalleryDlFunctionality(checkboxParentSelector) {
+  const galleryDlSelectedLinksSet = new Set();
+  waitForEach(checkboxParentSelector, async parentEl => {
+    console.log('xxx', parentEl);
+    const checkboxEl = generateElements(`<input type="checkbox">`, parentEl);
+    checkboxEl.classList.add('gallery-dl-checkbox');
+    checkboxEl.addEventListener('change', () => {
+      if (checkboxEl.checked) {
+        const linkEl = closestQuery(checkboxEl, 'a:not(.exclude-gallery-dl)', {
+          matchAncestors: true,
+        });
+        const link = linkEl ? linkEl.href : null;
+        console.log(linkEl, link);
+        if (link) {
+          galleryDlSelectedLinksSet.add(link);
+        }
+        console.log('xxx', galleryDlSelectedLinksSet);
+      } else {
+        const linkEl = closestQuery(checkboxEl, 'a:not(.exclude-gallery-dl)', {
+          matchAncestors: true,
+        });
+        const link = linkEl ? linkEl.href : null;
+        if (link) {
+          galleryDlSelectedLinksSet.delete(link);
+        }
+      }
+    });
+  });
+
+  const { addButton } = await Collapsible();
+  addButton('🖼️', null, () => {
+    console.log(galleryDlSelectedLinksSet);
+    // const gallerydlCheckboxEls = document.querySelectorAll(
+    //   `.gallery-dl-checkbox:checked`,
+    // );
+
+    if (galleryDlSelectedLinksSet.size < 1) {
+      galleryDlSelectedLinksSet.add(location.href);
+    }
+
+    invokeDownloader('gallerydl', {
+      urlToDownload: [...galleryDlSelectedLinksSet].join(','),
+      destination: 'Y:\\Pic\\gallery-dl',
+      mode: 'regular',
+      browser: 'firefox',
+      profile: '3vm341ho.default-release',
+    });
+  });
 }
 
 async function setupYtDlpBtn(
@@ -2151,6 +2196,7 @@ function invokeDownloader(
 
   // URLSearchParams encodes spaces as "+", but the AHK decoder expects %20
   const query = params.toString().replace(/\+/g, '%20');
+  clearThenLog(query);
 
   location.replace(`cdx-ahk-protocol://initiate-${downloader}/?${query}`);
 }
@@ -3376,7 +3422,9 @@ function fauxHistoryPushState(url, timeout = 3000) {
 
 function addHistoryEntry(newUrl) {
   const originalUrl = location.href;
-  history.pushState({ state: 1 }, 'new state', newUrl);
+  try {
+    history.pushState({ state: 1 }, 'new state', newUrl);
+  } catch (error) {}
   history.pushState({ state: 1 }, 'new state', originalUrl);
 }
 
@@ -3520,7 +3568,98 @@ function insertOrUpdateElement(selector, html, parent, prepend = false) {
 }
 
 // MARK: JQ Alternatives
-//# JQ Alternatives
+
+/**
+ * Options for {@link closestQuery}.
+ * @typedef {Object} ClosestQueryOptions
+ * @property {boolean} [includeSelf=false] If `true`, the starting element's own
+ *   descendants are searched first, before moving up to its parent.
+ * @property {boolean} [matchAncestors=false] If `true`, each ancestor is itself tested
+ *   against the selector (like `Element.closest()`) before its descendants are searched.
+ *   The starting element is never matched, only its ancestors.
+ * @property {Element | string | null} [boundary=null] Stops the upward walk. Can be an
+ *   element or a CSS selector. The boundary element itself IS tested/searched, but
+ *   nothing above it is.
+ */
+
+/**
+ * Walks up the ancestor chain from `start` and, at each ancestor, optionally tests the
+ * ancestor itself and then searches its descendants for an element matching `selector`.
+ * Returns the first match found.
+ *
+ * Unlike {@link Element.closest}, which only tests the ancestors themselves, this
+ * looks for matches *inside* each ancestor too. With `matchAncestors`, it covers both.
+ * Branches already searched at a lower level (including `start` itself) are skipped,
+ * so the same element is never re-examined or returned.
+ *
+ * At each level the order is: the ancestor itself (if `matchAncestors`), then its
+ * descendants in document order.
+ *
+ * @template {Element} [T=Element] Expected type of the matched element.
+ * @param {Element} start Element to begin from. It is never returned as a match.
+ * @param {string} selector CSS selector to match against.
+ * @param {ClosestQueryOptions} [options] Optional behavior settings.
+ * @returns {T | null} The nearest matching element, or `null` if none exists.
+ *
+ * @example
+ * // From a "Delete" button, find the nearest title in the same card or any outer container
+ * const title = closestQuery(button, '.title');
+ *
+ * @example
+ * // Also accept an ancestor that is itself a `.title`
+ * const title = closestQuery(button, '.title', { matchAncestors: true });
+ *
+ * @example
+ * // Stop at the nearest <form>, with a type cast for IntelliSense
+ * const input = /** @type {HTMLInputElement | null} *\/ (
+ *   closestQuery(button, 'input[type="text"]', { boundary: 'form' })
+ * );
+ */
+function closestQuery(start, selector, options = {}) {
+  const {
+    includeSelf = false,
+    matchAncestors = false,
+    boundary = null,
+  } = options;
+
+  /** @type {Element | null} Branch already searched; its subtree is skipped. */
+  let searched = includeSelf ? null : start;
+
+  /** @type {Element | null} Element currently being examined. */
+  let current = includeSelf ? start : start.parentElement;
+
+  /**
+   * Checks whether `el` is the boundary.
+   * @param {Element} el Element to test.
+   * @returns {boolean} `true` if `el` is the boundary.
+   */
+  const isBoundary = el =>
+    boundary instanceof Element
+      ? el === boundary
+      : typeof boundary === 'string'
+        ? el.matches(boundary)
+        : false;
+
+  while (current) {
+    // Test the ancestor itself (never `start`, even when includeSelf is true)
+    if (matchAncestors && current !== start && current.matches(selector)) {
+      return /** @type {any} */ (current);
+    }
+
+    for (const candidate of current.querySelectorAll(selector)) {
+      // Skip the branch we just came from (it's already been checked or excluded)
+      if (searched && (candidate === searched || searched.contains(candidate)))
+        continue;
+      return /** @type {any} */ (candidate);
+    }
+
+    if (isBoundary(current)) break;
+    searched = current;
+    current = current.parentElement;
+  }
+
+  return null;
+}
 
 function nextAll(element, selector, includeSelf = false) {
   const siblings = [];
