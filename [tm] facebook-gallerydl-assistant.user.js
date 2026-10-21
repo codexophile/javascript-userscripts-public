@@ -14,12 +14,13 @@
 
   const SELECTORS = ['/photo.php?', '/stories/', '/photo/?fbid='];
   const selector = SELECTORS.map(s => `[href*="${s}"]`).join(',');
-  waitForEach(selector, el => {
-    const checkboxEl = generateElements(
-      `<input type="checkbox">`,
-      el.parentElement,
-    );
-    checkboxEl.classList.add('gallery-dl-checkbox');
-    console.log(el);
-  });
+  initiateGalleryDlFunctionality(selector);
+  // waitForEach(selector, el => {
+  //   const checkboxEl = generateElements(
+  //     `<input type="checkbox">`,
+  //     el.parentElement,
+  //   );
+  //   checkboxEl.classList.add('gallery-dl-checkbox');
+  //   console.log(el);
+  // });
 })();
