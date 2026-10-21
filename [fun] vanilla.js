@@ -295,6 +295,20 @@ function capitalizeFirstLetter(string) {
 
 //  MARK: Time/date Text functions
 
+/**
+ * Formats the elapsed time between a date and now using calendar-sized duration
+ * units from years down to minutes.
+ *
+ * @param {string|Date} date - The date to compare with the current time.
+ * @param {boolean} [shortForm=false] - Whether to use abbreviated units such as
+ *   `1y 2mo` instead of `1 year 2 months`.
+ * @returns {string} A relative duration such as `2 weeks 3 days ago` or
+ *   `in 1 year 2 months`.
+ * @throws {Error} If the date is missing or invalid.
+ * @example
+ * timeSince(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)); // '1 month ago'
+ * timeSince(new Date(Date.now() + 90 * 60 * 1000), true); // 'in 1h 30m'
+ */
 function timeSince(date, shortForm = false) {
   // Handle null or undefined input
   if (!date) {
@@ -314,13 +328,26 @@ function timeSince(date, shortForm = false) {
   const isPast = diff < 0;
   const absDiff = Math.abs(diff);
 
-  // Convert to various time units
-  const minutes = Math.floor(absDiff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+  // Convert to duration units. Fixed-length units keep this helper predictable
+  // for elapsed durations, unlike calendar-month arithmetic.
+  const millisecondsPerMinute = 60000;
+  const minutesPerHour = 60;
+  const hoursPerDay = 24;
+  const daysPerWeek = 7;
+  const daysPerMonth = 30;
+  const daysPerYear = 365;
 
-  // Calculate remaining units
-  const remainingHours = hours % 24;
+  const minutes = Math.floor(absDiff / millisecondsPerMinute);
+  const totalHours = Math.floor(minutes / minutesPerHour);
+  const totalDays = Math.floor(totalHours / hoursPerDay);
+
+  const years = Math.floor(totalDays / daysPerYear);
+  const remainingDaysAfterYears = totalDays % daysPerYear;
+  const months = Math.floor(remainingDaysAfterYears / daysPerMonth);
+  const remainingDaysAfterMonths = remainingDaysAfterYears % daysPerMonth;
+  const weeks = Math.floor(remainingDaysAfterMonths / daysPerWeek);
+  const remainingDays = remainingDaysAfterMonths % daysPerWeek;
+  const remainingHours = totalHours % hoursPerDay;
   const remainingMinutes = minutes % 60;
 
   // Helper function to format parts
@@ -340,8 +367,23 @@ function timeSince(date, shortForm = false) {
   // Build the time string
   let result = '';
 
-  if (days > 0) {
-    result += formatPart(days, 'day', 'd');
+  if (years > 0) {
+    result += formatPart(years, 'year', 'y');
+  }
+
+  if (months > 0) {
+    result += result ? ' ' : '';
+    result += formatPart(months, 'month', 'mo');
+  }
+
+  if (weeks > 0) {
+    result += result ? ' ' : '';
+    result += formatPart(weeks, 'week', 'w');
+  }
+
+  if (remainingDays > 0) {
+    result += result ? ' ' : '';
+    result += formatPart(remainingDays, 'day', 'd');
   }
 
   if (remainingHours > 0) {
@@ -349,7 +391,14 @@ function timeSince(date, shortForm = false) {
     result += formatPart(remainingHours, 'hour', 'h');
   }
 
-  if (remainingMinutes > 0 || (days === 0 && remainingHours === 0)) {
+  if (
+    remainingMinutes > 0 ||
+    (years === 0 &&
+      months === 0 &&
+      weeks === 0 &&
+      remainingDays === 0 &&
+      remainingHours === 0)
+  ) {
     result += result ? ' ' : '';
     result += formatPart(remainingMinutes, 'minute', 'm');
   }
