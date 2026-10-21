@@ -1793,7 +1793,6 @@ function lazyLoad(load, ...items) {
 async function initiateGalleryDlFunctionality(checkboxParentSelector) {
   const galleryDlSelectedLinksSet = new Set();
   waitForEach(checkboxParentSelector, async parentEl => {
-    console.log('xxx', parentEl);
     const checkboxEl = generateElements(`<input type="checkbox">`, parentEl);
     checkboxEl.classList.add('gallery-dl-checkbox');
     checkboxEl.addEventListener('change', () => {
@@ -1806,7 +1805,6 @@ async function initiateGalleryDlFunctionality(checkboxParentSelector) {
         if (link) {
           galleryDlSelectedLinksSet.add(link);
         }
-        console.log('xxx', galleryDlSelectedLinksSet);
       } else {
         const linkEl = closestQuery(checkboxEl, 'a:not(.exclude-gallery-dl)', {
           matchAncestors: true,
