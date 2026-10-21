@@ -27,8 +27,16 @@
   initiateGalleryDlFunctionality('.gfms-container');
 
   //* ig-wall items
-  waitForEach('.media-frame', itemEl => {
-    // initiateGalleryDlFunctionality(itemEl);
+  waitForEach('.post-group[data-post-key]', postEl => {
+    const postId = postEl.dataset.postKey;
+    const gfmsContainerEl = generateElements(
+      `
+      <div class="gfms-container" data-gfms-url="${postEl.dataset.postKey}">
+        <a href="https://www.instagram.com/p/${postId}/" target="_blank">${postId}</a>
+      </div>`,
+      postEl,
+    );
+    style(gfmsContainerEl, `flex-basis: 100%;`);
   });
 
   //* post items
