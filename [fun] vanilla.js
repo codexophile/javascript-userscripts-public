@@ -822,53 +822,38 @@ function timer(interval = 1000, tick = null, done = null) {
 
 //  MARK: Central mutation observer
 
-// Central MutationObserver manager
+/**
+ * Observes the document and, when requested, accessible shadow roots for matching elements.
+ *
+ * Open shadow roots are discovered automatically. Closed shadow roots cannot be
+ * discovered from page code, but callers can provide one with observeRoot().
+ */
 const CentralObserverManager = (function () {
-  // Private properties
-  let mainObserver = null;
+  const observedRoots = new Map();
   const callbacks = new Map(); // Maps selectors to arrays of callback functions
   const processedElements = new Map(); // Maps selectors to Sets of processed elements
 
-  // Process mutations for all registered callbacks
-  function processMutations(mutations) {
-    // Check for added nodes
-    mutations.forEach(mutation => {
-      if (mutation.type === 'childList') {
-        // Process added nodes
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeType !== Node.ELEMENT_NODE) return;
+  /**
+   * Finds open shadow roots reachable from a document, shadow root, or element.
+   *
+   * @param {Document|ShadowRoot|Element} root Root from which to search.
+   * @returns {ShadowRoot[]} Reachable open shadow roots.
+   */
+  function findOpenShadowRoots(root) {
+    const roots = [];
+    const pending = [root];
 
-          // Check this node against all registered selectors
-          callbacks.forEach((callbackArray, selector) => {
-            // Check if the node itself matches
-            if (node.matches(selector)) {
-              executeCallbacks(node, selector, callbackArray);
-            }
-
-            // Check if any of its children match
-            if (node.querySelector(selector)) {
-              node.querySelectorAll(selector).forEach(element => {
-                executeCallbacks(element, selector, callbackArray);
-              });
-            }
-          });
-        });
-
-        // Handle removed nodes (if needed)
-        mutation.removedNodes.forEach(node => {
-          if (node.nodeType !== Node.ELEMENT_NODE) return;
-          // Implementation for tracking removed nodes if needed
-        });
-      }
-    });
-
-    // Also check for all newly added elements that might match existing selectors
-    // (this ensures we don't miss elements added through innerHTML or other means)
-    callbacks.forEach((callbackArray, selector) => {
-      document.querySelectorAll(selector).forEach(element => {
-        executeCallbacks(element, selector, callbackArray);
+    while (pending.length > 0) {
+      const currentRoot = pending.shift();
+      currentRoot.querySelectorAll('*').forEach(element => {
+        if (element.shadowRoot) {
+          roots.push(element.shadowRoot);
+          pending.push(element.shadowRoot);
+        }
       });
-    });
+    }
+
+    return roots;
   }
 
   // Execute callbacks for a matched element
@@ -885,45 +870,115 @@ const CentralObserverManager = (function () {
 
     // Mark as processed and execute callbacks
     processed.add(element);
-    callbackArray.forEach(callback => callback(element));
+    const isInShadowRoot = element.getRootNode() instanceof ShadowRoot;
+    callbackArray.forEach(({ callback, shadowDom }) => {
+      if (!isInShadowRoot || shadowDom) callback(element);
+    });
   }
 
-  // Initialize the main observer
-  function initializeObserver() {
-    if (mainObserver) return; // Already initialized
-
-    mainObserver = new MutationObserver(processMutations);
-    mainObserver.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-
-    // Process existing elements on page
+  /**
+   * Processes all currently matching elements in a root.
+   *
+   * @param {Document|ShadowRoot} root Root to search.
+   * @returns {void}
+   */
+  function processExistingElements(root) {
     callbacks.forEach((callbackArray, selector) => {
-      document.querySelectorAll(selector).forEach(element => {
+      root.querySelectorAll(selector).forEach(element => {
         executeCallbacks(element, selector, callbackArray);
       });
     });
   }
 
+  /**
+   * Processes nodes added to an observed root.
+   *
+   * @param {NodeList} nodes Added nodes.
+   * @returns {void}
+   */
+  function processAddedNodes(nodes, discoverShadowRoots) {
+    nodes.forEach(node => {
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      callbacks.forEach((callbackArray, selector) => {
+        if (node.matches(selector)) {
+          executeCallbacks(node, selector, callbackArray);
+        }
+        node.querySelectorAll(selector).forEach(element => {
+          executeCallbacks(element, selector, callbackArray);
+        });
+      });
+      if (discoverShadowRoots) {
+        findOpenShadowRoots(node).forEach(root => observeRoot(root, true));
+      }
+    });
+  }
+
+  /**
+   * Starts observing a document or shadow root.
+   *
+   * @param {Document|ShadowRoot} root Root to observe.
+   * @param {boolean} discoverShadowRoots Whether to discover nested open roots.
+   * @returns {void}
+   */
+  function observeRoot(root, discoverShadowRoots = false) {
+    const existing = observedRoots.get(root);
+    if (existing) {
+      if (discoverShadowRoots && !existing.discoverShadowRoots) {
+        existing.discoverShadowRoots = true;
+        findOpenShadowRoots(root).forEach(nestedRoot =>
+          observeRoot(nestedRoot, true),
+        );
+      }
+      return;
+    }
+
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          processAddedNodes(mutation.addedNodes, observedRoots.get(root).discoverShadowRoots);
+        }
+      });
+    });
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+    });
+    observedRoots.set(root, { observer, discoverShadowRoots });
+
+    processExistingElements(root);
+    if (discoverShadowRoots) {
+      findOpenShadowRoots(root).forEach(nestedRoot =>
+        observeRoot(nestedRoot, true),
+      );
+    }
+  }
+
   return {
     // Register a callback for a specific selector
-    observe: function (selector, callback, processExisting = true) {
+    observe: function (
+      selector,
+      callback,
+      processExisting = true,
+      { shadowDom = false } = {},
+    ) {
       // Create or retrieve callback array for this selector
       if (!callbacks.has(selector)) {
         callbacks.set(selector, []);
         processedElements.set(selector, new Set());
       }
 
-      callbacks.get(selector).push(callback);
+      callbacks.get(selector).push({ callback, shadowDom });
 
-      // Initialize observer if not already done
-      initializeObserver();
+      // Initialize the document observer if not already done.
+      observeRoot(document);
+      if (shadowDom) observeRoot(document, true);
 
       // Process existing elements if requested
       if (processExisting) {
-        document.querySelectorAll(selector).forEach(element => {
-          executeCallbacks(element, selector, callbacks.get(selector));
+        observedRoots.forEach((_, root) => {
+          root.querySelectorAll(selector).forEach(element => {
+            executeCallbacks(element, selector, callbacks.get(selector));
+          });
         });
       }
 
@@ -931,7 +986,9 @@ const CentralObserverManager = (function () {
       return function unobserve() {
         const callbackArray = callbacks.get(selector);
         if (callbackArray) {
-          const index = callbackArray.indexOf(callback);
+          const index = callbackArray.findIndex(
+            registration => registration.callback === callback,
+          );
           if (index !== -1) {
             callbackArray.splice(index, 1);
           }
@@ -945,6 +1002,9 @@ const CentralObserverManager = (function () {
       };
     },
 
+    // Register an open or closed shadow root that cannot be discovered automatically.
+    observeRoot,
+
     // Reset tracking for a specific selector
     resetSelector: function (selector) {
       if (processedElements.has(selector)) {
@@ -954,19 +1014,26 @@ const CentralObserverManager = (function () {
 
     // Disconnect and clean up everything
     disconnect: function () {
-      if (mainObserver) {
-        mainObserver.disconnect();
-        mainObserver = null;
-      }
+      observedRoots.forEach(({ observer }) => observer.disconnect());
+      observedRoots.clear();
       callbacks.clear();
       processedElements.clear();
     },
   };
 })();
 
-// Modified version of waitForEach using the consolidated observer
+/**
+ * Runs a callback once for each matching element, including elements in
+ * automatically discovered open shadow roots.
+ *
+ * @param {string} selector CSS selector to match.
+ * @param {Function} callback Callback receiving the matched element and stop helper.
+ * @param {{once?: boolean, shadowDom?: boolean}} options Observation options.
+ * Set shadowDom to true to include accessible open shadow roots.
+ * @returns {{unobserve: Function, reload: Function}} Observation controls.
+ */
 function waitForEach(selector, callback, options = {}) {
-  const { once = false } = options;
+  const { once = false, shadowDom = false } = options;
   let stopped = false;
   let unobserve;
 
@@ -983,7 +1050,9 @@ function waitForEach(selector, callback, options = {}) {
   };
 
   // Register with observer manager
-  unobserve = CentralObserverManager.observe(selector, wrappedCallback);
+  unobserve = CentralObserverManager.observe(selector, wrappedCallback, true, {
+    shadowDom,
+  });
 
   // observe() may process existing elements synchronously before it returns.
   if (stopped) unobserve();
@@ -1001,34 +1070,30 @@ function waitForEach(selector, callback, options = {}) {
   };
 }
 
-// Modified version of waitFor using the consolidated observer
-function waitFor(selector, textToMatch = null) {
+/**
+ * Waits for the first matching element, including elements in open shadow roots.
+ *
+ * @param {string} selector CSS selector to match.
+ * @param {string|null} textToMatch Optional text that must be contained by the element.
+ * @param {{shadowDom?: boolean}} options Observation options.
+ * Set shadowDom to true to include accessible open shadow roots.
+ * @returns {Promise<Element>} Promise resolved with the matching element.
+ */
+function waitFor(selector, textToMatch = null, options = {}) {
   return new Promise(resolve => {
-    // Check if element already exists
-    const existing = [...document.querySelectorAll(selector)].find(
-      element =>
-        textToMatch === null || element.textContent.includes(textToMatch),
-    );
-    if (existing) {
-      resolve(existing);
-      return;
-    }
+    let unobserve;
+    let resolved = false;
+    const callback = element => {
+      if (textToMatch !== null && !element.textContent.includes(textToMatch)) {
+        return;
+      }
+      resolved = true;
+      unobserve?.();
+      resolve(element);
+    };
 
-    // Set up observer to wait for element
-    const unobserve = CentralObserverManager.observe(
-      selector,
-      element => {
-        if (
-          textToMatch !== null &&
-          !element.textContent.includes(textToMatch)
-        ) {
-          return;
-        }
-        unobserve(); // Remove the observer once found
-        resolve(element);
-      },
-      false,
-    ); // Don't process existing elements (we already checked)
+    unobserve = CentralObserverManager.observe(selector, callback, true, options);
+    if (resolved) unobserve();
   });
 }
 
