@@ -1,3 +1,58 @@
+// ==UserScript==
+// @name         Instagram Full-Size Gallery & Downloader (fork)
+// @namespace    https://github.com/stupidgiraffe/instagram-full-size-gallery-downloader
+// @author       William Harris; based on the original script by driver8
+// @license      AGPL-3.0-or-later
+// @description  Rebuilds Instagram into an uncropped full-size photo and video gallery with smooth zoom, continuous browsing, load-all, and direct downloads.
+// @homepageURL  https://github.com/stupidgiraffe/instagram-full-size-gallery-downloader
+// @supportURL   https://github.com/stupidgiraffe/instagram-full-size-gallery-downloader/issues
+// @contributionURL https://buymeacoffee.com/stupidgiraffe
+// @compatible   firefox
+// @compatible   chrome
+// @compatible   edge
+// @compatible   brave
+
+// @match        https://www.instagram.com/*
+// @match        https://instagram.com/*
+
+// @version      2.2.1
+
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_setClipboard
+// @grant        GM_download
+// @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
+
+// @connect      instagram.com
+// @connect      www.instagram.com
+// @connect      i.instagram.com
+// @connect      *.cdninstagram.com
+// @connect      *.fbcdn.net
+
+// @run-at       document-start
+
+// @downloadURL https://update.greasyfork.org/scripts/592249/Instagram%20Full-Size%20Gallery%20%20Downloader.user.js
+// @updateURL https://update.greasyfork.org/scripts/592249/Instagram%20Full-Size%20Gallery%20%20Downloader.meta.js
+
+// @require      file://c:\mega\IDEs\javascript-userscripts-public\[fun] vanilla.js
+// @require      file://c:\mega\IDEs\javascript-userscripts-public\[fun] vanilla - presets.js
+// @require      file://C:\mega\IDEs\javascript-userscripts-public\Instagram-FullSize-Gallery-and-Downloader-fork.user.js
+
+// ==/UserScript==
+
+/*
+ * Instagram Full-Size Gallery & Downloader
+ *
+ * Based on “Instagram full-size media scroll wall” by driver8.
+ * Modern gallery rewrite and maintenance by William Harris, 2026.
+ * Development assisted by AI tooling.
+ *
+ * This program is free software licensed under the GNU Affero General
+ * Public License, version 3 or any later version. See LICENSE.
+ */
+
 (() => {
   'use strict';
 
