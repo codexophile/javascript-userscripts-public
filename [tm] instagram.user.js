@@ -27,8 +27,8 @@
   initiateGalleryDlFunctionality('.gfms-container');
 
   //* ig-wall items
-  waitForEach('.ig-wall-meta', itemEl => {
-    initiateGalleryDlFunctionality(itemEl);
+  waitForEach('.media-frame', itemEl => {
+    // initiateGalleryDlFunctionality(itemEl);
   });
 
   //* post items
