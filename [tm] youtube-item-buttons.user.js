@@ -19,6 +19,38 @@
   const queryForMenuEls = menuSelectorArr.join(', ');
   const menuTriggerSelectorArr = ['.dropdown-trigger'];
   const queryForMenuTriggerEls = menuTriggerSelectorArr.join(', ');
+  const ITEM_DIMENSIONS = '25px';
+
+  GM_addStyle(`
+      #buttonsContainerMain {
+        display: none;
+        a {
+          text-decoration: none;
+        }
+      }
+      :is(${queryForThumbEls}):hover #buttonsContainerMain {
+
+        display: flex;
+        flex-direction: column;
+
+        .btns-container-row {
+          display: flex;
+          flex-direction: row;
+          gap: 5px;
+
+          & > * {
+            font-size: 20px;
+            width: ${ITEM_DIMENSIONS};
+            height: ${ITEM_DIMENSIONS};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+          }
+        }
+
+      }
+    `);
 
   //* youtube menu actions
   // waitForEach(queryForMenuTriggerEls, menuTriggerEl => {
@@ -44,31 +76,36 @@
     if (isNested) return; // skip if it's a nested thumbnail element
     // if (thumbEl.querySelector(queryForThumbEls)) return; // skip if it has a child thumbnail element
 
-    const buttonsContainerEl = createButtonsContainer(thumbEl);
+    const btnsContainerMainEl = createButtonsContainer(thumbEl);
     const linkEl = thumbEl.querySelector('a');
     const itemUrl = linkEl.href;
 
+    const btnsContainerRowEl01 = generateElements(
+      '<div class="btns-container-row"></div>',
+      btnsContainerMainEl,
+    );
+
     generateElements(
       '<a id="allow-play-link">▶️</a>',
-      buttonsContainerEl,
+      btnsContainerRowEl01,
     ).setAttribute('href', itemUrl + '#allow-play');
 
     if (!location.href.match(/\/@|\/channel\//))
-      addLinkToVideos(thumbEl, buttonsContainerEl);
+      addLinkToVideos(thumbEl, btnsContainerRowEl01);
 
-    addHighResThumbButton(thumbEl, buttonsContainerEl);
+    addHighResThumbButton(thumbEl, btnsContainerRowEl01);
 
     thumbEl.addEventListener('mouseover', () => {
       const fullResThumbBtnEl =
-        buttonsContainerEl.querySelector('#peekFullResThumb');
-      const linkToVidsEl = buttonsContainerEl.querySelector('#linkToVids');
+        btnsContainerRowEl01.querySelector('#peekFullResThumb');
+      const linkToVidsEl = btnsContainerRowEl01.querySelector('#linkToVids');
       setPreviewImgHref(fullResThumbBtnEl, thumbEl);
       setLinkToVidsHref(linkToVidsEl, thumbEl);
     });
 
     generateElements(
       `<button>⬇️</button>`,
-      buttonsContainerEl,
+      btnsContainerRowEl01,
     ).addEventListener('click', () => {
       addHistoryEntry(itemUrl);
       invokeDownloader('ytdlp', {
@@ -82,7 +119,7 @@
 
     generateElements(
       '<button>👎🏻</button>',
-      buttonsContainerEl,
+      btnsContainerRowEl01,
     ).addEventListener('click', async () => {
       const menuBtn = thumbEl.querySelector(MENU_BTN_SELECTOR);
       if (!menuBtn) throw new Error('Menu button not found');
@@ -148,19 +185,11 @@
 
   function createButtonsContainer(parent) {
     const buttonsContainer = generateElements(
-      `<div id=buttonsContainer></div>`,
+      `<div id=buttonsContainerMain></div>`,
     );
     parent.append(buttonsContainer);
     buttonsContainer.style = 'position: absolute; left: 5px; bottom: 5px;';
-    GM_addStyle(`
-      #buttonsContainer {
-        display: none;
-        a {
-          text-decoration: none;
-        }
-      }
-      :is(${queryForThumbEls}):hover #buttonsContainer { display: flex; }
-    `);
+
     return buttonsContainer;
   }
 
