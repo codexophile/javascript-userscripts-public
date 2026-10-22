@@ -81,7 +81,7 @@
     const itemUrl = linkEl.href;
 
     const btnsContainerRowEl01 = generateElements(
-      '<div class="btns-container-row"></div>',
+      '<div class="btns-container-row" id="row-01"></div>',
       btnsContainerMainEl,
     );
 
