@@ -83,8 +83,9 @@
     });
   }
 
+  const QUERY = `a[href*='/watch']:not(#allow-play-link)`;
   waitForEach('#row-01.btns-container-row', async btnsContainerEl => {
-    const peekButton = generateElements(`<a class=peekButton>🫣</a>`);
+    const peekButton = generateElements(`<button class=peekButton>🫣</button>`);
     btnsContainerEl.append(peekButton);
 
     peekButton.addEventListener('click', async event => {
@@ -93,8 +94,9 @@
       peekButton.textContent = '🔄';
 
       try {
-        const videoLinkEl =
-          btnsContainerEl.parentElement.querySelector("a[href*='/watch']");
+        const videoLinkEl = btnsContainerEl
+          .closest(`*:has(${QUERY})`)
+          .querySelector(QUERY);
         const videoUrl = videoLinkEl.href;
 
         const ytHtml = await GMXmlHttpReqResponse(videoUrl);

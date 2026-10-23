@@ -4,10 +4,11 @@
 (async function () {
   'use strict';
 
-  const targetUrl = 'https://status.d420.de/api/v1/instances';
-  const result = await fetchJson(targetUrl);
-  console.log(result);
-  // GM_setClipboard(result);
+  const targetUrl =
+    'https://pornone.com/young/young-studs-loves-his-daddies-cock-lucas-vara-e-cm/280784899/';
+  const result = await two(targetUrl);
+  // console.log(result);
+  GM_setClipboard(result);
 
   async function two() {
     const doc = await fetchDoc(targetUrl, null, true);

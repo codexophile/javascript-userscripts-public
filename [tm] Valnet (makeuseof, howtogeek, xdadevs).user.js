@@ -1,13 +1,15 @@
 (function () {
-  'use strict';
+  ('use strict');
 
   const dialogContentEl = generateElements(
     '<div class="dialog-content"></div>',
   );
   dialog('Outline', dialogContentEl);
-  document
-    .querySelectorAll(`.content-block-regular > :is(h2, h3)`)
-    .forEach(headingEl => {
+
+  const query = '.content-block-regular > :is(h2, h3)';
+  waitForEach(query, headingEl => {
+    dialogContentEl.replaceChildren();
+    document.querySelectorAll(query).forEach(headingEl => {
       //* outline
       (function () {
         const clonedEl = headingEl.cloneNode(true);
@@ -30,29 +32,30 @@
           headingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
       })();
+    });
 
-      //* imdb links
-      (function () {
-        const headerText = headingEl.textContent.trim();
-        console.log(headerText);
-        const matches = headerText.match(/(?:\d+\. )?(.+?) \((\d{4})\)/);
-        if (!matches) return;
-        const title = matches[1];
-        const year = matches[2];
-        const query = `${title} ${year}`;
-        const imdbLinkEl = generateElements(`<a>Imdb</a>`, headingEl);
-        imdbLinkEl.setAttribute(
-          'href',
-          `https://www.google.com/search?btnI=1&q=${query}%20site:imdb.com/title`,
-        );
-        imdbLinkEl.setAttribute('target', '_blank');
-        style(
-          imdbLinkEl,
-          `
+    //* imdb links
+    (function () {
+      const headerText = headingEl.textContent.trim();
+      console.log(headerText);
+      const matches = headerText.match(/(?:\d+\. )?(.+?) \((\d{4})\)/);
+      if (!matches) return;
+      const title = matches[1].trim();
+      const year = matches[2].trim();
+      const query = encodeURIComponent(`${title} ${year}`);
+      const imdbLinkEl = generateElements(`<a>Imdb</a>`, headingEl);
+      imdbLinkEl.setAttribute(
+        'href',
+        `https://www.google.com/search?btnI=1&q=${query}%20site:imdb.com/title`,
+      );
+      imdbLinkEl.setAttribute('target', '_blank');
+      style(
+        imdbLinkEl,
+        `
       margin-left: 10px;
       color: #fff;
     `,
-        );
-      })();
-    });
+      );
+    })();
+  });
 })();
