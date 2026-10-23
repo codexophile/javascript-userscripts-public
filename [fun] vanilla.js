@@ -935,7 +935,10 @@ const CentralObserverManager = (function () {
     const observer = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
         if (mutation.type === 'childList') {
-          processAddedNodes(mutation.addedNodes, observedRoots.get(root).discoverShadowRoots);
+          processAddedNodes(
+            mutation.addedNodes,
+            observedRoots.get(root).discoverShadowRoots,
+          );
         }
       });
     });
@@ -1092,7 +1095,12 @@ function waitFor(selector, textToMatch = null, options = {}) {
       resolve(element);
     };
 
-    unobserve = CentralObserverManager.observe(selector, callback, true, options);
+    unobserve = CentralObserverManager.observe(
+      selector,
+      callback,
+      true,
+      options,
+    );
     if (resolved) unobserve();
   });
 }
@@ -4184,7 +4192,7 @@ function markVideoItems(mainElSelector, durationElSelector, qualityElSelector) {
       markAsErrored(videoItemEl);
       return;
     }
-    const duration = toSeconds(durationEl.textContent);
+    const duration = toSeconds(getOwnText(durationEl));
     if (isNaN(duration)) {
       markAsErrored(videoItemEl);
       return;
