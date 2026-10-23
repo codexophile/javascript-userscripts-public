@@ -171,7 +171,7 @@
         transform: translateY(-1px);
       }
 
-      &.is-collapsed #content {
+      &.is-collapsed #cdx-content {
         max-width: 0;
         opacity: 0;
         padding-left: 0;
@@ -179,7 +179,7 @@
         margin-right: -2px;
       }
 
-      #content, #content > * {
+      #cdx-content, #cdx-content > * {
         min-width: 0;
         max-width: min(34vw, 420px);
         padding: 3px 6px 3px 2px;
@@ -271,7 +271,7 @@
       @media (max-width: 640px) {
         max-width: calc(100vw - 16px);
 
-        #content {
+        #cdx-content {
           max-width: min(52vw, 260px);
         }
       }
@@ -300,7 +300,7 @@
         <button id="btn-copy-url" class="button" type="button" aria-label="Copy page URL">U</button>
         <button id="btn-open-in-new" class="button" type="button" aria-label="Open page in new tab">↗</button>
       </div>
-      <div id="content">
+      <div id="cdx-content">
         <div id="title"></div>
         <a id="url"></a>
       </div>
