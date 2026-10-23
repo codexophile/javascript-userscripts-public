@@ -1,22 +1,16 @@
 //* download buttons for reel thumbnails
 const queries = [
-  'div:has(>[data-visualcompletion][alt])', // images
+  // 'div:has(>[data-visualcompletion][alt])',     // images
+  'div:has(> div > div > div > div > a[href*="/photo.php"])', // photos
+  'div:has(> a[href*="/photo/"])', // photos
   'div:has(>[aria-label="Reel tile preview"])', // reels
+  'div:has(>div>a[href*="/media/set/"])', // albums
 ];
 const combinedQuery = queries.join(',');
+console.log('out');
+intializeGfmsFunctionality(combinedQuery, { galleryDlBtn: true });
 waitForEach(combinedQuery, parentEl => {
-  const toolsCntEl = generateElements(
-    `<div class=gfms-container></div>`,
-    parentEl,
-  );
-  style(
-    toolsCntEl,
-    `
-    position: absolute;
-    top: 10px;
-    left: 10px;
-  `,
-  );
+  return;
   const dlBtnEl = generateElements(
     `<button class=dlBtn>⬇️</button>`,
     toolsCntEl,
