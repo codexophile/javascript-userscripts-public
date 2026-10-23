@@ -9,6 +9,7 @@
       `<div class=new-container></div>`,
       itemEl,
     );
+    style(newContainerEl, `display: flex; flex-direction: column;`);
 
     const itemUrl = itemEl.querySelector(`a`).href;
     const doc = await fetchDoc(itemUrl);
