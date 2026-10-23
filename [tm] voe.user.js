@@ -1,12 +1,6 @@
 (function () {
   'use strict';
 
-  GM_addStyle(`
-    * {
-      pointer-events: auto !important;
-    }
-    `);
-
   if (
     !document.title.includes(
       'VOE | Content Delivery Network (CDN) & Video Cloud',
@@ -14,6 +8,12 @@
   ) {
     return;
   }
+
+  GM_addStyle(`
+    * {
+      pointer-events: auto !important;
+    }
+    `);
 
   disableConsoleClear();
 
