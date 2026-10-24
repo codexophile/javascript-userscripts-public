@@ -40,10 +40,14 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     if (document.querySelectorAll(`#cdx-collapsible-styles`).length === 0) {
       const styleEl = GM_addStyle(`
         .collapsible-container {
-          .collapsible-popover > * {
-            margin: 5px;
+          .collapsible-popover {
+            &, & * {
+              scrollbar-color: #888888 #f1f1f1;
+              scrollbar-width: thin;
+              margin: 5px;
             }
-            }
+          }
+        }
             `);
       styleEl.id = 'cdx-collapsible-styles';
     }
@@ -394,7 +398,8 @@ function dialog(title = '', contentElement, configOrMaxHeight = {}) {
   const dimensions = config.dimensions || {};
   const position = config.position || {};
   const maxHeight = dimensions.maxHeight ?? config.maxHeight ?? '300px';
-  const initialState = config.initialState === 'collapsed' ? 'collapsed' : 'expanded';
+  const initialState =
+    config.initialState === 'collapsed' ? 'collapsed' : 'expanded';
   const isDraggable = config.draggable !== false;
 
   if (!document.querySelector('#vanilla-presets-dialog-styles')) {
