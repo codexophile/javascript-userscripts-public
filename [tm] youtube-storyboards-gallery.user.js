@@ -9,38 +9,64 @@
   const galleryPopoverEl = collapsible.addPopup('gallery-popover');
   GM_addStyle(`
     #gallery-popover:popover-open {
-      display: flex;
-      flex-direction: column-reverse;
-      max-height: 80vh;
-      overflow-y: auto;
-      padding: 10px;
-    }
-  `);
-  const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
-  galleryBtnEl.title = 'YouTube storyboard gallery';
-  let allVideoLinks = [];
-  generateElements(SVG, galleryBtnEl);
-  galleryBtnEl.addEventListener('click', () => {
-    if (allVideoLinks.length === 0) {
-      allVideoLinks = gatherAllVideoLinks();
-      allVideoLinks.map(link => {
-        const linkEl = generateElements(
-          `<a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a>`,
-          galleryPopoverEl,
-        );
-        style(
-          linkEl,
-          `
+      &, .container {
+        display: flex;
+        flex-direction: column;
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 10px;
+
+        .container {
+          width: 1000px;
+          height: 1000px;
+          flex-direction: row;
+          flex-wrap: wrap;
+
+          & > * {
+            max-width: 200px;
+            padding: 5px;
+          }
+        }
+
+        a {
           display: block;
           margin: 5px 0;
           text-decoration: none;
           color: #3498db;
           font-size: 14px;
-        `,
-        );
-      });
+        }
+      }
     }
+  `);
+
+  const linksPreviewContainerEl = generateElements(
+    '<div class="container"></div>',
+    galleryPopoverEl,
+  );
+
+  const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
+  galleryBtnEl.title = 'YouTube storyboard gallery';
+  generateElements(SVG, galleryBtnEl);
+  galleryBtnEl.addEventListener('click', () => {
+    linksPreviewContainerEl.replaceChildren();
+    const elements = document.querySelectorAll(
+      `.ytLockupViewModelContentImage:not(:has(
+        yt-thumbnail-overlay-progress-bar-view-model,
+        ytd-thumbnail-overlay-resume-playback-renderer
+      ))`,
+    );
+    elements.forEach(element => {
+      const clonedEl = element.cloneNode(true);
+      linksPreviewContainerEl.appendChild(clonedEl);
+    });
+    allVideoLinks.map(link => {
+      const linkEl = generateElements(
+        `<a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a>`,
+        linksPreviewContainerEl,
+      );
+    });
   });
+
   const thisTabButton = generateElements(
     `<button style="margin-left: 10px;">This tab</button>`,
     galleryPopoverEl,
@@ -372,37 +398,8 @@
   }
 
   function gatherAllVideoLinks() {
-    const query = `a[href*="watch?v="]:not(#slotsDiv a)`;
-    const videoLinks = Array.from(
-      document.querySelectorAll(query),
-      el => el.href,
-    ).filter(href => {
-      try {
-        const url = new URL(href);
-        const videoId = url.searchParams.get('v');
-        return (
-          [
-            'youtube.com',
-            'www.youtube.com',
-            'm.youtube.com',
-            'music.youtube.com',
-          ].includes(url.hostname) &&
-          url.pathname === '/watch' &&
-          videoId !== null &&
-          /^[\w-]{11}$/.test(videoId)
-        );
-      } catch {
-        return false;
-      }
+    elements.forEach(element => {
+      console.log(element);
     });
-    return [
-      ...new Set(
-        videoLinks.map(href => {
-          const url = new URL(href);
-          url.hash = '';
-          return url.href;
-        }),
-      ),
-    ];
   }
 })();
