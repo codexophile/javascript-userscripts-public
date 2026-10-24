@@ -2,6 +2,7 @@
   'use strict';
 
   await waitFor('title');
+  await waitFor('video');
   if (location.hash === '#allow-play') {
     addHistoryEntry(location.href.replace('#allow-play', ''));
     return;
