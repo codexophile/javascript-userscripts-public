@@ -23,6 +23,34 @@
   const combinedQuery = Object.values(queries).join(', ');
   const finalQuery = `:is(${combinedQuery}):not(.cdx)`;
 
+  //* gfms
+  intializeGfmsFunctionality(finalQuery, { galleryDlBtn: true });
+
+  //* new yt-dlp button
+  const ytdlpPopoverEl = await waitFor('#yt-dlp-popover');
+  generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
+    'click',
+    () => {
+      let postLink = '';
+
+      if (location.href === 'https://www.instagram.com/') {
+        const visiblePostEl = getVisibleElements('article')[0];
+        if (!visiblePostEl) return;
+        style(visiblePostEl, `outline: solid red;`);
+        postLink = visiblePostEl.querySelector('[href*="/p/"]').href;
+      } else if (location.href.match(/\/(p|reels?)\//)) {
+        postLink = location.href;
+      }
+      invokeDownloader('ytdlp', {
+        urlToDownload: postLink,
+        destination: 'Y:\\@TOP\\tiktok',
+        mode: 'noprompt',
+        browser: 'firefox',
+        profile: 'lzV3dBf4.Profile 1',
+      });
+    },
+  );
+
   //* Collapsible items (mainly for gallerydl)
   initiateGalleryDlFunctionality('.gfms-container');
 
@@ -146,31 +174,6 @@
       }
     });
   });
-
-  //* new yt-dlp button
-  const ytdlpPopoverEl = await waitFor('#yt-dlp-popover');
-  generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
-    'click',
-    () => {
-      let postLink = '';
-
-      if (location.href === 'https://www.instagram.com/') {
-        const visiblePostEl = getVisibleElements('article')[0];
-        if (!visiblePostEl) return;
-        style(visiblePostEl, `outline: solid red;`);
-        postLink = visiblePostEl.querySelector('[href*="/p/"]').href;
-      } else if (location.href.match(/\/(p|reels?)\//)) {
-        postLink = location.href;
-      }
-      invokeDownloader('ytdlp', {
-        urlToDownload: postLink,
-        destination: 'Y:\\@TOP\\tiktok',
-        mode: 'noprompt',
-        browser: 'firefox',
-        profile: '3vm341ho.default-release',
-      });
-    },
-  );
 
   //* Shortcuts
   document.addEventListener(
