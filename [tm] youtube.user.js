@@ -300,7 +300,7 @@
   });
 
   //* cleaning tracking params from linkurls
-  // const urlParamsToRemove = ['pp', 'index', 't', 'list'];
+  const paramsAllowList = ['lc'];
   waitForEach(`*:not(#storyboard) a[href]`, videoLinkEl => {
     const url = videoLinkEl.href;
     if (!url) return;
@@ -310,11 +310,20 @@
     try {
       searchParams = new URL(url).searchParams;
     } catch (error) {
+      alert(error);
       alert(url);
+      return;
     }
     const videoID = searchParams.get('v');
     if (!videoID) return;
-    videoLinkEl.href = `https://www.youtube.com/watch?v=${videoID}`;
+    const videoUrl = new URL('https://www.youtube.com/watch');
+    videoUrl.searchParams.set('v', videoID);
+    for (const parameterName of paramsAllowList) {
+      const parameterValue = searchParams.get(parameterName);
+      if (parameterValue !== null)
+        videoUrl.searchParams.set(parameterName, parameterValue);
+    }
+    videoLinkEl.href = videoUrl.href;
   });
 
   function stopAndChangeUrl(url) {
