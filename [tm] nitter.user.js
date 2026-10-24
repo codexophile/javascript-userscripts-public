@@ -1,5 +1,12 @@
 (async function () {
   'use strict';
+
+  const metaEl = document.querySelector(`[property="og:site_name"]`);
+  if (!metaEl?.getAttribute('content')?.toLowerCase().includes('nitter')) {
+    console.log('Not a nitter page, exiting script.');
+    return;
+  }
+
   const { addButton } = await Collapsible();
   addButton('', undefined, () => {
     const newUrl = getTwitterUrl(location.href);
