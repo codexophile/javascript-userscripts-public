@@ -2242,19 +2242,19 @@ async function retrieveVttData(
 
 /**
  * Supported downloader identifiers.
- * @typedef {'ytdlp' | 'gallerydl'} Downloader
+ * @typedef {'ytdlp' | 'ytdlp-sb' | 'gallerydl'} Downloader
  */
 
 /**
  * Valid downloader names, used for runtime validation.
  * @constant {ReadonlyArray<Downloader>}
  */
-const DOWNLOADERS = /** @type {const} */ (['ytdlp', 'gallerydl']);
+const DOWNLOADERS = /** @type {const} */ (['ytdlp', 'ytdlp-sb', 'gallerydl']);
 
 /**
  * Options for a downloader invocation.
  * @typedef {Object} DownloaderOptions
- * @property {string} [urlToDownload] - Page or media URL to download.
+ * @property {string | string[]} [urlToDownload] - A single URL, or an array of URLs to download in one invocation. Empty or non-string entries are ignored.
  * @property {string} [destination] - Target directory (Windows path).
  * @property {string} [mode] - Downloader-specific mode name.
  * @property {string} [browser] - Browser to read cookies from.
@@ -2291,8 +2291,13 @@ function invokeDownloader(
     );
   }
 
+  /** @type {string[]} Normalized, non-empty URLs. */
+  const urls = [urlToDownload]
+    .flat()
+    .filter(u => typeof u === 'string' && u.trim() !== '');
+
   const params = new URLSearchParams();
-  if (urlToDownload) params.set('url', urlToDownload);
+  for (const url of urls) params.append('url', url);
   if (title) params.set('title', title);
   if (destination) params.set('dest', destination);
   if (mode) params.set('mode', mode);
