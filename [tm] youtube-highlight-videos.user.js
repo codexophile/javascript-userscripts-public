@@ -1,5 +1,6 @@
 (async function () {
   'use strict';
+
   GM_addStyle(`.cdx-same-uploader { 
     border-radius: 12px; 
     border: 4px solid transparent;
@@ -9,16 +10,25 @@
     background: rgba(15, 15, 15, 0.85);
     backdrop-filter: blur(8px);
   }`);
-  const { ownerChannelName } = await getCurrentVideoDetails();
+
+  let ownerChannelName_ = null;
+  onNewPage();
+  window.addEventListener('urlchange', onNewPage);
+
   waitForEach('yt-lockup-view-model', async videoItemEl => {
     const sameUploader = [
       ...videoItemEl.querySelectorAll(
         '.ytContentMetadataViewModelMetadataRow > span',
       ),
-    ].some(spanEl => spanEl.textContent.trim() === ownerChannelName);
+    ].some(spanEl => spanEl.textContent.trim() === ownerChannelName_);
     if (!sameUploader) {
       return;
     }
     videoItemEl.classList.add('cdx-same-uploader');
   });
+
+  async function onNewPage() {
+    const { ownerChannelName } = await getCurrentVideoDetails();
+    ownerChannelName_ = ownerChannelName;
+  }
 })();
