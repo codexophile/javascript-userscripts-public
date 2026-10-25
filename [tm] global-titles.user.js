@@ -306,7 +306,7 @@
       </div>
     </div>
   `,
-    document.body,
+    document.documentElement,
   );
 
   const titleCntEl = mainCntEl.querySelector('#title');
