@@ -244,7 +244,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
       <div class="resize-handle"></div>
     </div>
   `,
-    document.body,
+    document.documentElement,
   );
   collapsibleStructure.className = 'collapsible-container';
 
