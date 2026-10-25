@@ -2951,6 +2951,16 @@
       if (image) previewObserver.unobserve(image);
     }
 
+    /**
+     * Applies the media aspect ratio and intrinsic dimensions to a gallery card.
+     * @param {HTMLElement} card Gallery card to update.
+     * @param {Object} entry Media entry containing width and height metadata.
+     * @returns {void}
+     * @example
+     * ```js
+     * updateCardPreview(card, entry);
+     * ```
+     */
     function updateCardPreview(card, entry) {
       const frame = card.querySelector('.media-frame');
       frame.style.aspectRatio =
@@ -2958,6 +2968,17 @@
       frame.style.backgroundImage = entry.previewUrl
         ? `url(${JSON.stringify(entry.previewUrl)})`
         : '';
+      const image = card.querySelector('img');
+      if (!image) return;
+      const width = Number(entry.width);
+      const height = Number(entry.height);
+      if (width > 0 && height > 0) {
+        image.width = width;
+        image.height = height;
+      } else {
+        image.removeAttribute('width');
+        image.removeAttribute('height');
+      }
     }
 
     function button(label, handler) {
