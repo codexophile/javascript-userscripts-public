@@ -73,10 +73,19 @@ async function sbControls(
       .querySelectorAll('.storyboardControl')
       .forEach(item => item.remove());
 
+    //  MARK: xxx
     collapsible
       .addButton('🔙', null, async () => {
         // video.pause();
-        const targetEl = [...sbParent.querySelectorAll('.wentPast')].pop();
+        const duration = video.duration;
+        const totalSlots = getTotalSlots();
+        if (!totalSlots || !Number.isFinite(duration) || duration <= 0) return;
+        const currentSlotNo = Math.min(
+          totalSlots - 1,
+          Math.round((video.currentTime * totalSlots) / duration),
+        );
+        const targetEl =
+          sbParent.querySelectorAll('.storyboardItem')[currentSlotNo];
         targetEl.scrollIntoView({ behavior: 'instant', block: 'center' });
         await asyncTimeout(250);
         await blink(targetEl, 250, 3);
@@ -144,7 +153,9 @@ async function sbControls(
     video.addEventListener('timeupdate', handleTimeUpdate);
     setupState.handler = handleTimeUpdate;
 
+    //  MARK:  xxx
     function handleTimeUpdate() {
+      return;
       const duration = video.duration;
       const totalSlots = getTotalSlots();
       if (!totalSlots || !Number.isFinite(duration) || duration <= 0) return;
