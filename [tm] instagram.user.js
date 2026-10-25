@@ -38,27 +38,29 @@
   );
 
   //* ig-wall items
-  waitForEach('.post-group[data-post-key]', postEl => {
-    return;
+  waitForEach('.post-group[data-post-key] > article', postEl => {
     const postId = postEl.dataset.postKey;
-    console.log(postId);
-    const gfmsContainerEl = generateElements(
+    console.log('wall', postEl);
+    const linkEl = generateElements(
       `
-      <div class="gfms-container" data-gfms-url="${postEl.dataset.postKey}">
-        <a href="https://www.instagram.com/p/${postId}/" target="_blank">${postId}</a>
-      </div>`,
+      <a
+        class="cdx"
+        href="https://www.instagram.com/p/${postId}/"
+        target="_blank">
+        Link
+      </a>`,
       postEl,
     );
-    console.log(gfmsContainerEl);
-    style(gfmsContainerEl, `flex-basis: 100%;`);
+    linkEl.addEventListener('click', event => {
+      event.stopPropagation();
+    });
+    style(linkEl, `height: fit-content;`);
   });
 
   //* post items
   (function () {
-    console.log(finalQuery);
-
+    return;
     waitForEach(finalQuery, itemEl => {
-      return;
       if (itemEl.parentElement.closest(finalQuery)) return; // skip if it has child matching the query
       // const grandParentEl = grandParent(itemEl, 4);
       const linkEl = itemEl.closest('a');
@@ -131,7 +133,6 @@
       const postAuthorId = igPostEl
         .querySelector(`a`)
         ?.href.match(/\.com\/(.+?)\//)?.[1];
-      console.log(userId, postAuthorId, userId === postAuthorId);
       if (userId === postAuthorId) {
         igPostEl.style.display = 'none';
       }
@@ -511,7 +512,6 @@
 
       //
       const locatorId1 = document.querySelector(`header a`);
-      console.log(locatorId1);
       //
       const locatorId2 = document.querySelector(`a span`);
       const matches1 = locatorId1.href.match(/\/(.+?)\/$/);
