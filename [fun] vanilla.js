@@ -104,24 +104,42 @@ function pipeline(input, ...functions) {
  */
 
 /**
+ * Per-call shared state. `common` writes to it; later handlers read from it.
+ * @typedef {Record<string, any>} Context
+ */
+
+/**
+ * A sync or async function executed for a matched value.
+ * @template V
+ * @callback Handler
+ * @param {V} value - The value that matched.
+ * @param {Context} ctx - Per-call state shared by `common` and every handler.
+ * @returns {void | Promise<void>}
+ */
+
+/**
  * Builds an async dispatcher that replaces a `switch` statement.
  *
- * Order for a matching value: `common`, then every handler from every rule
- * listing the value (rule order, de-duplicated). Each step is awaited before
- * the next starts, so async `common` results are visible on `ctx` to every
- * later handler. All steps receive the SAME `ctx` object.
+ * Order for a matching value: `common` (unless the value is listed in
+ * `skipCommon`), then every handler from every rule listing the value
+ * (rule order, de-duplicated). Each step is awaited before the next starts.
+ * A skipped value still counts as a match, so `fallback` does not run for it.
  *
  * @template V
  * @param {Object} config - Dispatcher configuration.
- * @param {Handler<V>} [config.common] - Runs once whenever ANY listed value matches.
+ * @param {Handler<V>} [config.common] - Runs once whenever a matched value is not in `skipCommon`.
+ * @param {V[]} [config.skipCommon] - Values that match normally but bypass `common`.
+ * Each one must also appear in at least one rule, otherwise it is treated as unmatched.
  * @param {[V | V[], Handler<V> | Handler<V>[]][]} config.rules - Value(s) → handler(s) pairs.
  * @param {Handler<V>} [config.fallback] - Runs when no value matches.
  * @returns {(value: V, ctx?: Context) => Promise<boolean>} Resolves to `true` if a value matched.
  * Rejects if any handler throws, and remaining handlers are skipped.
  */
-function createDispatcher({ common, rules, fallback }) {
+function createDispatcher({ common, skipCommon = [], rules, fallback }) {
   /** @type {Map<*, Handler<*>[]>} */
   const table = new Map();
+  /** @type {Set<*>} */
+  const noCommon = new Set(skipCommon);
 
   for (const [keys, handlers] of rules) {
     for (const key of [].concat(keys)) {
@@ -137,7 +155,7 @@ function createDispatcher({ common, rules, fallback }) {
       await fallback?.(value, ctx);
       return false;
     }
-    await common?.(value, ctx);
+    if (!noCommon.has(value)) await common?.(value, ctx);
     for (const handler of new Set(list)) await handler(value, ctx);
     return true;
   };
@@ -1789,113 +1807,6 @@ function lazyLoad(load, ...items) {
 }
 
 //  MARK: Page functionalities
-
-async function intializeGfmsFunctionality(
-  parentSelector,
-  { galleryDlBtn = false } = {},
-) {
-  const gdlSrc =
-    'data:image/webp;base64,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';
-  GM_addStyle(`
-    .gfms-container {
-
-      position: absolute;
-      top: 10px;
-      left: 10px;
-    
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 5px;
-      padding: 2px;
-
-      & > * {
-        // width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        & > * {
-          height: 100%;
-        }
-      }
-
-    }
-  `);
-  const selectedLinksSet = new Set();
-  waitForEach(parentSelector, async parentEl => {
-    const closestSelector = 'a:not(.exclude-gfms)';
-    const linkEl =
-      parentEl.querySelector(closestSelector) ||
-      closestQuery(parentEl, closestSelector, {
-        matchAncestors: true,
-      });
-    console.log('xxx', linkEl);
-    const link = linkEl ? linkEl.href : null;
-
-    const gfmsContainerEl = generateElements(
-      `<div class=gfms-container></div>`,
-      parentEl,
-    );
-    const checkboxEl = generateElements(
-      `
-      <input
-        type="checkbox"
-        class="gfms-checkbox"
-      >`,
-      gfmsContainerEl,
-    );
-    checkboxEl.addEventListener('change', () => {
-      if (checkboxEl.checked) {
-        if (link) {
-          selectedLinksSet.add(link);
-        }
-      } else {
-        if (link) {
-          selectedLinksSet.delete(link);
-        }
-      }
-      console.log(selectedLinksSet);
-    });
-
-    if (galleryDlBtn) {
-      const galleryDlBtnEl = generateElements(
-        `<button class="gallery-dl-btn">
-          <img src="data:image/webp;base64,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">
-        </button>`,
-        gfmsContainerEl,
-      );
-      galleryDlBtnEl.addEventListener('click', () => {
-        invokeDownloader('gallerydl', {
-          urlToDownload: link,
-          destination: 'Y:\\Pic\\gallery-dl',
-          mode: 'regular',
-          browser: 'firefox',
-          profile: '3vm341ho.default-release',
-        });
-      });
-    }
-  });
-
-  const { addButton } = await Collapsible();
-  const galleryDlBtnEl = addButton('', null, () => {
-    if (selectedLinksSet.size < 1) {
-      selectedLinksSet.add(location.href);
-    }
-
-    invokeDownloader('gallerydl', {
-      urlToDownload: [...selectedLinksSet].join(','),
-      destination: 'Y:\\Pic\\gallery-dl',
-      mode: 'regular',
-      browser: 'firefox',
-      profile: '3vm341ho.default-release',
-    });
-  });
-  generateElements(`<img src=${gdlSrc}>`, galleryDlBtnEl);
-}
 
 async function setupYtDlpBtn(
   urlToDownload,
