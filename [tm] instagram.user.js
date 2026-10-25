@@ -38,24 +38,6 @@
   );
 
   //* ig-wall items
-  waitForEach('.post-group[data-post-key] > article', postEl => {
-    const postId = postEl.dataset.postKey;
-    console.log('wall', postEl);
-    const linkEl = generateElements(
-      `
-      <a
-        class="cdx"
-        href="https://www.instagram.com/p/${postId}/"
-        target="_blank">
-        Link
-      </a>`,
-      postEl,
-    );
-    linkEl.addEventListener('click', event => {
-      event.stopPropagation();
-    });
-    style(linkEl, `height: fit-content;`);
-  });
 
   //* post items
   (function () {
