@@ -37,21 +37,6 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     background-color: darkgray;
     `;
 
-    if (document.querySelectorAll(`#cdx-collapsible-styles`).length === 0) {
-      const styleEl = GM_addStyle(`
-        .collapsible-container {
-          .collapsible-popover {
-            &, & * {
-              scrollbar-color: #888888 #f1f1f1;
-              scrollbar-width: thin;
-              margin: 5px;
-            }
-          }
-        }
-            `);
-      styleEl.id = 'cdx-collapsible-styles';
-    }
-
     return popoverEl;
   }
 
@@ -230,6 +215,21 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
 
   if (GM_addStyle) {
     GM_addStyle(css);
+    GM_addStyle(`
+      .collapsible-container {
+        .collapsible-popover {
+          &, & * {
+            scrollbar-color: #888888 #f1f1f1;
+            scrollbar-width: thin;
+            margin: 5px;
+          }
+          .link-wrapper {
+            display: flex;
+            flex-direction: column;
+          }
+        }
+      }
+            `);
   } else {
     alert(
       'GM_addStyle is not available. Please ensure you are using a compatible userscript manager.',
