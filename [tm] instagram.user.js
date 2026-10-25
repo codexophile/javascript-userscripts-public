@@ -12,20 +12,6 @@
   //   ``,
   // );
 
-  const queries = {
-    reelItems: '[href*="/reel/"]',
-    pItems: '[href*="/p/"]',
-    // igPosts: 'img[crossorigin="anonymous"][style="object-fit: cover;"]',
-    // igAllImagesItems: '#igAllImages > * > img',
-    // openedImgs: 'article li img',
-    // igWallItems: '.ig-wall-item',
-  };
-  const combinedQuery = Object.values(queries).join(', ');
-  const finalQuery = `:is(${combinedQuery}):not(.cdx)`;
-
-  //* gfms
-  intializeGfmsFunctionality(finalQuery, { galleryDlBtn: true });
-
   //* new yt-dlp button
   const ytdlpPopoverEl = await waitFor('#yt-dlp-popover');
   generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
@@ -51,12 +37,11 @@
     },
   );
 
-  //* Collapsible items (mainly for gallerydl)
-  initiateGalleryDlFunctionality('.gfms-container');
-
   //* ig-wall items
   waitForEach('.post-group[data-post-key]', postEl => {
+    return;
     const postId = postEl.dataset.postKey;
+    console.log(postId);
     const gfmsContainerEl = generateElements(
       `
       <div class="gfms-container" data-gfms-url="${postEl.dataset.postKey}">
@@ -64,6 +49,7 @@
       </div>`,
       postEl,
     );
+    console.log(gfmsContainerEl);
     style(gfmsContainerEl, `flex-basis: 100%;`);
   });
 
@@ -72,6 +58,7 @@
     console.log(finalQuery);
 
     waitForEach(finalQuery, itemEl => {
+      return;
       if (itemEl.parentElement.closest(finalQuery)) return; // skip if it has child matching the query
       // const grandParentEl = grandParent(itemEl, 4);
       const linkEl = itemEl.closest('a');
