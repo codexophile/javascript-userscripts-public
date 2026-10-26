@@ -968,7 +968,7 @@ async function storyboard(options) {
     tileWidth = null,
     minTileWidth = STORYBOARD_MIN_TILE_WIDTH,
     linkUrl = null,
-    controls = true,
+    controls = { enabled: false, attachTo: null },
     hashSeek = true,
   } = options ?? {};
   console.log(parent);
@@ -1322,13 +1322,17 @@ async function storyboard(options) {
       video.addEventListener('seeking', updatePlaybackState, { signal });
     }
 
-    if (controls) {
+    if (controls?.enabled) {
       panel = _sbCreatePanel({
         onLocate: video ? locateCurrent : null,
         onToggleGrid: () => setGridHidden(!gridHidden),
         gridHidden,
       });
-      root.prepend(panel.element);
+      if (controls.attachTo) controls.attachTo.prepend(panel.element);
+      else {
+        const { collapsibleContent } = await Collapsible();
+        collapsibleContent.prepend(panel.element);
+      }
     }
 
     // ---- 6. Load and render in source order ------------------------------
