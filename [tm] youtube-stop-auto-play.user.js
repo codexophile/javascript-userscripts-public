@@ -1,54 +1,22 @@
-(async function () {
-  'use strict';
+'use strict';
+await waitFor('title');
+await waitFor('video');
+if (location.hash === '#allow-play') {
+  addHistoryEntry(location.href.replace('#allow-play', ''));
+  return;
+}
+if (location.hash === '#no-allow-play') {
+  main();
+  return;
+}
+const saidYes = confirm(
+  `${document.title}\n'OK': start playing\n'Cancel': keep it paused.`,
+);
+if (saidYes) return;
 
-  await waitFor('title');
-  await waitFor('video');
-  if (location.hash === '#allow-play') {
-    addHistoryEntry(location.href.replace('#allow-play', ''));
-    return;
-  }
-  const saidYes = confirm(
-    `${document.title}\n'OK': start playing\n'Cancel': keep it paused.`,
-  );
-  if (saidYes) return;
+main();
 
-  let autoPauseDone = false;
-  let videoEl = null;
-
-  const origPlay = HTMLMediaElement.prototype.play;
-  HTMLMediaElement.prototype.play = function (...args) {
-    if (this.tagName === 'VIDEO' && !autoPauseDone) {
-      mute(this);
-      const result = origPlay.apply(this, args);
-      this.pause();
-      return result;
-    }
-    return origPlay.apply(this, args);
-  };
-
-  // Capture phase on document fires before ANY listener on the target itself,
-  // regardless of when YouTube registered theirs.
-  document.addEventListener('click', maybeRestore, true);
-  document.addEventListener('auxclick', maybeRestore, true);
-
-  function maybeRestore(event) {
-    if (!videoEl) return;
-    if (event.type === 'auxclick' && event.button !== 1) return;
-    const isVideo = event.target === videoEl;
-    const isPlayBtn =
-      event.target.closest && event.target.closest('.ytp-play-button');
-    if (isVideo || isPlayBtn) ((autoPauseDone = true), (videoEl.muted = false));
-  }
-
-  waitFor('video').then(el => {
-    videoEl = el;
-    if (!autoPauseDone) {
-      mute(videoEl);
-      if (!videoEl.paused) videoEl.pause();
-    }
-  });
-
-  function mute(videoEl) {
-    // videoEl.muted = true;
-  }
-})();
+async function main() {
+  const playBtnEl = await waitFor('.ytp-play-button');
+  playBtnEl.click();
+}
