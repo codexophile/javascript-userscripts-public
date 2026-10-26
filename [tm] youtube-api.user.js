@@ -96,17 +96,13 @@
 
     async function updateTitle() {
       const videoId = getVideoId();
-      console.log('video id:', videoId);
       if (!videoId) return;
 
       try {
-        console.log('before');
         const videoTitleEl = await waitFor(
           '#title.ytd-watch-metadata yt-formatted-string',
         );
-        console.log('after');
         const videoTitle = videoTitleEl.innerText;
-        console.log('xxx', videoTitle);
 
         let newContent;
         if (!isVideoPlaying()) {
@@ -125,7 +121,6 @@
           newContent = cachedContent;
         }
 
-        console.log('xxx', newContent);
         const newTitle = `${videoTitle} | ${newContent}`;
         if (document.title === newTitle) return;
 
