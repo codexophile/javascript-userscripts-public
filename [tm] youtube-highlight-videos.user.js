@@ -13,7 +13,7 @@
   }`);
 
   let ownerChannelName_ = null;
-  onNewPage();
+  await onNewPage();
   window.addEventListener('urlchange', onNewPage);
 
   waitForEach('yt-lockup-view-model', async videoItemEl => {
@@ -21,7 +21,11 @@
       ...videoItemEl.querySelectorAll(
         '.ytContentMetadataViewModelMetadataRow > span',
       ),
-    ].some(spanEl => spanEl.textContent.trim() === ownerChannelName_);
+    ].some(spanEl => {
+      const match = spanEl.textContent.trim() === ownerChannelName_;
+
+      return match;
+    });
     if (!sameUploader) {
       return;
     }

@@ -46,6 +46,10 @@ const linksPreviewContainerEl = generateElements(
   '<div class="container"></div>',
   galleryPopoverEl,
 );
+const linksDetailsEl = generateElements(
+  '<div class="links-details"></div>',
+  galleryPopoverEl,
+);
 
 const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
 galleryBtnEl.title = 'YouTube storyboard gallery';
@@ -58,6 +62,7 @@ galleryBtnEl.addEventListener('click', () => {
         ytd-thumbnail-overlay-resume-playback-renderer
       ))`,
   );
+  linksDetailsEl.textContent = `Found: ${elements.length}`;
   elements.forEach(element => {
     const wrapperEl = generateElements(
       `<div class="cdx-wrapper"></div>`,
@@ -193,13 +198,8 @@ async function processGalleryBatch(
   secondaryProgressElement = null,
 ) {
   const results = { successful: 0, failed: 0 };
-  updateProgress(
-    progressElement,
-    0,
-    videoLinks.length,
-    results,
-    secondaryProgressElement,
-  );
+  const total = videoLinks.size || videoLinks.length;
+  updateProgress(progressElement, 0, total, results, secondaryProgressElement);
 
   for (const [index, videoLink] of videoLinks.entries()) {
     try {
@@ -214,7 +214,7 @@ async function processGalleryBatch(
         storyboardObj,
         targetElement,
         index,
-        videoLinks.length,
+        total,
       );
       results.successful++;
     } catch (error) {
@@ -232,7 +232,7 @@ async function processGalleryBatch(
     updateProgress(
       progressElement,
       results.successful + results.failed,
-      videoLinks.length,
+      total,
       results,
       secondaryProgressElement,
     );

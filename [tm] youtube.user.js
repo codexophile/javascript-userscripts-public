@@ -143,6 +143,8 @@
 //* Fixing new youtube video metadata section under video thumbnail
 //* uploader, tagged channels, number of views, and upload date etc.
 waitForEach('.ytContentMetadataViewModelMetadataRow', metadataRowEl => {
+  if (location.href.includes('/watch')) return;
+
   metadataRowEl.style.setProperty('flex-wrap', 'wrap', 'important');
 
   // wrapping verified badge with the channel name it belongs to

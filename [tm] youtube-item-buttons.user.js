@@ -78,6 +78,7 @@
 
     const btnsContainerMainEl = createButtonsContainer(thumbEl);
     const linkEl = thumbEl.querySelector('a');
+    if (!linkEl) return;
     const itemUrl = linkEl.href;
 
     const btnsContainerRowEl01 = generateElements(
@@ -128,6 +129,8 @@
         'yt-list-item-view-model',
         'Not interested',
       );
+      console.log(notInterestedEl);
+      await asyncTimeout(250);
       notInterestedEl.click();
     });
   });

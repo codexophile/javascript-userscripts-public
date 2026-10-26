@@ -2612,7 +2612,7 @@
     root.id = 'ig-full-size-gallery-host';
     root.style.cssText =
       'position:fixed;inset:0;z-index:2147483647;pointer-events:none';
-    doc.documentElement.appendChild(root);
+    doc.body.appendChild(root);
     // const root = host.attachShadow({ mode: 'open' });
 
     root.innerHTML = `
