@@ -85,7 +85,7 @@
  * @property {(width: number) => void} setTileWidth Resize all tiles to a CSS pixel width.
  * @property {(factor: number) => void} setScale Resize all tiles to a factor of their native width.
  * @property {(index: number) => void} seekToSlot Seek the video to a slot and play.
- * @property {() => StoryboardTile | null} locateCurrent Scroll to and blink the tile at the current playback time.
+ * @property {() => StoryboardTile | null} locateCurrent Scroll to and flash the tile at the current playback time.
  * @property {() => void} destroy Remove the storyboard and its listeners.
  */
 
@@ -283,6 +283,20 @@ const STORYBOARD_CSS = `
   border: 1px solid #fff;
   cursor: pointer;
   content-visibility: auto
+}
+
+.sb-tile.sb-played {
+  border-color: #777;
+  filter: saturate(.55);
+  opacity: .62
+}
+
+.sb-tile.sb-current {
+  border-color: #0ff;
+  box-shadow: 0 0 0 2px #0ff, 0 0 12px #0ff;
+  filter: none;
+  opacity: 1;
+  z-index: 1
 }
 
 .sb-tile canvas,
@@ -1177,6 +1191,50 @@ async function storyboard(options) {
       );
     };
 
+    /**
+     * Finds the tile whose start time is at or immediately before playback.
+     * @returns {StoryboardTile | null} The current tile, or `null` when no tile has a known time.
+     * @example
+     * const tile = currentTile();
+     */
+    const currentTile = () => {
+      if (!video) return null;
+      const now = video.currentTime;
+      /** @type {StoryboardTile | null} */
+      let current = null;
+      let currentTime = -Infinity;
+      for (const tile of tiles) {
+        const time = slotTime(tile);
+        if (time !== null && time <= now && time >= currentTime) {
+          current = tile;
+          currentTime = time;
+        }
+      }
+      return current;
+    };
+
+    /**
+     * Updates played and current classes from the video's playback position.
+     * The current tile is excluded from `sb-played` so the two visual states
+     * remain distinct while the video is playing.
+     * @returns {void}
+     * @example
+     * video.addEventListener('timeupdate', updatePlaybackState);
+     */
+    const updatePlaybackState = () => {
+      if (!video) return;
+      const now = video.currentTime;
+      const current = currentTile();
+      for (const tile of tiles) {
+        const time = slotTime(tile);
+        tile.element.classList.toggle(
+          'sb-played',
+          time !== null && time < now && tile !== current,
+        );
+        tile.element.classList.toggle('sb-current', tile === current);
+      }
+    };
+
     let gridHidden = Boolean(
       _sbGM.getValue(STORYBOARD_STORAGE_KEYS.gridHidden, false),
     );
@@ -1198,27 +1256,33 @@ async function storyboard(options) {
     };
 
     /**
-     * Scrolls to and blinks the tile at (or just before) the current playback time.
+     * Scrolls to and flashes the tile at (or just before) the current playback time.
      * @returns {StoryboardTile | null} The located tile, or `null` when none has a known time.
+     * @example
+     * const tile = locateCurrent();
      */
     const locateCurrent = () => {
-      if (!video) return null;
-      const now = video.currentTime;
-      /** @type {StoryboardTile | null} */
-      let best = null;
-      let bestTime = -Infinity;
-      /** @type {StoryboardTile | null} */
-      let earliest = null;
-      let earliestTime = Infinity;
-      for (const tile of tiles) {
-        const time = slotTime(tile);
-        if (time === null) continue;
-        if (time <= now && time >= bestTime) [best, bestTime] = [tile, time];
-        if (time < earliestTime) [earliest, earliestTime] = [tile, time];
+      const target = currentTile();
+      if (!target) {
+        if (!video) return null;
+        const earliest = tiles
+          .map(tile => ({ tile, time: slotTime(tile) }))
+          .filter(item => item.time !== null)
+          .sort((a, b) => a.time - b.time)[0];
+        if (!earliest) return null;
+        return locateTile(earliest.tile);
       }
-      const target = best ?? earliest;
-      if (!target) return null;
+      return locateTile(target);
+    };
 
+    /**
+     * Scrolls to and flashes a storyboard tile.
+     * @param {StoryboardTile} target Tile to locate.
+     * @returns {StoryboardTile} The located tile.
+     * @example
+     * locateTile(tile);
+     */
+    const locateTile = target => {
       if (gridHidden) setGridHidden(false);
       const el = target.element;
       el.classList.remove('sb-blink');
@@ -1252,6 +1316,10 @@ async function storyboard(options) {
     if (video) {
       video.addEventListener('loadedmetadata', refreshLabels, { signal });
       video.addEventListener('durationchange', refreshLabels, { signal });
+      video.addEventListener('loadedmetadata', updatePlaybackState, { signal });
+      video.addEventListener('durationchange', updatePlaybackState, { signal });
+      video.addEventListener('timeupdate', updatePlaybackState, { signal });
+      video.addEventListener('seeking', updatePlaybackState, { signal });
     }
 
     if (controls) {
@@ -1301,6 +1369,7 @@ async function storyboard(options) {
       grid.append(...batch.map(tile => tile.element));
       updateInterval();
       batch.forEach(labelTile);
+      updatePlaybackState();
     }
 
     // ---- 7. Finish ---------------------------------------------------------
