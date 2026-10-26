@@ -56,10 +56,10 @@ async function addStoryboard(force = false) {
     console.warn('[YT-Storyboard] No storyboard URLs generated');
     return;
   }
-  console.log('xxx', 'fsdfsdflkj');
 
   try {
     await storyboard({
+      video,
       parent: sbParent,
       columns: horizontal || 5,
       rows: vertical || 5,
