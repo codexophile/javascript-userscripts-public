@@ -3,7 +3,6 @@
 
   const metaEl = document.querySelector(`[property="og:site_name"]`);
   if (!metaEl?.getAttribute('content')?.toLowerCase().includes('nitter')) {
-    console.log('Not a nitter page, exiting script.');
     return;
   }
 
