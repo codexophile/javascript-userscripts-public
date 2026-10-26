@@ -66,6 +66,7 @@ async function addStoryboard(force = false) {
       interval: samplingFq,
       totalSlots: trueNoOfSlots,
       imageUrls: [...allUrls],
+      controls: { enabled: true },
     });
   } catch (error) {
     console.log(error);
