@@ -13,6 +13,7 @@ generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
 );
 
 //* follow button
+const { addButton } = await Collapsible();
 addButton('➕', null, () => {
   const followBtn = document.querySelector(
     'div[aria-label="Follow"][role="button"]',
