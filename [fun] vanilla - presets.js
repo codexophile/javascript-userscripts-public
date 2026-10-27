@@ -218,6 +218,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     GM_addStyle(`
       .collapsible-container {
         .collapsible-popover {
+          max-height: 80vh;
           &, & * {
             scrollbar-color: #888888 #f1f1f1;
             scrollbar-width: thin;
