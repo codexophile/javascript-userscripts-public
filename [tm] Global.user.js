@@ -95,6 +95,288 @@
     toolsPopoverEl,
   );
 
+  (function () {
+    /**
+     * Tunable timing/behaviour settings for the loader.
+     * @readonly
+     * @type {Readonly<{
+     *   pollIntervalMs: number,
+     *   loadTimeoutMs: number,
+     *   maxStalls: number,
+     *   nudgeUpPx: number,
+     *   nudgeDelayMs: number
+     * }>}
+     */
+    const CONFIG = Object.freeze({
+      /** How often (ms) to check whether the page grew after scrolling. */
+      pollIntervalMs: 200,
+      /** Max time (ms) to wait for new content after each scroll to the bottom. */
+      loadTimeoutMs: 3000,
+      /** Consecutive "no growth" attempts before the end of content is assumed. */
+      maxStalls: 3,
+      /** Pixels to scroll up before re-scrolling down, to re-trigger IntersectionObservers. */
+      nudgeUpPx: 300,
+      /** Delay (ms) between the upward nudge and the final scroll to the bottom. */
+      nudgeDelayMs: 60,
+    });
+
+    /**
+     * Possible states of the loader.
+     * @readonly
+     * @enum {string}
+     */
+    const STATE = Object.freeze({
+      /** Nothing started yet. Clicking starts loading. */
+      IDLE: 'idle',
+      /** Actively scrolling and loading. Clicking pauses. */
+      RUNNING: 'running',
+      /** Loading suspended. Clicking resumes. */
+      PAUSED: 'paused',
+      /** End of content reached. Clicking restarts. */
+      DONE: 'done',
+    });
+
+    /**
+     * SVG markup for each state's icon (24x24 viewBox, uses currentColor).
+     * @readonly
+     * @type {Readonly<Record<string, string>>}
+     */
+    const ICONS = Object.freeze({
+      [STATE.IDLE]:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="m6 11 6 6 6-6"/><path d="M5 21h14"/></svg>',
+      [STATE.RUNNING]:
+        '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+      [STATE.PAUSED]:
+        '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>',
+      [STATE.DONE]:
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+    });
+
+    /**
+     * Tooltip text for each state.
+     * @readonly
+     * @type {Readonly<Record<string, string>>}
+     */
+    const LABELS = Object.freeze({
+      [STATE.IDLE]: 'Load all content (click to start)',
+      [STATE.RUNNING]: 'Loading… (click to pause)',
+      [STATE.PAUSED]: 'Paused (click to resume)',
+      [STATE.DONE]: 'All content loaded (click to run again)',
+    });
+
+    /** @type {string} Current loader state; one of {@link STATE}. */
+    let state = STATE.IDLE;
+
+    /**
+     * Monotonic token identifying the active run loop. Incrementing it
+     * cancels any previously started loop.
+     * @type {number}
+     */
+    let runToken = 0;
+
+    /** @type {number} Number of successful content loads in the current session. */
+    let loadCount = 0;
+
+    /** @type {HTMLButtonElement|null} The floating toggle button. */
+    let button = null;
+
+    /**
+     * Resolves after the given delay.
+     * @param {number} ms - Milliseconds to wait.
+     * @returns {Promise<void>} Resolves once the delay has elapsed.
+     */
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    /**
+     * Returns the element that scrolls the document.
+     * @returns {Element} `document.scrollingElement`, falling back to `<html>`.
+     */
+    function getScroller() {
+      return document.scrollingElement || document.documentElement;
+    }
+
+    /**
+     * Gets the full scrollable height of the page.
+     * @returns {number} Total scroll height in pixels.
+     */
+    function getScrollHeight() {
+      return getScroller().scrollHeight;
+    }
+
+    /**
+     * Scrolls to the very bottom of the page. First nudges slightly upward
+     * so that scroll/IntersectionObserver-based loaders fire again even when
+     * the viewport is already at the bottom.
+     * @returns {Promise<void>} Resolves once the final scroll has been issued.
+     */
+    async function scrollToBottom() {
+      const scroller = getScroller();
+      const maxTop = scroller.scrollHeight - scroller.clientHeight;
+      scroller.scrollTop = Math.max(0, maxTop - CONFIG.nudgeUpPx);
+      await sleep(CONFIG.nudgeDelayMs);
+      scroller.scrollTop = scroller.scrollHeight;
+    }
+
+    /**
+     * Waits until the page grows beyond `previousHeight` or the timeout passes.
+     * Aborts early if the run was cancelled (paused/restarted).
+     * @param {number} previousHeight - Scroll height measured before scrolling.
+     * @param {number} token - Run token of the calling loop.
+     * @returns {Promise<boolean>} `true` if new content appeared, otherwise `false`.
+     */
+    async function waitForGrowth(previousHeight, token) {
+      const deadline = Date.now() + CONFIG.loadTimeoutMs;
+      while (Date.now() < deadline) {
+        if (token !== runToken) return false;
+        if (getScrollHeight() > previousHeight) return true;
+        await sleep(CONFIG.pollIntervalMs);
+      }
+      return getScrollHeight() > previousHeight;
+    }
+
+    /**
+     * Main loading loop. Repeatedly scrolls to the bottom and waits for new
+     * content. Ends when cancelled (token changes) or when the page stops
+     * growing for {@link CONFIG.maxStalls} consecutive attempts, at which
+     * point the state becomes {@link STATE.DONE}.
+     * @param {number} token - Run token; the loop exits when it no longer matches `runToken`.
+     * @returns {Promise<void>} Resolves when the loop ends.
+     */
+    async function runLoop(token) {
+      let stalls = 0;
+      while (token === runToken && state === STATE.RUNNING) {
+        const before = getScrollHeight();
+        await scrollToBottom();
+        const grew = await waitForGrowth(before, token);
+        if (token !== runToken) return;
+
+        if (grew) {
+          stalls = 0;
+          loadCount++;
+          updateButton();
+        } else if (++stalls >= CONFIG.maxStalls) {
+          setState(STATE.DONE);
+          return;
+        }
+      }
+    }
+
+    /**
+     * Transitions to a new state and refreshes the button.
+     * @param {string} next - Target state; one of {@link STATE}.
+     * @returns {void}
+     */
+    function setState(next) {
+      state = next;
+      updateButton();
+    }
+
+    /**
+     * Starts (or resumes) loading by creating a fresh run loop.
+     * @param {boolean} [reset=false] - Reset the load counter (used for a fresh start).
+     * @returns {void}
+     */
+    function start(reset = false) {
+      if (reset) loadCount = 0;
+      runToken++;
+      setState(STATE.RUNNING);
+      runLoop(runToken);
+    }
+
+    /**
+     * Pauses loading and cancels the active loop.
+     * @returns {void}
+     */
+    function pause() {
+      runToken++;
+      setState(STATE.PAUSED);
+    }
+
+    /**
+     * Handles button clicks: idle/done → start, running → pause, paused → resume.
+     * @returns {void}
+     */
+    function handleClick() {
+      switch (state) {
+        case STATE.IDLE:
+        case STATE.DONE:
+          start(true);
+          break;
+        case STATE.RUNNING:
+          pause();
+          break;
+        case STATE.PAUSED:
+          start(false);
+          break;
+      }
+    }
+
+    /**
+     * Syncs the button's icon, tooltip, and data attribute with the current state.
+     * @returns {void}
+     */
+    function updateButton() {
+      if (!button) return;
+      button.dataset.state = state;
+      button.innerHTML = ICONS[state];
+      const count = loadCount > 0 ? ` — ${loadCount} loads` : '';
+      const label = LABELS[state] + count;
+      button.title = label;
+      button.setAttribute('aria-label', label);
+    }
+
+    /**
+     * Builds the floating button inside a Shadow DOM (so page CSS can't
+     * affect it) and attaches it to the page.
+     * @returns {void}
+     */
+    function createButton() {
+      const hostEl = collapsible.addButton('', null, () => {});
+      hostEl.id = 'infinite-load-host';
+
+      GM_addStyle(`
+        #infinite-load-host {
+          button {
+            /* all: initial; */
+            box-sizing: border-box;
+            width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            color: #fff; background: #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,.35);
+            cursor: pointer;
+            transition: transform .15s, background-color .2s;
+          }
+          button:hover { transform: scale(1.1); }
+          button:active { transform: scale(.95); }
+          button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+          button[data-state="running"] { background: #f59e0b; }
+          button[data-state="paused"]  { background: #6366f1; }
+          button[data-state="done"]    { background: #22c55e; }
+          svg { width: 22px; height: 22px; display: block; }
+          button[data-state="running"] svg { animation: pulse 1.2s ease-in-out infinite; }
+          @keyframes pulse { 50% { opacity: .55; } }
+        }
+    `);
+      console.log('xxx');
+
+      button = generateElements(
+        `<button
+          type="button"
+          aria-label="${LABELS[STATE.IDLE]}"
+          title="${LABELS[STATE.IDLE]}"
+        >
+          ${ICONS[STATE.IDLE]}
+        </button>`,
+        hostEl,
+      );
+      button.addEventListener('click', handleClick);
+      console.log(button);
+      updateButton();
+    }
+    createButton();
+  })();
+
   //*
   collapsible.addButton('🔝', null, () => window.scrollTo(0, 0));
   const headersPopover = collapsible.addPopup('headers-popover');
