@@ -200,8 +200,7 @@ async function processGalleryBatch(
   const results = { successful: 0, failed: 0 };
   const total = videoLinks.size || videoLinks.length;
   updateProgress(progressElement, 0, total, results, secondaryProgressElement);
-
-  for (const [index, videoLink] of videoLinks.entries()) {
+  [...videoLinks].forEach(async (videoLink, index) => {
     try {
       const response = await GMXmlHttpReqResponse(videoLink);
       const storyboardObj = generateAllYouTubeSbUrls(response);
@@ -236,7 +235,7 @@ async function processGalleryBatch(
       results,
       secondaryProgressElement,
     );
-  }
+  });
 }
 
 /**
@@ -304,7 +303,9 @@ async function createStoryboardGalleryItem(item, targetElement, index, total) {
   );
   style(galleryItemHeader, 'margin-bottom: 10px;');
   generateElements(
-    `<span style="font-size: 14px; color: #555;">(${index + 1}/${total})</span>`,
+    `<span
+      id="gallery-item-index"
+      style="font-size: 14px; color: #555;">(${index + 1}/${total})</span>`,
     galleryItemHeader,
   );
   const statusLabel = generateElements(
