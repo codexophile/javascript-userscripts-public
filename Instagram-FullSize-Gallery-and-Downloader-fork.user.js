@@ -2615,7 +2615,9 @@
     doc.body.appendChild(root);
     // const root = host.attachShadow({ mode: 'open' });
 
-    root.innerHTML = `
+    setInnerHTML(
+      root,
+      `
       <style>${styles()}</style>
       <button class="launcher" type="button"><b>IG</b><span>Gallery</span></button>
       <section class="app hidden" data-theme="dark" data-layout="fit" data-filter="all" data-captions="off" data-size="large" data-thumbnails="contain">
@@ -2674,7 +2676,8 @@
           </footer>
         </section>
         <div class="toasts" aria-live="polite"></div>
-      </section>`;
+      </section>`,
+    );
 
     const $ = selector => root.querySelector(selector);
     const $$ = selector => [...root.querySelectorAll(selector)];
