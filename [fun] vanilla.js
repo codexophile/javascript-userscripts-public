@@ -3066,8 +3066,13 @@ function fetchDoc(url, headers = '', returnHtml) {
           return false;
         }
         if (returnHtml) resolve(resText);
-        if (response.response) resolve(response.response);
-        resolve(generateDoc(resText));
+
+        //! sometimes this line 👇🏻 caused the chrome tab
+        //! to crash with `STATUS_ACCESS_VIOLATION` error
+        // if (response.response) resolve(response.response);
+
+        const doc = generateDoc(resText);
+        resolve(doc);
       },
       onerror: obj => reject(obj.error),
       ontimeout: obj => reject(obj),
@@ -3966,8 +3971,8 @@ function applyDeferredStyles(root) {
  */
 function generateDoc(html) {
   const safeHtml = html.trim().replace(/(\s)style=/gi, '$1data-style=');
-
   const template = document.createElement('template');
+
   template.innerHTML = htmlPolicy.createHTML(safeHtml);
 
   const content = template.content;
