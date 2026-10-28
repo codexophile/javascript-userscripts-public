@@ -2846,8 +2846,7 @@
           : state.loading && !state.detailPaused
             ? ' — loading full post…'
             : ' — post incomplete';
-        entry.card.querySelector('.card-line').textContent =
-          `${entry.type.toUpperCase()}${entry.username ? `  @${entry.username}` : ''}${slide}${status}`;
+        renderCardLine(entry.card.querySelector('.card-line'), entry, `${slide}${status}`);
       }
       const load = $('[data-action="load"]');
       load.disabled = state.loading || state.exhausted;
@@ -2896,7 +2895,13 @@
       meta.className = 'card-meta';
       const line = doc.createElement('div');
       line.className = 'card-line';
-      line.textContent = `${entry.type.toUpperCase()}${entry.username ? `  @${entry.username}` : ''}${entry.carouselTotal > 1 ? `  ${entry.carouselIndex + 1}/${entry.carouselTotal}` : ''}`;
+      renderCardLine(
+        line,
+        entry,
+        entry.carouselTotal > 1
+          ? `  ${entry.carouselIndex + 1}/${entry.carouselTotal}`
+          : '',
+      );
       const caption = doc.createElement('p');
       caption.className = 'caption';
       caption.textContent = entry.caption || '';
@@ -2929,6 +2934,36 @@
         if (event.key === 'Enter') openViewer(Number(card.dataset.index));
       });
       return card;
+    }
+
+    /**
+     * Renders a card's type and uploader, linking to other uploader profiles.
+     *
+     * @param {HTMLElement} line Card metadata line to populate.
+     * @param {Object} entry Media entry containing type and username.
+     * @param {string} suffix Optional carousel or loading status text.
+     * @returns {void}
+     * @example
+     * renderCardLine(line, entry, '  1/2');
+     */
+    function renderCardLine(line, entry, suffix = '') {
+      line.replaceChildren();
+      line.append(`${entry.type.toUpperCase()}${entry.username ? '  ' : ''}`);
+      if (entry.username) {
+        const username = String(entry.username);
+        if (username.toLowerCase() === state.username.toLowerCase()) {
+          line.append(`@${username}`);
+        } else {
+          const handle = doc.createElement('a');
+          handle.className = 'uploader-link';
+          handle.href = `https://www.instagram.com/${encodeURIComponent(username)}/`;
+          handle.target = '_blank';
+          handle.rel = 'noopener noreferrer';
+          handle.textContent = `@${username}`;
+          line.append(handle);
+        }
+      }
+      line.append(suffix);
     }
 
     /**
@@ -3479,7 +3514,7 @@
       button,select,input,.action-link{padding:8px 10px;color:var(--fg);background:var(--soft);border:1px solid var(--line);border-radius:11px}select option{color:#10131d;background:#fff}.app[data-theme=dark] select option{color:#f6f7fb;background:#161926}button,.action-link{cursor:pointer}.action-link{text-decoration:none}button:hover:not(:disabled),.action-link:hover{background:var(--hover)}button:disabled{opacity:.5;cursor:not-allowed}.danger{background:#ff4a681f;border-color:#ff4a6858}
       .statusbar{display:flex;justify-content:space-between;gap:14px;padding:8px 14px;color:var(--muted);font-size:13px;border-bottom:1px solid var(--line)}.scroller{min-height:0;overflow:auto;padding:18px;overscroll-behavior:contain}.sentinel{height:1px}.gallery{min-height:50vh}
       .post-group{min-width:0}
-      .media-card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:17px;box-shadow:0 10px 30px #0003}.media-card:hover{background:var(--hover)}.media-frame{display:grid;place-items:center;width:100%;min-height:80px;background:#05060b center / contain no-repeat}.media-frame img,.media-frame video{display:block;max-width:100%;width:auto;height:auto;object-fit:contain}.media-frame video{width:100%}.card-meta{display:grid;gap:7px;padding:9px 10px}.card-line{font-size:12px;color:var(--muted)}.caption{display:none;margin:0;max-height:5.4em;overflow:hidden;font-size:12px;line-height:1.35}.app[data-captions=on] .caption{display:block}.card-actions{display:flex;flex-wrap:wrap;gap:6px;opacity:0;transition:opacity .15s}.media-card:hover .card-actions,.media-card:focus-within .card-actions{opacity:1}.card-actions button,.card-actions .action-link{padding:5px 7px;font-size:11px}.broken{outline:2px solid #ff4a68}
+      .media-card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:17px;box-shadow:0 10px 30px #0003}.media-card:hover{background:var(--hover)}.media-frame{display:grid;place-items:center;width:100%;min-height:80px;background:#05060b center / contain no-repeat}.media-frame img,.media-frame video{display:block;max-width:100%;width:auto;height:auto;object-fit:contain}.media-frame video{width:100%}.card-meta{display:grid;gap:7px;padding:9px 10px}.card-line{font-size:12px;color:var(--muted)}.uploader-link{color:var(--fg);font-weight:700;text-decoration:none}.uploader-link:hover{text-decoration:underline}.caption{display:none;margin:0;max-height:5.4em;overflow:hidden;font-size:12px;line-height:1.35}.app[data-captions=on] .caption{display:block}.card-actions{display:flex;flex-wrap:wrap;gap:6px;opacity:0;transition:opacity .15s}.media-card:hover .card-actions,.media-card:focus-within .card-actions{opacity:1}.card-actions button,.card-actions .action-link{padding:5px 7px;font-size:11px}.broken{outline:2px solid #ff4a68}
       .app[data-filter=image] .media-card[data-type=video],.app[data-filter=video] .media-card[data-type=image]{display:none!important}
       .app[data-filter=image] .post-group:not(:has(.media-card[data-type=image])),.app[data-filter=video] .post-group:not(:has(.media-card[data-type=video])){display:none!important}
       .app[data-layout=fit] .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card-width,320px),1fr));gap:14px}.app[data-layout=fit] .post-group{display:grid;gap:14px}.app[data-layout=fit][data-size=medium] .gallery{--card-width:240px}.app[data-layout=fit][data-size=huge] .gallery{--card-width:460px}.app[data-layout=fit] .media-frame img,.app[data-layout=fit] .media-frame video{max-height:72vh}
