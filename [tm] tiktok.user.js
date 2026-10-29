@@ -23,6 +23,8 @@
   const dataE2eArr = ['user-post-item', 'collection-item', 'user-liked-item'];
   const query = dataE2eArr.map(dataE2e => `[data-e2e="${dataE2e}"]`).join(',');
   waitForEach(query, postItemEl => {
+    const actualPostItemEl = grandParent(postItemEl, 2);
+
     const toolsCntEl = generateElements(
       `<div class=gfms-container></div>`,
       postItemEl,
@@ -41,6 +43,15 @@
       const linkToVid = postItemEl.querySelector('a').href;
       initiateYtdlp(linkToVid);
     });
+    generateElements(`<button>🪚</button>`, toolsCntEl).addEventListener(
+      'click',
+      () => {
+        const prevElsArr = prevAll(actualPostItemEl);
+        prevElsArr.forEach(el => {
+          el.remove();
+        });
+      },
+    );
   });
 
   //* download button (yt-dlp)
