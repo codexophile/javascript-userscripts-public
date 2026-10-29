@@ -33,8 +33,8 @@
       toolsCntEl,
       `
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 40px;
+        left: 10px;
         z-index: 9999;
       `,
     );
