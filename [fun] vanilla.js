@@ -2194,6 +2194,7 @@ function invokeDownloader(
     browser,
     profile,
     autoRetryInfoJson,
+    totalCount,
   } = {},
 ) {
   if (!DOWNLOADERS.includes(downloader)) {
@@ -2215,6 +2216,7 @@ function invokeDownloader(
   if (browser) params.set('browser', browser);
   if (profile) params.set('profile', profile);
   if (autoRetryInfoJson) params.set('autoRetryInfoJson', 'true');
+  if (totalCount) params.set('totalCount', totalCount);
 
   // URLSearchParams encodes spaces as "+", but the AHK decoder expects %20
   const query = params.toString().replace(/\+/g, '%20');
