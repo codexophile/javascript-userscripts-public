@@ -1,6 +1,18 @@
 'use strict';
+
+let permissionGranted = false;
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'k') {
+    console.log('Allowing play');
+    permissionGranted = true;
+    // mainVidEl.play();
+  }
+});
+
 await waitFor('title');
-await waitFor('video');
+const mainVidEl = await waitFor('video');
+
 if (location.hash === '#allow-play') {
   addHistoryEntry(location.href.replace('#allow-play', ''));
   return;
@@ -17,6 +29,21 @@ if (saidYes) return;
 main();
 
 async function main() {
-  const playBtnEl = await waitFor('.ytp-play-button');
-  playBtnEl.click();
+  mainVidEl.addEventListener('play', event => {
+    pause();
+  });
+  mainVidEl.addEventListener('playing', event => {
+    pause();
+  });
+  waitForEach('.sb-tile', tileEl => {
+    tileEl.addEventListener('click', event => {
+      permissionGranted = true;
+    });
+  });
+}
+
+function pause() {
+  if (permissionGranted) return;
+  console.log('Play attempt blocked');
+  mainVidEl.pause();
 }
