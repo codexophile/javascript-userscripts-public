@@ -4,7 +4,7 @@
   const dialogContentEl = generateElements(
     '<div class="dialog-content"></div>',
   );
-  dialog('Outline', dialogContentEl);
+  dialog('Outline', dialogContentEl, '700px');
 
   const query = '.content-block-regular > :is(h2, h3)';
   waitForEach(query, headingEl => {
