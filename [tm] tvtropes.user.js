@@ -134,11 +134,10 @@
   ];
 
   //* marking items with important words
-  const listEls = document.querySelectorAll(`li`);
   const uniqueSpecialWords = [...new Set(specialWords)];
   const wordsRegexStr = `\\b(${uniqueSpecialWords.join('|')})\\b`;
 
-  listEls.forEach(listEl => {
+  waitForEach('li', listEl => {
     const walker = document.createTreeWalker(
       listEl,
       NodeFilter.SHOW_TEXT,
@@ -385,7 +384,9 @@
   }
 
   function mark(el, color) {
+    console.log(el);
     if (el.matches('div>ul>li>a:first-child')) {
+      console.log('xxx', 'matches', el);
       style(
         $(el).parent('li')[0],
         `
