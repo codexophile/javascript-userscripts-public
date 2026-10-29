@@ -3690,19 +3690,64 @@ function closestQuery(start, selector, options = {}) {
   return null;
 }
 
-function nextAll(element, selector, includeSelf = false) {
-  const siblings = [];
-  if (includeSelf) siblings.push(element);
+/**
+ * Collects matching siblings in traversal order.
+ *
+ * @param {Element} element - The reference element.
+ * @param {string} [selector] - Optional CSS selector used to filter siblings.
+ * @param {boolean} [includeSelf=false] - Whether to include the reference element first.
+ * @param {'next'|'previous'} direction - Direction in which to traverse siblings.
+ * @returns {Element[]} Matching siblings, optionally including the reference element.
+ * @example
+ * const previousItems = allSiblings(item, '.item', false, 'previous');
+ */
+function allSiblings(
+  element,
+  selector,
+  includeSelf = false,
+  direction = 'next',
+) {
+  const siblings = includeSelf ? [element] : [];
+  const siblingProperty =
+    direction === 'next' ? 'nextElementSibling' : 'previousElementSibling';
 
-  let currentElement = element.nextElementSibling;
-  console.log(currentElement);
+  let currentElement = element[siblingProperty];
   while (currentElement) {
     if (!selector || currentElement.matches(selector)) {
       siblings.push(currentElement);
     }
-    currentElement = currentElement.nextElementSibling;
+    currentElement = currentElement[siblingProperty];
   }
+
   return siblings;
+}
+
+/**
+ * Returns all following siblings that match an optional selector.
+ *
+ * @param {Element} element - The reference element.
+ * @param {string} [selector] - Optional CSS selector used to filter siblings.
+ * @param {boolean} [includeSelf=false] - Whether to include the reference element first.
+ * @returns {Element[]} Matching following siblings in document order.
+ * @example
+ * const followingItems = nextAll(item, '.item');
+ */
+function nextAll(element, selector, includeSelf = false) {
+  return allSiblings(element, selector, includeSelf, 'next');
+}
+
+/**
+ * Returns all preceding siblings that match an optional selector.
+ *
+ * @param {Element} element - The reference element.
+ * @param {string} [selector] - Optional CSS selector used to filter siblings.
+ * @param {boolean} [includeSelf=false] - Whether to include the reference element first.
+ * @returns {Element[]} Matching preceding siblings from nearest to farthest.
+ * @example
+ * const previousItems = prevAll(item, '.item');
+ */
+function prevAll(element, selector, includeSelf = false) {
+  return allSiblings(element, selector, includeSelf, 'previous');
 }
 
 function convertElementType(element, newType) {
