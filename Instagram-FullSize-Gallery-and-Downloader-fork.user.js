@@ -318,6 +318,65 @@
     typeof win.fetch === 'function' ? win.fetch.bind(win) : null;
   const refreshRequests = new Map();
   const mediaBindings = new WeakMap();
+  const renderedCaptionSignatures = new WeakMap();
+
+  /**
+   * Renders caption text and turns Instagram mentions into classified links.
+   *
+   * @param {HTMLElement} caption Caption element to populate.
+   * @param {string} text Caption text.
+   * @param {Object} entry Media entry containing the actual uploader username.
+   * @returns {void}
+   * @example
+   * renderCaption(caption, 'Thanks @friend!', entry);
+   */
+  function renderCaption(caption, text, entry) {
+    if (!(caption instanceof HTMLElement)) return;
+    const value = String(text ?? '');
+    const signature = [
+      value,
+      state.username,
+      String(entry?.username || ''),
+    ].join('\u0000');
+    if (renderedCaptionSignatures.get(caption) === signature) return;
+    renderedCaptionSignatures.set(caption, signature);
+
+    caption.replaceChildren();
+    const fragment = doc.createDocumentFragment();
+    const mentionPattern = /(^|[^\w@])@([a-z0-9](?:[a-z0-9._]*[a-z0-9])?)/gi;
+    let position = 0;
+    for (const match of value.matchAll(mentionPattern)) {
+      const start = match.index ?? 0;
+      const mentionStart = start + match[1].length;
+      fragment.append(value.slice(position, mentionStart));
+      const username = match[2];
+      const link = doc.createElement('a');
+      link.className = `caption-mention ${mentionClass(username, entry)}`;
+      link.href = `https://www.instagram.com/${encodeURIComponent(username)}/`;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = `@${username}`;
+      fragment.append(link);
+      position = mentionStart + username.length + 1;
+    }
+    fragment.append(value.slice(position));
+    caption.append(fragment);
+  }
+
+  /**
+   * Classifies a caption mention against the loaded profile and post uploader.
+   *
+   * @param {string} username Mentioned username.
+   * @param {Object} entry Media entry containing the actual uploader username.
+   * @returns {string} CSS class for the mention color.
+   */
+  function mentionClass(username, entry) {
+    const normalized = username.toLowerCase();
+    if (normalized === state.username.toLowerCase()) return 'mention-current';
+    if (normalized === String(entry?.username || '').toLowerCase())
+      return 'mention-uploader';
+    return 'mention-other';
+  }
 
   function routeCache(route = detectRoute()) {
     if (native.key !== route.key) {
@@ -2968,52 +3027,6 @@
         }
       }
       line.append(suffix);
-    }
-
-    /**
-     * Renders caption text and turns Instagram mentions into classified links.
-     *
-     * @param {HTMLElement} caption Caption element to populate.
-     * @param {string} text Caption text.
-     * @param {Object} entry Media entry containing the actual uploader username.
-     * @returns {void}
-     * @example
-     * renderCaption(caption, 'Thanks @friend!', entry);
-     */
-    function renderCaption(caption, text, entry) {
-      caption.replaceChildren();
-      const mentionPattern = /(^|[^\w@])@([a-z0-9](?:[a-z0-9._]*[a-z0-9])?)/gi;
-      let position = 0;
-      for (const match of String(text).matchAll(mentionPattern)) {
-        const start = match.index ?? 0;
-        const mentionStart = start + match[1].length;
-        caption.append(String(text).slice(position, mentionStart));
-        const username = match[2];
-        const link = doc.createElement('a');
-        link.className = `caption-mention ${mentionClass(username, entry)}`;
-        link.href = `https://www.instagram.com/${encodeURIComponent(username)}/`;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = `@${username}`;
-        caption.append(link);
-        position = mentionStart + username.length + 1;
-      }
-      caption.append(String(text).slice(position));
-    }
-
-    /**
-     * Classifies a caption mention against the loaded profile and post uploader.
-     *
-     * @param {string} username Mentioned username.
-     * @param {Object} entry Media entry containing the actual uploader username.
-     * @returns {string} CSS class for the mention color.
-     */
-    function mentionClass(username, entry) {
-      const normalized = username.toLowerCase();
-      if (normalized === state.username.toLowerCase()) return 'mention-current';
-      if (normalized === String(entry.username || '').toLowerCase())
-        return 'mention-uploader';
-      return 'mention-other';
     }
 
     /**
