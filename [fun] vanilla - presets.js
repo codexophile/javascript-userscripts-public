@@ -218,6 +218,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     GM_addStyle(`
       .collapsible-container {
         .collapsible-popover {
+
           max-height: 80vh;
           &, & * {
             scrollbar-color: #888888 #f1f1f1;
@@ -225,8 +226,13 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
             margin: 5px;
           }
           .link-wrapper {
-            display: flex;
-            flex-direction: column;
+            flex: 1 1 auto;         /* take the remaining space and shrink as needed */
+            min-height: 0;          /* lets a flex child shrink below its content size */
+            overflow-y: auto;       /* only this scrolls */
+            height: auto; 
+          }
+          & > button {
+            flex: 0 0 auto;         /* buttons keep their size and stay put */
           }
         }
       }
@@ -855,7 +861,7 @@ function slideshowGallery() {
     }
     slides[slideIndex - 1].style.display = 'block';
     dots[slideIndex - 1].className += ' active';
-    captionText.innerHTML = dots[slideIndex - 1].alt;
+    setInnerHTML(captionText, dots[slideIndex - 1].alt);
   }
 
   return sgContent;
@@ -1128,7 +1134,7 @@ class ModalBox {
 
   setContent(content) {
     if (typeof content === 'string') {
-      this.bodyElement.innerHTML = content;
+      setInnerHTML(this.bodyElement, content);
     } else if (content instanceof Node) {
       this.bodyElement.replaceChildren(content);
     }
@@ -1250,8 +1256,14 @@ class VanillaDialog {
       this.closeBtn.type = 'button';
       this.closeBtn.className = 'btn-icon';
       this.closeBtn.setAttribute('aria-label', 'Close dialog');
-      this.closeBtn.innerHTML =
-        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>';
+      setInnerHTML(
+        this.closeBtn,
+        `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"></path>
+        </svg>
+      `,
+      );
       this.header.appendChild(this.closeBtn);
     }
 
@@ -1300,7 +1312,7 @@ class VanillaDialog {
 
   setContent(content) {
     if (typeof content === 'string') {
-      this.body.innerHTML = content;
+      setInnerHTML(this.body, content);
     } else if (content instanceof Node) {
       this.body.replaceChildren(content);
     }
