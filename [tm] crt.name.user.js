@@ -10,11 +10,14 @@
   if (match) {
     location.replace(`https://crt.name/v1/search?apex=${match[1]}`);
   }
-  preEl.innerHTML = preEl.textContent
-    .trim()
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean)
-    .map(url => `<a href="//${url}" target="_blank">${url}</a>`)
-    .join('\n');
+  setInnerHTML(
+    preEl,
+    preEl.textContent
+      .trim()
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(url => `<a href="//${url}" target="_blank">${url}</a>`)
+      .join('\n'),
+  );
 })();

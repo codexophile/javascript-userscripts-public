@@ -179,13 +179,15 @@
       .split('/')
       .pop()
       .replace(/(-\d+)?\.jpg$/, '');
-
-    panel.innerHTML = `
+    setInnerHTML(
+      panel,
+      `
       <div style="margin-bottom:6px;">Storyboard auto-captured</div>
       <div style="opacity:.75;margin-bottom:8px;word-break:break-all;">id: ${baseId} — ${data.images.length} sprite(s), grid ${data.x_len}x${data.y_len}</div>
       <button id="sb-download-btn" style="cursor:pointer;padding:4px 8px;">Download all</button>
       <button id="sb-copy-btn" style="cursor:pointer;padding:4px 8px;margin-left:6px;">Copy URLs</button>
-    `;
+    `,
+    );
 
     document.getElementById('sb-download-btn').onclick = () =>
       downloadAll(data);
