@@ -16,23 +16,53 @@ const SVGS = {
 };
 
 GM_addStyle(`
-    .collapsible-button {
-      padding: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 3px;
 
-      & > svg {
-        width: 100%;
-        height: 100%;
-      }
+  .collapsible-button {
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
 
-      &:has(> svg) {
-        background-color: #ababab;
+    & > svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    &:has(> svg) {
+      background-color: #ababab;
+    }
+  }
+
+  #rss-feeds-popover {
+
+    & > a {
+      text-decoration: none;
+      img {
+        width: 16px;
+        height: 16px;
+        margin-right: 4px;
       }
     }
-  `);
+
+    #possible-rss-paths {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #a0a0a0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px; 
+      max-width: 500px;
+      & > * {
+        background-color: #2b2b2b;
+        padding: 2px 4px;
+        border-radius: 4px;
+      }
+    }
+
+  }
+
+`);
 
 //* title
 
@@ -75,6 +105,17 @@ const collapsible = await Collapsible('', {
   // collapsedWidth: '40px',
 });
 collapsible.collapsibleToggler.click();
+
+//* Rss
+const rssFeedsPopover = collapsible.addPopup('rss-feeds-popover');
+const rssBtnEl = collapsible.addButton('', rssFeedsPopover);
+
+//  MARK: 🔥
+window.addEventListener('urlchange', onNewUrl);
+onNewUrl();
+function onNewUrl(info) {
+  reloadRss();
+}
 
 //  MARK: Page Tools
 const toolsPopoverEl = collapsible.addPopup('page-tools-popover');
@@ -551,131 +592,106 @@ GM_addElement(mainContainerEl, 'button', {
 });
 
 //  MARK: RSS
-const rssLinks = document.querySelectorAll(
-  'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
-);
+function reloadRss() {
+  rssFeedsPopover.replaceChildren();
 
-GM_addStyle(`
-    #rss-feeds-popover {
-      & > a {
-        text-decoration: none;
-        img {
-          width: 16px;
-          height: 16px;
-          margin-right: 4px;
-        }
-      }
-    }
-  `);
-const rssFeedsPopover = collapsible.addPopup('rss-feeds-popover');
-const rssBtnEl = collapsible.addButton('', rssFeedsPopover);
-generateElements(rssLinks.length ? SVGS.rssYes : SVGS.rssNo, rssBtnEl);
-addLinkToFeedReader(
-  'Blogtrottr',
-  'https://blogtrottr.com/?subscribe=',
-  rssFeedsPopover,
-);
-addLinkToFeedReader(
-  'Inoreader',
-  'https://www.inoreader.com/search/feeds/',
-  rssFeedsPopover,
-);
-addLinkToFeedReader(
-  'Feedly',
-  'https://feedly.com/i/discover?query=suggesto%2F',
-  rssFeedsPopover,
-);
-addLinkToFeedReader(
-  'FreshRSS',
-  'http://localhost:8080/i/?c=feed&a=add&cat_id=1&url_rss=',
-  rssFeedsPopover,
-);
+  const rssLinks = document.querySelectorAll(
+    'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
+  );
+  rssBtnEl.replaceChildren();
+  generateElements(rssLinks.length ? SVGS.rssYes : SVGS.rssNo, rssBtnEl);
 
-const openRssSegment = 'https://openrss.org/' + location.href;
-createPopoverItem(openRssSegment, null, 'OpenRSS');
-const rssBridgeSegment = `http://127.0.0.1:6060/?input-url=${encodeURIComponent(location.href)}`;
-createPopoverItem(rssBridgeSegment, SRCs.rssBridge, 'RSS-Bridge');
+  addLinkToFeedReader(
+    'Blogtrottr',
+    'https://blogtrottr.com/?subscribe=',
+    rssFeedsPopover,
+  );
+  addLinkToFeedReader(
+    'Inoreader',
+    'https://www.inoreader.com/search/feeds/',
+    rssFeedsPopover,
+  );
+  addLinkToFeedReader(
+    'Feedly',
+    'https://feedly.com/i/discover?query=suggesto%2F',
+    rssFeedsPopover,
+  );
+  addLinkToFeedReader(
+    'FreshRSS',
+    'http://localhost:8080/i/?c=feed&a=add&cat_id=1&url_rss=',
+    rssFeedsPopover,
+  );
 
-function createPopoverItem(
-  href,
-  imgSrc = getFaviconUrlFromProvider(href),
-  text,
-) {
-  return generateElements(
-    `
+  const openRssSegment = 'https://openrss.org/' + location.href;
+  createPopoverItem(openRssSegment, null, 'OpenRSS');
+  const rssBridgeSegment = `http://127.0.0.1:6060/?input-url=${encodeURIComponent(location.href)}`;
+  createPopoverItem(rssBridgeSegment, SRCs.rssBridge, 'RSS-Bridge');
+
+  function createPopoverItem(
+    href,
+    imgSrc = getFaviconUrlFromProvider(href),
+    text,
+  ) {
+    return generateElements(
+      `
       <a href="${href}" target="_blank">
         <img src="${imgSrc}">
         <span>${text}</span>
       </a>
     `,
-    rssFeedsPopover,
-  );
-}
+      rssFeedsPopover,
+    );
+  }
 
-rssLinks.forEach(link => {
-  generateElements(
-    `<a
+  rssLinks.forEach(link => {
+    generateElements(
+      `<a
           href='${link.href}'
           target=_blank
           style='display: block;'
-        >${link.title}</a>`,
+        >🛜 ${link.title}</a>`,
+      rssFeedsPopover,
+    );
+  });
+
+  const possibleRssPathsSet = new Set([
+    '/feed',
+    '/feed/',
+    '/rss',
+    '/rss/',
+    '/rss.xml',
+    '/atom.xml',
+    '/index.xml',
+    '/feed.xml',
+    '/feeds/posts/default',
+    '/comments/feed/',
+    '/?feed=rss2',
+  ]);
+  const possiblePathsEl = generateElements(
+    `<div id="possible-rss-paths">Possible RSS paths:</div>`,
     rssFeedsPopover,
   );
-});
 
-const possibleRssPathsSet = new Set([
-  '/feed',
-  '/feed/',
-  '/rss',
-  '/rss/',
-  '/rss.xml',
-  '/atom.xml',
-  '/index.xml',
-  '/feed.xml',
-  '/feeds/posts/default',
-  '/comments/feed/',
-  '/?feed=rss2',
-]);
-const possiblePathsEl = generateElements(
-  `<div id="possible-rss-paths">Possible RSS paths:</div>`,
-  rssFeedsPopover,
-);
-GM_addStyle(`
-    #possible-rss-paths {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #a0a0a0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px; 
-      max-width: 500px;
-      & > * {
-        background-color: #2b2b2b;
-        padding: 2px 4px;
-        border-radius: 4px;
-      }
-    }
-  `);
-possibleRssPathsSet.forEach(path => {
-  const stem = location.href.replace(/\/$/, '');
-  generateElements(
-    `<a href='${stem}${path}' target=_blank style='display: block;'>${path}</a>`,
-    possiblePathsEl,
-  );
-});
+  possibleRssPathsSet.forEach(path => {
+    const stem = location.href.replace(/\/$/, '');
+    generateElements(
+      `<a href='${stem}${path}' target=_blank style='display: block;'>${path}</a>`,
+      possiblePathsEl,
+    );
+  });
 
-function addLinkToFeedReader(readerName, baseUrl, parentEl) {
-  const addFeedBtnEl = generateElements(`<a>➕ ${readerName}</a>`, parentEl);
-  var encodedURI = encodeURIComponent(window.location);
-  addFeedBtnEl.href = `${baseUrl}${encodedURI}`;
-  addFeedBtnEl.target = '_blank';
-  addFeedBtnEl.style = `
+  function addLinkToFeedReader(readerName, baseUrl, parentEl) {
+    const addFeedBtnEl = generateElements(`<a>➕ ${readerName}</a>`, parentEl);
+    var encodedURI = encodeURIComponent(window.location);
+    addFeedBtnEl.href = `${baseUrl}${encodedURI}`;
+    addFeedBtnEl.target = '_blank';
+    addFeedBtnEl.style = `
       text-decoration: none;
       display: block;
       font-size: 14px;
     `;
+  }
 }
-
 //* scraping meta elements
 const metaElements = document.querySelectorAll('meta');
 if (metaElements.length) {
