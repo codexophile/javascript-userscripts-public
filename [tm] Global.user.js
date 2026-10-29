@@ -549,7 +549,7 @@ const mainContainerEl = generateElements(
   `<div id="ytdlp-main"></div>`,
   ytDlpPopover,
 );
-GM_addElement(mainContainerEl, 'input', {
+const noPromptCheckboxEl = GM_addElement(mainContainerEl, 'input', {
   textContent: 'noprompt',
   type: 'checkbox',
   id: 'ytdlp-noprompt-checkbox',
@@ -558,6 +558,16 @@ GM_addElement(mainContainerEl, 'input', {
 GM_addElement(mainContainerEl, 'label', {
   textContent: 'noprompt',
   for: 'ytdlp-noprompt-checkbox',
+});
+const cookiesCheckboxEl = GM_addElement(mainContainerEl, 'input', {
+  textContent: 'cookies',
+  type: 'checkbox',
+  id: 'ytdlp-cookies-checkbox',
+  class: 'ytdlp-option',
+});
+GM_addElement(mainContainerEl, 'label', {
+  textContent: 'Cookies',
+  for: 'ytdlp-cookies-checkbox',
 });
 GM_addElement(mainContainerEl, 'button', {
   textContent: 'quick ⬇️',
@@ -586,6 +596,27 @@ GM_addElement(mainContainerEl, 'button', {
       urlToDownload: location.href,
       mode: 'list',
       browser: 'firefox',
+      profile: '3vm341ho.default-release',
+    });
+  },
+});
+GM_addElement(mainContainerEl, 'button', {
+  textContent: 'Thumbnails',
+  onclick: () => {
+    let urlToDownload;
+    const locationPathname = location.pathname;
+    if (
+      location.host === 'www.tiktok.com' &&
+      !locationPathname.match(/video|photo/) &&
+      locationPathname.includes('/@')
+    ) {
+      urlToDownload = `tiktokuser:${locationPathname.replace('/@', '')}`;
+    } else urlToDownload = location.href;
+    invokeDownloader('ytdlp', {
+      urlToDownload,
+      mode: 'thumbnails',
+      destination: 'Y:\\#thumbnails-and-storyboards',
+      browser: cookiesCheckboxEl.checked ? 'firefox' : null,
       profile: '3vm341ho.default-release',
     });
   },
