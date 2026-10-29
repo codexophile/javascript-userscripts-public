@@ -1,22 +1,22 @@
 (function (window) {
-  "use strict";
+  'use strict';
 
   // --- Configuration ---
   const DEFAULT_CONFIG = {
-    position: "bottom-right", // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
+    position: 'bottom-right', // 'top-left', 'top-right', 'bottom-left', 'bottom-right'
     maxMessages: 100, // Maximum number of messages to keep
     defaultVisible: true, // Should the logger be visible initially?
     logLevelStyles: {
       // CSS styles for different levels
-      log: "color: #dadada;",
-      info: "color: #64b5f6;", // Light blue
-      warn: "color: #ffb74d; font-weight: bold;", // Orange
-      error: "color: #e57373; font-weight: bold;", // Red
-      debug: "color: #9575cd;", // Purple
+      log: 'color: #dadada;',
+      info: 'color: #64b5f6;', // Light blue
+      warn: 'color: #ffb74d; font-weight: bold;', // Orange
+      error: 'color: #e57373; font-weight: bold;', // Red
+      debug: 'color: #9575cd;', // Purple
     },
-    containerId: "page-logger-container",
+    containerId: 'page-logger-container',
     baseZIndex: 9999,
-    timestampFormat: "HH:mm:ss.ms", // 'HH:mm:ss' or 'HH:mm:ss.ms'
+    timestampFormat: 'HH:mm:ss.ms', // 'HH:mm:ss' or 'HH:mm:ss.ms'
   };
 
   // --- Library Code ---
@@ -41,12 +41,12 @@
       if (props.style) {
         el.style.cssText = props.style;
       }
-      children.forEach((child) => el.appendChild(child));
+      children.forEach(child => el.appendChild(child));
       return el;
     },
 
     _applyStyles: function () {
-      if (document.getElementById("page-logger-styles")) return;
+      if (document.getElementById('page-logger-styles')) return;
 
       const css = `
                 #${this.config.containerId} {
@@ -121,8 +121,8 @@
                     color: #111;
                  }
             `;
-      const styleElement = this._createElement("style", {
-        id: "page-logger-styles",
+      const styleElement = this._createElement('style', {
+        id: 'page-logger-styles',
         textContent: css,
       });
       (document.head || document.documentElement).appendChild(styleElement);
@@ -130,26 +130,26 @@
 
     _updateContainerPosition: function () {
       const containerStyle = this.elements.container.style;
-      const margin = "10px";
+      const margin = '10px';
       // Reset positions
-      ["top", "bottom", "left", "right"].forEach(
-        (prop) => (containerStyle[prop] = "auto")
+      ['top', 'bottom', 'left', 'right'].forEach(
+        prop => (containerStyle[prop] = 'auto'),
       );
 
       switch (this.config.position) {
-        case "top-left":
+        case 'top-left':
           containerStyle.top = margin;
           containerStyle.left = margin;
           break;
-        case "top-right":
+        case 'top-right':
           containerStyle.top = margin;
           containerStyle.right = margin;
           break;
-        case "bottom-left":
+        case 'bottom-left':
           containerStyle.bottom = margin;
           containerStyle.left = margin;
           break;
-        case "bottom-right":
+        case 'bottom-right':
         default: // Default to bottom-right
           containerStyle.bottom = margin;
           containerStyle.right = margin;
@@ -162,52 +162,52 @@
 
       this._applyStyles();
 
-      this.elements.messageArea = this._createElement("div", {
-        className: "page-logger-messages",
+      this.elements.messageArea = this._createElement('div', {
+        className: 'page-logger-messages',
       });
 
-      this.elements.toggleButton = this._createElement("button", {
-        className: "page-logger-button",
-        title: "Toggle Visibility",
-        textContent: "−",
+      this.elements.toggleButton = this._createElement('button', {
+        className: 'page-logger-button',
+        title: 'Toggle Visibility',
+        textContent: '−',
       });
       this.elements.toggleButton.onclick = () => this.toggle();
 
-      this.elements.clearButton = this._createElement("button", {
-        className: "page-logger-button",
-        title: "Clear Logs",
-        textContent: "Clear",
+      this.elements.clearButton = this._createElement('button', {
+        className: 'page-logger-button',
+        title: 'Clear Logs',
+        textContent: 'Clear',
       });
       this.elements.clearButton.onclick = () => this.clear();
 
-      this.elements.pauseButton = this._createElement("button", {
-        className: "page-logger-button",
-        title: "Pause Logging",
-        textContent: "Pause",
+      this.elements.pauseButton = this._createElement('button', {
+        className: 'page-logger-button',
+        title: 'Pause Logging',
+        textContent: 'Pause',
       });
       this.elements.pauseButton.onclick = () => this.togglePause();
 
       this.elements.controls = this._createElement(
-        "div",
-        { className: "page-logger-controls" },
+        'div',
+        { className: 'page-logger-controls' },
         [
           this.elements.pauseButton,
           this.elements.clearButton,
           this.elements.toggleButton,
-        ]
+        ],
       );
 
       this.elements.container = this._createElement(
-        "div",
+        'div',
         { id: this.config.containerId },
-        [this.elements.controls, this.elements.messageArea]
+        [this.elements.controls, this.elements.messageArea],
       );
 
       this._updateContainerPosition();
       this.visible = this.config.defaultVisible;
       if (!this.visible) {
-        this.elements.container.classList.add("hidden");
-        this.elements.toggleButton.textContent = "+";
+        this.elements.container.classList.add('hidden');
+        this.elements.toggleButton.textContent = '+';
       }
 
       // Append only when body is ready
@@ -216,18 +216,18 @@
       } else {
         // Wait for DOM content if body isn't available yet (e.g., @run-at document-start)
         document.addEventListener(
-          "DOMContentLoaded",
+          'DOMContentLoaded',
           () => {
             if (!document.getElementById(this.config.containerId)) {
               document.body.appendChild(this.elements.container);
             }
           },
-          { once: true }
+          { once: true },
         );
         // Fallback if DOMContentLoaded already fired
         if (
-          document.readyState === "interactive" ||
-          document.readyState === "complete"
+          document.readyState === 'interactive' ||
+          document.readyState === 'complete'
         ) {
           if (
             document.body &&
@@ -241,57 +241,57 @@
 
     _getTimestamp: function () {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
-      if (this.config.timestampFormat === "HH:mm:ss.ms") {
-        const ms = String(now.getMilliseconds()).padStart(3, "0");
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      if (this.config.timestampFormat === 'HH:mm:ss.ms') {
+        const ms = String(now.getMilliseconds()).padStart(3, '0');
         return `${hours}:${minutes}:${seconds}.${ms}`;
       }
       return `${hours}:${minutes}:${seconds}`;
     },
 
     _formatArg: function (arg) {
-      if (arg === null) return "null";
-      if (arg === undefined) return "undefined";
-      if (typeof arg === "string") return arg;
+      if (arg === null) return 'null';
+      if (arg === undefined) return 'undefined';
+      if (typeof arg === 'string') return arg;
       if (
-        typeof arg === "number" ||
-        typeof arg === "boolean" ||
-        typeof arg === "symbol"
+        typeof arg === 'number' ||
+        typeof arg === 'boolean' ||
+        typeof arg === 'symbol'
       )
         return String(arg);
-      if (typeof arg === "function")
-        return `[Function: ${arg.name || "anonymous"}]`;
-      if (typeof arg === "object") {
+      if (typeof arg === 'function')
+        return `[Function: ${arg.name || 'anonymous'}]`;
+      if (typeof arg === 'object') {
         try {
           // Indent with 2 spaces, handle circular refs gracefully (returns '[Circular]')
           // Using a replacer to handle specific types if needed later
           return JSON.stringify(
             arg,
             (key, value) => {
-              if (typeof value === "bigint") {
-                return value.toString() + "n"; // Indicate BigInt
+              if (typeof value === 'bigint') {
+                return value.toString() + 'n'; // Indicate BigInt
               }
               if (value instanceof Error) {
                 return `[Error: ${value.message}${
-                  value.stack ? `\n${value.stack}` : ""
+                  value.stack ? `\n${value.stack}` : ''
                 }]`;
               }
               // Add more handlers here if needed (e.g., Map, Set)
               return value;
             },
-            2
+            2,
           );
         } catch (e) {
           // Should ideally not happen with the replacer, but fallback
           if (
             e instanceof TypeError &&
-            e.message.includes("circular structure")
+            e.message.includes('circular structure')
           ) {
-            return "[Circular Object]";
+            return '[Circular Object]';
           }
-          return "[Object Formatting Error]";
+          return '[Object Formatting Error]';
         }
       }
       return String(arg); // Fallback
@@ -300,28 +300,28 @@
     _addMessage: function (level, args) {
       if (!this.initialized || this.paused) return;
       if (!this.elements.messageArea) {
-        console.warn("PageLogger UI not ready yet.");
+        console.warn('PageLogger UI not ready yet.');
         // Optionally queue messages here until ready
         return;
       }
 
       // Format all arguments
-      const messageText = args.map(this._formatArg.bind(this)).join(" ");
+      const messageText = args.map(this._formatArg.bind(this)).join(' ');
       const timestamp = this._getTimestamp();
       const levelStyle =
         this.config.logLevelStyles[level] || this.config.logLevelStyles.log;
 
-      const timestampSpan = this._createElement("span", {
-        className: "page-logger-timestamp",
+      const timestampSpan = this._createElement('span', {
+        className: 'page-logger-timestamp',
         textContent: `[${timestamp}]`,
       });
-      const messageSpan = this._createElement("span", {
+      const messageSpan = this._createElement('span', {
         textContent: messageText,
       });
       const messageDiv = this._createElement(
-        "div",
-        { className: "page-logger-message", style: levelStyle },
-        [timestampSpan, messageSpan]
+        'div',
+        { className: 'page-logger-message', style: levelStyle },
+        [timestampSpan, messageSpan],
       );
 
       this.elements.messageArea.appendChild(messageDiv);
@@ -333,7 +333,7 @@
         this.elements.messageArea.firstChild
       ) {
         this.elements.messageArea.removeChild(
-          this.elements.messageArea.firstChild
+          this.elements.messageArea.firstChild,
         );
         this.messageCount--;
       }
@@ -360,7 +360,7 @@
      */
     init: function (userConfig = {}) {
       if (this.initialized) {
-        console.warn("PageLogger already initialized.");
+        console.warn('PageLogger already initialized.');
         return;
       }
       // Deep merge might be better for logLevelStyles, but simple merge for now
@@ -372,35 +372,35 @@
 
       this._createUI();
       this.initialized = true;
-      console.log("PageLogger Initialized."); // Use native console for init message
+      console.log('PageLogger Initialized.'); // Use native console for init message
     },
 
     log: function (...args) {
-      this._addMessage("log", args);
+      this._addMessage('log', args);
     },
     info: function (...args) {
-      this._addMessage("info", args);
+      this._addMessage('info', args);
     },
     warn: function (...args) {
-      this._addMessage("warn", args);
+      this._addMessage('warn', args);
     },
     error: function (...args) {
-      this._addMessage("error", args);
+      this._addMessage('error', args);
     },
     debug: function (...args) {
-      this._addMessage("debug", args);
+      this._addMessage('debug', args);
     },
 
     clear: function () {
       if (!this.initialized || !this.elements.messageArea) return;
-      this.elements.messageArea.innerHTML = "";
+      setInnerHTML(this.elements.messageArea, '');
       this.messageCount = 0;
     },
 
     show: function () {
       if (!this.initialized || this.visible) return;
-      this.elements.container.classList.remove("hidden");
-      this.elements.toggleButton.textContent = "−";
+      this.elements.container.classList.remove('hidden');
+      this.elements.toggleButton.textContent = '−';
       this.visible = true;
       // Scroll to bottom when shown
       this.elements.messageArea.scrollTop =
@@ -409,8 +409,8 @@
 
     hide: function () {
       if (!this.initialized || !this.visible) return;
-      this.elements.container.classList.add("hidden");
-      this.elements.toggleButton.textContent = "+";
+      this.elements.container.classList.add('hidden');
+      this.elements.toggleButton.textContent = '+';
       this.visible = false;
     },
 
@@ -422,21 +422,21 @@
     togglePause: function () {
       if (!this.initialized) return;
       this.paused = !this.paused;
-      this.elements.pauseButton.textContent = this.paused ? "Resume" : "Pause";
-      this.elements.pauseButton.classList.toggle("paused", this.paused);
-      this._addMessage("info", [
-        this.paused ? "Logging paused" : "Logging resumed",
+      this.elements.pauseButton.textContent = this.paused ? 'Resume' : 'Pause';
+      this.elements.pauseButton.classList.toggle('paused', this.paused);
+      this._addMessage('info', [
+        this.paused ? 'Logging paused' : 'Logging resumed',
       ]);
     },
 
     setConfig: function (key, value) {
       if (!this.initialized) {
-        console.error("PageLogger not initialized. Cannot set config.");
+        console.error('PageLogger not initialized. Cannot set config.');
         return;
       }
       if (key in this.config) {
         // Special handling for some keys
-        if (key === "logLevelStyles") {
+        if (key === 'logLevelStyles') {
           this.config.logLevelStyles = {
             ...this.config.logLevelStyles,
             ...value,
@@ -447,27 +447,27 @@
         }
 
         // Update UI if necessary
-        if (key === "position") {
+        if (key === 'position') {
           this._updateContainerPosition();
         }
-        if (key === "maxMessages") {
+        if (key === 'maxMessages') {
           // Prune immediately if needed
           while (
             this.messageCount > this.config.maxMessages &&
             this.elements.messageArea.firstChild
           ) {
             this.elements.messageArea.removeChild(
-              this.elements.messageArea.firstChild
+              this.elements.messageArea.firstChild,
             );
             this.messageCount--;
           }
         }
-        if (key === "baseZIndex") {
+        if (key === 'baseZIndex') {
           this.elements.container.style.zIndex = this.config.baseZIndex;
         }
 
         this.log(
-          `[PageLogger] Config updated: ${key} = ${JSON.stringify(value)}`
+          `[PageLogger] Config updated: ${key} = ${JSON.stringify(value)}`,
         );
       } else {
         this.warn(`[PageLogger] Invalid config key: ${key}`);
@@ -476,7 +476,7 @@
 
     destroy: function () {
       if (!this.initialized) return;
-      const styleElement = document.getElementById("page-logger-styles");
+      const styleElement = document.getElementById('page-logger-styles');
       if (styleElement) styleElement.remove();
       if (this.elements.container) this.elements.container.remove();
 
@@ -496,12 +496,12 @@
       this.config = { ...DEFAULT_CONFIG }; // Reset config
 
       // Remove from global scope if it was added
-      if (typeof unsafeWindow !== "undefined") {
+      if (typeof unsafeWindow !== 'undefined') {
         if (unsafeWindow.PageLogger === this) delete unsafeWindow.PageLogger;
       } else {
         if (window.PageLogger === this) delete window.PageLogger;
       }
-      console.log("PageLogger Destroyed."); // Native console
+      console.log('PageLogger Destroyed.'); // Native console
     },
   };
 
@@ -509,7 +509,7 @@
   // Make it available to the userscript's scope and potentially the page's global scope
   // Using unsafeWindow allows other scripts on the page OR your own script to access it easily.
   // If you only want YOUR userscript to access it, you don't need to expose it globally.
-  if (typeof unsafeWindow !== "undefined") {
+  if (typeof unsafeWindow !== 'undefined') {
     unsafeWindow.PageLogger = PageLogger;
   } else {
     window.PageLogger = PageLogger; // Fallback for environments without unsafeWindow
@@ -527,7 +527,7 @@
       const checkInterval = setInterval(() => {
         // Access via unsafeWindow if needed, otherwise just PageLogger
         const logger =
-          typeof unsafeWindow !== "undefined"
+          typeof unsafeWindow !== 'undefined'
             ? unsafeWindow.PageLogger
             : window.PageLogger;
         if (logger && logger.init) {
@@ -540,59 +540,59 @@
       setTimeout(() => {
         clearInterval(checkInterval);
         const logger =
-          typeof unsafeWindow !== "undefined"
+          typeof unsafeWindow !== 'undefined'
             ? unsafeWindow.PageLogger
             : window.PageLogger;
         if (!logger || !logger.init) {
-          console.error("PageLogger did not become available in time.");
+          console.error('PageLogger did not become available in time.');
         }
       }, 5000); // Wait max 5 seconds
     }
 
-    waitForPageLogger((PageLogger) => {
+    waitForPageLogger(PageLogger => {
       // Initialize PageLogger (if not auto-initialized in the library)
       // You can override defaults here
       PageLogger.init({
-        position: "bottom-left",
+        position: 'bottom-left',
         maxMessages: 75,
         // defaultVisible: false
       });
 
       // Now you can use PageLogger instead of console
-      PageLogger.log("PageLogger is ready!");
+      PageLogger.log('PageLogger is ready!');
       PageLogger.info(
-        "This is an informational message.",
-        "Multiple arguments work.",
-        123
+        'This is an informational message.',
+        'Multiple arguments work.',
+        123,
       );
-      PageLogger.warn("This is a warning.");
+      PageLogger.warn('This is a warning.');
       PageLogger.error(
-        "This is an error message.",
-        new Error("Something went wrong")
+        'This is an error message.',
+        new Error('Something went wrong'),
       );
 
       const myObject = {
-        name: "Test Object",
+        name: 'Test Object',
         value: 42,
-        nested: { id: "A", data: [1, 2, 3] },
+        nested: { id: 'A', data: [1, 2, 3] },
       };
-      PageLogger.debug("Debugging an object:", myObject);
+      PageLogger.debug('Debugging an object:', myObject);
 
-      PageLogger.log("Testing null and undefined:", null, undefined);
+      PageLogger.log('Testing null and undefined:', null, undefined);
       PageLogger.log(
-        "Testing boolean and function:",
+        'Testing boolean and function:',
         true,
-        function testFunc() {}
+        function testFunc() {},
       );
       PageLogger.log(
-        "Testing BigInt:",
-        1234567890123456789012345678901234567890n
+        'Testing BigInt:',
+        1234567890123456789012345678901234567890n,
       );
 
       // Example of changing config after init
       setTimeout(() => {
-        PageLogger.setConfig("position", "top-right");
-        PageLogger.log("Moved logger to top-right");
+        PageLogger.setConfig('position', 'top-right');
+        PageLogger.log('Moved logger to top-right');
       }, 3000);
 
       // Example clear
@@ -615,7 +615,7 @@
       }, 9000);
       setTimeout(() => {
         PageLogger.togglePause(); // Resume
-        PageLogger.log("Logging resumed, this should appear."); // Will show
+        PageLogger.log('Logging resumed, this should appear.'); // Will show
       }, 11000);
 
       // Example destroy (if you need to clean up completely)
