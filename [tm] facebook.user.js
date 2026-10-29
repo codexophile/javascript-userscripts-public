@@ -1,3 +1,19 @@
+onNewUrl();
+window.addEventListener('urlchange', onNewUrl);
+function onNewUrl() {
+  if (isMediaPage()) {
+    addMediaStatusUi();
+  } else {
+    removeMediaStatusUi();
+  }
+}
+
+function addMediaStatusUi() {}
+
+function removeMediaStatusUi() {}
+
+function isMediaPage() {}
+
 //* new yt-dlp button
 const ytdlpPopoverEl = await waitFor('#yt-dlp-popover');
 generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
