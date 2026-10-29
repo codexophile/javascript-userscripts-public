@@ -273,6 +273,40 @@ const STORYBOARD_CSS = `
   padding: 2px
 }
 
+.sb-load-status {
+  display: flex;
+  flex: 0 0 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 18px;
+  color: #aaa;
+  font-size: 11px
+}
+
+.sb-load-status.sb-complete {
+  color: #8f8
+}
+
+.sb-load-status.sb-failed {
+  color: #f88
+}
+
+.sb-spinner {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #555;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: sb-spin .7s linear infinite
+}
+
+@keyframes sb-spin {
+  to {
+    transform: rotate(360deg)
+  }
+}
+
 .sb-tile {
   position: relative;
   flex: none;
@@ -822,14 +856,14 @@ function _sbCreateErrorTile(slot) {
  * @returns {StoryboardPanel} The panel and its update hooks.
  */
 function _sbCreatePanel({ onLocate, onToggleGrid, gridHidden }) {
-  const element = _sbEl('details', 'sb-panel');
+  const element = _sbEl('div', 'sb-panel');
   element.open = Boolean(
     _sbGM.getValue(STORYBOARD_STORAGE_KEYS.panelOpen, true),
   );
   element.addEventListener('toggle', () =>
     _sbGM.setValue(STORYBOARD_STORAGE_KEYS.panelOpen, element.open),
   );
-  element.append(_sbEl('summary', '', 'Storyboard'));
+  // element.append(_sbEl('summary', '', 'Storyboard'));
 
   const buttons = _sbEl('div', 'sb-buttons');
   const info = _sbEl('div', 'sb-info');
@@ -968,7 +1002,7 @@ async function storyboard(options) {
     tileWidth = null,
     minTileWidth = STORYBOARD_MIN_TILE_WIDTH,
     linkUrl = null,
-    controls = { enabled: false, attachTo: null },
+    controls = { enabled: false, attachTo: null, pauseOnLocate: false },
     hashSeek = true,
   } = options ?? {};
   console.log(parent);
@@ -1053,6 +1087,33 @@ async function storyboard(options) {
 
     const max = limit();
     if (max) jobs = jobs.filter(job => job.fallback.index < max);
+
+    const loadStatus = _sbEl('div', 'sb-load-status');
+    const spinner = _sbEl('span', 'sb-spinner');
+    spinner.setAttribute('aria-hidden', 'true');
+    const loadText = _sbEl('span');
+    loadStatus.append(spinner, loadText);
+    grid.append(loadStatus);
+    let completedJobs = 0;
+    let failedJobs = 0;
+
+    /**
+     * Updates the progress indicator at the end of the grid.
+     * @returns {void}
+     */
+    const updateLoadStatus = () => {
+      const totalJobs = jobs.length;
+      const complete = completedJobs >= totalJobs;
+      loadStatus.classList.toggle('sb-complete', complete && !failedJobs);
+      loadStatus.classList.toggle('sb-failed', complete && Boolean(failedJobs));
+      spinner.hidden = complete;
+      loadText.textContent = complete
+        ? failedJobs
+          ? `Loaded ${completedJobs}/${totalJobs} · ${failedJobs} failed`
+          : `All loaded · ${completedJobs}/${totalJobs}`
+        : `Loading ${completedJobs}/${totalJobs}`;
+    };
+    updateLoadStatus();
 
     // ---- 2. Image cache with reference counting --------------------------
     /** @type {Map<string, Promise<StoryboardImage>>} */
@@ -1324,7 +1385,14 @@ async function storyboard(options) {
 
     if (controls?.enabled) {
       panel = _sbCreatePanel({
-        onLocate: video ? locateCurrent : null,
+        onLocate: video
+          ? () => {
+              if (video && controls.pauseOnLocate) {
+                video.pause();
+              }
+              locateCurrent();
+            }
+          : null,
         onToggleGrid: () => setGridHidden(!gridHidden),
         gridHidden,
       });
@@ -1343,6 +1411,7 @@ async function storyboard(options) {
 
       /** @type {StoryboardTile[]} */
       let batch;
+      let jobFailed = false;
       try {
         const image = await getImage(job.url);
         batch = job.crops(image).map(crop => {
@@ -1350,12 +1419,14 @@ async function storyboard(options) {
             return _sbCreateTile(crop, image, linkUrl);
           } catch (error) {
             console.warn('[storyboard] tile failed', error);
+            jobFailed = true;
             return _sbCreateErrorTile(crop);
           }
         });
       } catch (error) {
         console.warn('[storyboard] image failed', job.url, error);
         batch = [_sbCreateErrorTile(job.fallback)];
+        jobFailed = true;
       }
       release(job.url);
 
@@ -1371,6 +1442,10 @@ async function storyboard(options) {
         }
       }
       grid.append(...batch.map(tile => tile.element));
+      if (jobFailed || batch.some(tile => tile.failed)) failedJobs++;
+      completedJobs++;
+      grid.append(loadStatus);
+      updateLoadStatus();
       updateInterval();
       batch.forEach(labelTile);
       updatePlaybackState();
