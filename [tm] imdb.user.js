@@ -1,4 +1,8 @@
 'use strict';
+if (location.host !== 'www.imdb.com') {
+  return;
+}
+
 const malFormed = /\/(%3F.+?)(?:\/|$)/;
 const matches = location.href.match(malFormed);
 if (location.href.includes('https://m.')) {
