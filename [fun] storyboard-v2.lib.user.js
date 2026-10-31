@@ -59,8 +59,10 @@
  *   `linkUrl#slot=<index>`. A plain click still seeks the local video (if any);
  *   Ctrl/Shift/Alt/Meta/middle clicks use the link natively.
  * @property {boolean} [controls=true] Render the collapsible control panel.
- * @property {boolean} [hashSeek=true] Seek to `#slot=<n>` from `location.hash`
- *   once the video metadata is available.
+ * @property {boolean} [hashSeek=true] Seek to `#t=<seconds>` or `#slot=<n>` from
+ *   the URL once the video metadata and storyboard layout are available.
+ * @property {boolean} [urlTracking=true] Replace the current URL hash with the
+ *   current timestamp and storyboard slot while the video plays.
  */
 
 /**
@@ -646,14 +648,51 @@ function _sbGridCrops(image, layout, firstIndex, limit) {
 }
 
 /**
- * Extracts the slot number from a `#slot=<digits>` URL hash.
+ * Reads a timestamp and/or storyboard slot from a URL hash or query string.
  *
- * @param {string} [hash] Hash string. Defaults to `location.hash`.
- * @returns {number | null} Slot index, or `null` when absent/invalid.
+ * @param {string} [urlString] URL string. Defaults to the current URL.
+ * @returns {{time: number | null, slot: number | null}} Parsed seek state.
+ * @example
+ * const state = _sbSeekState('https://example.test/video#t=12.5&slot=3');
  */
-function _sbSlotFromHash(hash = location.hash) {
-  const value = new URLSearchParams(hash.replace(/^#/, '')).get('slot');
-  return value && /^\d+$/.test(value) ? Number(value) : null;
+function _sbSeekState(urlString = location.href) {
+  const url = new URL(urlString, document.baseURI);
+  const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+  const params = new URLSearchParams(url.search);
+  const get = (...names) => {
+    for (const name of names) {
+      const value = hashParams.get(name) ?? params.get(name);
+      if (value !== null) return value;
+    }
+    return null;
+  };
+  const timeRaw = get('t', 'time', 'timestamp');
+  const slotRaw = get('slot', 'sb-grid', 'sb_grid', 'sbGrid');
+  const timeValue = timeRaw === null ? NaN : Number(timeRaw);
+  const slotValue = slotRaw === null ? NaN : Number(slotRaw);
+  return {
+    time:
+      Number.isFinite(timeValue) && timeValue >= 0 ? timeValue : null,
+    slot:
+      Number.isInteger(slotValue) && slotValue >= 0 ? slotValue : null,
+  };
+}
+
+/**
+ * Writes playback position into the current URL without adding a history entry.
+ *
+ * @param {number} time Current playback time in seconds.
+ * @param {number | null} slot Current storyboard slot, when known.
+ * @returns {void}
+ */
+function _sbUpdateSeekUrl(time, slot) {
+  if (!Number.isFinite(time) || time < 0) return;
+  const url = new URL(location.href);
+  const params = new URLSearchParams(url.hash.replace(/^#/, ''));
+  params.set('t', String(Math.round(time * 10) / 10));
+  if (slot !== null) params.set('slot', String(slot));
+  url.hash = params.toString();
+  history.replaceState(history.state, '', url.href);
 }
 
 // ---------------------------------------------------------------------------
@@ -799,22 +838,26 @@ function _sbCreateTile(crop, image, linkUrl) {
 
   const element = _sbEl('div', 'sb-tile');
   element.dataset.sbIndex = String(crop.index);
+  const label = _sbEl('div', 'sb-time');
 
   if (linkUrl) {
     const url = new URL(linkUrl, document.baseURI);
-    url.hash = `slot=${crop.index}`;
+    const params = new URLSearchParams(url.hash.replace(/^#/, ''));
+    params.set('slot', String(crop.index));
+    params.delete('t');
+    params.delete('time');
+    params.delete('timestamp');
+    url.hash = params.toString();
     const a = _sbEl('a');
     a.href = url.href;
     a.target = '_blank';
     a.rel = 'noopener';
-    a.append(canvas);
+    a.append(canvas, label);
     element.append(a);
   } else {
-    element.append(canvas);
+    element.append(canvas, label);
   }
 
-  const label = _sbEl('div', 'sb-time');
-  element.append(label);
   return {
     index: crop.index,
     time: crop.time,
@@ -1004,6 +1047,7 @@ async function storyboard(options) {
     linkUrl = null,
     controls = { enabled: false, attachTo: null, pauseOnLocate: false },
     hashSeek = true,
+    urlTracking = true,
   } = options ?? {};
   console.log(parent);
   if (!(parent instanceof Element))
@@ -1019,6 +1063,10 @@ async function storyboard(options) {
   const grid = _sbEl('div', 'sb-grid');
   root.append(grid);
   parent.append(root);
+  const initialSeekState =
+    video && hashSeek ? _sbSeekState() : { time: null, slot: null };
+  let initialSeekPending =
+    initialSeekState.time !== null || initialSeekState.slot !== null;
 
   try {
     // ---- 1. Build jobs from whichever source was supplied ----------------
@@ -1278,11 +1326,12 @@ async function storyboard(options) {
      * Updates played and current classes from the video's playback position.
      * The current tile is excluded from `sb-played` so the two visual states
      * remain distinct while the video is playing.
+     * @param {boolean} [writeUrl=false] Persist the current position in the URL.
      * @returns {void}
      * @example
      * video.addEventListener('timeupdate', updatePlaybackState);
      */
-    const updatePlaybackState = () => {
+    const updatePlaybackState = (writeUrl = false) => {
       if (!video) return;
       const now = video.currentTime;
       const current = currentTile();
@@ -1293,6 +1342,9 @@ async function storyboard(options) {
           time !== null && time < now && tile !== current,
         );
         tile.element.classList.toggle('sb-current', tile === current);
+      }
+      if (urlTracking && writeUrl && !initialSeekPending) {
+        _sbUpdateSeekUrl(now, current?.index ?? null);
       }
     };
 
@@ -1379,8 +1431,16 @@ async function storyboard(options) {
       video.addEventListener('durationchange', refreshLabels, { signal });
       video.addEventListener('loadedmetadata', updatePlaybackState, { signal });
       video.addEventListener('durationchange', updatePlaybackState, { signal });
-      video.addEventListener('timeupdate', updatePlaybackState, { signal });
-      video.addEventListener('seeking', updatePlaybackState, { signal });
+      video.addEventListener(
+        'timeupdate',
+        () => updatePlaybackState(true),
+        { signal },
+      );
+      video.addEventListener(
+        'seeking',
+        () => updatePlaybackState(true),
+        { signal },
+      );
     }
 
     if (controls?.enabled) {
@@ -1459,10 +1519,13 @@ async function storyboard(options) {
     });
 
     if (video && hashSeek) {
-      const slot = _sbSlotFromHash();
-      if (slot !== null) {
+      if (initialSeekPending) {
         _sbWhenMetadata(video).then(() => {
-          if (!signal.aborted) seekToSlot(slot);
+          if (signal.aborted) return;
+          initialSeekPending = false;
+          if (initialSeekState.time !== null) seekTo(initialSeekState.time);
+          else if (initialSeekState.slot !== null)
+            seekToSlot(initialSeekState.slot);
         });
       }
     }
