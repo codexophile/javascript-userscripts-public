@@ -78,6 +78,13 @@ galleryBtnEl.addEventListener('click', () => {
   });
 });
 
+//  MARK: buttons
+
+generateElements(
+  `<button style="margin-left: 10px;">ytdlp</button>`,
+  galleryPopoverEl,
+).addEventListener();
+
 const thisTabButton = generateElements(
   `<button style="margin-left: 10px;">This tab</button>`,
   galleryPopoverEl,
