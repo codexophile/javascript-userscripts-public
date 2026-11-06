@@ -1,6 +1,25 @@
 (async () => {
   //* press xbutton on anchor to save the link to browser history
 
+  /**
+   * Runtime settings for anchor dragging.
+   *
+   * @type {{enabled: boolean, radialMenuEnabled: boolean, menuRadius: number}}
+   */
+  const settings = {
+    enabled: true,
+    radialMenuEnabled: true,
+    menuRadius: 88,
+  };
+
+  /**
+   * Tracks the anchor and cursor position for the current drag operation.
+   *
+   * @type {{anchor: HTMLAnchorElement, x: number, y: number, startX: number, startY: number, action: string}|null}
+   */
+  let activeDrag = null;
+  let radialMenuEl = null;
+
   document.addEventListener('auxclick', function (event) {
     // SETTINGS:
     // Set this to 3 for the "Back" button
@@ -21,9 +40,43 @@
 
   const collapsibleEl = await Collapsible();
   const checkboxEl = generateElements(
-    `<input type="checkbox" id="myUniqueCheckbox" class="my-custom-checkbox" checked>`,
+    `<label>Enable anchor dragging <input type="checkbox" id="myUniqueCheckbox" class="my-custom-checkbox"></label>`,
   );
+  const enabledInputEl = checkboxEl.querySelector('input');
+  enabledInputEl.checked = settings.enabled;
   collapsibleEl.addElement(checkboxEl);
+  const radialMenuCheckboxEl = generateElements(
+    `<label>Show radial drag menu <input type="checkbox" id="anchorRadialMenuCheckbox" class="my-custom-checkbox"></label>`,
+  );
+  const radialMenuInputEl = radialMenuCheckboxEl.querySelector('input');
+  radialMenuInputEl.checked = settings.radialMenuEnabled;
+  collapsibleEl.addElement(radialMenuCheckboxEl);
+  const radiusEl = generateElements(
+    `<label>Menu radius <input type="range" id="anchorRadialMenuRadius" min="60" max="140" step="4"></label>`,
+  );
+  const radiusInputEl = radiusEl.querySelector('input');
+  radiusInputEl.value = String(settings.menuRadius);
+  collapsibleEl.addElement(radiusEl);
+  const temp = generateElements(
+    `<span id="anchorRadialMenuRadiusValue">${settings.menuRadius}px</span>`,
+    collapsibleEl.collapsibleContent,
+  );
+
+  enabledInputEl.addEventListener('change', () => {
+    settings.enabled = enabledInputEl.checked;
+    if (!settings.enabled) hideRadialMenu();
+  });
+  radialMenuInputEl.addEventListener('change', () => {
+    settings.radialMenuEnabled = radialMenuInputEl.checked;
+    if (!settings.radialMenuEnabled) hideRadialMenu();
+  });
+  radiusInputEl.addEventListener('input', () => {
+    settings.menuRadius = Number(radiusInputEl.value);
+    document.querySelector('#anchorRadialMenuRadiusValue').textContent =
+      `${settings.menuRadius}px`;
+    if (radialMenuEl)
+      updateRadialMenuPosition(activeDrag?.startX, activeDrag?.startY);
+  });
 
   GM_addStyle(`
   /* Apply to a specific class to avoid affecting all checkboxes */
@@ -98,36 +151,217 @@
 }
     `);
 
-  const setColor = (el, color) => {
-    el.style.color = color;
-    el.querySelectorAll('*').forEach(item => (item.style.color = color));
-  };
-
-  const handleDrag = e => {
-    if (!isEnabled()) return;
-    const color = e.offsetX <= 0 && e.offsetY <= 0 ? 'orange' : 'green';
-    setColor(e.currentTarget, color);
-  };
-
-  const handleDragEnd = e => {
-    if (!isEnabled()) return;
-    const anchor = e.currentTarget;
-    if (e.offsetX > 0 || e.offsetY > 0) {
-      location.href = anchor.href;
-    } else {
-      setColor(anchor, '');
+  GM_addStyle(`
+    .anchor-radial-menu {
+      position: fixed;
+      z-index: 2147483647;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+      user-select: none;
+      font: 600 12px/1.2 system-ui, sans-serif;
     }
-  };
 
-  const setupAnchor = anchor => {
-    anchor.addEventListener('drag', handleDrag);
-    anchor.addEventListener('dragend', handleDragEnd);
-  };
+    .anchor-radial-menu__section {
+      position: absolute;
+      width: 112px;
+      min-height: 42px;
+      padding: 8px;
+      box-sizing: border-box;
+      transform: translate(-50%, -50%);
+      border: 1px solid #fff8;
+      border-radius: 999px;
+      color: #fff;
+      background: #222e;
+      text-align: center;
+      box-shadow: 0 2px 12px #0008;
+      transition: background-color .12s, transform .12s;
+    }
 
-  function isEnabled() {
-    const checkboxEl = document.querySelector(`#myUniqueCheckbox`);
-    return checkboxEl.checked;
+    .anchor-radial-menu__section[data-action="new-tab"] {
+      transform: translate(-50%, -50%) translateY(calc(var(--menu-radius) * -1));
+    }
+
+    .anchor-radial-menu__section[data-action="same-tab"] {
+      transform: translate(-50%, -50%) translateY(var(--menu-radius));
+    }
+
+    .anchor-radial-menu__section[data-action="cancel"] {
+      background: #532e;
+    }
+
+    .anchor-radial-menu__section.is-active {
+      transform: translate(-50%, -50%) scale(1.12);
+      background: #1677dacc;
+    }
+
+    .anchor-radial-menu__section[data-action="new-tab"].is-active {
+      transform: translate(-50%, -50%) translateY(calc(var(--menu-radius) * -1)) scale(1.12);
+    }
+
+    .anchor-radial-menu__section[data-action="same-tab"].is-active {
+      transform: translate(-50%, -50%) translateY(var(--menu-radius)) scale(1.12);
+    }
+  `);
+
+  /**
+   * Creates the radial menu used while dragging an anchor.
+   *
+   * @returns {HTMLElement} The menu element.
+   * @example
+   * ```js
+   * const menu = createRadialMenu();
+   * ```
+   */
+  function createRadialMenu() {
+    console.log('444');
+    const menu = generateElements(
+      `<div class="anchor-radial-menu" role="menu" aria-label="Link drag actions">
+        <div class="anchor-radial-menu__section" data-action="new-tab" role="menuitem">Open in new tab<br>(up)</div>
+        <div class="anchor-radial-menu__section" data-action="same-tab" role="menuitem">Open on same tab<br>(down)</div>
+        <div class="anchor-radial-menu__section" data-action="cancel" role="menuitem">Cancel</div>
+      </div>`,
+      document.body,
+    );
+    console.log('444', menu);
+    menu.style.setProperty('--menu-radius', `${settings.menuRadius}px`);
+    return menu;
   }
 
+  /**
+   * Positions the radial menu at the cursor while keeping it in the viewport.
+   *
+   * @param {number} x - Cursor X coordinate.
+   * @param {number} y - Cursor Y coordinate.
+   * @returns {void}
+   * @example
+   * ```js
+   * updateRadialMenuPosition(event.clientX, event.clientY);
+   * ```
+   */
+  function updateRadialMenuPosition(x, y) {
+    if (!radialMenuEl || !Number.isFinite(x) || !Number.isFinite(y)) return;
+    radialMenuEl.style.left = `${Math.max(settings.menuRadius + 64, Math.min(x, innerWidth - settings.menuRadius - 64))}px`;
+    radialMenuEl.style.top = `${Math.max(settings.menuRadius + 32, Math.min(y, innerHeight - settings.menuRadius - 32))}px`;
+    radialMenuEl.style.setProperty('--menu-radius', `${settings.menuRadius}px`);
+  }
+
+  /**
+   * Updates the highlighted section based on the cursor's vertical position.
+   *
+   * @param {number} x - Cursor X coordinate.
+   * @param {number} y - Cursor Y coordinate.
+   * @returns {void}
+   */
+  function updateRadialMenuSelection(x, y) {
+    if (!radialMenuEl || !activeDrag) return;
+    const deltaY = y - activeDrag.startY;
+    const deltaX = x - activeDrag.startX;
+    let action =
+      Math.abs(deltaY) < settings.menuRadius / 2
+        ? 'cancel'
+        : deltaY < 0
+          ? 'new-tab'
+          : 'same-tab';
+    if (Math.abs(deltaX) > settings.menuRadius * 1.5) action = 'cancel';
+    activeDrag.action = action;
+    radialMenuEl.querySelectorAll('[data-action]').forEach(section => {
+      section.classList.toggle('is-active', section.dataset.action === action);
+    });
+    activeDrag.x = x;
+    activeDrag.y = y;
+  }
+
+  /**
+   * Removes the radial menu and clears the active drag state.
+   *
+   * @returns {void}
+   */
+  function hideRadialMenu() {
+    radialMenuEl?.remove();
+    radialMenuEl = null;
+    activeDrag = null;
+  }
+
+  /**
+   * Shows the menu when an anchor drag begins.
+   *
+   * @param {DragEvent} event - The drag-start event.
+   * @returns {void}
+   */
+  function handleDragStart(event) {
+    if (!isEnabled() || !settings.radialMenuEnabled) return;
+    const anchor =
+      event.target instanceof Element ? event.target.closest('a') : null;
+    if (!anchor || !anchor.href) return;
+    const rect = anchor.getBoundingClientRect();
+    activeDrag = {
+      anchor,
+      x: event.clientX || rect.left + rect.width / 2,
+      y: event.clientY || rect.top + rect.height / 2,
+      startX: event.clientX || rect.left + rect.width / 2,
+      startY: event.clientY || rect.top + rect.height / 2,
+      action: 'cancel',
+    };
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'link';
+    radialMenuEl = createRadialMenu();
+    updateRadialMenuPosition(activeDrag.x, activeDrag.y);
+    updateRadialMenuSelection(activeDrag.x, activeDrag.y);
+  }
+
+  /**
+   * Refreshes the menu selection while the browser reports drag movement.
+   *
+   * @param {DragEvent} event - The drag event.
+   * @returns {void}
+   */
+  function handleDrag(event) {
+    if (!activeDrag || !radialMenuEl) return;
+    const x = event.clientX || activeDrag.x;
+    const y = event.clientY || activeDrag.y;
+    updateRadialMenuSelection(x, y);
+  }
+
+  /**
+   * Opens the dragged anchor according to the selected radial-menu section.
+   *
+   * @param {DragEvent} event - The drag-end event.
+   * @returns {void}
+   */
+  function handleDragEnd(event) {
+    if (!activeDrag || !radialMenuEl) return;
+    if (event.clientX || event.clientY) {
+      updateRadialMenuSelection(event.clientX, event.clientY);
+    }
+    const { anchor } = activeDrag;
+    const action = activeDrag.action;
+    hideRadialMenu();
+    if (action === 'new-tab') window.open(anchor.href, '_blank', 'noopener');
+    if (action === 'same-tab') location.href = anchor.href;
+  }
+
+  /**
+   * Registers radial-menu drag handlers for one anchor.
+   *
+   * @param {HTMLAnchorElement} anchor - Anchor to enhance.
+   * @returns {void}
+   */
+  function setupAnchor(anchor) {
+    anchor.draggable = true;
+  }
+
+  /**
+   * Returns whether the script's main setting is enabled.
+   *
+   * @returns {boolean} Whether anchor drag actions are enabled.
+   */
+  function isEnabled() {
+    const checkboxEl = document.querySelector(`#myUniqueCheckbox`);
+    return checkboxEl?.checked === true;
+  }
+
+  document.addEventListener('dragstart', handleDragStart, true);
+  document.addEventListener('drag', handleDrag, true);
+  document.addEventListener('dragend', handleDragEnd, true);
   waitForEach('a', setupAnchor);
 })();
