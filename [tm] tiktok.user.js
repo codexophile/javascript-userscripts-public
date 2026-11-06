@@ -80,14 +80,4 @@
     });
     addHistoryEntry(url);
   }
-
-  // function invokeYtdlp(link) {
-  //   const urlSegment = `url:${link}::`;
-  //   const destinationSegment = `dest:x:\\tiktok::`;
-  //   const modeSegment = `mode:noprompt::`;
-  //   GM_setClipboard(
-  //     `initiate-ytdlp:${urlSegment}${destinationSegment}${modeSegment}`,
-  //   );
-  //   addHistoryEntry(link);
-  // }
 })();

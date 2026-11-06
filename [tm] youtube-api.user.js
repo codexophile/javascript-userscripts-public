@@ -10,26 +10,33 @@
   (function () {
     'use strict';
     document.addEventListener('yt-navigate-finish', async () => {
-      const { videoId, description, status } = getCurrentVideoDetails();
-      if (!status === 'UNPLAYABLE') return;
-      if (
-        !description.includes(
-          'The uploader has not made this video available in your country',
-        )
-      ) {
-        alert('Video is unplayable for other reasons: \n' + description);
-        return;
-      }
-
-      const errorScreenEl = await waitFor(
-        `.interstitialViewModelModelContainer`,
-      );
       try {
+        const { videoId, description = '', status } =
+          await getCurrentVideoDetails();
+        if (status !== 'UNPLAYABLE') return;
+        if (
+          !description.includes(
+            'The uploader has not made this video available in your country',
+          )
+        ) {
+          alert('Video is unplayable for other reasons: \n' + description);
+          return;
+        }
+
+        const errorScreenEl = await waitFor(
+          `.interstitialViewModelModelContainer`,
+        );
+        if (!errorScreenEl || !videoId) {
+          throw new Error('YouTube error screen or video ID is unavailable');
+        }
         const resJson = await fetchYoutubeApi(
           `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoId}&key=${API_KEY}`,
         );
         const allowedIn =
-          resJson.items[0].contentDetails.regionRestriction.allowed;
+          resJson.items?.[0]?.contentDetails?.regionRestriction?.allowed;
+        if (!Array.isArray(allowedIn)) {
+          throw new Error('Video region restrictions are unavailable');
+        }
         const newEl = generateElements(
           `<div>
             <p>Video is playable in:</p>
@@ -46,7 +53,10 @@
         `,
         );
       } catch (error) {
-        console.error('Failed to fetch video region restrictions:', error);
+        console.error(
+          'Failed to fetch or display video region restrictions:',
+          error,
+        );
       }
     });
     return;
@@ -130,7 +140,7 @@
           settingTitleInternally = false;
         }, 0);
       } catch (error) {
-        console.Error(error);
+        console.error('[YouTube] Failed to update video title:', error);
       }
     }
   }
@@ -150,13 +160,25 @@
 
       const videoId = getVideoId();
 
-      const channelId = await getChannelId(videoId, API_KEY);
+      let channelId;
+      try {
+        channelId = await getChannelId(videoId, API_KEY);
+      } catch (error) {
+        console.error('[YouTube] Failed to resolve channel ID:', error);
+        return;
+      }
       if (requestId !== currentRequestId) return;
 
-      const countryOfOrigin = await getChannelCountryOfOrigin(
-        channelId,
-        API_KEY,
-      );
+      let countryOfOrigin;
+      try {
+        countryOfOrigin = await getChannelCountryOfOrigin(
+          channelId,
+          API_KEY,
+        );
+      } catch (error) {
+        console.error('[YouTube] Failed to resolve channel country:', error);
+        return;
+      }
       if (requestId !== currentRequestId) return;
 
       const countryFullName = getCountryName(countryOfOrigin);

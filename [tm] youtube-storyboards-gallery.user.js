@@ -83,7 +83,9 @@ galleryBtnEl.addEventListener('click', () => {
 generateElements(
   `<button style="margin-left: 10px;">ytdlp</button>`,
   galleryPopoverEl,
-).addEventListener();
+).addEventListener('click', () => {
+  invokeDownloader('ytdlp-sb', { urlToDownload: location.href });
+});
 
 const thisTabButton = generateElements(
   `<button style="margin-left: 10px;">This tab</button>`,

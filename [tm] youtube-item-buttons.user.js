@@ -129,8 +129,7 @@
         'yt-list-item-view-model',
         'Not interested',
       );
-      console.log(notInterestedEl);
-      await asyncTimeout(250);
+      await asyncTimeout(50);
       notInterestedEl.click();
     });
   });
@@ -164,10 +163,16 @@
 
   async function setLinkToVidsHref(newEl, thumbEl) {
     newEl.textContent = '⏳';
-    const linkToChannel = await getLinkToChannel(thumbEl);
-    const linkToVideos = `${linkToChannel}/videos`;
-    newEl.href = linkToVideos;
-    newEl.textContent = 'Vid';
+    try {
+      const linkToChannel = await getLinkToChannel(thumbEl);
+      if (!linkToChannel) throw new Error('Channel link is unavailable');
+      newEl.href = `${linkToChannel}/videos`;
+      newEl.textContent = 'Vid';
+    } catch (error) {
+      console.error('[YouTube] Failed to resolve channel videos link:', error);
+      newEl.removeAttribute('href');
+      newEl.textContent = ' unavailable';
+    }
   }
 
   async function getLinkToChannel(thumbEl) {

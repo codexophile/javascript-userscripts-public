@@ -679,6 +679,35 @@ function _sbSeekState(urlString = location.href) {
 }
 
 /**
+ * Updates selected hash values while preserving all other raw hash segments.
+ * Existing hash tokens are kept byte-for-byte, including bare tokens such as
+ * `#allow-play`.
+ *
+ * @param {URL} url URL whose hash should be updated.
+ * @param {Map<string, string>} values Hash values to add or replace.
+ * @returns {void}
+ */
+function _sbUpdateHashValues(url, values) {
+  const hash = url.hash.replace(/^#/, '');
+  const parts = hash ? hash.split('&') : [];
+  const updated = [];
+  const seen = new Set();
+  for (const part of parts) {
+    const key = part.split('=', 1)[0];
+    if (!values.has(key)) {
+      updated.push(part);
+      continue;
+    }
+    if (!seen.has(key)) updated.push(`${key}=${values.get(key)}`);
+    seen.add(key);
+  }
+  for (const [key, value] of values) {
+    if (!seen.has(key)) updated.push(`${key}=${value}`);
+  }
+  url.hash = updated.join('&');
+}
+
+/**
  * Writes playback position into the current URL without adding a history entry.
  *
  * @param {number} time Current playback time in seconds.
@@ -688,10 +717,9 @@ function _sbSeekState(urlString = location.href) {
 function _sbUpdateSeekUrl(time, slot) {
   if (!Number.isFinite(time) || time < 0) return;
   const url = new URL(location.href);
-  const params = new URLSearchParams(url.hash.replace(/^#/, ''));
-  params.set('t', String(Math.round(time * 10) / 10));
-  if (slot !== null) params.set('slot', String(slot));
-  url.hash = params.toString();
+  const values = new Map([['t', String(Math.round(time * 10) / 10)]]);
+  if (slot !== null) values.set('slot', String(slot));
+  _sbUpdateHashValues(url, values);
   history.replaceState(history.state, '', url.href);
 }
 
@@ -842,12 +870,7 @@ function _sbCreateTile(crop, image, linkUrl) {
 
   if (linkUrl) {
     const url = new URL(linkUrl, document.baseURI);
-    const params = new URLSearchParams(url.hash.replace(/^#/, ''));
-    params.set('slot', String(crop.index));
-    params.delete('t');
-    params.delete('time');
-    params.delete('timestamp');
-    url.hash = params.toString();
+    _sbUpdateHashValues(url, new Map([['slot', String(crop.index)]]));
     const a = _sbEl('a');
     a.href = url.href;
     a.target = '_blank';
@@ -1067,6 +1090,7 @@ async function storyboard(options) {
     video && hashSeek ? _sbSeekState() : { time: null, slot: null };
   let initialSeekPending =
     initialSeekState.time !== null || initialSeekState.slot !== null;
+  let lastUrlUpdateAt = -Infinity;
 
   try {
     // ---- 1. Build jobs from whichever source was supplied ----------------
@@ -1343,8 +1367,14 @@ async function storyboard(options) {
         );
         tile.element.classList.toggle('sb-current', tile === current);
       }
-      if (urlTracking && writeUrl && !initialSeekPending) {
+      if (
+        urlTracking &&
+        writeUrl &&
+        !initialSeekPending &&
+        performance.now() - lastUrlUpdateAt >= 10_000
+      ) {
         _sbUpdateSeekUrl(now, current?.index ?? null);
+        lastUrlUpdateAt = performance.now();
       }
     };
 

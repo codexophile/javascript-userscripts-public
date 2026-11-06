@@ -1,7 +1,7 @@
 (async function () {
   'use strict';
 
-  await waitFor(`#vplayer.jwplayer`);
+  const playerEl = await waitFor(`.jwplayer`);
 
   window.close = () => {};
 
@@ -15,28 +15,41 @@
 
   (async function () {
     'use strict';
-    let storyboardUrl;
+
+    GM_addStyle(`
+      body {
+        flex-direction: column;
+        overflow: auto;
+
+        #media-player {
+          &, & * {
+            overflow: auto !important;
+            position: relative !important;
+          }
+        }
+
+        div:has(>#media-player) {
+          position: relative;
+          overflow: auto !important; 
+        }
+      }
+    `);
 
     const thumbEl = await waitFor('.jw-time-thumb[style*="background-image"]');
-    storyboardUrl = thumbEl.style.backgroundImage.match(/['"](.*)['"]/)[1];
+    const storyboardUrl =
+      thumbEl.style.backgroundImage.match(/['"](.*)['"]/)[1];
 
-    const $videoEl = $(`video[src]`);
-    $videoEl.data('processed', true);
-    $videoEl.prop('volume', 0.01);
-    $('#vplayer').css(`height`, `70vh`);
+    const videoEl = document.querySelector(`video[src]`);
+    videoEl.volume = 0.01;
+    playerEl.style.height = '70vh';
 
-    let parent;
-    if ($('.videoplayer, #vplayer').length)
-      parent = $(`<div></div>`).insertAfter(
-        $('.videoplayer, #vplayer').first(),
-      );
-    else parent = $(`<div></div>`).appendTo(document.body);
+    const storyboardParent = generateElements(`<div></div>`, document.body);
 
-    const storyboardEl = await storyboard({
-      storyboardParent: parent[0],
+    await storyboard({
+      storyboardParent,
       horizontal: 10,
       vertical: 10,
-      vidOnPage: $videoEl[0],
+      vidOnPage: videoEl,
       trueNoOfSlots: 100,
       imgUrls: [storyboardUrl],
     });

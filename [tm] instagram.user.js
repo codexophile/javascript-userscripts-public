@@ -12,10 +12,11 @@
 // );
 
 //* new yt-dlp button
-const ytdlpPopoverEl = await waitFor('#yt-dlp-popover');
-generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
-  'click',
-  () => {
+(async function () {
+  'use strict';
+
+  const { addButton } = await Collapsible();
+  addButton('Instant', null, () => {
     let postLink = '';
 
     if (location.href === 'https://www.instagram.com/') {
@@ -33,8 +34,8 @@ generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
       browser: 'firefox',
       profile: 'lzV3dBf4.Profile 1',
     });
-  },
-);
+  });
+})();
 
 //* ig-wall items
 
@@ -103,7 +104,20 @@ generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
   const igPostTypesSelector = igPostTypesArr
     .map(type => `[href*="/${type}/"]`)
     .join(', ');
-  waitForEach(`div:has(>:is(${igPostTypesSelector}))`, igPostEl => {
+  const finalQuery = `div:has(>:is(${igPostTypesSelector}))`;
+
+  // const styleEl = GM_addStyle(`
+  //   div:has(>div>div>:is(${igPostTypesSelector})) {
+  //     flex-direction: row !important;
+  //     flex-wrap: wrap;
+  //     justify-content: space-around;
+  //     & > div {
+  //       display: contents;
+  //     }
+  // `);
+  // console.log(styleEl);
+
+  waitForEach(finalQuery, igPostEl => {
     const shouldTest = sectionsToTestForArr.some(section =>
       location.href.includes(`/${section}/`),
     );

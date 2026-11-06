@@ -140,7 +140,6 @@ function createDispatcher({ common, skipCommon = [], rules, fallback }) {
   const table = new Map();
   /** @type {Set<*>} */
   const noCommon = new Set(skipCommon);
-
   for (const [keys, handlers] of rules) {
     for (const key of [].concat(keys)) {
       const list = table.get(key) ?? [];
@@ -1019,11 +1018,20 @@ function waitForEach(selector, callback, options = {}) {
   };
 }
 
-// Modified version of waitFor using the consolidated observer
-function waitFor(selector, textToMatch = null) {
+/**
+ * Waits for an element matching a selector and optional text within a scope.
+ *
+ * @param {string} selector CSS selector used to find the element.
+ * @param {?string} textToMatch Optional text that must be contained in the element.
+ * @param {Element|Document} parentEl Root element to search within. Defaults to the document.
+ * @returns {Promise<Element>} Promise resolved with the matching element.
+ * @example
+ * const button = await waitFor('.submit-button', null, modalElement);
+ */
+function waitFor(selector, textToMatch = null, parentEl = document) {
   return new Promise(resolve => {
     // Check if element already exists
-    const existing = [...document.querySelectorAll(selector)].find(
+    const existing = [...parentEl.querySelectorAll(selector)].find(
       element =>
         textToMatch === null || element.textContent.includes(textToMatch),
     );
@@ -1036,6 +1044,9 @@ function waitFor(selector, textToMatch = null) {
     const unobserve = CentralObserverManager.observe(
       selector,
       element => {
+        if (!parentEl.contains(element)) {
+          return;
+        }
         if (
           textToMatch !== null &&
           !element.textContent.includes(textToMatch)
@@ -1327,7 +1338,6 @@ function makeMarkable({
    * @returns {void}
    */
   const processElement = el => {
-    console.log(el);
     if ('markableInit' in el.dataset) return;
     el.dataset.markableInit = '';
 
@@ -4138,6 +4148,38 @@ function calculateWidthAndExpand(collapsibleContent) {
 }
 
 // MARK: Site specific functions
+
+async function getNitterHosts() {
+  const nitterStatusUrlsArr = [
+    'https://status.d420.de/api/v1/instances',
+    'https://d420.net/api/v1/instances',
+  ];
+  const results = await Promise.allSettled(
+    nitterStatusUrlsArr.map(statusUrl => fetchJson(statusUrl)),
+  );
+  const urls = [];
+
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.error(
+        `Failed to fetch Nitter instances from ${nitterStatusUrlsArr[index]}.`,
+        result.reason,
+      );
+      return;
+    }
+
+    if (!Array.isArray(result.value?.hosts)) {
+      console.error(
+        `Nitter instances response from ${nitterStatusUrlsArr[index]} did not contain a hosts array.`,
+      );
+      return;
+    }
+
+    urls.push(...result.value.hosts);
+  });
+  console.log(urls);
+  return urls;
+}
 
 function markVideoItems(mainElSelector, durationElSelector, qualityElSelector) {
   waitForEach(mainElSelector, async videoItemEl => {

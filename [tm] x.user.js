@@ -7,27 +7,44 @@ const { addButton, addPopup } = await Collapsible();
 const twitterPopover = addPopup('twitter-popover');
 const twitterBtnEl = addButton('', twitterPopover);
 generateElements(SVG, twitterBtnEl);
-const nitterStatusUrl = 'https://status.d420.de/api/v1/instances';
-const result = await fetchJson(nitterStatusUrl);
-const urls = result.hosts
-  .filter(h => h.rss)
-  .sort((a, b) => b.points - a.points)
-  .map(h => h.url);
-urls.forEach(url => {
-  const linkEl = generateElements(
-    `<a href="${url}" target="_blank">${url}</a>`,
-    twitterPopover,
-  );
-  style(
-    linkEl,
-    `
-      color: #e3e3e3;
-      display: block;
-      padding: 4px 8px;
-      text-decoration: none;
-    `,
-  );
-});
+
+
+/**
+ * Fetches available Nitter instances and adds their RSS-capable links to the
+ * Twitter popover.
+ *
+ * @param {HTMLElement} popoverEl - The popover that receives the instance links.
+ * @returns {Promise<void>} A promise that resolves after all links are rendered.
+ *
+ * @example
+ * ```js
+ * await addNitterLinks(twitterPopover);
+ * ```
+ */
+async function addNitterLinks(popoverEl) {
+  const urls = await getNitterHosts();
+
+  urls
+    .filter(host => host.rss)
+    .sort((a, b) => b.points - a.points)
+    .forEach(host => {
+      const linkEl = generateElements(
+        `<a href="${host.url}" target="_blank">${host.url}</a>`,
+        popoverEl,
+      );
+      style(
+        linkEl,
+        `
+          color: #e3e3e3;
+          display: block;
+          padding: 4px 8px;
+          text-decoration: none;
+        `,
+      );
+    });
+}
+
+await addNitterLinks(twitterPopover);
 
 /**
  * Replaces each popover link with the current page URL on that link's host.
