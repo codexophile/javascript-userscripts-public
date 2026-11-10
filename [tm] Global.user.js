@@ -121,7 +121,6 @@ window.addEventListener('urlchange', onNewUrl);
 onNewUrl();
 function onNewUrl(info) {
   reloadRss();
-  console.log('before');
   reloadMeta(metaObj);
 }
 
@@ -734,7 +733,6 @@ function onceMeta() {
   return { metaBtn, metaContentContainer };
 }
 function reloadMeta({ metaBtn, metaContentContainer }) {
-  console.log('xxx', metaBtn, metaContentContainer);
   metaContentContainer.replaceChildren();
   const metaElements = document.querySelectorAll('meta');
   if (!metaElements.length) return;
