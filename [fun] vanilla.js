@@ -162,6 +162,23 @@ function createDispatcher({ common, skipCommon = [], rules, fallback }) {
 
 // MARK: Text functions
 
+async function copyElementWithFormatting(element) {
+  if (!element) return;
+
+  const htmlContent = element.innerHTML;
+  const textContent = element.innerText;
+
+  try {
+    const clipboardItem = new ClipboardItem({
+      'text/html': new Blob([htmlContent], { type: 'text/html' }),
+      'text/plain': new Blob([textContent], { type: 'text/plain' }),
+    });
+    await navigator.clipboard.write([clipboardItem]);
+  } catch (err) {
+    console.error('Failed to copy formatted text: ', err);
+  }
+}
+
 /**
  * Replaces the element's own (direct) text with new text, leaving all
  * child elements and their text untouched. Existing direct text nodes are
@@ -2233,6 +2250,7 @@ function invokeDownloader(
   clearThenLog(query);
 
   location.replace(`cdx-ahk-protocol://initiate-${downloader}/?${query}`);
+  addHistoryEntry(urlToDownload);
 }
 
 function clearThenLog(...logWhat) {
@@ -4149,6 +4167,22 @@ function calculateWidthAndExpand(collapsibleContent) {
 
 // MARK: Site specific functions
 
+function ensureFastPlayback(selector, fastRate = 3) {
+  waitForEach(selector, mediaEl => {
+    mediaEl.addEventListener('play', () => {
+      setPlaybackRate(mediaEl, fastRate);
+    });
+    mediaEl.addEventListener('ratechange', () => {
+      setPlaybackRate(mediaEl, fastRate);
+    });
+  });
+
+  function setPlaybackRate(mediaEl) {
+    if (mediaEl.playbackRate === fastRate) return;
+    mediaEl.playbackRate = fastRate;
+  }
+}
+
 async function getNitterHosts() {
   const nitterStatusUrlsArr = [
     'https://status.d420.de/api/v1/instances',
@@ -4188,7 +4222,7 @@ function markVideoItems(mainElSelector, durationElSelector, qualityElSelector) {
       markAsErrored(videoItemEl);
       return;
     }
-    const duration = toSeconds(durationEl.textContent);
+    const duration = toSeconds(getOwnText(durationEl));
     if (isNaN(duration)) {
       markAsErrored(videoItemEl);
       return;
@@ -4317,4 +4351,30 @@ async function bftStoryboardFromUrl(bftvUrl, sbGrandParent) {
     trueNoOfSlots: thumbCount,
     imgUrls: imgUrls,
   });
+}
+
+function getTiktokPostQuery() {
+  const dataE2eArr = [
+    'user-post-item',
+    'collection-item',
+    'user-liked-item',
+    'user-repost-item',
+  ];
+  const query = dataE2eArr.map(dataE2e => `[data-e2e="${dataE2e}"]`).join(',');
+  return query;
+}
+
+function getYoutubePostQuery() {
+  arr = ['ytd-rich-item-renderer'];
+  const query = arr.join(',');
+  return query;
+}
+
+function getYoutubeWatchedMarkersQuery() {
+  const arr = [
+    'yt-thumbnail-overlay-progress-bar-view-model',
+    'ytd-thumbnail-overlay-resume-playback-renderer',
+    'ytd-thumbnail-overlay-playback-renderer',
+  ];
+  return arr.join(',');
 }
