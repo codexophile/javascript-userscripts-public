@@ -56,11 +56,10 @@ galleryBtnEl.title = 'YouTube storyboard gallery';
 generateElements(SVG, galleryBtnEl);
 galleryBtnEl.addEventListener('click', () => {
   linksPreviewContainerEl.replaceChildren();
+  const getQuery = getYoutubePostQuery();
+  const excludeQuery = getYoutubeWatchedMarkersQuery();
   const elements = document.querySelectorAll(
-    `.ytLockupViewModelContentImage:not(:has(
-        yt-thumbnail-overlay-progress-bar-view-model,
-        ytd-thumbnail-overlay-resume-playback-renderer
-      ))`,
+    `${getQuery}:not(${excludeQuery})`,
   );
   linksDetailsEl.textContent = `Found: ${elements.length}`;
   elements.forEach(element => {
@@ -72,7 +71,7 @@ galleryBtnEl.addEventListener('click', () => {
       `<input type="checkbox" checked style="margin-right: 5px;">`,
       wrapperEl,
     );
-    const clonedEl = element.cloneNode(true);
+    const clonedEl = element.querySelector('a').cloneNode(true);
     clonedEl.removeAttribute('style');
     wrapperEl.appendChild(clonedEl);
   });
