@@ -13,13 +13,19 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     }
 
     if (popoverEl) {
-      if (!popoverEl.id) {
+      let testEl;
+      if (popoverEl.matches('.collapsible-popover')) {
+        testEl = popoverEl;
+      } else {
+        testEl = popoverEl.closest('.collapsible-popover');
+      }
+      if (!testEl.id) {
         console.log('Popover error: ', { button, popoverEl });
         alert(
           'Popover element must have an ID before being passed to addButton.',
         );
       }
-      button.setAttribute('popovertarget', popoverEl.id);
+      button.setAttribute('popovertarget', testEl.id);
     }
 
     return button;
@@ -31,13 +37,26 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     popoverEl.setAttribute('popover', '');
     popoverEl.id = id;
     popoverEl.style = `
-    padding: 1rem;
-    border-radius: 4px;
-    position-area: top span-right;
-    background-color: darkgray;
+      border-radius: 4px;
+      position-area: top span-right;
+      background-color: darkgray;
     `;
 
-    return popoverEl;
+    const popoverInnerEl = generateElements(
+      `<div class="collapsible-popover-inner"></div>`,
+      popoverEl,
+    );
+    style(
+      popoverInnerEl,
+      `
+      padding: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    `,
+    );
+
+    return popoverInnerEl;
   }
 
   function addElement(element) {
@@ -84,133 +103,147 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
   } = options;
 
   const css = `
-        .collapsible-container {
-            font-family: Arial, sans-serif;
-            position: fixed;
-            bottom: ${bottom};
-            left: ${left};
-            display: flex;
-            border-radius: ${borderRadius};
-            box-shadow: ${boxShadow};
-            transition: ${transition};
-            width: ${collapsedWidth};
-            min-width: ${collapsedWidth};
-            height: ${height};
-            z-index: 10000;
-            resize: both;
-            border: 1px solid #404040; // Added border for better definition
-        }
-        .collapsible-container.expanded {
-            width: ${width};
-            overflow: visible;
-        }
-        .collapsible-container:not(.expanded) {
-          width: ${collapsedWidth} !important;
-          min-width: ${collapsedWidth};
-          overflow: hidden;
-        }
-        .collapsible-toggler {
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            transform: rotate(180deg);
-            background-color: ${backgroundColor};
-            color: ${textColor};
-            cursor: var(--dialog-header-cursor, move);
-            padding: 15px 5px;
-            border: none;
-            outline: none;
-            font-size: ${fontSize};
-            transition: background-color 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-width: ${collapsedWidth};
-            user-select: none;
-        }
-        .collapsible-toggler:hover {
-            background-color: ${hoverColor};
-        }
-        .collapsible-content {
-            flex-grow: 1;
-            overflow: auto;
-            transition: ${transition};
-            background-color: ${contentBgColor};
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            padding: 3px;
-            box-sizing: border-box;
-        }
-        .collapsible-container:not(.expanded) .collapsible-content,
-        .collapsible-container:not(.expanded) .resize-handle {
-          display: none;
-        }
-        .collapsible-content > * {
-            margin: 3px;
-        }
-        .collapsible-content > .button-like {
-            /* background-color: ${backgroundColor}; */
-            color: ${textColor};
-            width: ${buttonSize};
-            height: ${buttonSize};
-            border: none;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: background-color 0.2s;
-            position: relative;
-        }
-        .button-like > * {
-          width: inherit;
-        }
-        .collapsible-button:hover {
-            /*background-color: ${hoverColor}; */
-        }
-        .collapsible-container .popup {
-            display: none;
-            position: absolute;
-            left: 0px;
-            min-width: 150px;
-            height: ${popupHeight};
-            top: -${popupHeight};
-            background-color: ${backgroundColor};
-            border: 1px solid #404040;
-            border-radius: 4px;
-            padding: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1001;
-            overflow: auto;
-            text-wrap: nowrap;
-            color: ${textColor};
-        }
-        .collapsible-container .popup.visible {
-            display: block;
-        }
-        .collapsible-container .resize-handle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: #404040;
-            right: 0;
-            bottom: 0;
-            cursor: se-resize;
-        }
-        
-        /* Scrollbar styling for dark mode */
-        .collapsible-content::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        .collapsible-content::-webkit-scrollbar-track {
-            background: ${backgroundColor};
-        }
-        .collapsible-content::-webkit-scrollbar-thumb {
-            background: #505050;
-            border-radius: 4px;
-        }
-        .collapsible-content::-webkit-scrollbar-thumb:hover {
-            background: #606060;
-        }
+  .collapsible-container {
+      font-family: Arial, sans-serif;
+      position: fixed;
+      bottom: ${bottom};
+      left: ${left};
+      display: flex;
+      border-radius: ${borderRadius};
+      box-shadow: ${boxShadow};
+      transition: ${transition};
+      width: ${collapsedWidth};
+      min-width: ${collapsedWidth};
+      height: ${height};
+      z-index: 10000;
+      resize: both;
+      border: 1px solid #404040; // Added border for better definition
+  }
+  .collapsible-container.expanded {
+      width: ${width};
+      overflow: visible;
+  }
+  .collapsible-container:not(.expanded) {
+    width: ${collapsedWidth} !important;
+    min-width: ${collapsedWidth};
+    overflow: hidden;
+  }
+  .collapsible-toggler {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      background-color: ${backgroundColor};
+      color: ${textColor};
+      cursor: var(--dialog-header-cursor, move);
+      padding: 15px 5px;
+      border: none;
+      outline: none;
+      font-size: ${fontSize};
+      transition: background-color 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: ${collapsedWidth};
+      user-select: none;
+  }
+  .collapsible-toggler:hover {
+      background-color: ${hoverColor};
+  }
+  .collapsible-content {
+      flex-grow: 1;
+      overflow: auto;
+      transition: ${transition};
+      background-color: ${contentBgColor};
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      padding: 3px;
+      box-sizing: border-box;
+  }
+  .collapsible-container:not(.expanded) .collapsible-content,
+  .collapsible-container:not(.expanded) .resize-handle {
+    display: none;
+  }
+  .collapsible-content > * {
+      margin: 3px;
+  }
+  .collapsible-content {
+    .button-like {
+      /* background-color: ${backgroundColor}; */
+      color: ${textColor};
+      width: ${buttonSize};
+      height: ${buttonSize};
+      border: none;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background-color 0.2s;
+      position: relative;
+    }
+    .button-like.flex {
+      width: max-content;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 3px;
+
+      img {
+        max-width: 30px;
+        max-height: 30px;
+      }
+    }
+  }
+  .button-like > * {
+    width: inherit;
+  }
+  .collapsible-button:hover {
+      /*background-color: ${hoverColor}; */
+  }
+  .collapsible-container .popup {
+      display: none;
+      position: absolute;
+      left: 0px;
+      min-width: 150px;
+      height: ${popupHeight};
+      top: -${popupHeight};
+      background-color: ${backgroundColor};
+      border: 1px solid #404040;
+      border-radius: 4px;
+      padding: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 1001;
+      overflow: auto;
+      text-wrap: nowrap;
+      color: ${textColor};
+  }
+  .collapsible-container .popup.visible {
+      display: block;
+  }
+  .collapsible-container .resize-handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #404040;
+      right: 0;
+      bottom: 0;
+      cursor: se-resize;
+  }
+  
+  /* Scrollbar styling for dark mode */
+  .collapsible-content::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+  }
+  .collapsible-content::-webkit-scrollbar-track {
+      background: ${backgroundColor};
+  }
+  .collapsible-content::-webkit-scrollbar-thumb {
+      background: #505050;
+      border-radius: 4px;
+  }
+  .collapsible-content::-webkit-scrollbar-thumb:hover {
+      background: #606060;
+  }
     `;
 
   if (GM_addStyle) {
@@ -1344,4 +1377,23 @@ class VanillaDialog {
     this.dialog.removeEventListener('click', this.boundBackdropHandler);
     this.dialog.remove();
   }
+}
+
+function addCheckboxWithLabel(
+  id,
+  labelText = '',
+  parentElement = null,
+  onchange = null,
+) {
+  const checkboxContainerEl = generateElements(`<div></div>`, parentElement);
+  checkboxContainerEl.classList.add('checkbox-container');
+  const checkboxEl = generateElements(`<input>`, checkboxContainerEl);
+  checkboxEl.type = 'checkbox';
+  checkboxEl.id = id;
+  generateElements(
+    `<label for="${id}">${labelText}</label>`,
+    checkboxContainerEl,
+  );
+
+  checkboxEl.addEventListener('change', onchange);
 }
