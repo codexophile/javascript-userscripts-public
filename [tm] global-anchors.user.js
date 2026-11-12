@@ -38,28 +38,33 @@
   //*
   ('use strict');
 
-  const collapsibleEl = await Collapsible();
-  const checkboxEl = generateElements(
-    `<label>Enable anchor dragging <input type="checkbox" id="myUniqueCheckbox" class="my-custom-checkbox"></label>`,
+  const pageToolsPopoverEl = await waitFor('#page-tools-popover');
+  const anchorsSettingsEl = generateElements(
+    `<div id="anchors-settings"></div>`,
+    pageToolsPopoverEl,
   );
+  const checkboxEl = generateElements(`
+    <label>Enable anchor dragging
+      <input type="checkbox" id="myUniqueCheckbox" class="my-custom-checkbox">
+    </label>`);
   const enabledInputEl = checkboxEl.querySelector('input');
   enabledInputEl.checked = settings.enabled;
-  collapsibleEl.addElement(checkboxEl);
+  anchorsSettingsEl.append(checkboxEl);
   const radialMenuCheckboxEl = generateElements(
     `<label>Show radial drag menu <input type="checkbox" id="anchorRadialMenuCheckbox" class="my-custom-checkbox"></label>`,
   );
   const radialMenuInputEl = radialMenuCheckboxEl.querySelector('input');
   radialMenuInputEl.checked = settings.radialMenuEnabled;
-  collapsibleEl.addElement(radialMenuCheckboxEl);
+  anchorsSettingsEl.append(radialMenuCheckboxEl);
   const radiusEl = generateElements(
     `<label>Menu radius <input type="range" id="anchorRadialMenuRadius" min="60" max="140" step="4"></label>`,
   );
   const radiusInputEl = radiusEl.querySelector('input');
   radiusInputEl.value = String(settings.menuRadius);
-  collapsibleEl.addElement(radiusEl);
-  const temp = generateElements(
+  anchorsSettingsEl.append(radiusEl);
+  generateElements(
     `<span id="anchorRadialMenuRadiusValue">${settings.menuRadius}px</span>`,
-    collapsibleEl.collapsibleContent,
+    anchorsSettingsEl,
   );
 
   enabledInputEl.addEventListener('change', () => {
