@@ -114,6 +114,14 @@ const rssBtnEl = collapsible.addButton('', rssFeedsPopover);
 const toolsPopoverEl = collapsible.addPopup('page-tools-popover');
 const toolsBtnEl = collapsible.addButton('', toolsPopoverEl);
 generateElements(SVGS.tools, toolsBtnEl);
+style(
+  toolsPopoverEl,
+  `
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+`,
+);
 
 //  MARK: 🔥
 const metaObj = onceMeta();
