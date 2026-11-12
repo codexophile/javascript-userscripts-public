@@ -2943,6 +2943,9 @@
         if (entry.posterUrl) video.poster = entry.posterUrl;
         setSourceWithFallback(video, entry);
         frame.appendChild(video);
+        video.addEventListener('loadedmetadata', () => {
+          video.currentTime = video.duration / 2;
+        });
       } else {
         const image = doc.createElement('img');
         image.alt = entry.caption?.slice(0, 160) || 'Instagram image';
@@ -3865,7 +3868,7 @@ button:disabled {
       transition: opacity .15s
 }
 
-.media-card:hover .card-actions,
+.media-card .card-actions,
 .media-card:focus-within .card-actions {
       opacity: 1
 }
