@@ -611,6 +611,17 @@ GM_addElement(mainContainerEl, 'button', {
   },
 });
 GM_addElement(mainContainerEl, 'button', {
+  textContent: 'Infojson',
+  onclick: () => {
+    invokeDownloader('ytdlp', {
+      urlToDownload: location.href,
+      mode: 'get-infojson',
+      // browser: 'firefox',
+      // profile: '3vm341ho.default-release',
+    });
+  },
+});
+GM_addElement(mainContainerEl, 'button', {
   textContent: 'Thumbnails',
   onclick: () => {
     let urlToDownload;
