@@ -16,22 +16,34 @@
   (async function () {
     'use strict';
 
+    // GM_addStyle(`
+    //   body {
+    //     /* flex-direction: column; */
+    //     overflow: auto;
+
+    //     #media-player {
+    //       height: 70vh !important;
+    //       &, & * {
+    //         overflow: auto !important;
+    //         position: relative !important;
+    //       }
+    //     }
+
+    //     div:has(>#media-player) {
+    //       position: relative;
+    //       overflow: auto !important;
+    //     }
+    //   }
+    // `);
+
+    const mediaPlayerElQuery = `#media-player, #vplayer`;
+
     GM_addStyle(`
-      body {
-        flex-direction: column;
-        overflow: auto;
-
-        #media-player {
-          &, & * {
-            overflow: auto !important;
-            position: relative !important;
-          }
-        }
-
-        div:has(>#media-player) {
-          position: relative;
-          overflow: auto !important; 
-        }
+      div:has(>${mediaPlayerElQuery}) {
+        overflow: auto !important;
+      }
+      ${mediaPlayerElQuery} {
+        height: 70vh !important; 
       }
     `);
 
@@ -41,9 +53,13 @@
 
     const videoEl = document.querySelector(`video[src]`);
     videoEl.volume = 0.01;
-    playerEl.style.height = '70vh';
+    // playerEl.style.height = '70vh';
 
-    const storyboardParent = generateElements(`<div></div>`, document.body);
+    const mediaPlayerEl = await waitFor(mediaPlayerElQuery);
+    const storyboardParent = generateElements(
+      `<div></div>`,
+      mediaPlayerEl.parentElement,
+    );
 
     await storyboard({
       storyboardParent,
