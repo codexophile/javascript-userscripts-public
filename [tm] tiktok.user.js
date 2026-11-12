@@ -1,7 +1,7 @@
 (async function () {
   'use strict';
 
-  const FAST_PLAYBACK_RATE = 3;
+  const FAST_PLAYBACK_RATE = 3.5;
 
   //* auto speedup preview videos
   waitForEach('a video', previewVidEl => {
@@ -14,14 +14,13 @@
   });
 
   function setPlaybackRate(vidEl, rate = 3) {
-    if (location.href.includes('/video/')) return;
+    // if (location.href.includes('/video/')) return;
     if (vidEl.playbackRate === rate) return;
     vidEl.playbackRate = rate;
   }
 
   //* download item button
-  const dataE2eArr = ['user-post-item', 'collection-item', 'user-liked-item'];
-  const query = dataE2eArr.map(dataE2e => `[data-e2e="${dataE2e}"]`).join(',');
+  const query = getTiktokPostQuery();
   waitForEach(query, postItemEl => {
     const actualPostItemEl = grandParent(postItemEl, 2);
 
@@ -55,7 +54,7 @@
   });
 
   //* download button (yt-dlp)
-  const { addButton } = await Collapsible();
+  const { addButton, addPopup } = await Collapsible();
   addButton('⬇️', null, () => {
     let postLink = '';
 
@@ -68,6 +67,52 @@
     initiateYtdlp(postLink);
   });
 
+  //*
+
+  const MAIN_CONTAINER_SELECTOR = '#user-post-item-list';
+
+  const tiktokPopoverEl = addPopup('tiktok-popover');
+  const tiktokCollapsibleButton = addButton('', tiktokPopoverEl);
+  generateElements(
+    '<img src="' + getFaviconUrl() + '">',
+    tiktokCollapsibleButton,
+  );
+  addCheckboxWithLabel('hide-videos', 'Hide videos', tiktokPopoverEl, event => {
+    if (event.target.checked) {
+      document
+        .querySelector(MAIN_CONTAINER_SELECTOR)
+        .classList.add('hide-videos');
+    } else {
+      document
+        .querySelector(MAIN_CONTAINER_SELECTOR)
+        .classList.remove('hide-videos');
+    }
+  });
+
+  GM_addStyle(`
+
+    ${MAIN_CONTAINER_SELECTOR}.hide-videos {
+
+      display: flex;
+      flex-direction: raw;
+      flex-wrap: wrap;
+
+      & > div {
+        width: 300px !important;
+      }
+
+      & > div:has([href*="/video/"]) {
+        visibility: hidden;
+        max-width: 10px;
+        max-height: 10px;
+        /* display: none; */
+      }
+
+    }
+
+  `);
+
+  //  MARK:    helpers
   function initiateYtdlp(url) {
     invokeDownloader('ytdlp', {
       urlToDownload: url,
