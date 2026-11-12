@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   'use strict';
 
   if (
@@ -65,19 +65,18 @@
       .style.backgroundImage.match(/\/cache\/(.+?)_/)[1];
   }
   const imageUrl = `https://i.voe.sx/cache/${videoId}_storyboard_L0.jpg`;
-  const vidOnPage = document.querySelector('video');
+  const vidOnPage = await waitFor('video');
   const $sbParent = $(`<div id=sbParent></div>`);
   if (location.href.includes('/e/')) $sbParent.appendTo(document.body);
   else $sbParent.appendTo(document.body);
   const storyboardParent = $sbParent[0];
   console.log(storyboardParent);
   storyboard({
-    storyboardParent,
-    horizontal: 10,
-    vertical: 10,
-    vidOnPage,
-    trueNoOfSlots: 100,
-    imgUrls: [imageUrl],
-    // offset: -1,
+    parent: storyboardParent,
+    video: vidOnPage,
+    imageUrls: [imageUrl],
+    columns: 10,
+    rows: 10,
+    totalSlots: 100,
   });
 })();
