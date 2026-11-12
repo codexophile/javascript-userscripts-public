@@ -4,41 +4,46 @@
 (async function () {
   ('use strict');
 
-  /** @type {{html: Function, render: Function, useState: Function, useEffect: Function}} */
-  const { html, render, useState, useEffect } = window.htmPreact;
+  const targetUrl =
+    'https://www.javboys.tv/%e9%9c%b8%e9%81%93%e4%ba%ba%e5%a4%ab-chen_hum-59-%e5%88%9d%e6%ac%a1%e9%96%8b%e6%88%bf/';
 
-  /**
-   * Floating counter widget that mirrors its count into the document title.
-   *
-   * @returns {import('preact').VNode} The rendered widget markup.
-   */
+  one();
 
-  function Counter() {
-    /** @type {[number, (next: number | ((prev: number) => number)) => void]} */
-    const [count, setCount] = useState(0);
+  async function preact() {
+    /** @type {{html: Function, render: Function, useState: Function, useEffect: Function}} */
+    const { html, render, useState, useEffect } = window.htmPreact;
 
-    // Runs after each change to `count`.
-    useEffect(() => {
-      document.title = `Clicks: ${count}`;
-    }, [count]);
+    /**
+     * Floating counter widget that mirrors its count into the document title.
+     *
+     * @returns {import('preact').VNode} The rendered widget markup.
+     */
 
-    return html`
-      <button onClick=${() => setCount(c => c + 1)}>
-        Clicked ${count} times
-      </button>
-    `;
+    function Counter() {
+      /** @type {[number, (next: number | ((prev: number) => number)) => void]} */
+      const [count, setCount] = useState(0);
+
+      // Runs after each change to `count`.
+      useEffect(() => {
+        document.title = `Clicks: ${count}`;
+      }, [count]);
+
+      return html`
+        <button onClick=${() => setCount(c => c + 1)}>
+          Clicked ${count} times
+        </button>
+      `;
+    }
+
+    // Shadow DOM keeps the host page's CSS from leaking into your UI.
+    const host = document.createElement('div');
+    const collapsibleContEl = await waitFor('.collapsible-content');
+    collapsibleContEl.appendChild(host);
+    console.log(host);
+    render(html`<${Counter} />`, host.attachShadow({ mode: 'open' }));
   }
 
-  // Shadow DOM keeps the host page's CSS from leaking into your UI.
-  const host = document.createElement('div');
-  const collapsibleContEl = await waitFor('.collapsible-content');
-  collapsibleContEl.appendChild(host);
-  console.log(host);
-  render(html`<${Counter} />`, host.attachShadow({ mode: 'open' }));
-
   async function one() {
-    const targetUrl =
-      'https://pornone.com/young/young-studs-loves-his-daddies-cock-lucas-vara-e-cm/280784899/';
     const result = await two(targetUrl);
     // console.log(result);
     GM_setClipboard(result);
