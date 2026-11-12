@@ -1641,8 +1641,8 @@
   }
 
   function scrollInstagram(position = 'bottom') {
-    const main = doc.querySelector('main');
-    let target = main;
+    const mainEl = doc.querySelector('div[role="main"]');
+    let target = mainEl;
     while (target && target !== doc.body && target !== doc.documentElement) {
       const style = win.getComputedStyle(target);
       if (
@@ -2698,7 +2698,7 @@
           </div>
         </header>
         <div class="statusbar"><span class="status">Ready.</span><span class="stats"></span></div>
-        <main class="scroller"><div class="gallery"></div><div class="sentinel"></div></main>
+        <div role="main" class="scroller"><div class="gallery"></div><div class="sentinel"></div></div>
         <aside class="settings panel hidden">
           <div class="panel-head"><strong>Settings</strong><button data-action="settings">×</button></div>
           <label>Layout<select data-setting="layout"><option value="fit">Fit grid</option><option value="masonry">Masonry</option><option value="classic">Classic wall</option><option value="contact">Contact sheet</option></select></label>
