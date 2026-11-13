@@ -4365,7 +4365,7 @@ function getTiktokPostQuery() {
 }
 
 function getYoutubePostQuery() {
-  arr = ['ytd-rich-item-renderer'];
+  arr = ['ytd-rich-item-renderer', 'yt-lockup-view-model'];
   const query = arr.join(',');
   return query;
 }
