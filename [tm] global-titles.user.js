@@ -172,6 +172,7 @@
       }
 
       &.is-collapsed #cdx-content {
+        display: none;
         max-width: 0;
         opacity: 0;
         padding-left: 0;
