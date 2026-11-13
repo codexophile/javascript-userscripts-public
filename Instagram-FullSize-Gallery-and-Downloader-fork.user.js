@@ -2205,7 +2205,7 @@
         container: previousGroup?.container || ui.createPostContainer(key),
       });
     }
-    orderGallery(selectedId);
+    orderGallery(selectedId, oldEntries.length === 0);
     const keep = new Set(state.media);
     for (const entry of oldEntries)
       if (!keep.has(entry)) {
@@ -2217,7 +2217,10 @@
     ui.refresh();
   }
 
-  function orderGallery(selectedId = state.media[state.lightboxIndex]?.id) {
+  function orderGallery(
+    selectedId = state.media[state.lightboxIndex]?.id,
+    reorder = false,
+  ) {
     const groups = [...state.postGroups.values()];
     const timestamp = group => {
       const value = Number(
@@ -2244,38 +2247,53 @@
     };
     const area = group =>
       Math.max(0, ...group.entries.map(entry => entry.width * entry.height));
-    const sort = state.settings.sort;
-    groups.sort((a, b) => {
-      if (sort === 'newest' || sort === 'oldest')
-        return (
-          (sort === 'oldest' ? -1 : 1) * compareAge(a, b) || a.order - b.order
-        );
-      if (sort === 'largest' || sort === 'smallest') {
-        const aa = area(a),
-          bb = area(b);
-        if (!aa || !bb) return aa ? -1 : bb ? 1 : a.order - b.order;
-        return (sort === 'smallest' ? aa - bb : bb - aa) || a.order - b.order;
-      }
-      const ar = native.profileOrder.get(postKey(a.media)),
-        br = native.profileOrder.get(postKey(b.media));
-      return (
-        (ar ?? Number.MAX_SAFE_INTEGER) - (br ?? Number.MAX_SAFE_INTEGER) ||
-        a.order - b.order
-      );
-    });
     const visibleGroups = groups.filter(group => group.entries.length);
-    state.media = visibleGroups.flatMap(group => group.entries);
-    let cursor = ui.gallery.firstChild;
+    if (reorder) {
+      const sort = state.settings.sort;
+      groups.sort((a, b) => {
+        if (sort === 'newest' || sort === 'oldest')
+          return (
+            (sort === 'oldest' ? -1 : 1) * compareAge(a, b) ||
+            a.order - b.order
+          );
+        if (sort === 'largest' || sort === 'smallest') {
+          const aa = area(a),
+            bb = area(b);
+          if (!aa || !bb) return aa ? -1 : bb ? 1 : a.order - b.order;
+          return (
+            (sort === 'smallest' ? aa - bb : bb - aa) || a.order - b.order
+          );
+        }
+        const ar = native.profileOrder.get(postKey(a.media)),
+          br = native.profileOrder.get(postKey(b.media));
+        return (
+          (ar ?? Number.MAX_SAFE_INTEGER) - (br ?? Number.MAX_SAFE_INTEGER) ||
+          a.order - b.order
+        );
+      });
+    }
+    const orderedGroups = reorder
+      ? groups.filter(group => group.entries.length)
+      : [
+          ...[...ui.gallery.children]
+            .map(container =>
+              visibleGroups.find(group => group.container === container),
+            )
+            .filter(Boolean),
+          ...visibleGroups.filter(
+            group => !ui.gallery.contains(group.container),
+          ),
+        ];
+    state.media = orderedGroups.flatMap(group => group.entries);
     let index = 0;
-    visibleGroups.forEach(group => {
+    orderedGroups.forEach(group => {
       const container = group.container;
       for (const entry of group.entries) {
         entry.card.dataset.index = String(index);
-        container.appendChild(entry.card);
+        if (entry.card.parentNode !== container) container.appendChild(entry.card);
         index += 1;
       }
-      if (container !== cursor) ui.gallery.insertBefore(container, cursor);
-      cursor = container.nextSibling;
+      if (!container.parentNode) ui.gallery.appendChild(container);
     });
     for (const group of groups)
       if (!group.entries.length) group.container?.remove();
@@ -2684,7 +2702,7 @@
           <div class="brand"><strong>IG Gallery ${VERSION}</strong><span class="pill mode">idle</span><span class="pill count">0 media</span></div>
           <div class="controls">
             <button data-action="layout">Layout: Fit</button>
-            <select data-setting="sort" aria-label="Sort posts" title="All sorts show the same media. Instagram grid order includes pinned posts; newest first sorts by date."><option value="profile">Instagram grid (pins first)</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="largest">Largest resolution</option><option value="smallest">Smallest resolution</option></select>
+            <select data-setting="sort" aria-label="Sort posts" title="Sorts the current gallery when changed; newly discovered posts append without reordering existing cards."><option value="profile">Instagram grid (pins first)</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="largest">Largest resolution</option><option value="smallest">Smallest resolution</option></select>
             <button data-action="filter">Filter: All</button>
             <button data-action="captions">Captions: Off</button>
             <button data-action="autoload">Auto: On</button>
@@ -2876,7 +2894,7 @@
         video.volume = Number(settings.videoVolume) || 0;
       if (ui && appliedSort !== settings.sort) {
         appliedSort = settings.sort;
-        orderGallery();
+        orderGallery(undefined, true);
       }
       refresh();
       scheduleAutoLoad();
