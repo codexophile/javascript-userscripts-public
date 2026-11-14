@@ -56,7 +56,7 @@ galleryBtnEl.title = 'YouTube storyboard gallery';
 generateElements(SVG, galleryBtnEl);
 galleryBtnEl.addEventListener('click', () => {
   linksPreviewContainerEl.replaceChildren();
-  const getQuery = getYoutubePostQuery();
+  const getQuery = getYoutubePostQuery({ freshRss: true });
   const excludeQuery = getYoutubeWatchedMarkersQuery();
   const elements = document.querySelectorAll(
     `${getQuery}:not(${excludeQuery})`,
@@ -71,7 +71,9 @@ galleryBtnEl.addEventListener('click', () => {
       `<input type="checkbox" checked style="margin-right: 5px;">`,
       wrapperEl,
     );
-    const clonedEl = element.querySelector('a').cloneNode(true);
+    const clonedEl = element
+      .querySelector('a[href*="youtube.com"]')
+      .cloneNode(true);
     clonedEl.removeAttribute('style');
     wrapperEl.appendChild(clonedEl);
   });
@@ -271,7 +273,7 @@ function updateProgress(
   GM_notification({
     title: 'Progress Update',
     text: message,
-    tag: 'youtube-storyboards-gallery',
+    // tag: 'youtube-storyboards-gallery',
   });
 }
 

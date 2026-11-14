@@ -4364,8 +4364,11 @@ function getTiktokPostQuery() {
   return query;
 }
 
-function getYoutubePostQuery() {
-  arr = ['ytd-rich-item-renderer', 'yt-lockup-view-model'];
+function getYoutubePostQuery({ freshRss = false }) {
+  const arr = ['ytd-rich-item-renderer', 'yt-lockup-view-model'];
+  if (freshRss) {
+    arr.push('main#stream > .flux');
+  }
   const query = arr.join(',');
   return query;
 }
