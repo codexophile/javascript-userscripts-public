@@ -645,6 +645,31 @@ GM_addElement(mainContainerEl, 'button', {
 });
 
 //  MARK: RSS
+
+/**
+ * Base URL of the FreshRSS instance, without a trailing slash.
+ * @type {string}
+ */
+const FRESHRSS_URL = 'http://localhost:8080';
+
+/**
+ * FreshRSS username.
+ * @type {string}
+ */
+const USERNAME = 'sphingo';
+
+/**
+ * FreshRSS API password (Settings → Profile), not the login password.
+ * @type {string}
+ */
+const API_PASSWORD = 'ntJ90AQwb0puLv3gQZ09';
+
+/**
+ * How long the cached subscription list stays valid, in milliseconds.
+ * @type {number}
+ */
+const CACHE_TTL_MS = 10 * 60 * 1000;
+
 function reloadRss() {
   rssFeedsPopover.replaceChildren();
 
@@ -679,25 +704,6 @@ function reloadRss() {
   createPopoverItem(openRssSegment, null, 'OpenRSS');
   const rssBridgeSegment = `http://127.0.0.1:6060/?input-url=${encodeURIComponent(location.href)}`;
   createPopoverItem(rssBridgeSegment, SRCs.rssBridge, 'RSS-Bridge');
-
-  function createPopoverItem(
-    href,
-    imgSrc = getFaviconUrlFromProvider(href),
-    text,
-  ) {
-    return generateElements(
-      `
-      <a href="${href}" target="_blank">
-        <img
-          style="height: 1lh;"
-          src="${imgSrc}"
-        >
-        <span>${text}</span>
-      </a>
-    `,
-      rssFeedsPopover,
-    );
-  }
 
   rssLinks.forEach(link => {
     generateElements(
@@ -736,6 +742,31 @@ function reloadRss() {
     );
   });
 
+  findSubscriptionsInFreshrss(location.href)
+    .then(matches =>
+      console.log(matches.length ? 'Subscribed:' : 'Not subscribed', matches),
+    )
+    .catch(err => console.error('[FreshRSS check]', err));
+
+  function createPopoverItem(
+    href,
+    imgSrc = getFaviconUrlFromProvider(href),
+    text,
+  ) {
+    return generateElements(
+      `
+      <a href="${href}" target="_blank">
+        <img
+          style="height: 1lh;"
+          src="${imgSrc}"
+        >
+        <span>${text}</span>
+      </a>
+    `,
+      rssFeedsPopover,
+    );
+  }
+
   function addLinkToFeedReader(readerName, baseUrl, parentEl) {
     const addFeedBtnEl = generateElements(`<a>➕ ${readerName}</a>`, parentEl);
     var encodedURI = encodeURIComponent(window.location);
@@ -748,6 +779,111 @@ function reloadRss() {
     `;
   }
 }
+
+/**
+ * Promise wrapper around GM_xmlhttpRequest that resolves with the response text.
+ *
+ * @param {Object} options - Request options passed to GM_xmlhttpRequest.
+ * @param {string} options.method - HTTP method, e.g. "GET" or "POST".
+ * @param {string} options.url - Absolute request URL.
+ * @param {Object<string, string>} [options.headers] - Request headers.
+ * @param {string} [options.data] - Request body.
+ * @returns {Promise<string>} Resolves with the response body text.
+ * @throws {Error} Rejects on network failure or a non-2xx status.
+ */
+function request(options) {
+  return new Promise((resolve, reject) => {
+    GM_xmlhttpRequest({
+      ...options,
+      onload: res =>
+        res.status >= 200 && res.status < 300
+          ? resolve(res.responseText)
+          : reject(new Error(`HTTP ${res.status} for ${options.url}`)),
+      onerror: () => reject(new Error(`Network error for ${options.url}`)),
+    });
+  });
+}
+
+/**
+ * Logs in via the Google Reader API and returns the auth token.
+ *
+ * @returns {Promise<string>} The `Auth` token (format: "username/hash").
+ * @throws {Error} If the login response contains no Auth line.
+ */
+async function login() {
+  const body = new URLSearchParams({
+    Email: USERNAME,
+    Passwd: API_PASSWORD,
+  });
+  const text = await request({
+    method: 'POST',
+    url: `${FRESHRSS_URL}/api/greader.php/accounts/ClientLogin`,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    data: body.toString(),
+  });
+  const match = text.match(/^Auth=(.+)$/m);
+  if (!match) throw new Error('FreshRSS login failed: no Auth token returned');
+  return match[1].trim();
+}
+
+/**
+ * Fetches all subscriptions, using a short-lived cache stored via GM_setValue.
+ *
+ * @returns {Promise<Array<{id: string, title: string, url: string, htmlUrl: string}>>}
+ *   The user's subscriptions; `url` is the feed URL, `htmlUrl` the site URL.
+ */
+async function getSubscriptions() {
+  const cached = GM_getValue('subsCache', null);
+  if (cached && Date.now() - cached.time < CACHE_TTL_MS) return cached.subs;
+
+  const token = await login();
+  const text = await request({
+    method: 'GET',
+    url: `${FRESHRSS_URL}/api/greader.php/reader/api/0/subscription/list?output=json`,
+    headers: { Authorization: `GoogleLogin auth=${token}` },
+  });
+  const subs = JSON.parse(text).subscriptions ?? [];
+  GM_setValue('subsCache', { time: Date.now(), subs });
+  return subs;
+}
+
+/**
+ * Normalizes a URL for loose comparison: lowercases, drops the protocol,
+ * a leading "www.", the hash/query string, and trailing slashes.
+ *
+ * @param {string} url - The URL to normalize.
+ * @returns {string} Normalized form like "example.com/blog", or "" if invalid.
+ */
+function normalize(url) {
+  try {
+    const u = new URL(url);
+    return (u.host.replace(/^www\./i, '') + u.pathname)
+      .replace(/\/+$/, '')
+      .toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Finds the subscription(s) whose site URL matches the given site URL.
+ * Matches when the normalized strings are equal, or when the subscription's
+ * site URL is a path-prefix of the given URL (e.g. site root vs. a subpage).
+ *
+ * @param {string} siteUrl - The website URL to look up.
+ * @returns {Promise<Array<{title: string, url: string, htmlUrl: string}>>}
+ *   Matching subscriptions (empty array if not subscribed).
+ */
+async function findSubscriptionsInFreshrss(siteUrl) {
+  const target = normalize(siteUrl);
+  const subs = await getSubscriptions();
+  console.log(subs);
+  return subs.filter(s => {
+    const site = normalize(s.htmlUrl);
+    return site && (target === site || target.startsWith(site + '/'));
+  });
+}
+
 //  MARK: Meta
 function onceMeta() {
   const metaBtn = collapsible.addButton('🏷️', null, () => {});
