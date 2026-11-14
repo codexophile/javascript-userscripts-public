@@ -108,6 +108,7 @@ collapsible.collapsibleToggler.click();
 
 //* Rss
 const rssFeedsPopover = collapsible.addPopup('rss-feeds-popover');
+rssFeedsPopover.style.flexDirection = 'column';
 const rssBtnEl = collapsible.addButton('', rssFeedsPopover);
 
 //  MARK: Page Tools
@@ -687,7 +688,10 @@ function reloadRss() {
     return generateElements(
       `
       <a href="${href}" target="_blank">
-        <img src="${imgSrc}">
+        <img
+          style="height: 1lh;"
+          src="${imgSrc}"
+        >
         <span>${text}</span>
       </a>
     `,
