@@ -677,7 +677,7 @@ function reloadRss() {
     'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
   );
   rssBtnEl.replaceChildren();
-  generateElements(rssLinks.length ? SVGS.rssYes : SVGS.rssNo, rssBtnEl);
+  const hasRss = rssLinks.length > 0;
 
   addLinkToFeedReader(
     'Blogtrottr',
@@ -742,19 +742,26 @@ function reloadRss() {
     );
   });
 
-  findSubscriptionsInFreshrss(location.href)
-    .then(matches => {
-      if (matches.length) {
-        console.log('Subscribed:', matches);
-        rssBtnEl.querySelector('path').setAttribute('stroke', '#22c55e');
-      } else {
-        console.log('Not subscribed', matches);
-        rssBtnEl.querySelector('path').setAttribute('stroke', '#f59e0b');
-      }
-    })
-    .catch(err => console.error('[FreshRSS check]', err));
+  setRssBtnIcon();
 
-  function setRssBtnIcon(){}
+  function setRssBtnIcon() {
+    if (hasRss) {
+      generateElements(SVGS.rssYes, rssBtnEl);
+      findSubscriptionsInFreshrss(location.href)
+        .then(matches => {
+          if (matches.length) {
+            console.log('Subscribed:', matches);
+            rssBtnEl.querySelector('path').setAttribute('stroke', '#22c55e');
+          } else {
+            console.log('Not subscribed', matches);
+            rssBtnEl.querySelector('path').setAttribute('stroke', '#f59e0b');
+          }
+        })
+        .catch(err => console.error('[FreshRSS check]', err));
+      return;
+    }
+    generateElements(SVGS.rssNo, rssBtnEl);
+  }
 
   function createPopoverItem(
     href,
