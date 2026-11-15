@@ -25,13 +25,13 @@ const FRESHRSS_URL = 'http://localhost:8080';
  * FreshRSS username.
  * @type {string}
  */
-const USERNAME = 'sphingo';
+const FRESHRSS_USERNAME = getSecret('FRESHRSS_USERNAME');
 
 /**
  * FreshRSS API password (Settings → Profile), not the login password.
  * @type {string}
  */
-const API_PASSWORD = 'ntJ90AQwb0puLv3gQZ09';
+const FRESHRSS_API_PASSWORD = getSecret('FRESHRSS_API_PASSWORD');
 
 /**
  * How long the cached subscription list stays valid, in milliseconds.
@@ -827,7 +827,7 @@ function request(options) {
  */
 async function login() {
   const body = new URLSearchParams({
-    Email: USERNAME,
+    Email: FRESHRSS_USERNAME,
     Passwd: API_PASSWORD,
   });
   const text = await request({
