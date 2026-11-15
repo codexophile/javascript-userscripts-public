@@ -194,6 +194,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     }
   }
   .button-like > * {
+    filter: drop-shadow(3px 5px 2px rgba(0, 0, 0, 0.6));
     width: inherit;
   }
   .collapsible-button:hover {
