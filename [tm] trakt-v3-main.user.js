@@ -40,8 +40,9 @@
     switchEl.addEventListener('change', () => {
       const isChecked = switchEl.checked;
       const watchedItemEls = document.querySelectorAll(
-        'svelte-css-wrapper:has(>.trakt-gesture-container):has([data-variant="full"])',
+        'trakt-default-media-item.is-deemphasized',
       );
+      console.log(watchedItemEls);
       watchedItemEls.forEach(watchedItemEl => {
         if (isChecked) {
           fadeOut(watchedItemEl);
