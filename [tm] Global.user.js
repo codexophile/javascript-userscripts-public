@@ -670,12 +670,28 @@ GM_addElement(mainContainerEl, 'button', {
 
 //  MARK: RSS
 
-function reloadRss() {
+async function reloadRss() {
   rssFeedsPopover.replaceChildren();
 
-  const rssLinks = document.querySelectorAll(
-    'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
+  const rssLinks = Array.from(
+    document.querySelectorAll(
+      'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
+    ),
   );
+  let websiteUrl = location.href;
+  if (
+    location.href.match(/(www|m)\.youtube\.com\/watch/) &&
+    new URLSearchParams(location.search).has('v')
+  ) {
+    const ytDetails = await getCurrentVideoDetails();
+    const channelUid = ytDetails?.channelUid;
+    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelUid}`;
+    websiteUrl = `https://www.youtube.com/channel/${channelUid}`;
+    rssLinks.push({
+      href: rssUrl,
+      title: `YouTube channel feed for ${channelUid}`,
+    });
+  }
   rssBtnEl.replaceChildren();
   const hasRss = rssLinks.length > 0;
 
@@ -706,6 +722,7 @@ function reloadRss() {
   createPopoverItem(rssBridgeSegment, SRCs.rssBridge, 'RSS-Bridge');
 
   rssLinks.forEach(link => {
+    console.log('loop');
     generateElements(
       `<a
           href='${link.href}'
@@ -747,13 +764,13 @@ function reloadRss() {
   function setRssBtnIcon() {
     if (hasRss) {
       generateElements(SVGS.rssYes, rssBtnEl);
-      findSubscriptionsInFreshrss(location.href)
+      findSubscriptionsInFreshrss(websiteUrl)
         .then(matches => {
           if (matches.length) {
-            console.log('Subscribed:', matches);
+            console.log(websiteUrl, 'is subscribed:', matches);
             rssBtnEl.querySelector('path').setAttribute('stroke', '#22c55e');
           } else {
-            console.log('Not subscribed', matches);
+            console.log(websiteUrl, 'is not subscribed', matches);
             rssBtnEl.querySelector('path').setAttribute('stroke', '#f59e0b');
           }
         })
@@ -828,7 +845,7 @@ function request(options) {
 async function login() {
   const body = new URLSearchParams({
     Email: FRESHRSS_USERNAME,
-    Passwd: API_PASSWORD,
+    Passwd: FRESHRSS_API_PASSWORD,
   });
   const text = await request({
     method: 'POST',

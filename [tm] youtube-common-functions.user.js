@@ -146,7 +146,10 @@ function generateAllYouTubeSbUrls(fullYTHtml) {
 async function getCurrentVideoDetails() {
   const player = await waitFor('#movie_player');
   const resp = player?.getPlayerResponse?.();
-  // console.log(resp);
+  if (!resp) {
+    console.warn('No player response found');
+    return null;
+  }
   const ownerChannelName =
     resp?.microformat?.playerMicroformatRenderer?.ownerChannelName;
   const description =
@@ -156,6 +159,7 @@ async function getCurrentVideoDetails() {
   return {
     videoId,
     ownerChannelName,
+    channelUid: resp?.videoDetails?.channelId ?? null,
     description,
     status: resp?.playabilityStatus.status ?? null,
   };
