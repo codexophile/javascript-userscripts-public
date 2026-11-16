@@ -161,7 +161,7 @@ async function getCurrentVideoDetails() {
   const player = await waitFor('#movie_player');
   const resp = player?.getPlayerResponse?.();
   if (!resp) {
-    console.warn('No player response found');
+    console.trace('No player response found');
     return null;
   }
   const ownerChannelName =
@@ -210,9 +210,10 @@ function isChannelPage() {
  * @returns {Promise<T | null>} The first non-nullish value, or `null` on timeout.
  */
 function pollUntil(read, { timeout = 10000, interval = 100 } = {}) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const deadline = Date.now() + timeout;
     const tick = () => {
+      console.log('tick');
       let value = null;
       try {
         value = read();
@@ -244,11 +245,9 @@ function metaMatchesLocation(meta) {
 
   const handle = path.match(/^\/(@[^/]+)/)?.[1];
   if (handle) {
-    return (
-      decodeURIComponent(meta.vanityChannelUrl ?? '')
-        .toLowerCase()
-        .endsWith(handle.toLowerCase())
-    );
+    return decodeURIComponent(meta.vanityChannelUrl ?? '')
+      .toLowerCase()
+      .endsWith(handle.toLowerCase());
   }
   return true;
 }
@@ -283,10 +282,12 @@ async function getCurrentChannelDetails({ timeout = 10000 } = {}) {
     return null;
   }
 
+  console.log('sdfsdf', meta);
   return {
     ownerChannelName: meta.title ?? null,
     channelUid: meta.externalId ?? null,
     vanityUrl: meta.vanityChannelUrl ?? null,
+    vanityId: meta.vanityChannelUrl?.match(/@([^/]+)$/)?.[1] ?? null,
     description: meta.description ?? null,
   };
 }

@@ -122,13 +122,6 @@ thisTabButton.addEventListener('click', async () => {
     once: true,
   });
   await processGalleryBatch(allVideoLinks, modalBody, progressElement);
-  GM_notification({
-    text: 'All video links processed.',
-    title: 'YouTube storyboard gallery',
-    onclick: () => {
-      window.focus();
-    },
-  });
 });
 
 const newTabButton = generateElements(
@@ -270,11 +263,6 @@ function updateProgress(
       : `Loading: ${completed}/${total} | Successful: ${results.successful} | Failed: ${results.failed}`;
   progressElement.textContent = message;
   if (secondaryProgressElement) secondaryProgressElement.textContent = message;
-  GM_notification({
-    title: 'Progress Update',
-    text: message,
-    // tag: 'youtube-storyboards-gallery',
-  });
 }
 
 /**

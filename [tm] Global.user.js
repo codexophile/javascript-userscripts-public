@@ -678,21 +678,32 @@ async function reloadRss() {
       'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
     ),
   );
-  let websiteUrl = location.href;
+  const possibleWebsiteUrlsArr = [location.href];
   if (isAYoutubeUrl(location.href)) {
     console.log('isyoutube');
-    let rssUrl, channelUid;
+    let rssUrl, channelUid, channelVanityId;
     if (isAYoutubeChannelUrl(location.href)) {
       console.log('is channel');
-      const channelDetails = await getCurlrentChannelDetails();
-      console.log(channelDetails);
+      const channelDetails = await getCurrentChannelDetails();
       channelUid = channelDetails?.channelUid;
+      channelVanityId = channelDetails?.vanityId;
     } else if (isAYoutubeVideoUrl(location.href)) {
+      console.log(isvideo);
       const ytDetails = await getCurrentVideoDetails();
       channelUid = ytDetails?.channelUid;
+      channelVanityId = ytDetails?.vanityId;
     }
     rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelUid}`;
-    websiteUrl = `https://www.youtube.com/channel/${channelUid}`;
+    possibleWebsiteUrlsArr.push(
+      `https://www.youtube.com/channel/${channelUid}`,
+      `https://www.youtube.com/c/${channelUid}`,
+      `https://www.youtube.com/user/${channelUid}`,
+      `https://www.youtube.com/@${channelVanityId}`,
+      `https://www.youtube.com/channel/${channelVanityId}`,
+      `https://www.youtube.com/c/${channelVanityId}`,
+      `https://www.youtube.com/user/${channelVanityId}`,
+    );
+    console.log(possibleWebsiteUrlsArr);
     rssLinks.push({
       href: rssUrl,
       title: `YouTube channel feed for ${channelUid}`,
@@ -769,13 +780,13 @@ async function reloadRss() {
   function setRssBtnIcon() {
     if (hasRss) {
       generateElements(SVGS.rssYes, rssBtnEl);
-      findSubscriptionsInFreshrss(websiteUrl)
+      findSubscriptionsInFreshrss(possibleWebsiteUrlsArr)
         .then(matches => {
           if (matches.length) {
-            console.log(websiteUrl, 'is subscribed:', matches);
+            console.log(possibleWebsiteUrlsArr, 'is subscribed:', matches);
             rssBtnEl.querySelector('path').setAttribute('stroke', '#22c55e');
           } else {
-            console.log(websiteUrl, 'is not subscribed', matches);
+            console.log(possibleWebsiteUrlsArr, 'is not subscribed', matches);
             rssBtnEl.querySelector('path').setAttribute('stroke', '#f59e0b');
           }
         })
@@ -903,20 +914,34 @@ function normalize(url) {
 }
 
 /**
- * Finds the subscription(s) whose site URL matches the given site URL.
+ * Finds the subscription(s) whose site URL matches any given site URL.
  * Matches when the normalized strings are equal, or when the subscription's
- * site URL is a path-prefix of the given URL (e.g. site root vs. a subpage).
+ * site URL is a path-prefix of a given URL (e.g. site root vs. a subpage).
  *
- * @param {string} siteUrl - The website URL to look up.
+ * @param {string|string[]} siteUrl - A website URL, or URLs, to look up.
  * @returns {Promise<Array<{title: string, url: string, htmlUrl: string}>>}
  *   Matching subscriptions (empty array if not subscribed).
+ * @example
+ * const matches = await findSubscriptionsInFreshrss('https://example.com/article');
+ * @example
+ * const matches = await findSubscriptionsInFreshrss([
+ *   'https://example.com/article',
+ *   'https://example.org/article',
+ * ]);
  */
 async function findSubscriptionsInFreshrss(siteUrl) {
-  const target = normalize(siteUrl);
+  const targets = (Array.isArray(siteUrl) ? siteUrl : [siteUrl])
+    .map(normalize)
+    .filter(Boolean);
   const subs = await getSubscriptions();
   return subs.filter(s => {
     const site = normalize(s.htmlUrl);
-    return site && (target === site || target.startsWith(site + '/'));
+    return (
+      site &&
+      targets.some(target => {
+        return target === site || target.startsWith(site + '/');
+      })
+    );
   });
 }
 

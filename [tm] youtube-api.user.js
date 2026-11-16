@@ -12,7 +12,7 @@
   (function () {
     'use strict';
     document.addEventListener('yt-navigate-finish', async () => {
-      if (!isAYoutubeVideoUrl(location.href)) return;
+      if ( !isAYoutubeVideoUrl( location.href ) ) return;
       try {
         const {
           videoId,

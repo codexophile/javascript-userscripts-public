@@ -33,6 +33,7 @@
   });
 
   async function onNewPage() {
+    if (!isAYoutubeVideoUrl(location.href)) return;
     const { ownerChannelName } = await getCurrentVideoDetails();
     ownerChannelName_ = ownerChannelName;
   }
