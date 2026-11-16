@@ -688,22 +688,18 @@ async function reloadRss() {
       channelUid = channelDetails?.channelUid;
       channelVanityId = channelDetails?.vanityId;
     } else if (isAYoutubeVideoUrl(location.href)) {
-      console.log(isvideo);
+      console.log('is video');
       const ytDetails = await getCurrentVideoDetails();
       channelUid = ytDetails?.channelUid;
-      channelVanityId = ytDetails?.vanityId;
+      channelVanityId = ytDetails?.channelVanityId;
     }
     rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelUid}`;
     possibleWebsiteUrlsArr.push(
       `https://www.youtube.com/channel/${channelUid}`,
-      `https://www.youtube.com/c/${channelUid}`,
-      `https://www.youtube.com/user/${channelUid}`,
-      `https://www.youtube.com/@${channelVanityId}`,
-      `https://www.youtube.com/channel/${channelVanityId}`,
-      `https://www.youtube.com/c/${channelVanityId}`,
-      `https://www.youtube.com/user/${channelVanityId}`,
+      ...['@', 'c/', 'user/'].map(
+        prefix => `https://www.youtube.com/${prefix}${channelVanityId}`,
+      ),
     );
-    console.log(possibleWebsiteUrlsArr);
     rssLinks.push({
       href: rssUrl,
       title: `YouTube channel feed for ${channelUid}`,

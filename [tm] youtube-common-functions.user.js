@@ -1,15 +1,17 @@
 function isAYoutubeUrl(url) {
-  return url.match(/(www|m)\.youtube\.com\//);
+  return !!url.match(/(www|m)\.youtube\.com\//);
 }
 
 function isAYoutubeChannelUrl(url) {
-  return isAYoutubeUrl(url) && new URL(url).pathname.startsWith('/@');
+  const result = isAYoutubeUrl(url) && new URL(url).pathname.startsWith('/@');
+  return result;
 }
 
 function isAYoutubeVideoUrl(url) {
-  return (
-    isAYoutubeUrl(url) && new URLSearchParams(new URL(url).search).has('v')
-  );
+  const isYoutube = isAYoutubeUrl(url);
+  const urlObj = new URL(url);
+  const searchObj = new URLSearchParams(urlObj.search);
+  return isYoutube && searchObj.has('v');
 }
 
 function generateAllYouTubeSbUrls(fullYTHtml) {
@@ -170,12 +172,19 @@ async function getCurrentVideoDetails() {
     resp.playabilityStatus.errorScreen?.playerInterstitialRenderer.content
       .interstitialViewModel.description.content;
   const videoId = resp.videoDetails?.videoId;
+  const channelUid = resp?.videoDetails?.channelId ?? null;
+  const channelVanityId =
+    resp?.microformat?.playerMicroformatRenderer?.ownerProfileUrl?.match(
+      /@([^/]+)$/,
+    )?.[1] ?? null;
+  const status = resp?.playabilityStatus?.status ?? null;
   return {
     videoId,
     ownerChannelName,
-    channelUid: resp?.videoDetails?.channelId ?? null,
+    channelUid,
+    channelVanityId,
     description,
-    status: resp?.playabilityStatus.status ?? null,
+    status,
   };
 }
 
@@ -282,7 +291,6 @@ async function getCurrentChannelDetails({ timeout = 10000 } = {}) {
     return null;
   }
 
-  console.log('sdfsdf', meta);
   return {
     ownerChannelName: meta.title ?? null,
     channelUid: meta.externalId ?? null,
