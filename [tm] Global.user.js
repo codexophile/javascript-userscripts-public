@@ -679,13 +679,19 @@ async function reloadRss() {
     ),
   );
   let websiteUrl = location.href;
-  if (
-    location.href.match(/(www|m)\.youtube\.com\/watch/) &&
-    new URLSearchParams(location.search).has('v')
-  ) {
-    const ytDetails = await getCurrentVideoDetails();
-    const channelUid = ytDetails?.channelUid;
-    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelUid}`;
+  if (isAYoutubeUrl(location.href)) {
+    console.log('isyoutube');
+    let rssUrl, channelUid;
+    if (isAYoutubeChannelUrl(location.href)) {
+      console.log('is channel');
+      const channelDetails = await getCurlrentChannelDetails();
+      console.log(channelDetails);
+      channelUid = channelDetails?.channelUid;
+    } else if (isAYoutubeVideoUrl(location.href)) {
+      const ytDetails = await getCurrentVideoDetails();
+      channelUid = ytDetails?.channelUid;
+    }
+    rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelUid}`;
     websiteUrl = `https://www.youtube.com/channel/${channelUid}`;
     rssLinks.push({
       href: rssUrl,
@@ -722,7 +728,6 @@ async function reloadRss() {
   createPopoverItem(rssBridgeSegment, SRCs.rssBridge, 'RSS-Bridge');
 
   rssLinks.forEach(link => {
-    console.log('loop');
     generateElements(
       `<a
           href='${link.href}'

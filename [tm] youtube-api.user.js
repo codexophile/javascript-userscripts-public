@@ -4,15 +4,21 @@
   const API_KEY = getYoutubeAPI();
   const regionCode = 'US';
 
-  initializeFetchingAndDisplayingCountryFlags();
-  initializeTitleSetter();
+  if (isAYoutubeVideoUrl(location.href)) {
+    initializeFetchingAndDisplayingCountryFlags();
+    initializeTitleSetter();
+  }
 
   (function () {
     'use strict';
     document.addEventListener('yt-navigate-finish', async () => {
+      if (!isAYoutubeVideoUrl(location.href)) return;
       try {
-        const { videoId, description = '', status } =
-          await getCurrentVideoDetails();
+        const {
+          videoId,
+          description = '',
+          status,
+        } = await getCurrentVideoDetails();
         if (status !== 'UNPLAYABLE') return;
         if (
           !description.includes(
@@ -171,10 +177,7 @@
 
       let countryOfOrigin;
       try {
-        countryOfOrigin = await getChannelCountryOfOrigin(
-          channelId,
-          API_KEY,
-        );
+        countryOfOrigin = await getChannelCountryOfOrigin(channelId, API_KEY);
       } catch (error) {
         console.error('[YouTube] Failed to resolve channel country:', error);
         return;

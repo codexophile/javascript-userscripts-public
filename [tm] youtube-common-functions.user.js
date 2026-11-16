@@ -1,3 +1,17 @@
+function isAYoutubeUrl(url) {
+  return url.match(/(www|m)\.youtube\.com\//);
+}
+
+function isAYoutubeChannelUrl(url) {
+  return isAYoutubeUrl(url) && new URL(url).pathname.startsWith('/@');
+}
+
+function isAYoutubeVideoUrl(url) {
+  return (
+    isAYoutubeUrl(url) && new URLSearchParams(new URL(url).search).has('v')
+  );
+}
+
 function generateAllYouTubeSbUrls(fullYTHtml) {
   //# Based on:
   // https://github.com/hjk789/Userscripts/tree/master/YouTube-Clickbait-Buster
@@ -162,5 +176,117 @@ async function getCurrentVideoDetails() {
     channelUid: resp?.videoDetails?.channelId ?? null,
     description,
     status: resp?.playabilityStatus.status ?? null,
+  };
+}
+
+/**
+ * @typedef {Object} ChannelDetails
+ * @property {string|null} ownerChannelName - Display name of the channel (equivalent of `ownerChannelName` on video pages).
+ * @property {string|null} channelUid - Canonical channel ID, e.g. `UCxxxxxxxxxxxxxxxxxxxxxx`.
+ * @property {string|null} vanityUrl - Handle/vanity URL if present, e.g. `https://www.youtube.com/@handle`.
+ * @property {string|null} description - Channel "About" description.
+ */
+
+/**
+ * Checks whether the current location looks like a channel page
+ * (`/@handle`, `/channel/UC…`, `/c/name`, `/user/name`), including sub-tabs.
+ *
+ * @returns {boolean} `true` if the URL path matches a channel page pattern.
+ */
+function isChannelPage() {
+  return /^\/(@[^/]+|channel\/[^/]+|c\/[^/]+|user\/[^/]+)/.test(
+    location.pathname,
+  );
+}
+
+/**
+ * Polls `read` until it returns a non-nullish value or the timeout elapses.
+ *
+ * @template T
+ * @param {() => T | null | undefined} read - Reader called on every tick. May throw; errors are treated as "not ready".
+ * @param {Object} [options] - Polling options.
+ * @param {number} [options.timeout=10000] - Max time to wait, in milliseconds.
+ * @param {number} [options.interval=100] - Delay between attempts, in milliseconds.
+ * @returns {Promise<T | null>} The first non-nullish value, or `null` on timeout.
+ */
+function pollUntil(read, { timeout = 10000, interval = 100 } = {}) {
+  return new Promise((resolve) => {
+    const deadline = Date.now() + timeout;
+    const tick = () => {
+      let value = null;
+      try {
+        value = read();
+      } catch {
+        // Treat exceptions as "not ready yet".
+      }
+      if (value != null) return resolve(value);
+      if (Date.now() >= deadline) return resolve(null);
+      setTimeout(tick, interval);
+    };
+    tick();
+  });
+}
+
+/**
+ * Checks that channel metadata belongs to the channel in the current URL,
+ * guarding against stale data left over from the previous SPA page.
+ *
+ * Handles `/@handle` and `/channel/UC…` URLs. Legacy `/c/…` and `/user/…`
+ * URLs can't be verified from the path alone, so they are accepted as-is.
+ *
+ * @param {{ externalId?: string, vanityChannelUrl?: string }} meta - A `channelMetadataRenderer` object.
+ * @returns {boolean} `true` if the metadata matches the current location.
+ */
+function metaMatchesLocation(meta) {
+  const path = decodeURIComponent(location.pathname);
+  const channelId = path.match(/^\/channel\/([^/]+)/)?.[1];
+  if (channelId) return meta.externalId === channelId;
+
+  const handle = path.match(/^\/(@[^/]+)/)?.[1];
+  if (handle) {
+    return (
+      decodeURIComponent(meta.vanityChannelUrl ?? '')
+        .toLowerCase()
+        .endsWith(handle.toLowerCase())
+    );
+  }
+  return true;
+}
+
+/**
+ * Reads channel details from the active `ytd-browse` page, waiting until the
+ * page data is actually populated (it is not available right at page load).
+ *
+ * @param {Object} [options] - Options.
+ * @param {number} [options.timeout=10000] - Max time to wait for data, in milliseconds.
+ * @returns {Promise<ChannelDetails | null>} The channel details, or `null` if this is not a
+ *   channel page or the data did not become available in time.
+ */
+async function getCurrentChannelDetails({ timeout = 10000 } = {}) {
+  if (!isChannelPage()) {
+    console.log('Not a channel page, skipping getCurrentChannelDetails()');
+    return null;
+  }
+
+  const meta = await pollUntil(
+    () => {
+      const candidate = document
+        .querySelector('ytd-page-manager')
+        ?.getCurrentPage?.()?.data?.metadata?.channelMetadataRenderer;
+      return candidate && metaMatchesLocation(candidate) ? candidate : null;
+    },
+    { timeout },
+  );
+
+  if (!meta) {
+    console.warn('Channel metadata did not become available in time');
+    return null;
+  }
+
+  return {
+    ownerChannelName: meta.title ?? null,
+    channelUid: meta.externalId ?? null,
+    vanityUrl: meta.vanityChannelUrl ?? null,
+    description: meta.description ?? null,
   };
 }
