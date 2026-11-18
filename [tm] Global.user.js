@@ -667,6 +667,19 @@ GM_addElement(mainContainerEl, 'button', {
     });
   },
 });
+GM_addElement(mainContainerEl, 'button', {
+  textContent: 'Storyboards',
+  onclick: () => {
+    const urlToDownload = location.href;
+    invokeDownloader('ytdlp', {
+      urlToDownload,
+      mode: 'storyboards',
+      destination: 'Y:\\#thumbnails-and-storyboards',
+      browser: cookiesCheckboxEl.checked ? 'firefox' : null,
+      profile: '3vm341ho.default-release',
+    });
+  },
+});
 
 //  MARK: RSS
 
