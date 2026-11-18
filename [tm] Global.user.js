@@ -150,11 +150,30 @@ style(
 
 //  MARK: 🔥
 const metaObj = onceMeta();
+let currentUrl = location.href;
 window.addEventListener('urlchange', onNewUrl);
 onNewUrl();
-function onNewUrl(info) {
+function onNewUrl(newUrlInfo) {
+  if (newUrlInfo) {
+    const newUrl = newUrlInfo.url || location.href;
+    const newUrl_normalized = normalizeUrl(newUrl);
+    const currentUrl_normalized = normalizeUrl(currentUrl);
+    currentUrl = newUrlInfo.url;
+    if (newUrl_normalized === currentUrl_normalized) return;
+  }
   reloadRss();
   reloadMeta(metaObj);
+}
+
+function normalizeUrl(url) {
+  const IGNORED_PARAMS = new Set(['t', 'slot']);
+  const parsed = new URL(url);
+  parsed.hash = '';
+  for (const param of IGNORED_PARAMS) {
+    parsed.searchParams.delete(param);
+  }
+  parsed.searchParams.sort();
+  return parsed.href;
 }
 
 //* crt.name
