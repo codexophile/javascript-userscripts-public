@@ -29,14 +29,14 @@ if (saidYes) return;
 main();
 
 async function main() {
-  mainVidEl.addEventListener('play', event => {
+  mainVidEl.addEventListener('play', () => {
     pause();
   });
-  mainVidEl.addEventListener('playing', event => {
+  mainVidEl.addEventListener('playing', () => {
     pause();
   });
-  waitForEach('.sb-tile', tileEl => {
-    tileEl.addEventListener('click', event => {
+  waitForEach('.sb-tile, .ytp-play-button', allowEl => {
+    allowEl.addEventListener('click', () => {
       permissionGranted = true;
     });
   });
