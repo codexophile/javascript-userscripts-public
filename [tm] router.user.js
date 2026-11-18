@@ -1,4 +1,5 @@
 'use strict';
+return;
 
 /**
  * Pages that should NOT be remembered as a "return target":
