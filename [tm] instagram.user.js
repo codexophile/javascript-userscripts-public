@@ -105,7 +105,7 @@ waitForEach('[aria-label="Adjust volume"]', volumeEl => {
 })();
 
 //* filtering posts from same account in 'reposts' and 'tagged' sections
-(function () {
+(async function () {
   'use strict';
   const igPostTypesArr = ['p', 'reel'];
   const sectionsToTestForArr = ['reposts', 'tagged'];
@@ -125,19 +125,22 @@ waitForEach('[aria-label="Adjust volume"]', volumeEl => {
   // `);
   // console.log(styleEl);
 
+  const userIdEl = await waitFor(`section [href="#"]:has(>h2)`);
+  const userId = userIdEl.textContent;
   waitForEach(finalQuery, igPostEl => {
-    const shouldTest = sectionsToTestForArr.some(section =>
+    const notMainSection = sectionsToTestForArr.some(section =>
       location.href.includes(`/${section}/`),
     );
-    if (!shouldTest) return;
-    const userIdEl = document.querySelector(`section [href="#"]:has(>h2)`);
-    if (!userIdEl) return;
-    const userId = userIdEl.textContent;
     const postAuthorId = igPostEl
       .querySelector(`a`)
       ?.href.match(/\.com\/(.+?)\//)?.[1];
     if (userId === postAuthorId) {
-      igPostEl.style.display = 'none';
+      if (notMainSection) igPostEl.style.display = 'none';
+    } else {
+      generateElements(
+        `<a href="https://www.instagram.com/${postAuthorId}" target="_blank">${postAuthorId}</a>`,
+        igPostEl,
+      );
     }
   });
 })();
