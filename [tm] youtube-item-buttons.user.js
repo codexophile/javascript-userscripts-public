@@ -1,5 +1,4 @@
 'use strict';
-if (window.top != window.self) return; //don't run on frames or iframes
 
 const MENU_BTN_SELECTOR =
   '.ytLockupViewModelMetadata :is(ytd-menu-renderer button, button-view-model button, yt-icon-button button)';
@@ -162,9 +161,12 @@ async function getLinkToChannel(thumbEl) {
   );
   if (linkToChannelEl) {
     const matches = linkToChannelEl.href.match(/@(.+?)(\/|$)/);
-    if (!matches) return null;
-    return `https://www.youtube.com/@${matches[1]}`;
+    if (matches) return `https://www.youtube.com/@${matches[1]}`;
   }
+  const itemEl = thumbEl.closest('[data-pe-identifier]');
+  const channelUid = itemEl?.getAttribute('data-pe-identifier');
+  if (channelUid) return `https://www.youtube.com/channel/${channelUid}`;
+
   const videoLinkEl = thumbEl.parentElement.querySelector('a');
   if (!videoLinkEl) return null;
   const videoId = getVideoIdFromLink(videoLinkEl);
