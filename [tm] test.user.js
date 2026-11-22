@@ -4,8 +4,7 @@
 (async function () {
   ('use strict');
 
-  const targetUrl =
-    'https://www.javboys.tv/%e9%9c%b8%e9%81%93%e4%ba%ba%e5%a4%ab-chen_hum-59-%e5%88%9d%e6%ac%a1%e9%96%8b%e6%88%bf/';
+  const targetUrl = 'https://playmogo.com/e/j7pajmlc6zn6';
 
   one();
 
@@ -44,14 +43,31 @@
   }
 
   async function one() {
-    const result = await two(targetUrl);
-    // console.log(result);
-    GM_setClipboard(result);
+    const doc = await fetchDoc(targetUrl);
+    console.log(doc);
+    const scriptEl = contains('script', 'thumbnails:', doc)[0];
+    console.log(scriptEl);
+    const scriptTtext = scriptEl.textContent;
+    const quote = `['"]`;
+    const possibleSpace = `\\s*`;
+    const regex = new RegExp(
+      `thumbnails:${possibleSpace}{${possibleSpace}vtt:${possibleSpace}${quote}(.+?)${quote},${possibleSpace}basePath:${possibleSpace}${quote}(.+?)${quote}`,
+      'i',
+    );
+    const matches = scriptTtext.match(regex);
+    console.log(matches);
+    const fileName = matches[1].split('/').pop();
+    const basePath = matches[2];
+    console.log(`${basePath}slides/${fileName}`);
+    return;
   }
 
   async function two() {
     const doc = await fetchDoc(targetUrl, null, true);
-    return doc;
+
+    console.log(scriptTtext);
+    const obj = JSON.parse(scriptTtext);
+    console.log(obj);
   }
 
   function three() {
