@@ -46,9 +46,11 @@ const linksPreviewContainerEl = generateElements(
   '<div class="container"></div>',
   galleryPopoverEl,
 );
+const restEl = generateElements('<div class="rest"></div>', galleryPopoverEl);
+style(restEl, 'display: flex; align-items: center; margin-top: 10px;');
 const linksDetailsEl = generateElements(
   '<div class="links-details"></div>',
-  galleryPopoverEl,
+  restEl,
 );
 
 const galleryBtnEl = collapsible.addButton('', galleryPopoverEl);
@@ -83,14 +85,14 @@ galleryBtnEl.addEventListener('click', () => {
 
 generateElements(
   `<button style="margin-left: 10px;">ytdlp</button>`,
-  galleryPopoverEl,
+  restEl,
 ).addEventListener('click', () => {
   invokeDownloader('ytdlp-sb', { urlToDownload: location.href });
 });
 
 const thisTabButton = generateElements(
   `<button style="margin-left: 10px;">This tab</button>`,
-  galleryPopoverEl,
+  restEl,
 );
 thisTabButton.addEventListener('click', async () => {
   const allVideoLinks = new Set();
@@ -126,7 +128,7 @@ thisTabButton.addEventListener('click', async () => {
 
 const newTabButton = generateElements(
   `<button style="margin-left: 10px;">New tab</button>`,
-  galleryPopoverEl,
+  restEl,
 );
 newTabButton.addEventListener('click', async () => {
   try {
