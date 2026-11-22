@@ -84,7 +84,7 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
   const {
     bottom = '0px',
     left = '0px',
-    backgroundColor = '#1e1e1e', // Darker background
+    backgroundColor = '#7c7c7c', // Darker background
     hoverColor = '#2c2c2c', // Darker hover
     textColor = '#e0e0e0', // Light gray text
     contentBgColor = '#2d2d2d', // Dark gray content background
