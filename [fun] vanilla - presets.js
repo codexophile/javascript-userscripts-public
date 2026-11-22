@@ -1,5 +1,17 @@
+/**
+ * Creates or reuses the shared draggable collapsible toolbar.
+ *
+ * @param {string} [togglerText='Toggle'] Label shown on the collapsed toggle.
+ * @param {Object} [options={}] Position and appearance overrides.
+ * @returns {Promise<Object>} The toolbar elements and element helper methods.
+ * @example
+ * ```js
+ * const { addButton } = await Collapsible('Tools');
+ * addButton('Open', null, openTools);
+ * ```
+ */
 async function Collapsible(togglerText = 'Toggle', options = {}) {
-  await waitFor('body');
+  // await waitFor('body');
 
   //* Methods for adding elements and handling popups
   function addButton(text, popoverEl = null, onclick) {
@@ -36,26 +48,11 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
     popoverEl.className = 'collapsible-popover';
     popoverEl.setAttribute('popover', '');
     popoverEl.id = id;
-    popoverEl.style = `
-      border-radius: 4px;
-      position-area: top span-right;
-      background-color: darkgray;
-    `;
 
     const popoverInnerEl = generateElements(
       `<div class="collapsible-popover-inner"></div>`,
       popoverEl,
     );
-    style(
-      popoverInnerEl,
-      `
-      padding: 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    `,
-    );
-
     return popoverInnerEl;
   }
 
@@ -117,8 +114,36 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
       height: ${height};
       z-index: 10000;
       resize: both;
-      border: 1px solid #404040; // Added border for better definition
+      border: 1px solid #404040;
   }
+  .collapsible-popover {
+      max-height: 75vh;
+      margin: 0;
+      border: 1px solid #404040;
+      border-radius: 4px;
+      position-area: top span-right;
+      background-color: ${contentBgColor};
+      color: ${textColor};
+      scrollbar-color: #888888 ${contentBgColor};
+      scrollbar-width: thin;
+  }
+  .collapsible-popover .link-wrapper {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      height: auto;
+  }
+  .collapsible-popover > button {
+      flex: 0 0 auto;
+  }
+  .collapsible-popover-inner {
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 1rem;
+  }
+
   .collapsible-container.expanded {
       width: ${width};
       overflow: visible;
@@ -168,37 +193,42 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
   .collapsible-content > * {
       margin: 3px;
   }
-  .collapsible-content {
-    .button-like {
-      /* background-color: ${backgroundColor}; */
-      color: ${textColor};
+  .collapsible-content .button-like {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       width: ${buttonSize};
       height: ${buttonSize};
-      border: none;
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background-color: ${backgroundColor};
+      color: ${textColor};
       cursor: pointer;
-      border-radius: 3px;
-      transition: background-color 0.2s;
+      font: inherit;
       position: relative;
-    }
-    .button-like.flex {
+      transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+  }
+  .collapsible-content .button-like:hover,
+  .collapsible-content .button-like:focus-visible {
+      background-color: ${hoverColor};
+      border-color: #606060;
+      outline: none;
+  }
+  .collapsible-content .button-like:active {
+      transform: scale(0.94);
+  }
+  .collapsible-content .button-like.flex {
       width: max-content;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       gap: 3px;
-
-      img {
-        max-width: 30px;
-        max-height: 30px;
-      }
-    }
+  }
+  .collapsible-content .button-like.flex img {
+      max-width: 30px;
+      max-height: 30px;
   }
   .button-like > * {
     filter: drop-shadow(3px 5px 2px rgba(0, 0, 0, 0.6));
-    width: inherit;
-  }
-  .collapsible-button:hover {
-      /*background-color: ${hoverColor}; */
+    max-width: 100%;
   }
   .collapsible-container .popup {
       display: none;
@@ -245,32 +275,10 @@ async function Collapsible(togglerText = 'Toggle', options = {}) {
   .collapsible-content::-webkit-scrollbar-thumb:hover {
       background: #606060;
   }
-    `;
+`;
 
   if (GM_addStyle) {
     GM_addStyle(css);
-    GM_addStyle(`
-      .collapsible-container {
-        .collapsible-popover {
-
-          max-height: 80vh;
-          &, & * {
-            scrollbar-color: #888888 #f1f1f1;
-            scrollbar-width: thin;
-            margin: 5px;
-          }
-          .link-wrapper {
-            flex: 1 1 auto;         /* take the remaining space and shrink as needed */
-            min-height: 0;          /* lets a flex child shrink below its content size */
-            overflow-y: auto;       /* only this scrolls */
-            height: auto; 
-          }
-          & > button {
-            flex: 0 0 auto;         /* buttons keep their size and stay put */
-          }
-        }
-      }
-            `);
   } else {
     alert(
       'GM_addStyle is not available. Please ensure you are using a compatible userscript manager.',
