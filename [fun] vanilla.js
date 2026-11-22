@@ -4211,7 +4211,6 @@ async function getNitterHosts() {
 
     urls.push(...result.value.hosts);
   });
-  console.log(urls);
   return urls;
 }
 
@@ -4365,7 +4364,11 @@ function getTiktokPostQuery() {
 }
 
 function getYoutubePostQuery({ freshRss = false }) {
-  const arr = ['ytd-rich-item-renderer', 'yt-lockup-view-model'];
+  const arr = [
+    'ytd-rich-item-renderer',
+    'yt-lockup-view-model',
+    'ytd-video-renderer',
+  ];
   if (freshRss) {
     arr.push('main#stream > .flux');
   }
