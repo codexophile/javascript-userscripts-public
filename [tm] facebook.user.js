@@ -20,10 +20,13 @@ generateElements(`<button>Instant</button>`, ytdlpPopoverEl).addEventListener(
   'click',
   () => {
     const postLink = getPostLink();
+    const cookiesCheckboxEl = document.querySelector('#ytdlp-cookies-checkbox');
     invokeDownloader('ytdlp', {
       urlToDownload: postLink,
       destination: 'Y:\\@TOP\\tiktok',
       mode: 'noprompt',
+      browser: cookiesCheckboxEl.checked ? 'firefox' : null,
+      profile: '3vm341ho.default-release',
     });
   },
 );
