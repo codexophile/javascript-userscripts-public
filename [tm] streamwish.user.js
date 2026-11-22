@@ -47,7 +47,9 @@
       }
     `);
 
+    console.log('before');
     const thumbEl = await waitFor('.jw-time-thumb[style*="background-image"]');
+    console.log('after', thumbEl);
     const storyboardUrl =
       thumbEl.style.backgroundImage.match(/['"](.*)['"]/)[1];
 
