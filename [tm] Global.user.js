@@ -710,6 +710,7 @@ async function reloadRss() {
       'link[rel="alternate"][type="application/rss+xml"], link[rel="alternate"][type="application/atom+xml"]',
     ),
   );
+  const locationHost = location.host;
   const possibleWebsiteUrlsArr = [location.href];
   if (isAYoutubeUrl(location.href)) {
     console.log('isyoutube');
@@ -737,8 +738,10 @@ async function reloadRss() {
       title: `YouTube channel feed for ${channelUid}`,
     });
   }
+  if (locationHost === 'x.com') {
+  }
   rssBtnEl.replaceChildren();
-  const hasRss = rssLinks.length > 0;
+  let hasRss = rssLinks.length > 0;
 
   addLinkToFeedReader(
     'Blogtrottr',
@@ -803,25 +806,49 @@ async function reloadRss() {
     );
   });
 
-  setRssBtnIcon();
+  await setRssBtnIcon();
 
-  function setRssBtnIcon() {
+  async function setRssBtnIcon() {
+    let subscribed = false;
+    let error = false;
+    let matches;
+
+    try {
+      matches = await findSubscriptionsInFreshrss(possibleWebsiteUrlsArr);
+    } catch (error) {
+      error = true;
+      console.error('[FreshRSS check]', err);
+    }
+    if (matches.length) {
+      console.log(possibleWebsiteUrlsArr, 'is subscribed:', matches);
+      hasRss = true;
+      subscribed = true;
+    } else {
+      console.log(possibleWebsiteUrlsArr, 'is not subscribed', matches);
+      subscribed = false;
+    }
+
     if (hasRss) {
       generateElements(SVGS.rssYes, rssBtnEl);
-      findSubscriptionsInFreshrss(possibleWebsiteUrlsArr)
-        .then(matches => {
-          if (matches.length) {
-            console.log(possibleWebsiteUrlsArr, 'is subscribed:', matches);
-            rssBtnEl.querySelector('path').setAttribute('stroke', '#22c55e');
-          } else {
-            console.log(possibleWebsiteUrlsArr, 'is not subscribed', matches);
-            rssBtnEl.querySelector('path').setAttribute('stroke', '#f59e0b');
-          }
-        })
-        .catch(err => console.error('[FreshRSS check]', err));
-      return;
+    } else {
+      generateElements(SVGS.rssNo, rssBtnEl);
     }
-    generateElements(SVGS.rssNo, rssBtnEl);
+    const pathEl = rssBtnEl.querySelector('path');
+    if (subscribed) {
+      setRssStatusColor('#22c55e');
+    } else {
+      setRssStatusColor('#f59e0b');
+      if (!hasRss) {
+        setRssStatusColor('#000000');
+      }
+    }
+    if (error) {
+      setRssStatusColor('#b23a3a');
+    }
+
+    function setRssStatusColor(color) {
+      pathEl.setAttribute('stroke', color);
+    }
   }
 
   function createPopoverItem(
