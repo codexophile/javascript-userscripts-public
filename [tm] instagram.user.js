@@ -38,14 +38,7 @@
 })();
 
 //* restart video on unmute
-waitForEach('[aria-label="Adjust volume"]', volumeEl => {
-  const videoEl = closestQuery(volumeEl, 'video');
-  if (!videoEl) return;
-  volumeEl.addEventListener('click', () => {
-    videoEl.currentTime = 0;
-    videoEl.play();
-  });
-});
+restartOnUnmute('button[aria-label="Volume"]');
 
 //* post items
 (function () {

@@ -1,9 +1,11 @@
 (async function () {
   'use strict';
 
-  const FAST_PLAYBACK_RATE = 3.5;
+  //* restart video on unmute
+  restartOnUnmute('button[aria-label="Volume"]');
 
   //* auto speedup preview videos
+  const FAST_PLAYBACK_RATE = 3.5;
   waitForEach('a video', previewVidEl => {
     previewVidEl.addEventListener('play', () => {
       setPlaybackRate(previewVidEl, FAST_PLAYBACK_RATE);

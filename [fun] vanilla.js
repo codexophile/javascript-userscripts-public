@@ -4384,3 +4384,17 @@ function getYoutubeWatchedMarkersQuery() {
   ];
   return arr.join(',');
 }
+
+function restartOnUnmute(toggleMuteBtnQuery) {
+  waitForEach(toggleMuteBtnQuery, volumeEl => {
+    const videoEl = closestQuery(volumeEl, 'video');
+    if (!videoEl) return;
+    volumeEl.addEventListener('click', () => {
+      if (GM_audio) {
+        GM_audio.setMute({ isMuted: false });
+      }
+      videoEl.currentTime = 0;
+      videoEl.play();
+    });
+  });
+}
