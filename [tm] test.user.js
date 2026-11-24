@@ -4,7 +4,7 @@
 (async function () {
   ('use strict');
 
-  const targetUrl = 'https://playmogo.com/e/j7pajmlc6zn6';
+  const targetUrl = 'https://38x.io/6tig';
 
   one();
 
@@ -43,22 +43,8 @@
   }
 
   async function one() {
-    const doc = await fetchDoc(targetUrl);
-    console.log(doc);
-    const scriptEl = contains('script', 'thumbnails:', doc)[0];
-    console.log(scriptEl);
-    const scriptTtext = scriptEl.textContent;
-    const quote = `['"]`;
-    const possibleSpace = `\\s*`;
-    const regex = new RegExp(
-      `thumbnails:${possibleSpace}{${possibleSpace}vtt:${possibleSpace}${quote}(.+?)${quote},${possibleSpace}basePath:${possibleSpace}${quote}(.+?)${quote}`,
-      'i',
-    );
-    const matches = scriptTtext.match(regex);
-    console.log(matches);
-    const fileName = matches[1].split('/').pop();
-    const basePath = matches[2];
-    console.log(`${basePath}slides/${fileName}`);
+    const doc = await fetchDoc(targetUrl, null, true);
+    GM_setClipboard(doc);
     return;
   }
 
