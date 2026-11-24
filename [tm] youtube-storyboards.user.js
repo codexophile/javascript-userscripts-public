@@ -63,7 +63,7 @@ async function addStoryboard(force = false) {
   }
 
   try {
-    await storyboard({
+    await storyboardV2({
       video,
       parent: sbParent,
       columns: horizontal || 5,
@@ -125,7 +125,7 @@ waitForEach('#row-01.btns-container-row', async btnsContainerEl => {
       modal.setTitle(headerLink);
       modal.setContent(modalBody);
 
-      await storyboard({
+      await storyboardV2({
         parent: modalBody,
         columns: horizontal || 5,
         rows: vertical || 5,
