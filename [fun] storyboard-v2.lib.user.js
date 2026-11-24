@@ -671,10 +671,8 @@ function _sbSeekState(urlString = location.href) {
   const timeValue = timeRaw === null ? NaN : Number(timeRaw);
   const slotValue = slotRaw === null ? NaN : Number(slotRaw);
   return {
-    time:
-      Number.isFinite(timeValue) && timeValue >= 0 ? timeValue : null,
-    slot:
-      Number.isInteger(slotValue) && slotValue >= 0 ? slotValue : null,
+    time: Number.isFinite(timeValue) && timeValue >= 0 ? timeValue : null,
+    slot: Number.isInteger(slotValue) && slotValue >= 0 ? slotValue : null,
   };
 }
 
@@ -1052,7 +1050,7 @@ function _sbEnsureStyles() {
  * });
  * sb.setScale(1.5);
  */
-async function storyboard(options) {
+async function storyboardV2(options) {
   const startedAt = performance.now();
   const {
     parent,
@@ -1461,16 +1459,12 @@ async function storyboard(options) {
       video.addEventListener('durationchange', refreshLabels, { signal });
       video.addEventListener('loadedmetadata', updatePlaybackState, { signal });
       video.addEventListener('durationchange', updatePlaybackState, { signal });
-      video.addEventListener(
-        'timeupdate',
-        () => updatePlaybackState(true),
-        { signal },
-      );
-      video.addEventListener(
-        'seeking',
-        () => updatePlaybackState(true),
-        { signal },
-      );
+      video.addEventListener('timeupdate', () => updatePlaybackState(true), {
+        signal,
+      });
+      video.addEventListener('seeking', () => updatePlaybackState(true), {
+        signal,
+      });
     }
 
     if (controls?.enabled) {
