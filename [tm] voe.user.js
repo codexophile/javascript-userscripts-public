@@ -71,12 +71,13 @@
   else $sbParent.appendTo(document.body);
   const storyboardParent = $sbParent[0];
   console.log(storyboardParent);
-  storyboard({
+  storyboardV2({
     parent: storyboardParent,
     video: vidOnPage,
     imageUrls: [imageUrl],
     columns: 10,
     rows: 10,
     totalSlots: 100,
+    controls: { enabled: true },
   });
 })();
