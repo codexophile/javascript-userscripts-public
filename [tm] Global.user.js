@@ -703,6 +703,7 @@ GM_addElement(mainContainerEl, 'button', {
 //  MARK: RSS
 
 async function reloadRss() {
+  rssBtnEl.replaceChildren();
   rssFeedsPopover.replaceChildren();
 
   const rssLinks = Array.from(
