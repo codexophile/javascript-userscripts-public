@@ -184,12 +184,13 @@ function renderActions(anchorEl) {
 
   generateElements(`<div id="link-text">${linkText}</div>`, popoverEl);
   generateElements(
-    `<div
-        id="link-href"
-        style="font: 12px monospace; word-break: break-all;"
-       >
-        ${linkHref}
-      </div>`,
+    `
+    <div
+      id="link-href"
+      style="font: 12px monospace; word-break: break-all;"
+    >
+      ${linkHref}
+    </div>`,
     popoverEl,
   );
 }
