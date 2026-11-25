@@ -5,9 +5,10 @@ const CLOSE_DELAY = 200;
 const POPOVER_ID = 'cdx-main-popover';
 const ELEMENT_WIDTH = '20px';
 const svgsObj = {
+  copy: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24px" width="24px" fill="#e3e3e3"><path d="M9,18q-0.82,0-1.41-0.59T7,16V4Q7,3.17 7.59,2.59T9,2h9q0.82,0 1.41,0.59T20,4V16q0,0.82-0.59,1.41T18,18H9Zm0-2h9V4H9V16ZM5,22q-0.83,0-1.41-0.59T3,20V6H5V20H16v2H5Zm4-6V4V16Z"/></svg>',
   'open-in-new': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></svg>`,
   'open-here': `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z"/></svg>`,
-  'copy-link': `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/></svg>`,
+  link: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/></svg>`,
   popup:
     '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M520-400h200v-240H520v240ZM160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Z"/></svg>',
   freshrss: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><title>Logo FreshRSS</title><circle fill="#FFF" cx="128" cy="128" r="128"/><circle fill="#0062BE" cx="128" cy="128" r="33"/><g fill="none" stroke="#0062BE" stroke-width="24"><g stroke-opacity="0.3"><path d="M12,128 A116,116 0 1,1 128,244"/><path d="M54,128 A74,74 0 1,1 128,202"/></g><path d="M128,12 A116,116 0 0,1 244,128"/><path d="M128,54 A74,74 0 0,1 202,128"/></g></svg>`,
@@ -41,6 +42,12 @@ GM_addStyle(`
       color: #f5f5f5;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 
+      .flex-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
       .cdx-popover-toolbar {
         display: flex;
         gap: 0.5rem;
@@ -51,6 +58,9 @@ GM_addStyle(`
         padding: 0;
         width: ${ELEMENT_WIDTH};
         height: ${ELEMENT_WIDTH};
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
         img, svg {
           width: 100%;
@@ -117,7 +127,8 @@ function hidePopover() {
 
 //  MARK: 🔥
 function renderActions(anchorEl) {
-  const linkText = anchorEl.textContent.trim();
+  // const linkText = anchorEl.textContent.trim();
+  const linkText = getOwnText(anchorEl).trim();
   const linkHref = anchorEl.href;
   popoverEl.textContent = ''; // clear previous
 
@@ -143,12 +154,6 @@ function renderActions(anchorEl) {
     toolbar01El,
     () => (window.location.href = linkHref),
     'Open here',
-  );
-  createPopoverToolbarButton(
-    svgsObj['copy-link'],
-    toolbar01El,
-    () => GM_setClipboard(linkHref),
-    'Copy link',
   );
   createPopoverToolbarButton(
     svgsObj.freshrss,
@@ -182,7 +187,31 @@ function renderActions(anchorEl) {
     });
   });
 
-  generateElements(`<div id="link-text">${linkText}</div>`, popoverEl);
+  const linkTextContainerEl = generateElements(
+    `<div id="link-text-container" class="flex-row"></div>`,
+    popoverEl,
+  );
+  generateElements(
+    `<button id="copy-link-text">${svgsObj.copy}</button>`,
+    linkTextContainerEl,
+  ).addEventListener('click', () => {
+    GM_setClipboard(linkText);
+  });
+  generateElements(
+    `<div id="link-text">${linkText}</div>`,
+    linkTextContainerEl,
+  );
+
+  const linkHrefContainerEl = generateElements(
+    `<div id="link-href-container" class="flex-row"></div>`,
+    popoverEl,
+  );
+  generateElements(
+    `<button id="copy-link-href">${svgsObj.copy}</button>`,
+    linkHrefContainerEl,
+  ).addEventListener('click', () => {
+    GM_setClipboard(linkHref);
+  });
   generateElements(
     `
     <div
@@ -191,7 +220,7 @@ function renderActions(anchorEl) {
     >
       ${linkHref}
     </div>`,
-    popoverEl,
+    linkHrefContainerEl,
   );
 }
 
