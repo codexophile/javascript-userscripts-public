@@ -63,8 +63,17 @@ galleryBtnEl.addEventListener('click', () => {
   const elements = document.querySelectorAll(
     `${getQuery}:not(${excludeQuery})`,
   );
-  linksDetailsEl.textContent = `Found: ${elements.length}`;
-  elements.forEach(element => {
+  const uniqueEls = uniqueByHref(elements);
+
+  linksDetailsEl.textContent = `Found: ${uniqueEls.length}`;
+  uniqueEls.forEach(element => {
+    const alreadyEl = linksPreviewContainerEl.querySelector(
+      `a[href="${element.href}"]`,
+    );
+    if (alreadyEl) {
+      console.log(`Skipping duplicate link: ${element.href}`, alreadyEl);
+      return;
+    }
     const wrapperEl = generateElements(
       `<div class="cdx-wrapper"></div>`,
       linksPreviewContainerEl,
@@ -411,4 +420,21 @@ function gatherAllVideoLinks() {
   elements.forEach(element => {
     console.log(element);
   });
+}
+
+/**
+ * Returns a new array of elements from a NodeList with duplicate `href` values removed.
+ * The first element encountered for each distinct href is kept; later ones are dropped.
+ *
+ * @param {NodeListOf<HTMLAnchorElement> | HTMLAnchorElement[]} nodes - The elements to deduplicate.
+ * @returns {HTMLAnchorElement[]} Elements with unique `href` values, in original document order.
+ */
+function uniqueByHref(nodes) {
+  const seen = new Map();
+  for (const node of nodes) {
+    const href = node.querySelector('a')?.href || node.href;
+    console.log(href);
+    if (!seen.has(href)) seen.set(href, node);
+  }
+  return [...seen.values()];
 }

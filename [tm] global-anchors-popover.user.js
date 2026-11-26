@@ -128,7 +128,8 @@ function hidePopover() {
 //  MARK: 🔥
 function renderActions(anchorEl) {
   // const linkText = anchorEl.textContent.trim();
-  const linkText = getOwnText(anchorEl).trim();
+  // const linkText = getOwnText(anchorEl).trim();
+  const linkText = anchorEl.innerText.trim();
   const linkHref = anchorEl.href;
   popoverEl.textContent = ''; // clear previous
 
