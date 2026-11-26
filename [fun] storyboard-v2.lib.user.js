@@ -1,4 +1,4 @@
-/* global GM_addStyle, GM_getValue, GM_setValue, GM_setClipboard, GM_xmlhttpRequest */
+/* global GM_addStyle, GM_getValue, GM_setValue, GM_setClipboard, GM_xmlhttpRequest, waitFor */
 
 /**
  * @file Storyboard helper for userscripts.
@@ -21,6 +21,7 @@
  * Every GM function is optional: with `@grant none` the helper falls back to
  * plain DOM APIs (image loading then goes through `<img>` instead of
  * `GM_xmlhttpRequest`, so hotlink/CSP-restricted sheets may fail).
+ * A selector supplied as `video` uses the shared `waitFor` helper.
  *
  * Public API (top-level, visible to the consuming script):
  * `storyboard`, `parseWebvtt`, `resolveStoryboardLayout`,
@@ -36,8 +37,10 @@
  *
  * @typedef {object} StoryboardOptions
  * @property {Element} parent Element that receives the generated storyboard root.
- * @property {HTMLVideoElement | null} [video] Video controlled by the storyboard.
- *   Without it tiles are not seekable and the "locate" button is omitted.
+ * @property {HTMLVideoElement | string | null} [video] Video controlled by the
+ *   storyboard, a CSS selector for a video that may be added later, or `null`
+ *   for a storyboard without video controls. Selector-based storyboards render
+ *   what they can immediately and wait for the video only when needed.
  * @property {readonly string[]} [imageUrls] Sprite-sheet URLs (relative URLs are
  *   resolved against `baseUrl`). Ignored when `webvtt` is given.
  * @property {string | null} [webvtt] WebVTT storyboard text. Each cue payload must
@@ -1032,17 +1035,20 @@ function _sbEnsureStyles() {
  * seek correctly.
  *
  * If a sprite-sheet layout cannot be resolved without the duration, this waits
- * for the video's `loadedmetadata` event before building tiles.
+ * for the selected video's `loadedmetadata` event before building tiles. When
+ * `video` is a selector, the storyboard renders using available information
+ * first and waits for the video before enabling video-specific behavior.
  *
  * @param {StoryboardOptions} options Storyboard configuration.
  * @returns {Promise<StoryboardHandle>} Handle for resizing, seeking and cleanup.
- * @throws {TypeError} When `options.parent` is not an Element.
+ * @throws {TypeError} When `options.parent` is not an Element or `video` is not
+ *   an HTMLVideoElement, selector, or `null`.
  * @throws {Error} For unresolvable layouts, missing sources or malformed WebVTT.
  *
  * @example
  * const sb = await storyboard({
  *   parent: document.querySelector('#below-player'),
- *   video: document.querySelector('video'),
+ *   video: 'video',
  *   imageUrls: ['https://cdn.example/sb0.jpg', 'https://cdn.example/sb1.jpg'],
  *   columns: 5,
  *   rows: 5,
@@ -1054,7 +1060,7 @@ async function storyboardV2(options) {
   const startedAt = performance.now();
   const {
     parent,
-    video = null,
+    video: videoOption = null,
     imageUrls = [],
     webvtt = null,
     baseUrl = null,
@@ -1073,6 +1079,31 @@ async function storyboardV2(options) {
   console.log(parent);
   if (!(parent instanceof Element))
     throw new TypeError('storyboard: `parent` must be an Element');
+  let video = null;
+  const videoSelector = typeof videoOption === 'string' ? videoOption : null;
+  if (videoOption instanceof HTMLVideoElement) {
+    video = videoOption;
+  } else if (videoOption !== null && typeof videoOption !== 'string') {
+    throw new TypeError(
+      'storyboard: `video` must be an HTMLVideoElement, CSS selector, or null',
+    );
+  }
+
+  /**
+   * Resolves the video selector once video-specific work is needed.
+   * @returns {Promise<HTMLVideoElement | null>} The video, or `null` when omitted.
+   */
+  const resolveVideo = async () => {
+    if (video || !videoSelector) return video;
+    console.log('Waiting for video element: ' + videoSelector);
+    const element = await waitFor(videoSelector);
+    if (!(element instanceof HTMLVideoElement))
+      throw new TypeError(
+        `storyboard: \`video\` selector must match an HTMLVideoElement: ${videoSelector}`,
+      );
+    video = element;
+    return video;
+  };
 
   _sbEnsureStyles();
   const abort = new AbortController();
@@ -1085,7 +1116,9 @@ async function storyboardV2(options) {
   root.append(grid);
   parent.append(root);
   const initialSeekState =
-    video && hashSeek ? _sbSeekState() : { time: null, slot: null };
+    (video || videoSelector) && hashSeek
+      ? _sbSeekState()
+      : { time: null, slot: null };
   let initialSeekPending =
     initialSeekState.time !== null || initialSeekState.slot !== null;
   let lastUrlUpdateAt = -Infinity;
@@ -1132,6 +1165,7 @@ async function storyboardV2(options) {
       try {
         layout = resolve();
       } catch (error) {
+        if (!video && videoSelector) await resolveVideo();
         if (!video || video.readyState > 0) throw error;
         await _sbWhenMetadata(video);
         layout = resolve();
@@ -1376,6 +1410,28 @@ async function storyboardV2(options) {
       }
     };
 
+    /**
+     * Connects storyboard updates to the resolved video.
+     * @returns {void}
+     */
+    const attachVideoListeners = async () => {
+      if (!video) {
+        video = await resolveVideo();
+      }
+      video.addEventListener('loadedmetadata', refreshLabels, { signal });
+      video.addEventListener('durationchange', refreshLabels, { signal });
+      video.addEventListener('loadedmetadata', updatePlaybackState, { signal });
+      video.addEventListener('durationchange', updatePlaybackState, { signal });
+      video.addEventListener('timeupdate', () => updatePlaybackState(true), {
+        signal,
+      });
+      video.addEventListener('seeking', () => updatePlaybackState(true), {
+        signal,
+      });
+      refreshLabels();
+      updatePlaybackState();
+    };
+
     let gridHidden = Boolean(
       _sbGM.getValue(STORYBOARD_STORAGE_KEYS.gridHidden, false),
     );
@@ -1444,6 +1500,7 @@ async function storyboardV2(options) {
       event => {
         const el = /** @type {Element} */ (event.target).closest('.sb-tile');
         const tile = el && byElement.get(el);
+        console.log('xxx', tile, video);
         if (!tile || !video) return;
         const modified =
           event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
@@ -1454,29 +1511,19 @@ async function storyboardV2(options) {
       { signal },
     );
 
-    if (video) {
-      video.addEventListener('loadedmetadata', refreshLabels, { signal });
-      video.addEventListener('durationchange', refreshLabels, { signal });
-      video.addEventListener('loadedmetadata', updatePlaybackState, { signal });
-      video.addEventListener('durationchange', updatePlaybackState, { signal });
-      video.addEventListener('timeupdate', () => updatePlaybackState(true), {
-        signal,
-      });
-      video.addEventListener('seeking', () => updatePlaybackState(true), {
-        signal,
-      });
-    }
+    attachVideoListeners();
 
     if (controls?.enabled) {
       panel = _sbCreatePanel({
-        onLocate: video
-          ? () => {
-              if (video && controls.pauseOnLocate) {
-                video.pause();
+        onLocate:
+          video || videoSelector
+            ? () => {
+                if (video && controls.pauseOnLocate) {
+                  video.pause();
+                }
+                locateCurrent();
               }
-              locateCurrent();
-            }
-          : null,
+            : null,
         onToggleGrid: () => setGridHidden(!gridHidden),
         gridHidden,
       });
@@ -1536,6 +1583,11 @@ async function storyboardV2(options) {
     }
 
     // ---- 7. Finish ---------------------------------------------------------
+    if (videoSelector && !video) {
+      await resolveVideo();
+      attachVideoListeners();
+    }
+
     panel?.setStats({
       tiles: tiles.length,
       ms: performance.now() - startedAt,
