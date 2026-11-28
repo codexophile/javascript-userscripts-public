@@ -5,6 +5,7 @@ const SEL_PMWIKI = `[href*="/pmwiki/pmwiki.php/"]`;
 const SEL_MAIN_TROPE = `li>span>a:first-child`;
 const SEL_TOOLBAR_LINKS = `:is(#main-article,.folder) > ul > li > [href*='/laconic/']:first-child`;
 const SEL_MAIN_ARTICLE = 'article#main-article[data-tt-pencils="hover"]';
+const SEL_MAIN_ARTICLE_alt = 'article#main-article';
 const TROPE_RE = /\.php\/\w+\/(\w+)$/;
 const COLOR_SEEN = '#690f08';
 const COLOR_IMPORTANT = '#07540b';
@@ -203,24 +204,43 @@ window.addEventListener('beforeunload', event => {
 });
 
 observeLoad(`${SEL_MAIN_ARTICLE} ${SEL_MAIN}`, async item => {
-  console.log('observelsdfsdf');
-  showFetchSpinner(item);
+  const currentHref = item.getAttribute('href');
+
+  if (!location.href.includes('/laconic/')) {
+    item.setAttribute('href', currentHref.replace('/Main/', '/laconic/'));
+    item.setAttribute('target', '_blank');
+  }
+
+  const tropeName = extractTropeName(currentHref);
+  if (!tropeName) return; // 🛑
+
+  addAnt('✖️', item, () => appendTrope('Seen', tropeName));
+  addAnt('✔️', item, () => appendTrope('Important', tropeName));
+
   const laconicHref = item.href.replace('/Main/', '/laconic/');
+  let fetchSucceeded = false;
+  const indicatorObj = createStatusIndicator(item);
   try {
     const tempDoc = await fetchDoc(laconicHref);
-    const pEl = tempDoc.querySelector('p');
+    const pEl = tempDoc.querySelector(`${SEL_MAIN_ARTICLE_alt} p`);
     if (!pEl) {
       console.log('No p element found in laconic document');
       return;
     }
     const tooltipText = pEl.textContent.trim();
+    console.log(item, tooltipText);
     if (!tooltipText) {
       console.log('No text content found in p element');
       return;
     }
     item.title = tooltipText;
+    fetchSucceeded = true;
+  } catch (error) {
+    console.error('Error fetching laconic summary:', error);
   } finally {
-    hideFetchSpinner(item);
+    fetchSucceeded
+      ? indicatorObj.setStatus_success()
+      : indicatorObj.setStatus_error();
   }
 });
 
@@ -262,41 +282,6 @@ async function saveBackup() {
   unsavedChanges = false;
 }
 
-$(SEL_MAIN).each(function () {
-  const $tropeLink = $(this);
-  const currentHref = $tropeLink.attr('href') || '';
-
-  if (!location.href.includes('/laconic/')) {
-    $tropeLink.attr('href', currentHref.replace('/Main/', '/laconic/'));
-    $tropeLink.attr('target', '_blank');
-  }
-
-  const tropeName = extractTropeName($tropeLink.attr('href'));
-  if (!tropeName) return; // 🛑
-
-  addAnt('🐜', $tropeLink, function () {
-    let allToCopy = `\n[href*=${tropeName}],`;
-    GM_setClipboard(allToCopy);
-  });
-  addAnt('✖️', $tropeLink, () => appendTrope('Seen', tropeName));
-  addAnt('✔️', $tropeLink, () => appendTrope('Important', tropeName));
-
-  $tropeLink.on('mouseenter', event => {
-    const currentTitle = event.target.title || '';
-    if (currentTitle && !currentTitle.match(/^\/pmwiki\/pmwiki.php\//)) {
-      return; // 🛑
-    }
-    GM_xmlhttpRequest({
-      method: 'GET',
-      url: event.target.href,
-      responseType: 'document',
-      onload: function (response) {
-        event.target.title = getArticleText(generateDoc(response.responseText));
-      },
-    });
-  });
-});
-
 function getArticleText(doc) {
   return doc.querySelector(SEL_MAIN_ARTICLE)?.textContent || '';
 }
@@ -317,17 +302,73 @@ function findDuplicates(array) {
   );
 }
 
-function showFetchSpinner(link) {
-  if (fetchSpinners.has(link)) return;
+function createStatusIndicator(parentEl) {
+  const indicatorEl = generateElements(
+    `<span class="tm-status-indicator"
+      style="
+        display:inline-block;
+        margin-left:.35em;
+        vertical-align:middle;
+      ">
+      </span>`,
+    parentEl,
+  );
 
-  const spinner = document.createElement('span');
-  spinner.className = 'tm-fetch-spinner';
+  setStaus_spinning();
+
+  function setStaus_spinning() {
+    indicatorEl.replaceChildren();
+    generateElements(
+      `
+      <svg width="40" height="40" viewBox="0 0 50 50" role="status" aria-label="Loading">
+        <circle cx="25" cy="25" r="20" fill="none" stroke="#e0e0e0" stroke-width="5" />
+        <circle cx="25" cy="25" r="20" fill="none" stroke="#3498db" stroke-width="5" stroke-dasharray="80" stroke-dashoffset="60" stroke-linecap="round">
+          <animateTransform 
+            attributeName="transform" 
+            type="rotate" 
+            from="0 25 25" 
+            to="360 25 25" 
+            dur="1s" 
+            repeatCount="indefinite" />
+        </circle>
+      </svg>
+    `,
+      indicatorEl,
+    );
+  }
+
+  function setStatus_success() {
+    indicatorEl.replaceChildren();
+    generateElements(
+      `<span style="color:green;font-weight:bold;">✓</span>`,
+      indicatorEl,
+    );
+  }
+
+  function setStatus_error() {
+    indicatorEl.replaceChildren();
+    generateElements(
+      `<span style="color:red;font-weight:bold;">✕</span>`,
+      indicatorEl,
+    );
+  }
+
+  return { indicatorEl, setStaus_spinning, setStatus_success, setStatus_error };
+}
+
+function showFetchSpinner(link) {
+  let spinner = fetchSpinners.get(link);
+  if (!spinner) {
+    spinner = document.createElement('span');
+    spinner.className = 'tm-fetch-spinner';
+    link.appendChild(spinner);
+    fetchSpinners.set(link, spinner);
+  }
   spinner.title = 'Loading laconic summary...';
   spinner.style.cssText =
     'display:inline-block;width:.75em;height:.75em;margin-left:.35em;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;vertical-align:middle;animation:tm-fetch-spin .7s linear infinite;';
-
-  link.appendChild(spinner);
-  fetchSpinners.set(link, spinner);
+  spinner.textContent = '';
+  spinner.removeAttribute('aria-label');
 
   if (document.getElementById('tm-fetch-spinner-style')) return;
   const styleEl = document.createElement('style');
@@ -337,11 +378,23 @@ function showFetchSpinner(link) {
   document.head.appendChild(styleEl);
 }
 
-function hideFetchSpinner(link) {
+/**
+ * Replaces the loading spinner with an icon showing the fetch result.
+ * @param {HTMLAnchorElement} link The link containing the spinner.
+ * @param {boolean} succeeded Whether the summary was fetched successfully.
+ * @returns {void}
+ * @example
+ * finishFetchSpinner(link, true);
+ */
+function finishFetchSpinner(link, succeeded) {
   const spinner = fetchSpinners.get(link);
   if (!spinner) return;
-  spinner.remove();
-  fetchSpinners.delete(link);
+  spinner.textContent = succeeded ? '✓' : '✕';
+  spinner.title = succeeded
+    ? 'Laconic summary loaded'
+    : 'Failed to load laconic summary';
+  spinner.setAttribute('aria-label', spinner.title);
+  spinner.style.cssText = `display:inline-block;margin-left:.35em;vertical-align:middle;font-weight:bold;color:${succeeded ? '#07540b' : '#b00020'};`;
 }
 
 async function appendTrope(which, tropeName) {
