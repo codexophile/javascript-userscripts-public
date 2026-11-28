@@ -4167,18 +4167,39 @@ function calculateWidthAndExpand(collapsibleContent) {
 
 // MARK: Site specific functions
 
-function ensureFastPlayback(selector, fastRate = 3) {
+function ensureFastPlayback(selector, fastRate = 3, automatic = false) {
+  if (automatic) {
+    selector = 'video';
+  }
   waitForEach(selector, mediaEl => {
+    console.log(selector, mediaEl);
+    if (automatic) {
+      if (isSmall(mediaEl)) {
+        console.log('width', width, 'height', height);
+        markAsHandled(mediaEl);
+        return;
+      }
+    }
     mediaEl.addEventListener('play', () => {
       setPlaybackRate(mediaEl, fastRate);
     });
     mediaEl.addEventListener('ratechange', () => {
       setPlaybackRate(mediaEl, fastRate);
     });
-  });
 
+    function markAsHandled(el) {
+      el.setAttribute('data-fast-playback-handled', 'true');
+    }
+  });
+  function isSmall(el) {
+    const rectObj = el.getBoundingClientRect();
+    const width = rectObj.width;
+    const height = rectObj.height;
+    return width <= 200 || height <= 200;
+  }
   function setPlaybackRate(mediaEl) {
     if (mediaEl.playbackRate === fastRate) return;
+    if (!isSmall(mediaEl)) return;
     mediaEl.playbackRate = fastRate;
   }
 }
@@ -4239,6 +4260,28 @@ function markVideoItems(mainElSelector, durationElSelector, qualityElSelector) {
   function markAsErrored(el) {
     el.style.outline = '2px solid red';
   }
+}
+
+function filterVideoItems(
+  mainElSelector,
+  filterKeywordsArr,
+  whereToLookSelector,
+) {
+  waitForEach(mainElSelector, async videoItemEl => {
+    const whereToLookEl = videoItemEl.querySelector(whereToLookSelector);
+    if (!whereToLookEl) {
+      markAsErrored(videoItemEl);
+      return;
+    }
+    const whereToLookText = whereToLookEl.innerText.toLowerCase();
+    if (filterKeywordsArr.some(keyword => whereToLookText.includes(keyword))) {
+      // videoItemEl.style.display = 'none';
+      replaceWith(
+        videoItemEl,
+        `<div style="outline: 2px solid #00ffeeef; padding: 5px; margin: 5px;">Filtered out due to keyword match</div>`,
+      );
+    }
+  });
 }
 
 function getStreamwishQuery() {
