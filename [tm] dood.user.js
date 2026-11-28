@@ -53,11 +53,12 @@
           }
           const vidOnPage = document.querySelector(`video`);
           try {
-            await storyboard({
-              storyboardParent: document.body,
-              vidOnPage,
-              webvttContent,
-              baseUrlPath,
+            await storyboardV2({
+              parent: document.body,
+              video: vidOnPage,
+              webvtt: webvttContent,
+              baseUrl: baseUrlPath,
+              controls: { enabled: true },
             });
           } catch (error) {
             alert(error.message);
