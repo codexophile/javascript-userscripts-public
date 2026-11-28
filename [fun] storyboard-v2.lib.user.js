@@ -509,13 +509,15 @@ function formatStoryboardTime(seconds) {
 }
 
 /**
- * Parses a WebVTT timestamp (`MM:SS.mmm` or `HH:MM:SS.mmm`, comma allowed).
+ * Parses a WebVTT timestamp (`MM:SS.mmm` or `HH:MM:SS.mmm`, comma allowed),
+ * including storyboard timestamps with a redundant trailing `.000` component.
  *
  * @param {string} text Timestamp text.
  * @returns {number | null} Seconds, or `null` when malformed.
  */
 function _sbParseTimestamp(text) {
-  const parts = text.trim().replace(',', '.').split(':');
+  const timestamp = text.trim().replace(/([.,]\d{3})\.000$/, '$1');
+  const parts = timestamp.replace(',', '.').split(':');
   if (parts.length < 2 || parts.length > 3) return null;
   const nums = parts.map(p => (/^\d+(\.\d+)?$/.test(p) ? Number(p) : NaN));
   if (nums.some(n => !Number.isFinite(n))) return null;
@@ -1500,13 +1502,13 @@ async function storyboardV2(options) {
       event => {
         const el = /** @type {Element} */ (event.target).closest('.sb-tile');
         const tile = el && byElement.get(el);
-        console.log('xxx', tile, video);
         if (!tile || !video) return;
         const modified =
           event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
         if (modified && el.querySelector('a')) return; // let the browser open the link
         event.preventDefault();
         seekTo(slotTime(tile));
+        video.focus();
       },
       { signal },
     );
