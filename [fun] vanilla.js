@@ -162,6 +162,95 @@ function createDispatcher({ common, skipCommon = [], rules, fallback }) {
 
 // MARK: Text functions
 
+/**
+ * Converts an arbitrary string into a file name that is valid on Windows.
+ *
+ * Handles illegal characters, reserved device names, trailing dots and
+ * spaces, and the NTFS length limit. Operates on a single file name only;
+ * do not pass a full path, because `\` and `/` are replaced.
+ *
+ * @param {string} rawFileName - The untrusted or arbitrary input string.
+ * @param {object} [options] - Optional configuration.
+ * @param {string} [options.replacementText=""] - Text substituted for each illegal character (must not itself contain illegal characters).
+ * @param {string} [options.fallbackFileName="untitled"] - Returned when sanitizing leaves nothing usable.
+ * @param {number} [options.maximumLength=255] - Maximum length of the result in UTF-16 code units.
+ * @returns {string} A string safe to use as a Windows file name.
+ *
+ * @example
+ * sanitizeWindowsFileName('Report: Q1/Q2 <draft>?.txt');
+ * // => 'Report Q1Q2 draft.txt'
+ *
+ * @example
+ * sanitizeWindowsFileName('CON.txt');
+ * // => '_CON.txt'
+ */
+function sanitizeWindowsFileName(
+  rawFileName,
+  { replacementText = '', fallbackFileName = 'untitled', maximumLength } = {},
+) {
+  /**
+   * Characters that Windows forbids in file names: `< > : " / \ | ? *`
+   * plus ASCII control characters (code points 0 through 31).
+   * @type {RegExp}
+   */
+  const WINDOWS_ILLEGAL_FILE_NAME_CHARACTERS_PATTERN =
+    /[<>:"/\\|?*\u0000-\u001F]/g;
+
+  /**
+   * Matches device names Windows reserves (CON, PRN, AUX, NUL, COM1-9, LPT1-9,
+   * including the superscript variants), with or without an extension.
+   * For example, both `CON` and `con.txt` are reserved.
+   * @type {RegExp}
+   */
+  const WINDOWS_RESERVED_DEVICE_NAME_PATTERN =
+    /^(con|prn|aux|nul|com[1-9\u00B9\u00B2\u00B3]|lpt[1-9\u00B9\u00B2\u00B3])\s*(\.|$)/i;
+
+  /**
+   * Maximum length of a single file name component on NTFS, in UTF-16 code units.
+   * @type {number}
+   */
+  const WINDOWS_MAXIMUM_FILE_NAME_LENGTH = 255;
+
+  maximumLength = WINDOWS_MAXIMUM_FILE_NAME_LENGTH;
+
+  let sanitizedFileName = String(rawFileName)
+    .normalize('NFC')
+    .replace(WINDOWS_ILLEGAL_FILE_NAME_CHARACTERS_PATTERN, replacementText);
+
+  // Windows silently strips trailing dots/spaces, which causes mismatches.
+  sanitizedFileName = sanitizedFileName
+    .replace(/[. ]+$/, '')
+    .replace(/^\s+/, '');
+
+  if (WINDOWS_RESERVED_DEVICE_NAME_PATTERN.test(sanitizedFileName)) {
+    sanitizedFileName = `_${sanitizedFileName}`;
+  }
+
+  if (sanitizedFileName.length > maximumLength) {
+    const warning = [
+      'Warning: The sanitized file name exceeds',
+      'the maximum length of ${maximumLength} characters.',
+      'It will be truncated.',
+    ].join(' ');
+    alert(warning);
+    console.warn(warning);
+
+    sanitizedFileName = sanitizedFileName.slice(0, maximumLength);
+
+    // Avoid leaving half of a surrogate pair (e.g. an emoji) at the cut point.
+    const lastCharacterCode = sanitizedFileName.charCodeAt(
+      sanitizedFileName.length - 1,
+    );
+    if (lastCharacterCode >= 0xd800 && lastCharacterCode <= 0xdbff) {
+      sanitizedFileName = sanitizedFileName.slice(0, -1);
+    }
+
+    sanitizedFileName = sanitizedFileName.replace(/[. ]+$/, '');
+  }
+
+  return sanitizedFileName || fallbackFileName;
+}
+
 async function copyElementWithFormatting(element) {
   if (!element) return;
 
@@ -2237,7 +2326,10 @@ function invokeDownloader(
 
   const params = new URLSearchParams();
   for (const url of urls) params.append('url', url);
-  if (title) params.set('title', title);
+  if (title) {
+    const titleSafe = sanitizeWindowsFileName(title);
+    params.set('title', titleSafe);
+  }
   if (destination) params.set('dest', destination);
   if (mode) params.set('mode', mode);
   if (browser) params.set('browser', browser);
@@ -2247,10 +2339,9 @@ function invokeDownloader(
 
   // URLSearchParams encodes spaces as "+", but the AHK decoder expects %20
   const query = params.toString().replace(/\+/g, '%20');
-  clearThenLog(query);
 
   location.replace(`cdx-ahk-protocol://initiate-${downloader}/?${query}`);
-  addHistoryEntry(urlToDownload);
+  // addHistoryEntry(urlToDownload);
 }
 
 function clearThenLog(...logWhat) {
@@ -4172,10 +4263,8 @@ function ensureFastPlayback(selector, fastRate = 3, automatic = false) {
     selector = 'video';
   }
   waitForEach(selector, mediaEl => {
-    console.log(selector, mediaEl);
     if (automatic) {
       if (isSmall(mediaEl)) {
-        console.log('width', width, 'height', height);
         markAsHandled(mediaEl);
         return;
       }
@@ -4440,4 +4529,16 @@ function restartOnUnmute(toggleMuteBtnQuery) {
       videoEl.play();
     });
   });
+}
+
+function getCastMembersFormatted(castElsQuery) {
+  const castEls = document.querySelectorAll(castElsQuery);
+  if (castEls.length === 0) {
+    alert('No cast element found.');
+    return;
+  }
+  const cast = [...castEls]
+    .map(castEl => '@' + castEl.textContent.trim().replaceAll(' ', '_'))
+    .join(', ');
+  return `[${cast}]`;
 }
