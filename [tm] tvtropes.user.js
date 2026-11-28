@@ -2,14 +2,15 @@
 
 const SEL_MAIN = `[href*="/Main/"]`;
 const SEL_PMWIKI = `[href*="/pmwiki/pmwiki.php/"]`;
+const SEL_MAIN_TROPE = `li>span>a:first-child`;
 const SEL_TOOLBAR_LINKS = `:is(#main-article,.folder) > ul > li > [href*='/laconic/']:first-child`;
-const SEL_MAIN_ARTICLE = '#main-article';
+const SEL_MAIN_ARTICLE = 'article#main-article[data-tt-pencils="hover"]';
 const TROPE_RE = /\.php\/\w+\/(\w+)$/;
 const COLOR_SEEN = '#690f08';
 const COLOR_IMPORTANT = '#07540b';
 const fetchSpinners = new WeakMap();
 
-const specialWords = [
+const specialWordsSet = new Set([
   'imply',
   'implies',
   'implying',
@@ -130,11 +131,11 @@ const specialWords = [
   'clues',
   'motive',
   'motives',
-];
+]);
 
 //* marking items with important words
-const uniqueSpecialWords = [...new Set(specialWords)];
-const wordsRegexStr = `\\b(${uniqueSpecialWords.join('|')})\\b`;
+const specialWordsArr = [...specialWordsSet];
+const wordsRegexStr = `\\b(${specialWordsArr.join('|')})\\b`;
 
 waitForEach('li', listEl => {
   const walker = document.createTreeWalker(
@@ -201,20 +202,27 @@ window.addEventListener('beforeunload', event => {
   saveBackup();
 });
 
-lazyLoad(
-  async item => {
-    showFetchSpinner(item);
-    const laconicHref = item.href.replace('/Main/', '/laconic/');
-    try {
-      const tempDoc = await fetchDoc(laconicHref);
-      const tooltipText = getArticleText(tempDoc).replace(/\.(\w)/, '.\n\n$1');
-      item.title = tooltipText;
-    } finally {
-      hideFetchSpinner(item);
+observeLoad(`${SEL_MAIN_ARTICLE} ${SEL_MAIN}`, async item => {
+  console.log('observelsdfsdf');
+  showFetchSpinner(item);
+  const laconicHref = item.href.replace('/Main/', '/laconic/');
+  try {
+    const tempDoc = await fetchDoc(laconicHref);
+    const pEl = tempDoc.querySelector('p');
+    if (!pEl) {
+      console.log('No p element found in laconic document');
+      return;
     }
-  },
-  ...$(SEL_MAIN),
-);
+    const tooltipText = pEl.textContent.trim();
+    if (!tooltipText) {
+      console.log('No text content found in p element');
+      return;
+    }
+    item.title = tooltipText;
+  } finally {
+    hideFetchSpinner(item);
+  }
+});
 
 markAndRefresh();
 
@@ -369,6 +377,7 @@ async function markAndRefresh() {
   const tropesSeen = (await GM.getValue('tropesSeen')) || [];
   const tropesImportant = (await GM.getValue('tropesImportant')) || [];
 
+  await waitFor(SEL_MAIN_ARTICLE);
   $(SEL_PMWIKI).each(function () {
     const tropeName = extractTropeName(this.href);
     if (!tropeName) return; // 🛑
@@ -378,15 +387,17 @@ async function markAndRefresh() {
 }
 
 function mark(el, color) {
-  console.log(el);
-  if (el.matches('div>ul>li>a:first-child')) {
-    console.log('xxx', 'matches', el);
+  const isAMainTrope = el.matches(SEL_MAIN_TROPE);
+  if (isAMainTrope) {
+    const parentEl = el.closest('li');
     style(
-      $(el).parent('li')[0],
+      parentEl,
       `
-                    background-color: ${color};
-                    border-radius: 4px;
-                `,
+      margin: 10px;
+      padding: 5px;
+      background-color: ${color};
+      border-radius: 5px;
+    `,
     );
   } else {
     el.style.outline = `solid ${color}`;
