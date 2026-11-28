@@ -146,7 +146,6 @@ function observeLoad(selector, _load, options = {}) {
 
   const loadElement = element => {
     if (stopped || loaded.has(element)) return;
-
     loaded.add(element);
     pending.delete(element);
     intersectionObserver?.unobserve(element);
@@ -161,7 +160,8 @@ function observeLoad(selector, _load, options = {}) {
   };
 
   const observeElement = element => {
-    if (stopped || loaded.has(element)) return;
+    const loadedHasElement = loaded.has(element);
+    if (stopped || loadedHasElement) return;
     pending.add(element);
     if (mode === 'scrollPast' && isInViewport(element)) {
       enteredViewport.add(element);
@@ -186,15 +186,16 @@ function observeLoad(selector, _load, options = {}) {
     intersectionObserver = new IntersectionObserver(
       entries => {
         entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            enteredViewport.add(entry.target);
-          } else if (
-            mode === 'scrollPast' &&
-            enteredViewport.has(entry.target) &&
-            (direction === 'both' || direction === scrollDirection)
-          ) {
-            loadElement(entry.target);
-          } else if (mode !== 'scrollPast' && entry.isIntersecting) {
+          if (mode === 'scrollPast') {
+            if (entry.isIntersecting) {
+              enteredViewport.add(entry.target);
+            } else if (
+              enteredViewport.has(entry.target) &&
+              (direction === 'both' || direction === scrollDirection)
+            ) {
+              loadElement(entry.target);
+            }
+          } else if (entry.isIntersecting) {
             loadElement(entry.target);
           }
         });
